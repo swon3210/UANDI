@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm --filter docs build)",
+      "Bash(pnpm --filter docs add lucide-react clsx tailwind-merge)",
+      "Bash(pnpm --filter web build)",
+      "Bash(pnpm --filter @uandi/ui add -D storybook @storybook/nextjs @storybook/react @storybook/addon-essentials @storybook/addon-interactions @storybook/addon-a11y @storybook/test @tailwindcss/postcss)",
+      "Bash(pnpm --filter @uandi/ui add -D \"storybook@^8.6.14\" \"@storybook/nextjs@^8.6.14\" \"@storybook/react@^8.6.14\" \"@storybook/addon-essentials@^8.6.14\" \"@storybook/addon-interactions@^8.6.14\" \"@storybook/addon-a11y@^8.6.14\" \"@storybook/test@^8.6.14\")",
+      "Bash(pnpm --filter @uandi/ui add -D \"@storybook/test@^8.6.17\")",
+      "Bash(pnpm --filter @uandi/ui build-storybook)",
+      "Bash(pnpm --filter @uandi/ui remove @storybook/nextjs)",
+      "Bash(pnpm --filter @uandi/ui add -D @storybook/react-vite vite @vitejs/plugin-react)",
+      "Bash(pnpm --filter @uandi/ui remove @storybook/react-vite)",
+      "Bash(pnpm --filter @uandi/ui add -D \"@storybook/react-vite@^8.6.17\" \"vite@^5\" \"@vitejs/plugin-react@^4\")",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm add -D prettier -w)",
+      "Bash(pnpm add -D @eslint/eslintrc eslint-config-prettier --filter web --filter docs-viewer)",
+      "Bash(pnpm add -D eslint typescript-eslint eslint-plugin-react-hooks eslint-config-prettier --filter @uandi/ui)",
+      "Bash(pnpm --filter web lint)",
+      "Bash(pnpm format:check)",
+      "Bash(pnpm format)",
+      "Bash(pnpm --filter web add @uidotdev/usehooks)",
+      "Bash(pnpm --filter web add react-hook-form zod @hookform/resolvers)",
+      "Bash(pnpm dlx shadcn@latest add button input-otp --yes)",
+      "Bash(pnpm --filter web add lucide-react)",
+      "Bash(ls /Users/jinsong/Documents/Github/UANDI/apps/web/.env*)",
+      "Bash(pnpm --filter web exec tsc --noEmit)"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+// TODO: 보안 규칙 구현
+// 구현 명세: docs/03-domain-models.md (Firestore 보안 규칙 명세 섹션)
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 에뮬레이터 테스트용: 모든 접근 허용
+    // 프로덕션 배포 전 반드시 아래 규칙으로 교체할 것
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // TODO: 프로덕션 규칙 (위 임시 규칙 삭제 후 활성화)
+    // function isCoupleM ember(coupleId) {
+    //   return request.auth != null &&
+    //     request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.memberUids;
+    // }
+    //
+    // match /users/{uid} {
+    //   allow read, write: if request.auth != null && request.auth.uid == uid;
+    // }
+    //
+    // match /couples/{coupleId} {
+    //   allow read, write: if isCoupleM ember(coupleId);
+    // }
+    //
+    // match /couples/{coupleId}/photos/{photoId} {
+    //   allow read, write: if isCoupleM ember(coupleId);
+    // }
+    //
+    // match /couples/{coupleId}/cashbookEntries/{entryId} {
+    //   allow read, write: if isCoupleM ember(coupleId);
+    // }
+  }
+}

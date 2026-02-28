@@ -1,0 +1,44 @@
+{
+  "name": "web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.66.0",
+    "@uandi/ui": "workspace:*",
+    "@uidotdev/usehooks": "^2.4.1",
+    "dayjs": "^1.11.0",
+    "firebase": "^11.3.1",
+    "jotai": "^2.11.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.2.0",
+    "overlay-kit": "^1.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.71.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.4",
+    "@playwright/test": "^1.50.1",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.13.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@uandi/tsconfig": "workspace:*",
+    "eslint": "^9.21.0",
+    "eslint-config-next": "^15.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3"
+  }
+}
