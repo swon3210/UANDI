@@ -8,9 +8,11 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,css,md}\"",
     "test:e2e": "turbo test:e2e",
+    "test:e2e:visible": "turbo test:e2e:visible",
     "emulators": "firebase emulators:start --only auth,firestore,storage"
   },
   "devDependencies": {
+    "firebase-tools": "^15.8.0",
     "prettier": "^3.8.1",
     "turbo": "^2.3.3"
   },

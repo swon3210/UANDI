@@ -19,6 +19,7 @@ storybook-static
 
 # Firebase
 .firebase
+*-debug.log
 
 # Testing
 playwright-report
@@ -28,3 +29,4 @@ test-results
 .DS_Store
 *.pem
 .turbo
+*.tsbuildinfo

@@ -18,6 +18,10 @@
       "dependsOn": ["build"],
       "cache": false
     },
+    "test:e2e:visible": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "storybook": {
       "cache": false,
       "persistent": true
