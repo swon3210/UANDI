@@ -13,10 +13,14 @@ const PASSWORD = 'testpassword123';
 // 브라우저에서 Firebase Auth Emulator로 이메일/비밀번호 로그인
 // 앱이 에뮬레이터 모드일 때 config.ts에서 window.__auth를 노출함
 async function signInOnPage(page: Page, email: string, password: string) {
+  await page.waitForFunction(
+    () => typeof (window as any).__signInWithEmailAndPassword === 'function',
+    { timeout: 10000 }
+  );
   await page.evaluate(
     async ({ email, password }) => {
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword((window as any).__auth, email, password);
+      const w = window as any;
+      await w.__signInWithEmailAndPassword(w.__auth, email, password);
     },
     { email, password }
   );

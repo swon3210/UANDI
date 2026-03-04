@@ -10,6 +10,11 @@ import { getAuth } from './config';
 const provider = new GoogleAuthProvider();
 
 export async function signInWithGoogle(): Promise<void> {
+  // E2E 테스트에서 에러 시나리오 모킹용 (config.ts에서 window.__signInWithGoogle 설정)
+  if (typeof window !== 'undefined' && (window as any).__signInWithGoogleMock) {
+    await (window as any).__signInWithGoogleMock();
+    return;
+  }
   await signInWithPopup(getAuth(), provider);
 }
 

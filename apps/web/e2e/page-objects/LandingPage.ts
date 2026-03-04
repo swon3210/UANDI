@@ -8,7 +8,7 @@ export class LandingPage {
   constructor(page: Page) {
     this.page = page;
     this.loginButton = page.getByTestId('google-login-btn');
-    this.errorMessage = page.getByRole('alert');
+    this.errorMessage = page.getByTestId('login-error');
   }
 
   async goto() {

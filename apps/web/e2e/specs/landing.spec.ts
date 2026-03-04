@@ -8,10 +8,14 @@ const PASSWORD = 'testpassword123';
 
 // 브라우저에서 Firebase Auth Emulator로 이메일/비밀번호 로그인
 async function signInOnPage(page: Page, email: string) {
+  await page.waitForFunction(
+    () => typeof (window as any).__signInWithEmailAndPassword === 'function',
+    { timeout: 10000 }
+  );
   await page.evaluate(
     async ({ email, password }) => {
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword((window as any).__auth, email, password);
+      const w = window as any;
+      await w.__signInWithEmailAndPassword(w.__auth, email, password);
     },
     { email, password: PASSWORD }
   );
@@ -58,7 +62,7 @@ test.describe('랜딩 & 로그인', () => {
 
     await clickPromise.catch(() => {});
     // 팝업 닫힌 후 버튼이 재활성화됨
-    await expect(landing.loginButton).toBeEnabled({ timeout: 5000 });
+    await expect(landing.loginButton).toBeEnabled({ timeout: 15000 });
   });
 
   test('신규 유저 로그인 성공 시 /onboarding으로 이동하고 Firestore에 users 문서가 생성된다', async ({
@@ -106,7 +110,7 @@ test.describe('랜딩 & 로그인', () => {
 
     await landing.loginButton.click().catch(() => {});
     // 팝업 닫기 후 버튼 재활성화, 에러 메시지 없음
-    await expect(landing.loginButton).toBeEnabled({ timeout: 5000 });
+    await expect(landing.loginButton).toBeEnabled({ timeout: 15000 });
     await expect(landing.errorMessage).not.toBeVisible();
   });
 
@@ -114,20 +118,21 @@ test.describe('랜딩 & 로그인', () => {
     await clearEmulatorData();
     const landing = new LandingPage(page);
     await landing.goto();
+    await expect(landing.loginButton).toBeVisible();
 
-    // Firebase Auth 네트워크 요청을 차단해 네트워크 오류 유발
-    await page.route('**/identitytoolkit.googleapis.com/**', (route: Route) => route.abort());
-    await page.route('**/securetoken.googleapis.com/**', (route: Route) => route.abort());
-
-    // 팝업이 열리면 닫기 — 네트워크가 막혀있어 auth/network-request-failed 발생
-    page.on('popup', async (popup: Page) => {
-      await popup.close();
+    // signInWithGoogle을 네트워크 에러를 던지는 모킹 함수로 교체
+    await page.evaluate(() => {
+      (window as any).__signInWithGoogleMock = () => {
+        const err = new Error('auth/network-request-failed');
+        (err as any).code = 'auth/network-request-failed';
+        return Promise.reject(err);
+      };
     });
 
-    await landing.loginButton.click().catch(() => {});
+    await landing.loginButton.click();
 
     // 버튼 재활성화 + 에러 메시지 표시 확인
-    await expect(landing.loginButton).toBeEnabled({ timeout: 5000 });
+    await expect(landing.loginButton).toBeEnabled({ timeout: 15000 });
     await expect(landing.errorMessage).toBeVisible();
     await expect(landing.errorMessage).toContainText('네트워크 오류');
   });

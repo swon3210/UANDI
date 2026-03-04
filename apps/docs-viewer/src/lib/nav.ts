@@ -28,7 +28,6 @@ export const NAV_ITEMS: NavGroup[] = [
   {
     group: '페이지 명세',
     items: [
-      { title: '랜딩 & 로그인', slug: 'pages/landing' },
       { title: '온보딩', slug: 'pages/onboarding' },
       { title: '대시보드', slug: 'pages/dashboard' },
       { title: '사진 갤러리', slug: 'pages/photo-gallery' },

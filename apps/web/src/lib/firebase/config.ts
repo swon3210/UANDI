@@ -1,5 +1,9 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth as firebaseGetAuth, connectAuthEmulator } from 'firebase/auth';
+import {
+  getAuth as firebaseGetAuth,
+  connectAuthEmulator,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 import { getFirestore as firebaseGetFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage as firebaseGetStorage, connectStorageEmulator } from 'firebase/storage';
 
@@ -36,6 +40,8 @@ function getFirebaseApp(): FirebaseApp {
 
       // Playwright E2E 테스트용: page.evaluate에서 auth 인스턴스 접근
       (window as unknown as Record<string, unknown>).__auth = firebaseGetAuth(_app);
+      (window as unknown as Record<string, unknown>).__signInWithEmailAndPassword =
+        signInWithEmailAndPassword;
     }
   }
   return _app;

@@ -8,6 +8,7 @@
     "start": "next start --port 3000",
     "lint": "next lint",
     "test:e2e": "playwright test",
+    "test:e2e:visible": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"
   },
