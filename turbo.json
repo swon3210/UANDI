@@ -15,11 +15,9 @@
       "dependsOn": ["^lint"]
     },
     "test:e2e": {
-      "dependsOn": ["build"],
       "cache": false
     },
     "test:e2e:visible": {
-      "dependsOn": ["build"],
       "cache": false
     },
     "storybook": {
