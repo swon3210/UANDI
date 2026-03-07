@@ -1,4 +1,10 @@
-// TODO: 사진 훅 구현 (TanStack Query + useInfiniteQuery)
-// 구현 명세: docs/pages/03-photo-gallery.md
+import { useQuery } from '@tanstack/react-query';
+import { getRecentPhotos } from '@/services/photos';
 
-export {};
+export function useRecentPhotos(coupleId: string | null) {
+  return useQuery({
+    queryKey: ['recentPhotos', coupleId],
+    queryFn: () => getRecentPhotos(coupleId!, 3),
+    enabled: !!coupleId,
+  });
+}

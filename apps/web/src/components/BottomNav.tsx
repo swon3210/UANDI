@@ -18,7 +18,7 @@ const TABS = [
 
 export function BottomNav({ activeTab }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border flex items-center md:hidden">
+    <nav data-testid="bottom-nav" className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border flex items-center md:hidden">
       {TABS.map(({ id, label, href, Icon }) => {
         const isActive = activeTab === id;
         return (

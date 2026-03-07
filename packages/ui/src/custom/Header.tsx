@@ -6,15 +6,16 @@ type HeaderProps = {
   leftSlot?: ReactNode;
   rightSlot?: ReactNode;
   className?: string;
-};
+} & React.HTMLAttributes<HTMLElement>;
 
-export function Header({ title, leftSlot, rightSlot, className }: HeaderProps) {
+export function Header({ title, leftSlot, rightSlot, className, ...props }: HeaderProps) {
   return (
     <header
       className={cn(
         'h-14 flex items-center justify-between px-4 bg-background border-b border-border',
         className
       )}
+      {...props}
     >
       <div className="w-10">{leftSlot}</div>
       <span className="text-base font-semibold text-foreground">{title}</span>

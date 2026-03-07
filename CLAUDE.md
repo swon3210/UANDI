@@ -1,5 +1,18 @@
 # UANDI — Claude 작업 지침
 
+## Workspace 초기화 (Conductor worktree)
+
+새 workspace에서 작업을 시작할 때 **가장 먼저** 아래 명령을 실행한다:
+
+```bash
+sh scripts/setup-env.sh
+```
+
+이 스크립트는 원본 repo의 `apps/web/.env.local`을 심볼릭 링크로 연결한다.
+`.env.local`이 없으면 개발 서버(`pnpm dev`)가 실행되지 않는다.
+
+---
+
 ## 구현 시작 전 필수 문서 읽기
 
 구현 요청을 받으면 **코드 작성 전에 반드시** 아래 순서로 문서를 읽어야 한다.

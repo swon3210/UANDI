@@ -29,7 +29,13 @@ export function AuthInit() {
         return;
       }
 
-      let userDoc = await getUserDocument(firebaseUser.uid);
+      let userDoc: User | null = null;
+      try {
+        userDoc = await getUserDocument(firebaseUser.uid);
+        console.log('[AuthInit] getUserDocument result:', JSON.stringify(userDoc));
+      } catch (e) {
+        console.log('[AuthInit] getUserDocument ERROR:', e);
+      }
       if (!userDoc) {
         const newUserData: User = {
           uid: firebaseUser.uid,

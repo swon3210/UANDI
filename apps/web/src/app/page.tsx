@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai';
 import { FullScreenSpinner } from '@uandi/ui';
 import { authStatusAtom } from '@/stores/auth.store';
 import { LandingPage } from '@/components/LandingPage';
+import { Dashboard } from '@/components/dashboard/Dashboard';
 
 export default function HomePage() {
   const authStatus = useAtomValue(authStatusAtom);
@@ -26,10 +27,6 @@ export default function HomePage() {
     return <LandingPage />;
   }
 
-  // authenticated_with_couple → 대시보드 (docs/pages/02-dashboard.md 구현 예정)
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <p className="text-muted-foreground">대시보드 준비 중...</p>
-    </main>
-  );
+  // authenticated_with_couple → 대시보드
+  return <Dashboard />;
 }

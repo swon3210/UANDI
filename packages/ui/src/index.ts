@@ -14,3 +14,5 @@ export { FullScreenSpinner } from './custom/FullScreenSpinner';
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './components/input-otp';
+export { Skeleton } from './components/skeleton';
+export { Avatar, AvatarImage, AvatarFallback } from './components/avatar';
