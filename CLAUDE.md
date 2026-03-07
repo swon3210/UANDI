@@ -53,6 +53,20 @@
 | 서버 상태     | TanStack Query v5                       | SWR                        |
 | 범용 훅       | `@uidotdev/usehooks`                    | 동일 기능 직접 구현        |
 
+### 디자인 시스템 컴포넌트 우선 사용 규칙
+
+페이지 구현 시 **`@uandi/ui`에 이미 존재하는 컴포넌트를 반드시 먼저 확인**하고 최대한 활용할 것.
+
+1. **구현 전**: `packages/ui/src/index.ts`의 export 목록을 읽어 사용 가능한 컴포넌트 확인
+2. **shadcn 컴포넌트**: `Button`, `Input`, `Form`, `Dialog`, `Sheet`, `Skeleton`, `Tabs`, `Badge`, `Avatar`, `Sonner`, `Separator` 등 — 직접 HTML 태그 대신 사용
+3. **커스텀 컴포넌트**: `Logo`, `Header`, `EmptyState`, `FullScreenSpinner` — 해당 UI가 필요할 때 반드시 사용
+4. **로딩 상태**: `<Loader2>` 직접 사용 대신 `<FullScreenSpinner />` 사용 (전체 화면 로딩 시)
+5. **로고 표시**: 텍스트 `<h1>UANDI</h1>` 대신 `<Logo variant="..." />` 사용
+6. **버튼**: HTML `<button>` 대신 `<Button>` 컴포넌트 + 적절한 `variant`/`size` 사용
+7. **폼**: `<input>` 직접 사용 금지 → React Hook Form + shadcn `<Form>` 패턴 (docs/02-design-system.md 참고)
+
+> 새 컴포넌트가 필요하면 먼저 shadcn 카탈로그를 확인하고, 없으면 `packages/ui/src/custom/`에 추가한다.
+
 ### `@uidotdev/usehooks` 사용 규칙
 
 아래 기능이 필요할 때 **직접 구현하지 말고 반드시 이 라이브러리에서 가져올 것**:

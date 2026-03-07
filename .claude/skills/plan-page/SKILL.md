@@ -26,6 +26,7 @@ description: 페이지 구현 전 명세 충돌 검사 및 UI 플랜 수립. 페
 - `docs/05-testing-strategy.md`
 
 페이지 명세에서 참조하는 훅, 서비스, 컴포넌트 파일이 있으면 해당 소스 파일도 읽는다.
+반드시 `packages/ui/src/index.ts`도 읽어 현재 사용 가능한 디자인 시스템 컴포넌트 목록을 파악한다.
 
 ### 2단계: 충돌 검사 (Conflict Check)
 

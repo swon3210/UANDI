@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@uandi/ui';
+import { Button, Logo } from '@uandi/ui';
 import { signInWithGoogle } from '@/lib/firebase/auth';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -13,6 +13,15 @@ const ERROR_MESSAGES: Record<string, string> = {
 export function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // signInWithPopup은 팝업 닫힘을 감지 못해 Promise가 pending으로 남을 수 있음
+  // window focus 시 로딩 상태를 리셋해 UX 보완
+  useEffect(() => {
+    if (!isLoading) return;
+    const handleFocus = () => setIsLoading(false);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isLoading]);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -34,7 +43,7 @@ export function LandingPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <h1 className="text-2xl font-bold text-foreground">UANDI</h1>
+      <Logo variant="icon" className="h-16 w-16" />
       <p className="mt-6 text-center text-xl font-semibold leading-snug text-foreground">
         둘이서 만드는
         <br />
@@ -47,6 +56,7 @@ export function LandingPage() {
         <Button
           data-testid="google-login-btn"
           className="w-full"
+          size="lg"
           onClick={handleLogin}
           disabled={isLoading}
         >
