@@ -8,6 +8,7 @@ export type { LogoProps, LogoVariant } from './Logo';
 // 커스텀 컴포넌트
 export { Header } from './custom/Header';
 export { EmptyState } from './custom/EmptyState';
+export { FullScreenSpinner } from './custom/FullScreenSpinner';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';
