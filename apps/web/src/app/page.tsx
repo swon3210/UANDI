@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { Loader2 } from 'lucide-react';
+import { FullScreenSpinner } from '@uandi/ui';
 import { authStatusAtom } from '@/stores/auth.store';
 import { LandingPage } from '@/components/LandingPage';
 
@@ -19,11 +19,7 @@ export default function HomePage() {
   }, [authStatus, router]);
 
   if (authStatus === 'loading' || authStatus === 'authenticated_no_couple') {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="animate-spin text-muted-foreground" size={32} />
-      </div>
-    );
+    return <FullScreenSpinner />;
   }
 
   if (authStatus === 'unauthenticated') {
