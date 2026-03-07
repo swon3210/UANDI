@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "tsc": "tsc --noEmit",
     "lint": "eslint src",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "sb": "storybook dev -p 6006",
+    "build-sb": "storybook build"
   },
   "exports": {
     ".": "./src/index.ts",
