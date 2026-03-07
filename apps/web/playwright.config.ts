@@ -23,6 +23,9 @@ function loadEnvFile(filePath: string): Record<string, string> {
 
 const testEnv = loadEnvFile('.env.test');
 
+// E2E 전용 포트 — 수동 dev 서버(3000)와 충돌 방지
+const E2E_PORT = 3100;
+
 export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   testDir: './e2e/specs',
@@ -32,7 +35,7 @@ export default defineConfig({
   reporter: 'html',
   ...(isHeaded && { timeout: 60000 }),
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${E2E_PORT}`,
     trace: 'on-first-retry',
     ...(isHeaded && {
       launchOptions: { slowMo: 1000 },
@@ -53,8 +56,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000',
+    command: `pnpm next dev --port ${E2E_PORT}`,
+    url: `http://localhost:${E2E_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 30000,
     env: {

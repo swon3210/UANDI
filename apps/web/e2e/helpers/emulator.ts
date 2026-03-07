@@ -87,3 +87,74 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
 export async function seedCoupleWithTwoMembers(uid1: string, uid2: string): Promise<string> {
   return seedCouple({ uid: uid1, secondMemberUid: uid2 });
 }
+
+export async function seedPhoto(
+  coupleId: string,
+  uploadedBy: string,
+  options: { caption?: string; takenAt?: string } = {}
+): Promise<string> {
+  const photoId = `photo-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const takenAt = options.takenAt ?? new Date().toISOString();
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/photos/${photoId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: photoId },
+          coupleId: { stringValue: coupleId },
+          uploadedBy: { stringValue: uploadedBy },
+          storageUrl: { stringValue: `https://storage.example.com/${photoId}.jpg` },
+          thumbnailUrl: { stringValue: `https://storage.example.com/${photoId}_thumb.jpg` },
+          caption: { stringValue: options.caption ?? '' },
+          takenAt: { timestampValue: takenAt },
+          uploadedAt: { timestampValue: new Date().toISOString() },
+          width: { integerValue: '800' },
+          height: { integerValue: '600' },
+        },
+      }),
+    }
+  );
+
+  return photoId;
+}
+
+export async function seedCashbookEntry(
+  coupleId: string,
+  createdBy: string,
+  options: {
+    type: 'income' | 'expense';
+    amount: number;
+    category?: string;
+    description?: string;
+    date?: string;
+  }
+): Promise<string> {
+  const entryId = `entry-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const date = options.date ?? new Date().toISOString();
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: entryId },
+          coupleId: { stringValue: coupleId },
+          createdBy: { stringValue: createdBy },
+          type: { stringValue: options.type },
+          amount: { integerValue: String(options.amount) },
+          category: { stringValue: options.category ?? '기타' },
+          description: { stringValue: options.description ?? '' },
+          date: { timestampValue: date },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+
+  return entryId;
+}

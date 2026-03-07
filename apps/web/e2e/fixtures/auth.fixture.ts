@@ -46,8 +46,11 @@ export const test = base.extend<Fixtures>({
     await use(page);
   },
 
-  authedPage: async ({ page }, use) => {
+  authedPage: async ({ page, context }, use) => {
     await clearEmulatorData();
+    // 이전 테스트에서 남은 쿠키 제거 (미들웨어가 잘못 리다이렉트하지 않도록)
+    await context.clearCookies();
+
     const uid1 = await createTestUser(EMAIL_1, PASSWORD);
     const uid2 = await createTestUser(EMAIL_2, PASSWORD);
     const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
@@ -56,7 +59,8 @@ export const test = base.extend<Fixtures>({
 
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
-    await page.waitForURL('/');
+    // 로그인 후 AuthInit이 coupleId를 감지하고 대시보드를 렌더링할 때까지 대기
+    await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
 
     await use(page);
   },

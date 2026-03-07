@@ -7,6 +7,7 @@ import { Loader2, ChevronLeft, Copy, Check } from 'lucide-react';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { Button, InputOTP, InputOTPGroup, InputOTPSlot } from '@uandi/ui';
 import { userAtom, authStatusAtom } from '@/stores/auth.store';
+import { setAuthCookie } from '@/lib/auth-cookie';
 import { createCouple, joinCoupleByInviteCode, subscribeToCouple } from '@/services/couple';
 import { getUserDocument } from '@/services/user';
 
@@ -48,6 +49,7 @@ export default function OnboardingPage() {
       if (couple.memberUids.length === 2 && user) {
         const updated = await getUserDocument(user.uid);
         if (updated) setUser(updated);
+        setAuthCookie('with_couple');
         router.replace('/');
       }
     });
@@ -154,6 +156,7 @@ export default function OnboardingPage() {
       await joinCoupleByInviteCode(user.uid, otpValue);
       const updated = await getUserDocument(user.uid);
       if (updated) setUser(updated);
+      setAuthCookie('with_couple');
       router.replace('/');
     } catch (err) {
       const code = err instanceof Error ? err.message : 'UNKNOWN';
