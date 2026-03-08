@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'localhost', // Firebase Storage 에뮬레이터
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.example.com', // E2E 테스트 시드 데이터용
+      },
     ],
   },
 };

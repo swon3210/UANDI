@@ -16,3 +16,20 @@ export type { ButtonProps } from './components/button';
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './components/input-otp';
 export { Skeleton } from './components/skeleton';
 export { Avatar, AvatarImage, AvatarFallback } from './components/avatar';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
+export { Badge, badgeVariants } from './components/badge';
+export type { BadgeProps } from './components/badge';
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './components/sheet';
+export { Input } from './components/input';
+export { Separator } from './components/separator';

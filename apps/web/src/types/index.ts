@@ -17,10 +17,20 @@ export type Couple = {
   createdAt: Timestamp;
 };
 
+export type Folder = {
+  id: string;
+  coupleId: string;
+  name: string;
+  createdBy: string;
+  createdAt: Timestamp;
+};
+
 export type Photo = {
   id: string;
   coupleId: string;
   uploadedBy: string;
+  folderId: string;
+  tags: string[];
   storageUrl: string;
   thumbnailUrl: string | null;
   caption: string;
