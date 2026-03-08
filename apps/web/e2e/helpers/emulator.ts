@@ -91,10 +91,12 @@ export async function seedCoupleWithTwoMembers(uid1: string, uid2: string): Prom
 export async function seedPhoto(
   coupleId: string,
   uploadedBy: string,
-  options: { caption?: string; takenAt?: string } = {}
+  options: { caption?: string; takenAt?: string; folderId?: string; tags?: string[] } = {}
 ): Promise<string> {
   const photoId = `photo-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const takenAt = options.takenAt ?? new Date().toISOString();
+
+  const tagsValues = (options.tags ?? []).map((t) => ({ stringValue: t }));
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/photos/${photoId}`,
@@ -106,6 +108,8 @@ export async function seedPhoto(
           id: { stringValue: photoId },
           coupleId: { stringValue: coupleId },
           uploadedBy: { stringValue: uploadedBy },
+          folderId: { stringValue: options.folderId ?? '' },
+          tags: { arrayValue: { values: tagsValues.length > 0 ? tagsValues : [] } },
           storageUrl: { stringValue: `https://storage.example.com/${photoId}.jpg` },
           thumbnailUrl: { stringValue: `https://storage.example.com/${photoId}_thumb.jpg` },
           caption: { stringValue: options.caption ?? '' },
@@ -119,6 +123,33 @@ export async function seedPhoto(
   );
 
   return photoId;
+}
+
+export async function seedFolder(
+  coupleId: string,
+  createdBy: string,
+  options: { name?: string } = {}
+): Promise<string> {
+  const folderId = `folder-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/folders/${folderId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: folderId },
+          coupleId: { stringValue: coupleId },
+          name: { stringValue: options.name ?? '테스트 폴더' },
+          createdBy: { stringValue: createdBy },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+
+  return folderId;
 }
 
 export async function seedCashbookEntry(

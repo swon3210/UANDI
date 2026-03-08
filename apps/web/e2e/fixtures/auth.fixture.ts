@@ -26,11 +26,19 @@ async function signInOnPage(page: Page, email: string, password: string) {
   );
 }
 
+type AuthContext = {
+  page: Page;
+  uid: string;
+  coupleId: string;
+};
+
 type Fixtures = {
   // 로그인 O, coupleId 없음 → 온보딩 테스트용
   noCoupleAuthedPage: Page;
   // 로그인 O, coupleId 있음 → 대시보드 / 사진 / 가계부 테스트용
   authedPage: Page;
+  // authedPage와 동일하지만 uid, coupleId도 함께 제공
+  authedContext: AuthContext;
 };
 
 export const test = base.extend<Fixtures>({
@@ -63,5 +71,22 @@ export const test = base.extend<Fixtures>({
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
 
     await use(page);
+  },
+
+  authedContext: async ({ page, context }, use) => {
+    await clearEmulatorData();
+    await context.clearCookies();
+
+    const uid1 = await createTestUser(EMAIL_1, PASSWORD);
+    const uid2 = await createTestUser(EMAIL_2, PASSWORD);
+    const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
+    await seedUserDocument(uid1, EMAIL_1, coupleId);
+    await seedUserDocument(uid2, EMAIL_2, coupleId);
+
+    await page.goto('/');
+    await signInOnPage(page, EMAIL_1, PASSWORD);
+    await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
+
+    await use({ page, uid: uid1, coupleId });
   },
 });
