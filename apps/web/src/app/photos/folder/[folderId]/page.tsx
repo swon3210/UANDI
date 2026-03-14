@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, CheckSquare } from 'lucide-react';
+import { ArrowLeft, MoreVertical, CheckSquare, Play } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import { Header, EmptyState, Button, Sheet, Skeleton } from '@uandi/ui';
@@ -171,6 +171,17 @@ export default function FolderDetailPage() {
           }
           rightSlot={
             <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  router.push(`/photos/slideshow?source=folder&id=${folderId}`)
+                }
+                aria-label="슬라이드쇼"
+                data-testid="slideshow-btn"
+              >
+                <Play size={20} />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
