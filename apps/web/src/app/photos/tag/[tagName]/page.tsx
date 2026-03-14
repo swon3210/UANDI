@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Play } from 'lucide-react';
 import { Header, EmptyState, Button, Skeleton } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotosByTag } from '@/hooks/usePhotos';
@@ -54,6 +54,21 @@ export default function TagDetailPage() {
         leftSlot={
           <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로">
             <ArrowLeft size={20} />
+          </Button>
+        }
+        rightSlot={
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              router.push(
+                `/photos/slideshow?source=tag&id=${encodeURIComponent(tagName)}`
+              )
+            }
+            aria-label="슬라이드쇼"
+            data-testid="slideshow-btn"
+          >
+            <Play size={20} />
           </Button>
         }
       />
