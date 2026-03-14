@@ -17,7 +17,10 @@ type SlideshowViewProps = {
 
 export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showCaption, setShowCaption] = useState(false);
+  const [showCaption, setShowCaption] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem('slideshow-show-caption') === 'true';
+  });
   const [overlayVisible, setOverlayVisible] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -34,22 +37,6 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
     startIdleTimer();
   }, [startIdleTimer]);
 
-  // 초기 타이머 설정 + 인터랙션 이벤트 리스너
-  useEffect(() => {
-    startIdleTimer();
-
-    const handleInteraction = () => resetIdleTimer();
-    window.addEventListener('mousemove', handleInteraction);
-    window.addEventListener('touchstart', handleInteraction);
-    window.addEventListener('click', handleInteraction);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      window.removeEventListener('mousemove', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
-      window.removeEventListener('click', handleInteraction);
-    };
-  }, [startIdleTimer, resetIdleTimer]);
-
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => Math.min(prev + 1, photos.length - 1));
     resetIdleTimer();
@@ -59,6 +46,28 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
     resetIdleTimer();
   }, [resetIdleTimer]);
+
+  // 초기 타이머 설정 + 인터랙션 이벤트 리스너 + 키보드 탐색
+  useEffect(() => {
+    startIdleTimer();
+
+    const handleInteraction = () => resetIdleTimer();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrev();
+    };
+    window.addEventListener('mousemove', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      window.removeEventListener('mousemove', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [startIdleTimer, resetIdleTimer, goNext, goPrev]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
@@ -95,31 +104,42 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
           data-testid="slideshow-image"
         />
 
-        {/* 인접 이미지 프리로드 */}
+        {/* 인접 이미지 프리로드 (Next.js Image 최적화 활용) */}
         {currentIndex > 0 && (
-          <link rel="preload" as="image" href={photos[currentIndex - 1].storageUrl} />
+          <Image
+            src={photos[currentIndex - 1].storageUrl}
+            alt=""
+            fill
+            className="invisible"
+            sizes="100vw"
+            priority
+            aria-hidden
+          />
         )}
         {currentIndex < photos.length - 1 && (
-          <link rel="preload" as="image" href={photos[currentIndex + 1].storageUrl} />
+          <Image
+            src={photos[currentIndex + 1].storageUrl}
+            alt=""
+            fill
+            className="invisible"
+            sizes="100vw"
+            priority
+            aria-hidden
+          />
         )}
       </div>
 
-      {/* 좌우 탭 영역 (사진 위에 투명하게) */}
-      <div className="absolute inset-0 z-20 flex">
-        <button
-          className="h-full w-1/3 cursor-default"
-          onClick={goPrev}
-          aria-label="이전 사진"
-          data-testid="slideshow-prev-zone"
-        />
-        <div className="h-full w-1/3" />
-        <button
-          className="h-full w-1/3 cursor-default"
-          onClick={goNext}
-          aria-label="다음 사진"
-          data-testid="slideshow-next-zone"
-        />
-      </div>
+      {/* 좌우 탭 영역 — 클릭 x좌표로 이전/다음 판별 */}
+      <div
+        className="absolute inset-0 z-30 cursor-default"
+        data-testid="slideshow-tap-zone"
+        onClick={(e) => {
+          const x = e.clientX;
+          const w = window.innerWidth;
+          if (x < w / 2) goPrev();
+          else goNext();
+        }}
+      />
 
       {/* 오버레이 */}
       <SlideshowOverlay
@@ -131,7 +151,11 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
         visible={overlayVisible}
         onClose={onClose}
         onToggleCaption={() => {
-          setShowCaption((prev) => !prev);
+          setShowCaption((prev) => {
+            const next = !prev;
+            sessionStorage.setItem('slideshow-show-caption', String(next));
+            return next;
+          });
           resetIdleTimer();
         }}
       />
