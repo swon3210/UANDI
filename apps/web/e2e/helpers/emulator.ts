@@ -28,8 +28,10 @@ export async function createTestUser(email: string, password: string): Promise<s
 export async function seedUserDocument(
   uid: string,
   email: string,
-  coupleId: string | null = null
+  coupleId: string | null = null,
+  options: { displayName?: string; photoURL?: string | null } = {}
 ) {
+  const { displayName = 'Test User', photoURL = null } = options;
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
     {
@@ -39,8 +41,8 @@ export async function seedUserDocument(
         fields: {
           uid: { stringValue: uid },
           email: { stringValue: email },
-          displayName: { stringValue: 'Test User' },
-          photoURL: { nullValue: null },
+          displayName: { stringValue: displayName },
+          photoURL: photoURL ? { stringValue: photoURL } : { nullValue: null },
           coupleId: coupleId ? { stringValue: coupleId } : { nullValue: null },
           createdAt: { timestampValue: new Date().toISOString() },
         },
