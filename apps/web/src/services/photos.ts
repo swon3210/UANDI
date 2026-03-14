@@ -13,6 +13,7 @@ import {
   startAfter,
   serverTimestamp,
   Timestamp,
+  writeBatch,
   type DocumentSnapshot,
   type QueryConstraint,
 } from 'firebase/firestore';
@@ -154,6 +155,22 @@ export async function updatePhoto(
 export async function deletePhotoDoc(coupleId: string, photoId: string): Promise<void> {
   const docRef = doc(getDb(), `couples/${coupleId}/photos/${photoId}`);
   await deleteDoc(docRef);
+}
+
+// --- 일괄 이동 ---
+
+export async function movePhotosToFolder(
+  coupleId: string,
+  photoIds: string[],
+  targetFolderId: string
+): Promise<void> {
+  const db = getDb();
+  const batch = writeBatch(db);
+  photoIds.forEach((photoId) => {
+    const ref = doc(db, `couples/${coupleId}/photos/${photoId}`);
+    batch.update(ref, { folderId: targetFolderId });
+  });
+  await batch.commit();
 }
 
 // --- 사진 통계 (태그 집계 + 폴더별 사진 수 + 커버 URL) ---

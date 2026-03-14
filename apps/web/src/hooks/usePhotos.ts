@@ -10,6 +10,7 @@ import {
   addPhoto,
   updatePhoto,
   deletePhotoDoc,
+  movePhotosToFolder,
   type AddPhotoInput,
   type UpdatePhotoInput,
 } from '@/services/photos';
@@ -178,6 +179,19 @@ export function useUpdatePhoto(coupleId: string | null) {
       updatePhoto(coupleId!, photoId, updates),
     onSuccess: (_data, { photoId }) => {
       queryClient.invalidateQueries({ queryKey: ['photo', coupleId, photoId] });
+      queryClient.invalidateQueries({ queryKey: ['photos', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['photoStats', coupleId] });
+    },
+  });
+}
+
+export function useMovePhotos(coupleId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ photoIds, targetFolderId }: { photoIds: string[]; targetFolderId: string }) =>
+      movePhotosToFolder(coupleId!, photoIds, targetFolderId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos', coupleId] });
       queryClient.invalidateQueries({ queryKey: ['photoStats', coupleId] });
     },

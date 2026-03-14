@@ -24,6 +24,7 @@ import {
   useUploadPhotos,
 } from '@/hooks/usePhotos';
 import { useFolders, useCreateFolder } from '@/hooks/useFolders';
+import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { BottomNav } from '@/components/BottomNav';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderCard } from '@/components/photos/FolderCard';
@@ -31,7 +32,7 @@ import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
 import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import Link from 'next/link';
 
-function AllPhotosTab({ coupleId }: { coupleId: string }) {
+function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -74,7 +75,7 @@ function AllPhotosTab({ coupleId }: { coupleId: string }) {
 
   return (
     <div ref={scrollRef} className="overflow-y-auto flex-1">
-      <PhotoGrid photos={photos} />
+      <PhotoGrid photos={photos} uploaderAvatars={uploaderAvatars} />
       {isFetchingNextPage && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -210,6 +211,7 @@ export function PhotosGallery() {
   const { data: folders } = useFolders(coupleId);
   const { data: stats } = usePhotoStats(coupleId);
   const uploadMutation = useUploadPhotos();
+  const uploaderAvatars = useUploaderAvatars(coupleId);
 
   const tagSuggestions = stats?.tags.map((t) => t.name) ?? [];
 
@@ -278,7 +280,7 @@ export function PhotosGallery() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="flex-1 mt-0">
-            {coupleId && <AllPhotosTab coupleId={coupleId} />}
+            {coupleId && <AllPhotosTab coupleId={coupleId} uploaderAvatars={uploaderAvatars} />}
           </TabsContent>
           <TabsContent value="folders" className="flex-1 mt-0">
             {coupleId && <FoldersTab coupleId={coupleId} />}

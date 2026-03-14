@@ -32,6 +32,13 @@ type AuthContext = {
   coupleId: string;
 };
 
+type TwoUserAuthContext = {
+  page: Page;
+  uid1: string;
+  uid2: string;
+  coupleId: string;
+};
+
 type Fixtures = {
   // 로그인 O, coupleId 없음 → 온보딩 테스트용
   noCoupleAuthedPage: Page;
@@ -39,6 +46,8 @@ type Fixtures = {
   authedPage: Page;
   // authedPage와 동일하지만 uid, coupleId도 함께 제공
   authedContext: AuthContext;
+  // 두 유저의 uid를 모두 제공 (업로더 구분 테스트용)
+  twoUserAuthedContext: TwoUserAuthContext;
 };
 
 export const test = base.extend<Fixtures>({
@@ -88,5 +97,22 @@ export const test = base.extend<Fixtures>({
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
 
     await use({ page, uid: uid1, coupleId });
+  },
+
+  twoUserAuthedContext: async ({ page, context }, use) => {
+    await clearEmulatorData();
+    await context.clearCookies();
+
+    const uid1 = await createTestUser(EMAIL_1, PASSWORD);
+    const uid2 = await createTestUser(EMAIL_2, PASSWORD);
+    const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
+    await seedUserDocument(uid1, EMAIL_1, coupleId, { displayName: 'User 1', photoURL: 'https://example.com/user1.jpg' });
+    await seedUserDocument(uid2, EMAIL_2, coupleId, { displayName: 'User 2', photoURL: 'https://example.com/user2.jpg' });
+
+    await page.goto('/');
+    await signInOnPage(page, EMAIL_1, PASSWORD);
+    await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
+
+    await use({ page, uid1, uid2, coupleId });
   },
 });
