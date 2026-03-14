@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
+import { toast } from 'sonner';
+import dayjs from 'dayjs';
 import {
   Header,
   EmptyState,
@@ -16,12 +18,17 @@ import {
   Sheet,
 } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useInfinitePhotos, useTagSummary } from '@/hooks/usePhotos';
+import {
+  useInfinitePhotos,
+  usePhotoStats,
+  useUploadPhotos,
+} from '@/hooks/usePhotos';
 import { useFolders, useCreateFolder } from '@/hooks/useFolders';
 import { BottomNav } from '@/components/BottomNav';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderCard } from '@/components/photos/FolderCard';
 import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
+import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import Link from 'next/link';
 
 function AllPhotosTab({ coupleId }: { coupleId: string }) {
@@ -82,6 +89,7 @@ function AllPhotosTab({ coupleId }: { coupleId: string }) {
 function FoldersTab({ coupleId }: { coupleId: string }) {
   const { user } = useAuth();
   const { data: folders, isLoading } = useFolders(coupleId);
+  const { data: stats, error: statsError } = usePhotoStats(coupleId);
   const createMutation = useCreateFolder(coupleId);
 
   const handleCreateFolder = () => {
@@ -117,6 +125,11 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
           새 폴더
         </Button>
       </div>
+      {statsError && (
+        <p className="px-4 py-2 text-sm text-destructive">
+          통계 로드 실패: {statsError.message}
+        </p>
+      )}
       {!folders || folders.length === 0 ? (
         <EmptyState
           icon="📁"
@@ -134,8 +147,8 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
             <FolderCard
               key={folder.id}
               folder={folder}
-              coverUrl={null}
-              photoCount={0}
+              coverUrl={stats?.folderCovers[folder.id] ?? null}
+              photoCount={stats?.folderCounts[folder.id] ?? 0}
             />
           ))}
         </div>
@@ -145,7 +158,8 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
 }
 
 function TagsTab({ coupleId }: { coupleId: string }) {
-  const { data: tags, isLoading } = useTagSummary(coupleId);
+  const { data: stats, isLoading, error } = usePhotoStats(coupleId);
+  const tags = stats?.tags;
 
   if (isLoading) {
     return (
@@ -153,6 +167,16 @@ function TagsTab({ coupleId }: { coupleId: string }) {
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-8 w-20 rounded-full" />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <p className="text-sm text-destructive">
+          태그를 불러오지 못했어요: {error.message}
+        </p>
       </div>
     );
   }
@@ -183,13 +207,59 @@ function TagsTab({ coupleId }: { coupleId: string }) {
 export function PhotosGallery() {
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
+  const { data: folders } = useFolders(coupleId);
+  const { data: stats } = usePhotoStats(coupleId);
+  const uploadMutation = useUploadPhotos();
+
+  const tagSuggestions = stats?.tags.map((t) => t.name) ?? [];
+
+  const handleUpload = () => {
+    if (!user || !coupleId) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <PhotoUploadSheet
+          folders={folders ?? []}
+          tagSuggestions={tagSuggestions}
+          onSubmit={async (data, onProgress) => {
+            try {
+              await uploadMutation.mutateAsync({
+                files: data.files.map((f) => ({
+                  file: f.file,
+                  width: f.width,
+                  height: f.height,
+                })),
+                coupleId,
+                uploadedBy: user.uid,
+                folderId: data.folderId,
+                tags: data.tags,
+                caption: data.caption,
+                takenAt: dayjs(data.takenAt).toDate(),
+                onProgress,
+              });
+              close();
+              setTimeout(unmount, 300);
+            } catch {
+              toast.error('사진 업로드에 실패했어요. 다시 시도해주세요.');
+              throw new Error('upload failed');
+            }
+          }}
+        />
+      </Sheet>
+    ));
+  };
 
   return (
     <div className="flex min-h-screen flex-col pb-16 md:pb-0">
       <Header
         title="사진"
         rightSlot={
-          <Button variant="ghost" size="icon" disabled aria-label="사진 업로드">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleUpload}
+            aria-label="사진 업로드"
+            data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
+          >
             <Plus size={20} />
           </Button>
         }

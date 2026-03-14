@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "rm -rf .next && next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "next lint",
@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.66.0",
     "@uandi/ui": "workspace:*",
     "@uidotdev/usehooks": "^2.4.1",
+    "browser-image-compression": "^2.0.2",
     "dayjs": "^1.11.0",
     "firebase": "^11.3.1",
     "jotai": "^2.11.0",
