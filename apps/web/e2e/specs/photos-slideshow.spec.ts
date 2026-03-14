@@ -2,6 +2,19 @@ import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { seedFolder, seedPhoto } from '../helpers/emulator';
 
+// 탭 영역 클릭 헬퍼 — 화면 우측(다음) 또는 좌측(이전) 클릭
+async function clickRight(page: import('@playwright/test').Page) {
+  const viewport = page.viewportSize()!;
+  await page.getByTestId('slideshow-tap-zone').click({
+    position: { x: viewport.width - 50, y: viewport.height / 2 },
+  });
+}
+async function clickLeft(page: import('@playwright/test').Page) {
+  await page.getByTestId('slideshow-tap-zone').click({
+    position: { x: 50, y: page.viewportSize()!.height / 2 },
+  });
+}
+
 test.describe('슬라이드쇼', () => {
   test('폴더 상세에서 슬라이드쇼 진입 후 사진 전환이 동작한다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
@@ -25,16 +38,16 @@ test.describe('슬라이드쇼', () => {
     await expect(page.getByTestId('slideshow-folder-name')).toContainText('제주도 여행');
     await expect(page.getByTestId('slideshow-tags')).toContainText('#벚꽃');
 
-    // 다음 사진으로 전환
-    await page.getByTestId('slideshow-next-zone').click();
+    // 다음 사진으로 전환 (우측 클릭)
+    await clickRight(page);
     await expect(page.getByTestId('slideshow-position')).toHaveText(/2\s*\/\s*3/);
 
-    // 이전 사진으로 복귀
-    await page.getByTestId('slideshow-prev-zone').click();
+    // 이전 사진으로 복귀 (좌측 클릭)
+    await clickLeft(page);
     await expect(page.getByTestId('slideshow-position')).toHaveText(/1\s*\/\s*3/);
 
     // 첫 번째에서 이전 → 변화 없음
-    await page.getByTestId('slideshow-prev-zone').click();
+    await clickLeft(page);
     await expect(page.getByTestId('slideshow-position')).toHaveText(/1\s*\/\s*3/);
   });
 
@@ -88,6 +101,48 @@ test.describe('슬라이드쇼', () => {
       );
       expect(Number(restoredOpacity)).toBe(1);
     }).toPass({ timeout: 2000 });
+  });
+
+  test('마지막 사진에서 다음 탭 시 변화가 없다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const folderId = await seedFolder(coupleId, uid, { name: '폴더' });
+    await seedPhoto(coupleId, uid, { folderId });
+    await seedPhoto(coupleId, uid, { folderId });
+
+    await page.goto(`/photos/slideshow?source=folder&id=${folderId}`);
+    await page.waitForSelector('[data-testid="slideshow-container"]');
+
+    // 마지막 사진으로 이동 (우측 클릭)
+    await clickRight(page);
+    await expect(page.getByTestId('slideshow-position')).toHaveText(/2\s*\/\s*2/);
+
+    // 마지막에서 다음 → 변화 없음
+    await clickRight(page);
+    await expect(page.getByTestId('slideshow-position')).toHaveText(/2\s*\/\s*2/);
+  });
+
+  test('폴더명 클릭 시 폴더 상세 페이지로 이동한다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const folderId = await seedFolder(coupleId, uid, { name: '제주도 여행' });
+    await seedPhoto(coupleId, uid, { folderId });
+
+    await page.goto(`/photos/slideshow?source=folder&id=${folderId}`);
+    await page.waitForSelector('[data-testid="slideshow-container"]');
+
+    await page.getByTestId('slideshow-folder-name').click();
+    await expect(page).toHaveURL(new RegExp(`/photos/folder/${folderId}`));
+  });
+
+  test('태그 클릭 시 태그 상세 페이지로 이동한다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const folderId = await seedFolder(coupleId, uid, { name: '폴더' });
+    await seedPhoto(coupleId, uid, { folderId, tags: ['벚꽃'] });
+
+    await page.goto(`/photos/slideshow?source=folder&id=${folderId}`);
+    await page.waitForSelector('[data-testid="slideshow-container"]');
+
+    await page.getByTestId('slideshow-tags').getByText('#벚꽃').click();
+    await expect(page).toHaveURL(/\/photos\/tag\//);
   });
 
   test('태그 상세에서 슬라이드쇼 진입이 동작한다', async ({ authedContext }) => {

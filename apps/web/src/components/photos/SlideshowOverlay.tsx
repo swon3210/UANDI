@@ -30,7 +30,7 @@ export function SlideshowOverlay({
   return (
     <div
       data-testid="slideshow-overlay"
-      className={`pointer-events-none absolute inset-0 z-30 transition-opacity duration-300 ${
+      className={`pointer-events-none absolute inset-0 z-40 transition-opacity duration-300 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
     >
