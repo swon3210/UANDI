@@ -32,4 +32,49 @@ export {
   SheetDescription,
 } from './components/sheet';
 export { Input } from './components/input';
+export { Textarea } from './components/textarea';
 export { Separator } from './components/separator';
+export { Label } from './components/label';
+export { Progress } from './components/progress';
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+} from './components/select';
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from './components/dropdown-menu';
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './components/dialog';
+export {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  useFormField,
+} from './components/form';
+export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
+export { Toaster } from './components/sonner';

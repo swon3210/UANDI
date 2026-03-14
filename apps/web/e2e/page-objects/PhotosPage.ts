@@ -12,6 +12,16 @@ export class PhotosPage {
   readonly folderMenuBtn: Locator;
   readonly bottomNav: Locator;
 
+  // 업로드 관련
+  readonly uploadBtn: Locator;
+  readonly uploadSubmitBtn: Locator;
+
+  // 상세 페이지 관련
+  readonly detailImage: Locator;
+  readonly detailCaption: Locator;
+  readonly detailFolderLink: Locator;
+  readonly moreMenuBtn: Locator;
+
   constructor(page: Page) {
     this.page = page;
     this.header = page.locator('header');
@@ -23,10 +33,24 @@ export class PhotosPage {
     this.submitFolderBtn = page.getByRole('button', { name: '만들기' });
     this.folderMenuBtn = page.getByTestId('folder-menu-btn');
     this.bottomNav = page.getByTestId('bottom-nav');
+
+    // 업로드
+    this.uploadBtn = page.getByRole('button', { name: '사진 업로드' });
+    this.uploadSubmitBtn = page.getByTestId('upload-submit-btn');
+
+    // 상세
+    this.detailImage = page.getByTestId('photo-detail-image');
+    this.detailCaption = page.getByTestId('photo-caption');
+    this.detailFolderLink = page.getByTestId('photo-folder-link');
+    this.moreMenuBtn = page.getByTestId('photo-more-menu');
   }
 
   async goto() {
     await this.page.goto('/photos');
+  }
+
+  async gotoDetail(photoId: string) {
+    await this.page.goto(`/photos/${photoId}`);
   }
 
   async switchToTab(tab: 'all' | 'folders' | 'tags') {
@@ -48,5 +72,9 @@ export class PhotosPage {
 
   getEmptyStateTitle() {
     return this.page.locator('p.text-base.font-semibold');
+  }
+
+  getDetailTagLinks() {
+    return this.page.locator('[data-testid="photo-tags"] a');
   }
 }
