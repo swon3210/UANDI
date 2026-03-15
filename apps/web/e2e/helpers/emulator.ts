@@ -154,11 +154,75 @@ export async function seedFolder(
   return folderId;
 }
 
+export async function seedCashbookCategory(
+  coupleId: string,
+  options: {
+    group: string;
+    subGroup: string;
+    name: string;
+    icon: string;
+    color?: string;
+    isDefault?: boolean;
+    sortOrder?: number;
+  }
+): Promise<string> {
+  const categoryId = `cat-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookCategories/${categoryId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: categoryId },
+          coupleId: { stringValue: coupleId },
+          group: { stringValue: options.group },
+          subGroup: { stringValue: options.subGroup },
+          name: { stringValue: options.name },
+          icon: { stringValue: options.icon },
+          color: { stringValue: options.color ?? '#D8635A' },
+          isDefault: { booleanValue: options.isDefault ?? true },
+          sortOrder: { integerValue: String(options.sortOrder ?? 0) },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+
+  return categoryId;
+}
+
+export async function seedDefaultCategories(coupleId: string): Promise<void> {
+  const categories = [
+    // 수입
+    { group: 'income', subGroup: 'regular_income', name: '정기급여', icon: 'wallet', sortOrder: 0 },
+    { group: 'income', subGroup: 'regular_income', name: '상여', icon: 'gift', sortOrder: 1 },
+    { group: 'income', subGroup: 'irregular_income', name: '인센티브', icon: 'trophy', sortOrder: 0 },
+    { group: 'income', subGroup: 'irregular_income', name: '부업', icon: 'briefcase', sortOrder: 1 },
+    // 지출
+    { group: 'expense', subGroup: 'fixed_expense', name: '월세', icon: 'house', sortOrder: 0 },
+    { group: 'expense', subGroup: 'fixed_expense', name: '보험', icon: 'shield_check', sortOrder: 1 },
+    { group: 'expense', subGroup: 'variable_common', name: '식비', icon: 'bowl_food', sortOrder: 0 },
+    { group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', sortOrder: 0 },
+    // 재테크
+    { group: 'investment', subGroup: 'cash_holding', name: '예적금', icon: 'piggy_bank', sortOrder: 0 },
+    { group: 'investment', subGroup: 'investment', name: '국내주식', icon: 'chart_line_up', sortOrder: 0 },
+    // Flex
+    { group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', sortOrder: 0 },
+    { group: 'flex', subGroup: 'personal_flex', name: '소비', icon: 'shopping_bag', sortOrder: 0 },
+  ];
+
+  for (const cat of categories) {
+    await seedCashbookCategory(coupleId, cat);
+  }
+}
+
 export async function seedCashbookEntry(
   coupleId: string,
   createdBy: string,
   options: {
-    type: 'income' | 'expense';
+    type: 'income' | 'expense' | 'investment' | 'flex';
     amount: number;
     category?: string;
     description?: string;

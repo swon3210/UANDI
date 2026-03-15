@@ -87,6 +87,7 @@
 
   /* 도메인 */
   --color-income: hsl(var(--income));
+  --color-income-light: hsl(var(--income-light));
   --color-expense: hsl(var(--expense));
 
   /* 폰트 */
@@ -142,6 +143,7 @@
 
   /* 도메인 전용 */
   --income: 155 43% 49%; /* sage-400  = #4CAF86 */
+  --income-light: 155 44% 63%; /* sage-300  = #63C39F (비정기 수입) */
   --expense: 4 65% 58%; /* coral-500 = #D8635A */
 
   /* 레이아웃 상수 (CSS calc 참조용) */

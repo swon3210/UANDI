@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-query": "^5.66.0",
     "@uandi/ui": "workspace:*",
     "@uidotdev/usehooks": "^2.4.1",
