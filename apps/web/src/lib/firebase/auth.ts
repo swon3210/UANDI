@@ -1,6 +1,8 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  reauthenticateWithPopup,
+  deleteUser,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
 } from 'firebase/auth';
@@ -24,4 +26,21 @@ export async function signOut(): Promise<void> {
 
 export function onAuthStateChanged(callback: (user: FirebaseUser | null) => void): Unsubscribe {
   return firebaseOnAuthStateChanged(getAuth(), callback);
+}
+
+export async function deleteCurrentUser(): Promise<void> {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error('NOT_AUTHENTICATED');
+
+  try {
+    await deleteUser(user);
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'auth/requires-recent-login') {
+      await reauthenticateWithPopup(user, new GoogleAuthProvider());
+      await deleteUser(user);
+    } else {
+      throw error;
+    }
+  }
 }
