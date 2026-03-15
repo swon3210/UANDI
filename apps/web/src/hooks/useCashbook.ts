@@ -1,19 +1,32 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import { getMonthlyEntries } from '@/services/cashbook';
+import {
+  getMonthlyEntries,
+  addEntry,
+  updateEntry,
+  deleteEntry,
+} from '@/services/cashbook';
 import type { CashbookEntry } from '@/types';
 
-export function useMonthlyEntries(coupleId: string | null) {
-  const now = dayjs();
-  const year = now.year();
-  const month = now.month(); // 0-indexed
+const QUERY_KEY = 'cashbookEntries';
 
+export function useCashbookEntries(
+  coupleId: string | null,
+  year: number,
+  month: number
+) {
   return useQuery({
-    queryKey: ['monthlyEntries', coupleId, year, month],
+    queryKey: [QUERY_KEY, coupleId, year, month],
     queryFn: () => getMonthlyEntries(coupleId!, year, month),
     enabled: !!coupleId,
   });
+}
+
+export function useMonthlyEntries(coupleId: string | null) {
+  const now = dayjs();
+  return useCashbookEntries(coupleId, now.year(), now.month());
 }
 
 export type MonthlySummary = {
@@ -40,4 +53,66 @@ export function useMonthlySummary(entries: CashbookEntry[] | undefined): Monthly
 
     return { income, expense, balance: income - expense };
   }, [entries]);
+}
+
+export type GroupedEntries = {
+  date: Date;
+  entries: CashbookEntry[];
+};
+
+export function useGroupedEntries(
+  entries: CashbookEntry[] | undefined
+): GroupedEntries[] {
+  return useMemo(() => {
+    if (!entries || entries.length === 0) return [];
+
+    const groups = new Map<string, CashbookEntry[]>();
+    for (const entry of entries) {
+      const d = entry.date.toDate();
+      const key = dayjs(d).format('YYYY-MM-DD');
+      const list = groups.get(key) ?? [];
+      list.push(entry);
+      groups.set(key, list);
+    }
+
+    return Array.from(groups.entries())
+      .map(([key, items]) => ({ date: dayjs(key).toDate(), entries: items }))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [entries]);
+}
+
+export function useAddEntry(coupleId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'>) =>
+      addEntry(coupleId!, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
+  });
+}
+
+export function useUpdateEntry(coupleId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      entryId,
+      data,
+    }: {
+      entryId: string;
+      data: Partial<
+        Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>
+      >;
+    }) => updateEntry(coupleId!, entryId, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('내역 수정에 실패했어요. 다시 시도해주세요.'),
+  });
+}
+
+export function useDeleteEntry(coupleId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (entryId: string) => deleteEntry(coupleId!, entryId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('내역 삭제에 실패했어요. 다시 시도해주세요.'),
+  });
 }
