@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'storage.example.com', // E2E 테스트 시드 데이터용
       },
+      {
+        protocol: 'https',
+        hostname: '*.appspot.com', // 마이그레이션된 이미지 (기존 Firebase Storage)
+      },
     ],
   },
 };

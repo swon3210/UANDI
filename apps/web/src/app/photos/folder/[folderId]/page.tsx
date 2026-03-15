@@ -15,7 +15,7 @@ import { RenameFolderSheet } from '@/components/photos/RenameFolderSheet';
 import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/UploaderFilterChips';
 import { SelectionModeBar } from '@/components/photos/SelectionModeBar';
 import { MovePhotosSheet } from '@/components/photos/MovePhotosSheet';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function FolderDetailPage() {
   const params = useParams<{ folderId: string }>();
@@ -48,22 +48,22 @@ export default function FolderDetailPage() {
     return allPhotos.filter((p) => p.uploadedBy !== user?.uid);
   }, [data?.pages, uploaderFilter, user?.uid]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current || !hasNextPage || isFetchingNextPage) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = sentinelRef.current;
     if (!el) return;
-    el.addEventListener('scroll', handleScroll);
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleToggleSelect = (photoId: string) => {
     setSelectedIds((prev) => {
@@ -214,7 +214,7 @@ export default function FolderDetailPage() {
       {!isSelectMode && (
         <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />
       )}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
           {isLoading ? (
             <PhotoGrid photos={[]} isLoading />
@@ -240,6 +240,7 @@ export default function FolderDetailPage() {
                   ))}
                 </div>
               )}
+              <div ref={sentinelRef} className="h-1" />
             </>
           )}
         </div>

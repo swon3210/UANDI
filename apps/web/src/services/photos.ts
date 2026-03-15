@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   Timestamp,
   writeBatch,
+  getCountFromServer,
   type DocumentSnapshot,
   type QueryConstraint,
 } from 'firebase/firestore';
@@ -55,39 +56,71 @@ export async function getPhotos(
 export async function getPhotosByFolder(
   coupleId: string,
   folderId: string,
-  _cursor?: DocumentSnapshot
+  cursor?: DocumentSnapshot
 ): Promise<PhotoPage> {
-  // where + orderBy(다른 필드)는 복합 인덱스 필요 → where만 사용 후 클라이언트 정렬
-  const q = query(photosCol(coupleId), where('folderId', '==', folderId));
-  const snap = await getDocs(q);
-  const photos = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }) as Photo)
-    .sort((a, b) => {
-      const aTime = a.takenAt && 'toMillis' in a.takenAt ? a.takenAt.toMillis() : 0;
-      const bTime = b.takenAt && 'toMillis' in b.takenAt ? b.takenAt.toMillis() : 0;
-      return bTime - aTime;
-    });
+  // 복합 인덱스: folderId ASC + takenAt DESC (firestore.indexes.json)
+  const constraints: QueryConstraint[] = [
+    where('folderId', '==', folderId),
+    orderBy('takenAt', 'desc'),
+    limit(PAGE_SIZE),
+  ];
+  if (cursor) constraints.push(startAfter(cursor));
 
-  return { photos, lastDoc: null };
+  const q = query(photosCol(coupleId), ...constraints);
+  const snap = await getDocs(q);
+  const photos = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+
+  return { photos, lastDoc };
+}
+
+/** 폴더 내 전체 사진 (슬라이드쇼용) */
+export async function getAllPhotosByFolder(
+  coupleId: string,
+  folderId: string
+): Promise<Photo[]> {
+  const q = query(
+    photosCol(coupleId),
+    where('folderId', '==', folderId),
+    orderBy('takenAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
 }
 
 export async function getPhotosByTag(
   coupleId: string,
   tagName: string,
-  _cursor?: DocumentSnapshot
+  cursor?: DocumentSnapshot
 ): Promise<PhotoPage> {
-  // where(array-contains) + orderBy(다른 필드)는 복합 인덱스 필요 → where만 사용 후 클라이언트 정렬
-  const q = query(photosCol(coupleId), where('tags', 'array-contains', tagName));
-  const snap = await getDocs(q);
-  const photos = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }) as Photo)
-    .sort((a, b) => {
-      const aTime = a.takenAt && 'toMillis' in a.takenAt ? a.takenAt.toMillis() : 0;
-      const bTime = b.takenAt && 'toMillis' in b.takenAt ? b.takenAt.toMillis() : 0;
-      return bTime - aTime;
-    });
+  // 복합 인덱스: tags array-contains + takenAt DESC (firestore.indexes.json)
+  const constraints: QueryConstraint[] = [
+    where('tags', 'array-contains', tagName),
+    orderBy('takenAt', 'desc'),
+    limit(PAGE_SIZE),
+  ];
+  if (cursor) constraints.push(startAfter(cursor));
 
-  return { photos, lastDoc: null };
+  const q = query(photosCol(coupleId), ...constraints);
+  const snap = await getDocs(q);
+  const photos = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+
+  return { photos, lastDoc };
+}
+
+/** 태그별 전체 사진 (슬라이드쇼용) */
+export async function getAllPhotosByTag(
+  coupleId: string,
+  tagName: string
+): Promise<Photo[]> {
+  const q = query(
+    photosCol(coupleId),
+    where('tags', 'array-contains', tagName),
+    orderBy('takenAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
 }
 
 // --- 단건 조회 ---
@@ -182,30 +215,18 @@ export type PhotoStats = {
 };
 
 export async function getPhotoStats(coupleId: string): Promise<PhotoStats> {
-  // orderBy('takenAt', 'desc')로 최신 사진부터 → 첫 번째 매칭이 각 폴더 커버
-  const q = query(photosCol(coupleId), orderBy('takenAt', 'desc'));
+  // 태그 집계만 수행 — tags 필드가 비어있지 않은 문서만 조회
+  const q = query(photosCol(coupleId), where('tags', '!=', []));
   const snap = await getDocs(q);
 
   const tagMap = new Map<string, number>();
-  const folderCounts: Record<string, number> = {};
-  const folderCovers: Record<string, string> = {};
 
   snap.docs.forEach((d) => {
     const photo = d.data() as Photo;
-
-    // 태그 집계
     if (Array.isArray(photo.tags)) {
       photo.tags.forEach((tag) => {
         tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
       });
-    }
-
-    // 폴더별 사진 수 + 커버 (최신 사진)
-    if (photo.folderId) {
-      folderCounts[photo.folderId] = (folderCounts[photo.folderId] ?? 0) + 1;
-      if (!folderCovers[photo.folderId] && photo.storageUrl) {
-        folderCovers[photo.folderId] = photo.storageUrl;
-      }
     }
   });
 
@@ -213,5 +234,33 @@ export async function getPhotoStats(coupleId: string): Promise<PhotoStats> {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  return { tags, folderCounts, folderCovers };
+  return { tags, folderCounts: {}, folderCovers: {} };
+}
+
+// --- 개별 폴더 통계 (사진 수 + 커버) ---
+
+export type FolderStat = {
+  count: number;
+  coverUrl: string | null;
+};
+
+export async function getFolderStat(coupleId: string, folderId: string): Promise<FolderStat> {
+  const countQuery = query(photosCol(coupleId), where('folderId', '==', folderId));
+  const coverQuery = query(
+    photosCol(coupleId),
+    where('folderId', '==', folderId),
+    limit(1)
+  );
+
+  const [countSnap, coverSnap] = await Promise.all([
+    getCountFromServer(countQuery),
+    getDocs(coverQuery),
+  ]);
+
+  const coverPhoto = coverSnap.docs[0]?.data() as Photo | undefined;
+
+  return {
+    count: countSnap.data().count,
+    coverUrl: coverPhoto?.storageUrl ?? null,
+  };
 }
