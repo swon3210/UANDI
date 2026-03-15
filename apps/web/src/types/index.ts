@@ -101,3 +101,73 @@ export const INCOME_CATEGORIES = ['월급', '용돈', '부수입', '기타'] as 
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 export type IncomeCategory = (typeof INCOME_CATEGORIES)[number];
+
+export type AnnualPlan = {
+  id: string;
+  coupleId: string;
+  year: number;
+  createdBy: string;
+  updatedAt: Timestamp;
+  createdAt: Timestamp;
+};
+
+export type AnnualPlanItem = {
+  id: string;
+  planId: string;
+  coupleId: string;
+  categoryId: string;
+  group: CategoryGroup;
+  subGroup: CategorySubGroup;
+  annualAmount: number;
+  monthlyAmount: number | null;
+  targetMonths: number[] | null;
+  ownerUid: string | null;
+  updatedAt: Timestamp;
+};
+
+export type InvestmentPlan = {
+  id: string;
+  planId: string;
+  coupleId: string;
+  targetReturnRate: number;
+  totalAvailable: number;
+  targetAmount: number;
+  updatedAt: Timestamp;
+};
+
+// 투자 항목 (CashbookEntry 확장)
+export type InvestmentEntry = CashbookEntry & {
+  type: 'investment';
+  transactionType: 'buy' | 'sell';
+};
+
+// 월별 예산 스냅샷 (연간 계획에서 자동 생성)
+export type MonthlyBudget = {
+  id: string;
+  coupleId: string;
+  planId: string;
+  year: number;
+  month: number; // 1~12
+  items: MonthlyBudgetItem[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type MonthlyBudgetItem = {
+  categoryId: string;
+  group: CategoryGroup;
+  subGroup: CategorySubGroup;
+  budgetAmount: number;
+  ownerUid: string | null;
+};
+
+// 현금 보유 잔고 (월말 스냅샷)
+export type CashBalance = {
+  id: string;
+  coupleId: string;
+  categoryId: string;
+  year: number;
+  month: number;
+  balance: number;
+  updatedAt: Timestamp;
+};

@@ -218,6 +218,115 @@ export async function seedDefaultCategories(coupleId: string): Promise<void> {
   }
 }
 
+export async function seedAnnualPlan(
+  coupleId: string,
+  year: number,
+  createdBy: string
+): Promise<string> {
+  const planId = `plan-${year}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: planId },
+          coupleId: { stringValue: coupleId },
+          year: { integerValue: String(year) },
+          createdBy: { stringValue: createdBy },
+          updatedAt: { timestampValue: new Date().toISOString() },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+  return planId;
+}
+
+export async function seedAnnualPlanItem(
+  coupleId: string,
+  planId: string,
+  options: {
+    categoryId: string;
+    group: string;
+    subGroup: string;
+    annualAmount: number;
+    monthlyAmount?: number | null;
+    targetMonths?: number[] | null;
+    ownerUid?: string | null;
+  }
+): Promise<string> {
+  const itemId = `item-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+  const targetMonthsField = options.targetMonths
+    ? {
+        arrayValue: {
+          values: options.targetMonths.map((m) => ({ integerValue: String(m) })),
+        },
+      }
+    : { nullValue: null };
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/items/${itemId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: itemId },
+          planId: { stringValue: planId },
+          coupleId: { stringValue: coupleId },
+          categoryId: { stringValue: options.categoryId },
+          group: { stringValue: options.group },
+          subGroup: { stringValue: options.subGroup },
+          annualAmount: { integerValue: String(options.annualAmount) },
+          monthlyAmount:
+            options.monthlyAmount != null
+              ? { integerValue: String(options.monthlyAmount) }
+              : { nullValue: null },
+          targetMonths: targetMonthsField,
+          ownerUid: options.ownerUid
+            ? { stringValue: options.ownerUid }
+            : { nullValue: null },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+
+  return itemId;
+}
+
+export async function seedInvestmentPlan(
+  coupleId: string,
+  planId: string,
+  options: {
+    targetReturnRate: number;
+    totalAvailable: number;
+    targetAmount: number;
+  }
+): Promise<void> {
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/investmentPlan/main`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: 'main' },
+          planId: { stringValue: planId },
+          coupleId: { stringValue: coupleId },
+          targetReturnRate: { integerValue: String(options.targetReturnRate) },
+          totalAvailable: { integerValue: String(options.totalAvailable) },
+          targetAmount: { integerValue: String(options.targetAmount) },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
 export async function seedCashbookEntry(
   coupleId: string,
   createdBy: string,

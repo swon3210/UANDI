@@ -18,6 +18,7 @@ function entriesCol(coupleId: string) {
   return collection(getDb(), `couples/${coupleId}/cashbookEntries`);
 }
 
+/** @param month 0-indexed (0 = 1월). dayjs().month() 값을 그대로 전달. */
 export async function getMonthlyEntries(
   coupleId: string,
   year: number,
