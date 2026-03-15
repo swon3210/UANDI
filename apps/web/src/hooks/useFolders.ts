@@ -1,6 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { DocumentSnapshot } from 'firebase/firestore';
 import {
   getFolders,
+  getAllFolders,
   getFolder,
   createFolder,
   renameFolder,
@@ -8,10 +10,23 @@ import {
   getFolderPhotoCount,
 } from '@/services/folders';
 
+/** 페이지네이션된 폴더 목록 (폴더 탭용) */
+export function useInfiniteFolders(coupleId: string | null) {
+  return useInfiniteQuery({
+    queryKey: ['folders', coupleId],
+    queryFn: ({ pageParam }) => getFolders(coupleId!, pageParam),
+    initialPageParam: undefined as DocumentSnapshot | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.folders.length > 0 ? lastPage.lastDoc : undefined,
+    enabled: !!coupleId,
+  });
+}
+
+/** 전체 폴더 목록 (업로드 시트의 폴더 선택 등) */
 export function useFolders(coupleId: string | null) {
   return useQuery({
-    queryKey: ['folders', coupleId],
-    queryFn: () => getFolders(coupleId!),
+    queryKey: ['allFolders', coupleId],
+    queryFn: () => getAllFolders(coupleId!),
     enabled: !!coupleId,
   });
 }

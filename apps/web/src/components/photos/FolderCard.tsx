@@ -3,15 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FolderOpen } from 'lucide-react';
+import { Skeleton } from '@uandi/ui';
 import type { Folder } from '@/types';
+import { useFolderStat } from '@/hooks/usePhotos';
 
 type FolderCardProps = {
   folder: Folder;
-  coverUrl: string | null;
-  photoCount: number;
 };
 
-export function FolderCard({ folder, coverUrl, photoCount }: FolderCardProps) {
+export function FolderCard({ folder }: FolderCardProps) {
+  const { data: stat, isLoading } = useFolderStat(folder.coupleId, folder.id);
+
   return (
     <Link
       href={`/photos/folder/${folder.id}`}
@@ -19,9 +21,11 @@ export function FolderCard({ folder, coverUrl, photoCount }: FolderCardProps) {
       data-testid={`folder-card-${folder.id}`}
     >
       <div className="aspect-[16/10] relative bg-muted">
-        {coverUrl ? (
+        {isLoading ? (
+          <Skeleton className="absolute inset-0" />
+        ) : stat?.coverUrl ? (
           <Image
-            src={coverUrl}
+            src={stat.coverUrl}
             alt={folder.name}
             fill
             className="object-cover"
@@ -34,7 +38,7 @@ export function FolderCard({ folder, coverUrl, photoCount }: FolderCardProps) {
         )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
           <p className="text-sm font-semibold text-white">{folder.name}</p>
-          <p className="text-xs text-white/80">{photoCount}장</p>
+          <p className="text-xs text-white/80">{stat?.count ?? 0}장</p>
         </div>
       </div>
     </Link>

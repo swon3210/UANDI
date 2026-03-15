@@ -100,6 +100,7 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
           fill
           className="object-contain"
           sizes="100vw"
+          quality={90}
           priority
           data-testid="slideshow-image"
         />
@@ -112,6 +113,7 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
             fill
             className="invisible"
             sizes="100vw"
+            quality={90}
             priority
             aria-hidden
           />
@@ -123,6 +125,7 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
             fill
             className="invisible"
             sizes="100vw"
+            quality={90}
             priority
             aria-hidden
           />

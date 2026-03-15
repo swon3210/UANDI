@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
@@ -23,7 +23,7 @@ import {
   usePhotoStats,
   useUploadPhotos,
 } from '@/hooks/usePhotos';
-import { useFolders, useCreateFolder } from '@/hooks/useFolders';
+import { useFolders, useInfiniteFolders, useCreateFolder } from '@/hooks/useFolders';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { BottomNav } from '@/components/BottomNav';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
@@ -35,24 +35,24 @@ import Link from 'next/link';
 function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const photos = data?.pages.flatMap((p) => p.photos) ?? [];
 
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current || !hasNextPage || isFetchingNextPage) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = sentinelRef.current;
     if (!el) return;
-    el.addEventListener('scroll', handleScroll);
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) {
     return <PhotoGrid photos={[]} isLoading />;
@@ -74,7 +74,7 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
   }
 
   return (
-    <div ref={scrollRef} className="overflow-y-auto flex-1">
+    <div>
       <PhotoGrid photos={photos} uploaderAvatars={uploaderAvatars} />
       {isFetchingNextPage && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
@@ -83,15 +83,34 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
           ))}
         </div>
       )}
+      <div ref={sentinelRef} className="h-1" />
     </div>
   );
 }
 
 function FoldersTab({ coupleId }: { coupleId: string }) {
   const { user } = useAuth();
-  const { data: folders, isLoading } = useFolders(coupleId);
-  const { data: stats, error: statsError } = usePhotoStats(coupleId);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteFolders(coupleId);
   const createMutation = useCreateFolder(coupleId);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const folders = data?.pages.flatMap((p) => p.folders) ?? [];
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleCreateFolder = () => {
     overlay.open(({ isOpen, close, unmount }) => (
@@ -126,12 +145,7 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
           새 폴더
         </Button>
       </div>
-      {statsError && (
-        <p className="px-4 py-2 text-sm text-destructive">
-          통계 로드 실패: {statsError.message}
-        </p>
-      )}
-      {!folders || folders.length === 0 ? (
+      {folders.length === 0 ? (
         <EmptyState
           icon="📁"
           title="폴더를 만들어 사진을 정리해보세요"
@@ -148,12 +162,18 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
             <FolderCard
               key={folder.id}
               folder={folder}
-              coverUrl={stats?.folderCovers[folder.id] ?? null}
-              photoCount={stats?.folderCounts[folder.id] ?? 0}
             />
           ))}
         </div>
       )}
+      {isFetchingNextPage && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-xl" />
+          ))}
+        </div>
+      )}
+      <div ref={sentinelRef} className="h-1" />
     </div>
   );
 }
@@ -208,8 +228,10 @@ function TagsTab({ coupleId }: { coupleId: string }) {
 export function PhotosGallery() {
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
+  const [activeTab, setActiveTab] = useState('all');
   const { data: folders } = useFolders(coupleId);
-  const { data: stats } = usePhotoStats(coupleId);
+  const needStats = activeTab === 'folders' || activeTab === 'tags';
+  const { data: stats } = usePhotoStats(needStats ? coupleId : null);
   const uploadMutation = useUploadPhotos();
   const uploaderAvatars = useUploaderAvatars(coupleId);
 
@@ -267,7 +289,7 @@ export function PhotosGallery() {
         }
       />
       <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
-        <Tabs defaultValue="all" className="flex-1 flex flex-col">
+        <Tabs defaultValue="all" onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <TabsList className="w-full rounded-none bg-background h-11">
             <TabsTrigger value="all" className="flex-1" data-testid="tab-all">
               전체

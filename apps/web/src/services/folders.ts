@@ -9,8 +9,11 @@ import {
   query,
   orderBy,
   where,
+  limit,
+  startAfter,
   serverTimestamp,
   getCountFromServer,
+  type DocumentSnapshot,
 } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
 import type { Folder } from '@/types';
@@ -19,7 +22,30 @@ function foldersCol(coupleId: string) {
   return collection(getDb(), `couples/${coupleId}/folders`);
 }
 
-export async function getFolders(coupleId: string): Promise<Folder[]> {
+const FOLDER_PAGE_SIZE = 20;
+
+export type FolderPage = {
+  folders: Folder[];
+  lastDoc: DocumentSnapshot | null;
+};
+
+export async function getFolders(
+  coupleId: string,
+  cursor?: DocumentSnapshot
+): Promise<FolderPage> {
+  const constraints = [orderBy('createdAt', 'desc'), limit(FOLDER_PAGE_SIZE)];
+  if (cursor) constraints.push(startAfter(cursor));
+
+  const q = query(foldersCol(coupleId), ...constraints);
+  const snap = await getDocs(q);
+  const folders = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Folder);
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+
+  return { folders, lastDoc };
+}
+
+/** 전체 폴더 목록 (업로드 시트 등에서 사용) */
+export async function getAllFolders(coupleId: string): Promise<Folder[]> {
   const q = query(foldersCol(coupleId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Folder);

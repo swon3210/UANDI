@@ -11,6 +11,9 @@ import {
   updatePhoto,
   deletePhotoDoc,
   movePhotosToFolder,
+  getFolderStat,
+  getAllPhotosByFolder,
+  getAllPhotosByTag,
   type AddPhotoInput,
   type UpdatePhotoInput,
 } from '@/services/photos';
@@ -87,6 +90,32 @@ export function useFolderPhotoCounts(coupleId: string | null) {
 export function useFolderCovers(coupleId: string | null) {
   const { data: stats, ...rest } = usePhotoStats(coupleId);
   return { data: stats?.folderCovers, ...rest };
+}
+
+/** 폴더 내 전체 사진 (슬라이드쇼용) */
+export function useAllPhotosByFolder(coupleId: string | null, folderId: string | null) {
+  return useQuery({
+    queryKey: ['allPhotos', coupleId, 'folder', folderId],
+    queryFn: () => getAllPhotosByFolder(coupleId!, folderId!),
+    enabled: !!coupleId && !!folderId,
+  });
+}
+
+/** 태그별 전체 사진 (슬라이드쇼용) */
+export function useAllPhotosByTag(coupleId: string | null, tagName: string | null) {
+  return useQuery({
+    queryKey: ['allPhotos', coupleId, 'tag', tagName],
+    queryFn: () => getAllPhotosByTag(coupleId!, tagName!),
+    enabled: !!coupleId && !!tagName,
+  });
+}
+
+export function useFolderStat(coupleId: string | null, folderId: string | null) {
+  return useQuery({
+    queryKey: ['folderStat', coupleId, folderId],
+    queryFn: () => getFolderStat(coupleId!, folderId!),
+    enabled: !!coupleId && !!folderId,
+  });
 }
 
 // --- Mutations ---

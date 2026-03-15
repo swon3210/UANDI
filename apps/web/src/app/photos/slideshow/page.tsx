@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useEffect, useRef } from 'react';
 import { FullScreenSpinner } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { usePhotosByFolder, usePhotosByTag } from '@/hooks/usePhotos';
+import { useAllPhotosByFolder, useAllPhotosByTag } from '@/hooks/usePhotos';
 import { useFolder } from '@/hooks/useFolders';
 import { SlideshowView } from '@/components/photos/SlideshowView';
 
@@ -20,11 +20,11 @@ function SlideshowContent() {
   const isFolderSource = source === 'folder';
   const isTagSource = source === 'tag';
 
-  const folderQuery = usePhotosByFolder(
+  const folderQuery = useAllPhotosByFolder(
     isFolderSource ? coupleId : null,
     isFolderSource ? id : null
   );
-  const tagQuery = usePhotosByTag(
+  const tagQuery = useAllPhotosByTag(
     isTagSource ? coupleId : null,
     isTagSource ? id : null
   );
@@ -34,7 +34,7 @@ function SlideshowContent() {
   );
 
   const activeQuery = isFolderSource ? folderQuery : tagQuery;
-  const photos = activeQuery.data?.pages.flatMap((p) => p.photos) ?? [];
+  const photos = activeQuery.data ?? [];
   const isFetched = activeQuery.isFetched;
 
   const hasRedirected = useRef(false);
