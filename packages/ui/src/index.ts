@@ -80,3 +80,4 @@ export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
 export { Toaster } from './components/sonner';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
 export { Checkbox } from './components/checkbox';
+export { Slider } from './components/slider';
