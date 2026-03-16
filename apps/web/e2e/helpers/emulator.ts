@@ -59,7 +59,12 @@ type SeedCoupleOptions = {
 };
 
 export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
-  const { uid, inviteCode = 'TEST99', expiresInMs = 48 * 60 * 60 * 1000, secondMemberUid } = options;
+  const {
+    uid,
+    inviteCode = 'TEST99',
+    expiresInMs = 48 * 60 * 60 * 1000,
+    secondMemberUid,
+  } = options;
   const coupleId = `couple-test-${Date.now()}`;
   const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
 
@@ -198,16 +203,52 @@ export async function seedDefaultCategories(coupleId: string): Promise<void> {
     // 수입
     { group: 'income', subGroup: 'regular_income', name: '정기급여', icon: 'wallet', sortOrder: 0 },
     { group: 'income', subGroup: 'regular_income', name: '상여', icon: 'gift', sortOrder: 1 },
-    { group: 'income', subGroup: 'irregular_income', name: '인센티브', icon: 'trophy', sortOrder: 0 },
-    { group: 'income', subGroup: 'irregular_income', name: '부업', icon: 'briefcase', sortOrder: 1 },
+    {
+      group: 'income',
+      subGroup: 'irregular_income',
+      name: '인센티브',
+      icon: 'trophy',
+      sortOrder: 0,
+    },
+    {
+      group: 'income',
+      subGroup: 'irregular_income',
+      name: '부업',
+      icon: 'briefcase',
+      sortOrder: 1,
+    },
     // 지출
     { group: 'expense', subGroup: 'fixed_expense', name: '월세', icon: 'house', sortOrder: 0 },
-    { group: 'expense', subGroup: 'fixed_expense', name: '보험', icon: 'shield_check', sortOrder: 1 },
-    { group: 'expense', subGroup: 'variable_common', name: '식비', icon: 'bowl_food', sortOrder: 0 },
+    {
+      group: 'expense',
+      subGroup: 'fixed_expense',
+      name: '보험',
+      icon: 'shield_check',
+      sortOrder: 1,
+    },
+    {
+      group: 'expense',
+      subGroup: 'variable_common',
+      name: '식비',
+      icon: 'bowl_food',
+      sortOrder: 0,
+    },
     { group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', sortOrder: 0 },
     // 재테크
-    { group: 'investment', subGroup: 'cash_holding', name: '예적금', icon: 'piggy_bank', sortOrder: 0 },
-    { group: 'investment', subGroup: 'investment', name: '국내주식', icon: 'chart_line_up', sortOrder: 0 },
+    {
+      group: 'investment',
+      subGroup: 'cash_holding',
+      name: '예적금',
+      icon: 'piggy_bank',
+      sortOrder: 0,
+    },
+    {
+      group: 'investment',
+      subGroup: 'investment',
+      name: '국내주식',
+      icon: 'chart_line_up',
+      sortOrder: 0,
+    },
     // Flex
     { group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', sortOrder: 0 },
     { group: 'flex', subGroup: 'personal_flex', name: '소비', icon: 'shopping_bag', sortOrder: 0 },
@@ -286,9 +327,7 @@ export async function seedAnnualPlanItem(
               ? { integerValue: String(options.monthlyAmount) }
               : { nullValue: null },
           targetMonths: targetMonthsField,
-          ownerUid: options.ownerUid
-            ? { stringValue: options.ownerUid }
-            : { nullValue: null },
+          ownerUid: options.ownerUid ? { stringValue: options.ownerUid } : { nullValue: null },
           updatedAt: { timestampValue: new Date().toISOString() },
         },
       }),
@@ -327,6 +366,37 @@ export async function seedInvestmentPlan(
   );
 }
 
+export async function seedCashBalance(
+  coupleId: string,
+  options: {
+    categoryId: string;
+    year: number;
+    month: number; // 1~12
+    balance: number;
+  }
+): Promise<string> {
+  const balanceId = `${options.categoryId}-${options.year}-${options.month}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashBalances/${balanceId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: balanceId },
+          coupleId: { stringValue: coupleId },
+          categoryId: { stringValue: options.categoryId },
+          year: { integerValue: String(options.year) },
+          month: { integerValue: String(options.month) },
+          balance: { integerValue: String(options.balance) },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+  return balanceId;
+}
+
 export async function seedCashbookEntry(
   coupleId: string,
   createdBy: string,
@@ -336,29 +406,34 @@ export async function seedCashbookEntry(
     category?: string;
     description?: string;
     date?: string;
+    transactionType?: 'buy' | 'sell';
   }
 ): Promise<string> {
   const entryId = `entry-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const date = options.date ?? new Date().toISOString();
+
+  const fields: Record<string, unknown> = {
+    id: { stringValue: entryId },
+    coupleId: { stringValue: coupleId },
+    createdBy: { stringValue: createdBy },
+    type: { stringValue: options.type },
+    amount: { integerValue: String(options.amount) },
+    category: { stringValue: options.category ?? '기타' },
+    description: { stringValue: options.description ?? '' },
+    date: { timestampValue: date },
+    createdAt: { timestampValue: new Date().toISOString() },
+  };
+
+  if (options.transactionType) {
+    fields.transactionType = { stringValue: options.transactionType };
+  }
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          id: { stringValue: entryId },
-          coupleId: { stringValue: coupleId },
-          createdBy: { stringValue: createdBy },
-          type: { stringValue: options.type },
-          amount: { integerValue: String(options.amount) },
-          category: { stringValue: options.category ?? '기타' },
-          description: { stringValue: options.description ?? '' },
-          date: { timestampValue: date },
-          createdAt: { timestampValue: new Date().toISOString() },
-        },
-      }),
+      body: JSON.stringify({ fields }),
     }
   );
 

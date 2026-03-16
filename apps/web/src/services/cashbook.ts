@@ -39,7 +39,7 @@ export async function getMonthlyEntries(
 
 export async function addEntry(
   coupleId: string,
-  data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'>
+  data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
 ): Promise<string> {
   const docRef = await addDoc(entriesCol(coupleId), {
     ...data,
