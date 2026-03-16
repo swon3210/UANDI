@@ -33,10 +33,9 @@ export async function getFolders(
   coupleId: string,
   cursor?: DocumentSnapshot
 ): Promise<FolderPage> {
-  const constraints = [orderBy('createdAt', 'desc'), limit(FOLDER_PAGE_SIZE)];
-  if (cursor) constraints.push(startAfter(cursor));
-
-  const q = query(foldersCol(coupleId), ...constraints);
+  const q = cursor
+    ? query(foldersCol(coupleId), orderBy('createdAt', 'desc'), startAfter(cursor), limit(FOLDER_PAGE_SIZE))
+    : query(foldersCol(coupleId), orderBy('createdAt', 'desc'), limit(FOLDER_PAGE_SIZE));
   const snap = await getDocs(q);
   const folders = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Folder);
   const lastDoc = snap.docs[snap.docs.length - 1] ?? null;

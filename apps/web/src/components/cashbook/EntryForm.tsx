@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/incompatible-library -- RHF watch() is known-incompatible with React Compiler */
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -35,7 +36,7 @@ import type { CategorySubGroup } from '@/types';
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'investment', 'flex'];
 
 const schema = z.object({
-  amount: z.number({ invalid_type_error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),
+  amount: z.number({ error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),
   category: z.string().min(1, '카테고리를 선택해주세요'),
   date: z.string().min(1),
   description: z.string(),

@@ -22,7 +22,7 @@ import { CategoryIcon } from './CategoryIcon';
 const schema = z.object({
   balances: z.array(z.object({
     categoryId: z.string(),
-    balance: z.number({ invalid_type_error: '금액을 입력해주세요' }).min(0, '0 이상 입력해주세요'),
+    balance: z.number({ error: '금액을 입력해주세요' }).min(0, '0 이상 입력해주세요'),
   })),
 });
 

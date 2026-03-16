@@ -439,3 +439,50 @@ export async function seedCashbookEntry(
 
   return entryId;
 }
+
+export async function seedNotificationSettings(
+  userId: string,
+  options: {
+    coupleId: string;
+    recordReminderEnabled?: boolean;
+    recordReminderTime?: string;
+    recordReminderDays?: number[];
+    budgetWarningEnabled?: boolean;
+  }
+): Promise<void> {
+  const days = options.recordReminderDays ?? [1, 2, 3, 4, 5];
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/settings/notifications`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          coupleId: { stringValue: options.coupleId },
+          userId: { stringValue: userId },
+          recordReminder: {
+            mapValue: {
+              fields: {
+                enabled: { booleanValue: options.recordReminderEnabled ?? true },
+                time: { stringValue: options.recordReminderTime ?? '21:00' },
+                days: {
+                  arrayValue: {
+                    values: days.map((d) => ({ integerValue: String(d) })),
+                  },
+                },
+              },
+            },
+          },
+          budgetWarning: {
+            mapValue: {
+              fields: {
+                enabled: { booleanValue: options.budgetWarningEnabled ?? true },
+              },
+            },
+          },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}

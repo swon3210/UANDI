@@ -21,8 +21,15 @@ const config: StorybookConfig = {
       'next/link': path.resolve(__dirname, '__mocks__/next-link.tsx'),
       'next/image': path.resolve(__dirname, '__mocks__/next-image.tsx'),
       'firebase/firestore': path.resolve(__dirname, '__mocks__/firebase-firestore.ts'),
+      'dayjs/plugin/isoWeek': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
+      'dayjs/locale/ko': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
       'dayjs': path.resolve(__dirname, '__mocks__/dayjs.ts'),
       '@': path.resolve(__dirname, '../../../apps/web/src'),
+    };
+    // Next.js uses process.env for env vars — polyfill for Vite/Storybook
+    config.define = {
+      ...config.define,
+      'process.env': JSON.stringify({}),
     };
     return config;
   },
