@@ -89,6 +89,7 @@
   --color-income: hsl(var(--income));
   --color-income-light: hsl(var(--income-light));
   --color-expense: hsl(var(--expense));
+  --color-warning: hsl(var(--warning));
 
   /* 폰트 */
   --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
@@ -145,6 +146,7 @@
   --income: 155 43% 49%; /* sage-400  = #4CAF86 */
   --income-light: 155 44% 63%; /* sage-300  = #63C39F (비정기 수입) */
   --expense: 4 65% 58%; /* coral-500 = #D8635A */
+  --warning: 45 93% 47%; /* amber — 예산 소진 임박 경고 */
 
   /* 레이아웃 상수 (CSS calc 참조용) */
   --header-h: 3.5rem; /* 56px */

@@ -84,8 +84,9 @@ export function useGroupedEntries(
 export function useAddEntry(coupleId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'>) =>
-      addEntry(coupleId!, data),
+    mutationFn: (
+      data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
+    ) => addEntry(coupleId!, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
     onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
   });
