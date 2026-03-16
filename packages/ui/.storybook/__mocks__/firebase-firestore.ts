@@ -24,19 +24,41 @@ export class Timestamp {
 }
 
 // Query constraints
-export function limit() { return {}; }
-export function where() { return {}; }
-export function orderBy() { return {}; }
-export function startAfter() { return {}; }
-export function endBefore() { return {}; }
-export function startAt() { return {}; }
-export function endAt() { return {}; }
-export function limitToLast() { return {}; }
+export function limit() {
+  return {};
+}
+export function where() {
+  return {};
+}
+export function orderBy() {
+  return {};
+}
+export function startAfter() {
+  return {};
+}
+export function endBefore() {
+  return {};
+}
+export function startAt() {
+  return {};
+}
+export function endAt() {
+  return {};
+}
+export function limitToLast() {
+  return {};
+}
 
 // Document/collection references
-export function collection() { return {}; }
-export function doc() { return {}; }
-export function query() { return {}; }
+export function collection() {
+  return {};
+}
+export function doc() {
+  return {};
+}
+export function query() {
+  return {};
+}
 
 // CRUD operations
 export function getDocs() {
@@ -45,24 +67,46 @@ export function getDocs() {
 export function getDoc() {
   return Promise.resolve({ exists: () => false, data: () => null, id: '' });
 }
-export function setDoc() { return Promise.resolve(); }
-export function updateDoc() { return Promise.resolve(); }
-export function deleteDoc() { return Promise.resolve(); }
-export function addDoc() { return Promise.resolve({ id: 'mock-id' }); }
+export function setDoc() {
+  return Promise.resolve();
+}
+export function updateDoc() {
+  return Promise.resolve();
+}
+export function deleteDoc() {
+  return Promise.resolve();
+}
+export function addDoc() {
+  return Promise.resolve({ id: 'mock-id' });
+}
 
 // Emulator
 export function connectFirestoreEmulator() {}
-export function getFirestore() { return {}; }
+export function getFirestore() {
+  return {};
+}
 
 // Field values
-export function serverTimestamp() { return {}; }
-export function arrayUnion() { return {}; }
-export function arrayRemove() { return {}; }
-export function increment() { return {}; }
-export function deleteField() { return {}; }
+export function serverTimestamp() {
+  return {};
+}
+export function arrayUnion() {
+  return {};
+}
+export function arrayRemove() {
+  return {};
+}
+export function increment() {
+  return {};
+}
+export function deleteField() {
+  return {};
+}
 
 // Snapshot listeners
-export function onSnapshot() { return () => {}; }
+export function onSnapshot() {
+  return () => {};
+}
 
 // Aggregation
 export function getCountFromServer() {
@@ -73,4 +117,6 @@ export function getCountFromServer() {
 export function writeBatch() {
   return { set: () => {}, update: () => {}, delete: () => {}, commit: () => Promise.resolve() };
 }
-export function runTransaction() { return Promise.resolve(); }
+export function runTransaction() {
+  return Promise.resolve();
+}

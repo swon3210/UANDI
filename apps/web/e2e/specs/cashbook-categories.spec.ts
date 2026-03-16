@@ -94,9 +94,7 @@ test.describe('카테고리 설정', () => {
       await expect(categoriesPage.categoryItem('인센티브')).not.toBeVisible();
     });
 
-    test('사용 중인 카테고리 삭제 시 확인 다이얼로그가 표시된다', async ({
-      authedContext,
-    }) => {
+    test('사용 중인 카테고리 삭제 시 확인 다이얼로그가 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       // 정기급여 카테고리를 사용하는 항목 생성

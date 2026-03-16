@@ -3,11 +3,7 @@
 import { Progress, Badge } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import type { BudgetStatus } from '@/hooks/useMonthlyBudget';
-import {
-  getStatusLabel,
-  getStatusEmoji,
-  getStatusColor,
-} from '@/hooks/useMonthlyBudget';
+import { getStatusLabel, getStatusEmoji, getStatusColor } from '@/hooks/useMonthlyBudget';
 
 const EXPENSE_PROGRESS_CLASS: Record<BudgetStatus, string> = {
   stable: 'h-2.5 [&>div]:bg-income',
@@ -34,12 +30,10 @@ export function MonthlyOverview({
   margin,
   status,
 }: MonthlyOverviewProps) {
-  const incomePercent = incomeBudget > 0
-    ? Math.min(Math.round((incomeActual / incomeBudget) * 100), 100)
-    : 0;
-  const expensePercent = expenseBudget > 0
-    ? Math.min(Math.round((expenseActual / expenseBudget) * 100), 100)
-    : 0;
+  const incomePercent =
+    incomeBudget > 0 ? Math.min(Math.round((incomeActual / incomeBudget) * 100), 100) : 0;
+  const expensePercent =
+    expenseBudget > 0 ? Math.min(Math.round((expenseActual / expenseBudget) * 100), 100) : 0;
 
   return (
     <div
@@ -69,10 +63,7 @@ export function MonthlyOverview({
           <span className="text-sm text-muted-foreground">지출</span>
           <span className="text-xs text-muted-foreground">{expensePercent}%</span>
         </div>
-        <Progress
-          value={expensePercent}
-          className={EXPENSE_PROGRESS_CLASS[status]}
-        />
+        <Progress value={expensePercent} className={EXPENSE_PROGRESS_CLASS[status]} />
         <div className="flex justify-end">
           <span className="text-sm tabular-nums">
             <span className={`font-semibold ${getStatusColor(status)}`}>
@@ -87,9 +78,7 @@ export function MonthlyOverview({
       <div className="border-t border-border pt-3 space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">잔액</span>
-          <span className="text-sm font-semibold tabular-nums">
-            {formatCurrency(balance)}
-          </span>
+          <span className="text-sm font-semibold tabular-nums">{formatCurrency(balance)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">여유분</span>
@@ -99,11 +88,7 @@ export function MonthlyOverview({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">상태</span>
-          <Badge
-            variant="outline"
-            className={getStatusColor(status)}
-            data-testid="budget-status"
-          >
+          <Badge variant="outline" className={getStatusColor(status)} data-testid="budget-status">
             {getStatusEmoji(status)} {getStatusLabel(status)}
           </Badge>
         </div>

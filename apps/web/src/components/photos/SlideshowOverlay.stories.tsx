@@ -35,7 +35,8 @@ const meta: Meta<typeof SlideshowOverlay> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: '슬라이드쇼 상단/하단 오버레이. 닫기, 캡션 토글, 폴더명, 태그, 위치 정보를 표시합니다.',
+        component:
+          '슬라이드쇼 상단/하단 오버레이. 닫기, 캡션 토글, 폴더명, 태그, 위치 정보를 표시합니다.',
       },
     },
   },

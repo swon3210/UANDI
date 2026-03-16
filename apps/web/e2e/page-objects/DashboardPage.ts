@@ -20,11 +20,18 @@ export class DashboardPage {
     this.header = page.getByTestId('dashboard-header');
     this.bottomNav = page.getByTestId('bottom-nav');
     this.recentPhotosSection = page.getByTestId('recent-photos');
-    this.recentPhotosViewAll = page.getByTestId('recent-photos').getByRole('link', { name: '전체 보기' });
+    this.recentPhotosViewAll = page
+      .getByTestId('recent-photos')
+      .getByRole('link', { name: '전체 보기' });
     this.photoThumbnails = page.getByTestId('recent-photos').getByTestId('photo-thumbnail');
-    this.uploadButton = page.getByTestId('recent-photos').getByTestId('photo-upload-placeholder').first();
+    this.uploadButton = page
+      .getByTestId('recent-photos')
+      .getByTestId('photo-upload-placeholder')
+      .first();
     this.monthlySummarySection = page.getByTestId('monthly-summary');
-    this.cashbookViewAll = page.getByTestId('monthly-summary').getByRole('link', { name: '전체 보기' });
+    this.cashbookViewAll = page
+      .getByTestId('monthly-summary')
+      .getByRole('link', { name: '전체 보기' });
     this.incomeAmount = page.getByTestId('summary-income');
     this.expenseAmount = page.getByTestId('summary-expense');
     this.balanceAmount = page.getByTestId('summary-balance');

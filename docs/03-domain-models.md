@@ -160,10 +160,10 @@ const INCOME_CATEGORIES = ['월급', '용돈', '부수입', '기타'] as const;
 
 ## 인덱스 요구사항
 
-| 컬렉션          | 인덱스 필드                            | 용도               |
-| --------------- | -------------------------------------- | ------------------ |
-| photos          | `coupleId ASC`, `takenAt DESC`         | 갤러리 시간순 정렬 |
-| photos          | `coupleId ASC`, `folderId ASC`, `takenAt DESC` | 폴더별 사진 조회 |
-| photos          | `coupleId ASC`, `tags ARRAY_CONTAINS`, `takenAt DESC` | 태그별 사진 조회 |
-| cashbookEntries | `coupleId ASC`, `date DESC`            | 가계부 최신순      |
-| cashbookEntries | `coupleId ASC`, `date ASC` (월 필터용) | 월별 조회          |
+| 컬렉션          | 인덱스 필드                                           | 용도               |
+| --------------- | ----------------------------------------------------- | ------------------ |
+| photos          | `coupleId ASC`, `takenAt DESC`                        | 갤러리 시간순 정렬 |
+| photos          | `coupleId ASC`, `folderId ASC`, `takenAt DESC`        | 폴더별 사진 조회   |
+| photos          | `coupleId ASC`, `tags ARRAY_CONTAINS`, `takenAt DESC` | 태그별 사진 조회   |
+| cashbookEntries | `coupleId ASC`, `date DESC`                           | 가계부 최신순      |
+| cashbookEntries | `coupleId ASC`, `date ASC` (월 필터용)                | 월별 조회          |

@@ -29,7 +29,10 @@ export function MonthlyIncomeTab({
   // 카테고리 이름으로 실제 입력 여부 확인
   const actualByCategory = new Map<string, number>();
   for (const entry of incomeEntries) {
-    actualByCategory.set(entry.category, (actualByCategory.get(entry.category) ?? 0) + entry.amount);
+    actualByCategory.set(
+      entry.category,
+      (actualByCategory.get(entry.category) ?? 0) + entry.amount
+    );
   }
 
   const planTotal = incomeBudgets.reduce((sum, b) => sum + b.budgetAmount, 0);
@@ -113,11 +116,7 @@ export function MonthlyIncomeTab({
               </div>
             ))}
           <div className="p-3">
-            <Button
-              variant="ghost"
-              className="w-full text-sm"
-              onClick={onAddIrregularIncome}
-            >
+            <Button variant="ghost" className="w-full text-sm" onClick={onAddIrregularIncome}>
               <Plus size={16} className="mr-1" />
               비정기 수입 추가
             </Button>

@@ -2,21 +2,12 @@ import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import {
-  getMonthlyEntries,
-  addEntry,
-  updateEntry,
-  deleteEntry,
-} from '@/services/cashbook';
+import { getMonthlyEntries, addEntry, updateEntry, deleteEntry } from '@/services/cashbook';
 import type { CashbookEntry } from '@/types';
 
 const QUERY_KEY = 'cashbookEntries';
 
-export function useCashbookEntries(
-  coupleId: string | null,
-  year: number,
-  month: number
-) {
+export function useCashbookEntries(coupleId: string | null, year: number, month: number) {
   return useQuery({
     queryKey: [QUERY_KEY, coupleId, year, month],
     queryFn: () => getMonthlyEntries(coupleId!, year, month),
@@ -60,9 +51,7 @@ export type GroupedEntries = {
   entries: CashbookEntry[];
 };
 
-export function useGroupedEntries(
-  entries: CashbookEntry[] | undefined
-): GroupedEntries[] {
+export function useGroupedEntries(entries: CashbookEntry[] | undefined): GroupedEntries[] {
   return useMemo(() => {
     if (!entries || entries.length === 0) return [];
 
@@ -100,9 +89,7 @@ export function useUpdateEntry(coupleId: string | null) {
       data,
     }: {
       entryId: string;
-      data: Partial<
-        Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>
-      >;
+      data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>;
     }) => updateEntry(coupleId!, entryId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
     onError: () => toast.error('내역 수정에 실패했어요. 다시 시도해주세요.'),

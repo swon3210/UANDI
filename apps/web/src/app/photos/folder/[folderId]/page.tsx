@@ -25,8 +25,10 @@ export default function FolderDetailPage() {
   const folderId = params.folderId;
 
   const { data: folder, isLoading: folderLoading } = useFolder(coupleId, folderId);
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    usePhotosByFolder(coupleId, folderId);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = usePhotosByFolder(
+    coupleId,
+    folderId
+  );
   const { data: allFolders } = useFolders(coupleId);
   const renameMutation = useRenameFolder(coupleId);
   const deleteMutation = useDeleteFolder(coupleId);
@@ -174,9 +176,7 @@ export default function FolderDetailPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() =>
-                  router.push(`/photos/slideshow?source=folder&id=${folderId}`)
-                }
+                onClick={() => router.push(`/photos/slideshow?source=folder&id=${folderId}`)}
                 aria-label="슬라이드쇼"
                 data-testid="slideshow-btn"
               >
@@ -206,14 +206,15 @@ export default function FolderDetailPage() {
       )}
       {deleteError && (
         <div className="max-w-5xl mx-auto w-full px-4 mt-2">
-          <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="delete-error">
+          <div
+            className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            data-testid="delete-error"
+          >
             {deleteError}
           </div>
         </div>
       )}
-      {!isSelectMode && (
-        <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />
-      )}
+      {!isSelectMode && <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
           {isLoading ? (

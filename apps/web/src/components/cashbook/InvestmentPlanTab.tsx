@@ -15,11 +15,7 @@ type InvestmentPlanTabProps = {
   totalExpense: number;
   targetReturnRate: number;
   onTargetReturnRateChange: (rate: number) => void;
-  onItemAmountChange: (
-    itemId: string,
-    annualAmount: number,
-    monthlyAmount: number | null
-  ) => void;
+  onItemAmountChange: (itemId: string, annualAmount: number, monthlyAmount: number | null) => void;
 };
 
 export function InvestmentPlanTab({

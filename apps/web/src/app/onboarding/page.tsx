@@ -92,8 +92,7 @@ export default function OnboardingPage() {
             }}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}
-            새 커플 공간 만들기
+            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}새 커플 공간 만들기
           </Button>
           <Button variant="outline" className="w-full" onClick={() => setStep('join')}>
             초대 코드 입력하기
@@ -135,9 +134,7 @@ export default function OnboardingPage() {
           <p className="mb-1 text-center text-sm text-muted-foreground">
             상대방에게 이 코드를 공유해 주세요.
           </p>
-          <p className="text-center text-xs text-muted-foreground">
-            코드는 48시간 후 만료됩니다
-          </p>
+          <p className="text-center text-xs text-muted-foreground">코드는 48시간 후 만료됩니다</p>
           <div className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="animate-spin" size={14} />
             상대방이 입력하면 자동으로 연결됩니다

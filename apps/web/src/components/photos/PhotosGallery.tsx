@@ -18,11 +18,7 @@ import {
   Sheet,
 } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useInfinitePhotos,
-  usePhotoStats,
-  useUploadPhotos,
-} from '@/hooks/usePhotos';
+import { useInfinitePhotos, usePhotoStats, useUploadPhotos } from '@/hooks/usePhotos';
 import { useFolders, useInfiniteFolders, useCreateFolder } from '@/hooks/useFolders';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { BottomNav } from '@/components/BottomNav';
@@ -32,7 +28,13 @@ import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
 import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import Link from 'next/link';
 
-function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
+function AllPhotosTab({
+  coupleId,
+  uploaderAvatars,
+}: {
+  coupleId: string;
+  uploaderAvatars?: Record<string, string | null>;
+}) {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -64,11 +66,7 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
         icon="📷"
         title="아직 사진이 없어요"
         description="소중한 순간을 함께 기록해보세요"
-        action={
-          <Button disabled>
-            첫 사진 올리기
-          </Button>
-        }
+        action={<Button disabled>첫 사진 올리기</Button>}
       />
     );
   }
@@ -140,9 +138,13 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
   return (
     <div>
       <div className="flex justify-end px-4 py-2">
-        <Button variant="ghost" size="sm" onClick={handleCreateFolder} data-testid="create-folder-btn">
-          <Plus size={16} className="mr-1" />
-          새 폴더
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCreateFolder}
+          data-testid="create-folder-btn"
+        >
+          <Plus size={16} className="mr-1" />새 폴더
         </Button>
       </div>
       {folders.length === 0 ? (
@@ -150,19 +152,12 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
           icon="📁"
           title="폴더를 만들어 사진을 정리해보세요"
           description="여행, 일상 등 주제별로 사진을 분류할 수 있어요"
-          action={
-            <Button onClick={handleCreateFolder}>
-              새 폴더 만들기
-            </Button>
-          }
+          action={<Button onClick={handleCreateFolder}>새 폴더 만들기</Button>}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
           {folders.map((folder) => (
-            <FolderCard
-              key={folder.id}
-              folder={folder}
-            />
+            <FolderCard key={folder.id} folder={folder} />
           ))}
         </div>
       )}
@@ -195,9 +190,7 @@ function TagsTab({ coupleId }: { coupleId: string }) {
   if (error) {
     return (
       <div className="p-4">
-        <p className="text-sm text-destructive">
-          태그를 불러오지 못했어요: {error.message}
-        </p>
+        <p className="text-sm text-destructive">태그를 불러오지 못했어요: {error.message}</p>
       </div>
     );
   }

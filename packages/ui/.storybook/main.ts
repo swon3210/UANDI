@@ -2,10 +2,7 @@ import path from 'path';
 import type { StorybookConfig } from '@storybook/react-vite';
 
 const config: StorybookConfig = {
-  stories: [
-    '../src/**/*.stories.@(ts|tsx)',
-    '../../../apps/web/src/**/*.stories.@(ts|tsx)',
-  ],
+  stories: ['../src/**/*.stories.@(ts|tsx)', '../../../apps/web/src/**/*.stories.@(ts|tsx)'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
   framework: {
     name: '@storybook/react-vite',
@@ -23,7 +20,7 @@ const config: StorybookConfig = {
       'firebase/firestore': path.resolve(__dirname, '__mocks__/firebase-firestore.ts'),
       'dayjs/plugin/isoWeek': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
       'dayjs/locale/ko': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
-      'dayjs': path.resolve(__dirname, '__mocks__/dayjs.ts'),
+      dayjs: path.resolve(__dirname, '__mocks__/dayjs.ts'),
       '@': path.resolve(__dirname, '../../../apps/web/src'),
     };
     // Next.js uses process.env for env vars — polyfill for Vite/Storybook

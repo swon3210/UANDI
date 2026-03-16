@@ -30,8 +30,12 @@ export function PreviousYearSuggestion({
       </div>
 
       <div className="text-xs text-muted-foreground space-y-1">
-        <div>전년도 {categoryName}: {formatCurrency(previousAmount)}</div>
-        <div>올해 제안 (+{rate}%): {formatCurrency(suggestedAmount)}</div>
+        <div>
+          전년도 {categoryName}: {formatCurrency(previousAmount)}
+        </div>
+        <div>
+          올해 제안 (+{rate}%): {formatCurrency(suggestedAmount)}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

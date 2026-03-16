@@ -97,14 +97,14 @@ sh scripts/setup-env.sh
 
 아래 기능이 필요할 때 **직접 구현하지 말고 반드시 이 라이브러리에서 가져올 것**:
 
-| 필요 기능           | 사용할 훅                  |
-| ------------------- | -------------------------- |
-| 값 debounce         | `useDebounce`              |
-| 로컬스토리지 동기화 | `useLocalStorage`          |
-| 요소 가시성 감지    | `useIntersectionObserver`  |
-| 윈도우 크기         | `useWindowSize`            |
-| 클립보드 복사       | `useCopyToClipboard`       |
-| 미디어 쿼리         | `useMediaQuery`            |
+| 필요 기능           | 사용할 훅                 |
+| ------------------- | ------------------------- |
+| 값 debounce         | `useDebounce`             |
+| 로컬스토리지 동기화 | `useLocalStorage`         |
+| 요소 가시성 감지    | `useIntersectionObserver` |
+| 윈도우 크기         | `useWindowSize`           |
+| 클립보드 복사       | `useCopyToClipboard`      |
+| 미디어 쿼리         | `useMediaQuery`           |
 
 구현 전 [공식 문서](https://usehooks.com)에서 사용 가능한 훅 목록을 먼저 확인할 것.
 

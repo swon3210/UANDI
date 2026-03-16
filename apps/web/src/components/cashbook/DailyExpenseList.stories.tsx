@@ -9,13 +9,21 @@ const meta: Meta<typeof DailyExpenseList> = {
   title: 'Cashbook/DailyExpenseList',
   component: DailyExpenseList,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
 type Story = StoryObj<typeof DailyExpenseList>;
 
-function makeEntry(overrides: Partial<CashbookEntry> & { amount: number; category: string }): CashbookEntry {
+function makeEntry(
+  overrides: Partial<CashbookEntry> & { amount: number; category: string }
+): CashbookEntry {
   return {
     id: `entry-${Math.random().toString(36).slice(2)}`,
     coupleId: 'couple-1',
@@ -46,9 +54,7 @@ const sampleDays: DailyExpense[] = [
     date: monday.add(1, 'day'),
     dayOfWeek: '화',
     total: 42000,
-    entries: [
-      makeEntry({ amount: 42000, category: '식비' }),
-    ],
+    entries: [makeEntry({ amount: 42000, category: '식비' })],
     isFuture: false,
     isToday: false,
   },
@@ -56,9 +62,7 @@ const sampleDays: DailyExpense[] = [
     date: monday.add(2, 'day'),
     dayOfWeek: '수',
     total: 120000,
-    entries: [
-      makeEntry({ amount: 120000, category: '데이트', description: '카페' }),
-    ],
+    entries: [makeEntry({ amount: 120000, category: '데이트', description: '카페' })],
     isFuture: false,
     isToday: false,
   },
@@ -66,9 +70,7 @@ const sampleDays: DailyExpense[] = [
     date: monday.add(3, 'day'),
     dayOfWeek: '목',
     total: 35000,
-    entries: [
-      makeEntry({ amount: 35000, category: '교통' }),
-    ],
+    entries: [makeEntry({ amount: 35000, category: '교통' })],
     isFuture: false,
     isToday: true,
   },

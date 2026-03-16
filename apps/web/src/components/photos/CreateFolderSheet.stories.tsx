@@ -12,8 +12,7 @@ const meta: Meta<typeof CreateFolderSheet> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component:
-          '새 폴더 생성 바텀시트. 폴더 이름을 입력받고 생성 버튼을 제공합니다.',
+        component: '새 폴더 생성 바텀시트. 폴더 이름을 입력받고 생성 버튼을 제공합니다.',
       },
     },
   },

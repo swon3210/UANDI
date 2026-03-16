@@ -62,9 +62,7 @@ export default defineConfig({
     timeout: 30000,
     env: {
       ...Object.fromEntries(
-        Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] != null
-        )
+        Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] != null)
       ),
       ...testEnv,
     },

@@ -5,7 +5,13 @@ const meta: Meta<typeof WeeklySummaryCard> = {
   title: 'Cashbook/WeeklySummaryCard',
   component: WeeklySummaryCard,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;

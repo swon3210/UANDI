@@ -131,7 +131,7 @@
 ```ts
 // 클라이언트 사이드 필터링
 // 서버에서 가져온 사진 목록에서 uploadedBy 기준으로 필터
-photos.filter(p => p.uploadedBy === userId)
+photos.filter((p) => p.uploadedBy === userId);
 ```
 
 - "전체": 필터 없음
@@ -143,7 +143,7 @@ photos.filter(p => p.uploadedBy === userId)
 ```ts
 // Firestore batch write로 여러 사진의 folderId를 한번에 업데이트
 const batch = writeBatch(db);
-selectedPhotoIds.forEach(photoId => {
+selectedPhotoIds.forEach((photoId) => {
   const ref = doc(db, `couples/${coupleId}/photos/${photoId}`);
   batch.update(ref, { folderId: targetFolderId });
 });

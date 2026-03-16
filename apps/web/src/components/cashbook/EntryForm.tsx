@@ -23,13 +23,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@uandi/ui';
-import type {
-  CashbookEntry,
-  CashbookEntryType,
-  CashbookCategory,
-  CategoryGroup,
-} from '@/types';
-import { GROUP_LABELS, SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS } from '@/constants/default-categories';
+import type { CashbookEntry, CashbookEntryType, CashbookCategory, CategoryGroup } from '@/types';
+import {
+  GROUP_LABELS,
+  SUB_GROUPS_BY_GROUP,
+  SUB_GROUP_LABELS,
+} from '@/constants/default-categories';
 import { CategoryIcon } from './CategoryIcon';
 import type { CategorySubGroup } from '@/types';
 
@@ -68,9 +67,7 @@ export function EntryForm({
   onClose,
   createdBy,
 }: EntryFormProps) {
-  const [activeType, setActiveType] = useState<CashbookEntryType>(
-    editingEntry?.type ?? 'expense'
-  );
+  const [activeType, setActiveType] = useState<CashbookEntryType>(editingEntry?.type ?? 'expense');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -86,9 +83,7 @@ export function EntryForm({
 
   const selectedCategory = form.watch('category');
 
-  const typeCategories = categories.filter(
-    (c) => c.group === (activeType as CategoryGroup)
-  );
+  const typeCategories = categories.filter((c) => c.group === (activeType as CategoryGroup));
 
   const handleSubmit = (data: FormValues) => {
     onSubmit({

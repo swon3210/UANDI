@@ -7,13 +7,7 @@ import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import { Plus, Settings } from 'lucide-react';
 import { BookOpen } from 'lucide-react';
-import {
-  Header,
-  Button,
-  Sheet,
-  EmptyState,
-  FullScreenSpinner,
-} from '@uandi/ui';
+import { Header, Button, Sheet, EmptyState, FullScreenSpinner } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
   useCashbookEntries,
@@ -151,9 +145,7 @@ export default function CashbookPage() {
               icon={<BookOpen size={48} className="text-muted-foreground" />}
               title="아직 내역이 없어요"
               description="가계부를 시작해보세요"
-              action={
-                <Button onClick={handleAdd}>추가하기</Button>
-              }
+              action={<Button onClick={handleAdd}>추가하기</Button>}
             />
           )}
         </div>

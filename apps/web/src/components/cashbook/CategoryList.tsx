@@ -3,7 +3,11 @@
 import { FolderOpen } from 'lucide-react';
 import { EmptyState } from '@uandi/ui';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
-import { SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS, GROUP_LABELS } from '@/constants/default-categories';
+import {
+  SUB_GROUPS_BY_GROUP,
+  SUB_GROUP_LABELS,
+  GROUP_LABELS,
+} from '@/constants/default-categories';
 import { CategoryItem } from './CategoryItem';
 
 type CategoryListProps = {
@@ -42,12 +46,7 @@ export function CategoryList({ categories, group, onEdit, onDelete }: CategoryLi
             </div>
             <div className="rounded-xl bg-card border border-border divide-y divide-border">
               {items.map((cat) => (
-                <CategoryItem
-                  key={cat.id}
-                  category={cat}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
+                <CategoryItem key={cat.id} category={cat} onEdit={onEdit} onDelete={onDelete} />
               ))}
             </div>
           </div>

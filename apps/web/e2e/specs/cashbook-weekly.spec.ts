@@ -94,9 +94,7 @@ test.describe('주간 예산', () => {
       const monday = today.startOf('week').add(1, 'day');
 
       await seedWeeklyData(coupleId, uid, {
-        expenseEntries: [
-          { category: '식비', amount: 150000, date: monday.toISOString() },
-        ],
+        expenseEntries: [{ category: '식비', amount: 150000, date: monday.toISOString() }],
       });
 
       const weekly = new CashbookWeeklyPage(page);

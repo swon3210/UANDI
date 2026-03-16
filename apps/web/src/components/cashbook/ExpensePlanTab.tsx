@@ -11,11 +11,7 @@ type ExpensePlanTabProps = {
   categories: CashbookCategory[];
   currentUserUid: string;
   partnerDisplayName?: string;
-  onItemAmountChange: (
-    itemId: string,
-    annualAmount: number,
-    monthlyAmount: number | null
-  ) => void;
+  onItemAmountChange: (itemId: string, annualAmount: number, monthlyAmount: number | null) => void;
   onTargetMonthsChange: (itemId: string, months: number[]) => void;
 };
 
@@ -31,9 +27,7 @@ export function ExpensePlanTab({
   const variableCommonItems = items.filter((i) => i.subGroup === 'variable_common');
   const variablePersonalItems = items.filter((i) => i.subGroup === 'variable_personal');
 
-  const myItems = variablePersonalItems.filter(
-    (i) => i.ownerUid === currentUserUid
-  );
+  const myItems = variablePersonalItems.filter((i) => i.ownerUid === currentUserUid);
   const partnerItems = variablePersonalItems.filter(
     (i) => i.ownerUid !== null && i.ownerUid !== currentUserUid
   );
@@ -69,18 +63,12 @@ export function ExpensePlanTab({
                 categoryIcon={cat?.icon ?? ''}
                 categoryColor={cat?.color ?? '#D8635A'}
                 inputMode={mode}
-                amount={
-                  mode === 'monthly'
-                    ? (item.monthlyAmount ?? 0)
-                    : item.annualAmount
-                }
+                amount={mode === 'monthly' ? (item.monthlyAmount ?? 0) : item.annualAmount}
                 targetMonths={item.targetMonths ?? undefined}
                 onAmountChange={(annualAmount, monthlyAmount) =>
                   onItemAmountChange(item.id, annualAmount, monthlyAmount)
                 }
-                onTargetMonthsChange={(months) =>
-                  onTargetMonthsChange(item.id, months)
-                }
+                onTargetMonthsChange={(months) => onTargetMonthsChange(item.id, months)}
               />
             );
           })}
@@ -119,9 +107,7 @@ export function ExpensePlanTab({
 
           {myItems.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground pl-1">
-                👤 나의 지출
-              </h4>
+              <h4 className="text-xs font-medium text-muted-foreground pl-1">👤 나의 지출</h4>
               <div className="space-y-3">
                 {myItems.map((item) => {
                   const cat = getCategoryInfo(item.categoryId);

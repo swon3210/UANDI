@@ -6,7 +6,13 @@ const meta: Meta<typeof WeekSelector> = {
   title: 'Cashbook/WeekSelector',
   component: WeekSelector,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;

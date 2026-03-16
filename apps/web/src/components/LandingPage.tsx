@@ -70,7 +70,11 @@ export function LandingPage() {
           )}
         </Button>
         {error && (
-          <p role="alert" data-testid="login-error" className="mt-2 text-center text-sm text-destructive">
+          <p
+            role="alert"
+            data-testid="login-error"
+            className="mt-2 text-center text-sm text-destructive"
+          >
             {error}
           </p>
         )}

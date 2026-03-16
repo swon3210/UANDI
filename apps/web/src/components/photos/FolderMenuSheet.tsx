@@ -16,11 +16,7 @@ export function FolderMenuSheet({ onRename, onDelete }: FolderMenuSheetProps) {
         <SheetDescription className="sr-only">폴더 관리 메뉴</SheetDescription>
       </SheetHeader>
       <div className="mt-4 space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3"
-          onClick={onRename}
-        >
+        <Button variant="ghost" className="w-full justify-start gap-3" onClick={onRename}>
           <Pencil size={20} />
           이름 변경
         </Button>

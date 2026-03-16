@@ -9,8 +9,7 @@ const meta: Meta<typeof Tabs> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component:
-          '탭 네비게이션 컴포넌트. 선택된 탭은 하단 보더와 primary 색상으로 강조됩니다.',
+        component: '탭 네비게이션 컴포넌트. 선택된 탭은 하단 보더와 primary 색상으로 강조됩니다.',
       },
     },
   },

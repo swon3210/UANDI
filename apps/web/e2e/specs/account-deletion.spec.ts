@@ -19,9 +19,7 @@ test.describe('회원탈퇴', () => {
     await expect(settings.deleteAccountButton).toBeVisible();
   });
 
-  test('회원탈퇴 확인 다이얼로그에서 취소하면 설정 페이지에 머문다', async ({
-    authedPage,
-  }) => {
+  test('회원탈퇴 확인 다이얼로그에서 취소하면 설정 페이지에 머문다', async ({ authedPage }) => {
     await authedPage.goto('/settings');
     const settings = new SettingsPage(authedPage);
 

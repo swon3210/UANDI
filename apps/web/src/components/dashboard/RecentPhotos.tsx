@@ -31,11 +31,7 @@ export function RecentPhotos({ coupleId }: RecentPhotosProps) {
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {photos?.map((photo) => (
-            <Link
-              key={photo.id}
-              href={`/photos/${photo.id}`}
-              data-testid="photo-thumbnail"
-            >
+            <Link key={photo.id} href={`/photos/${photo.id}`} data-testid="photo-thumbnail">
               <Image
                 src={photo.thumbnailUrl ?? photo.storageUrl}
                 alt={photo.caption || '사진'}

@@ -55,10 +55,14 @@ test.describe('랜딩 & 로그인', () => {
     const clickPromise = landing.loginButton.click();
 
     // 클릭 직후 버튼 비활성화 + "로그인 중..." 텍스트 확인 (팝업 열리기 전)
-    await expect(landing.loginButton).toBeDisabled({ timeout: 2000 }).catch(() => {
-      // 팝업이 너무 빨리 닫힐 수 있으므로 실패해도 pass
-    });
-    await expect(landing.loginButton).toContainText('로그인 중').catch(() => {});
+    await expect(landing.loginButton)
+      .toBeDisabled({ timeout: 2000 })
+      .catch(() => {
+        // 팝업이 너무 빨리 닫힐 수 있으므로 실패해도 pass
+      });
+    await expect(landing.loginButton)
+      .toContainText('로그인 중')
+      .catch(() => {});
 
     await clickPromise.catch(() => {});
     // 팝업 닫힌 후 버튼이 재활성화됨

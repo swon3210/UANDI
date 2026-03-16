@@ -48,7 +48,8 @@ function dayjsObj(d: Date) {
       return dayjsObj(new Date(d));
     },
     endOf(unit: string) {
-      if (unit === 'day') return dayjsObj(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999));
+      if (unit === 'day')
+        return dayjsObj(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999));
       if (unit === 'month') return dayjsObj(new Date(d.getFullYear(), d.getMonth() + 1, 0));
       return dayjsObj(new Date(d));
     },
@@ -66,7 +67,10 @@ function dayjsObj(d: Date) {
       const otherDate = other._d || other.toDate?.() || new Date(other);
       const ms = d.getTime() - otherDate.getTime();
       if (unit === 'day') return Math.floor(ms / 86400000);
-      if (unit === 'month') return (d.getFullYear() - otherDate.getFullYear()) * 12 + d.getMonth() - otherDate.getMonth();
+      if (unit === 'month')
+        return (
+          (d.getFullYear() - otherDate.getFullYear()) * 12 + d.getMonth() - otherDate.getMonth()
+        );
       return ms;
     },
     isBefore(other: any, unit?: string) {
@@ -90,13 +94,14 @@ function dayjsObj(d: Date) {
     isSame(other: any, unit?: string) {
       const otherDate = other._d || other.toDate?.() || new Date(other);
       if (unit === 'day') {
-        return d.getFullYear() === otherDate.getFullYear() &&
+        return (
+          d.getFullYear() === otherDate.getFullYear() &&
           d.getMonth() === otherDate.getMonth() &&
-          d.getDate() === otherDate.getDate();
+          d.getDate() === otherDate.getDate()
+        );
       }
       if (unit === 'month') {
-        return d.getFullYear() === otherDate.getFullYear() &&
-          d.getMonth() === otherDate.getMonth();
+        return d.getFullYear() === otherDate.getFullYear() && d.getMonth() === otherDate.getMonth();
       }
       return d.getTime() === otherDate.getTime();
     },

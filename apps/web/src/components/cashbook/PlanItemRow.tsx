@@ -50,8 +50,7 @@ export function PlanItemRow({
     }
   }, [debouncedAmount, inputMode, amount]);
 
-  const annualTotal =
-    inputMode === 'monthly' ? localAmount * 12 : localAmount;
+  const annualTotal = inputMode === 'monthly' ? localAmount * 12 : localAmount;
 
   const perMonthDisplay =
     inputMode === 'target_months' && targetMonths && targetMonths.length > 0
@@ -121,7 +120,8 @@ export function PlanItemRow({
           </div>
           {perMonthDisplay != null && localAmount > 0 && (
             <div className="text-xs text-muted-foreground">
-              선택: {targetMonths?.map((m) => `${m}월(${formatCurrency(perMonthDisplay)})`).join(', ')}
+              선택:{' '}
+              {targetMonths?.map((m) => `${m}월(${formatCurrency(perMonthDisplay)})`).join(', ')}
             </div>
           )}
         </div>
