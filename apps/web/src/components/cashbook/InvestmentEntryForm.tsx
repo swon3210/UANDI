@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/incompatible-library -- RHF watch() is known-incompatible with React Compiler */
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,8 +24,8 @@ import { CategoryIcon } from './CategoryIcon';
 
 const schema = z.object({
   category: z.string().min(1, '카테고리를 선택해주세요'),
-  transactionType: z.enum(['buy', 'sell'], { required_error: '거래 유형을 선택해주세요' }),
-  amount: z.number({ invalid_type_error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),
+  transactionType: z.enum(['buy', 'sell'], { error: '거래 유형을 선택해주세요' }),
+  amount: z.number({ error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),
   date: z.string().min(1),
   description: z.string(),
 });

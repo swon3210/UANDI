@@ -81,3 +81,5 @@ export { Toaster } from './components/sonner';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
 export { Checkbox } from './components/checkbox';
 export { Slider } from './components/slider';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './components/collapsible';
+export { Switch } from './components/switch';

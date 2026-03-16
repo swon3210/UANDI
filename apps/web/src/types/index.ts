@@ -161,6 +161,21 @@ export type MonthlyBudgetItem = {
   ownerUid: string | null;
 };
 
+// 알림 설정
+export type NotificationSettings = {
+  coupleId: string;
+  userId: string;
+  recordReminder: {
+    enabled: boolean;
+    time: string; // "21:00" (HH:mm)
+    days: number[]; // [1, 2, 3, 4, 5] (1=월, 7=일)
+  };
+  budgetWarning: {
+    enabled: boolean;
+  };
+  updatedAt: Timestamp;
+};
+
 // 현금 보유 잔고 (월말 스냅샷)
 export type CashBalance = {
   id: string;

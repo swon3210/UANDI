@@ -38,8 +38,8 @@ export async function upsertCashBalance(
     ref,
     {
       id: balanceId,
-      coupleId,
       ...data,
+      coupleId,
       updatedAt: Timestamp.now(),
     },
     { merge: true }
