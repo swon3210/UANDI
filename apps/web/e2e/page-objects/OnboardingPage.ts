@@ -17,7 +17,7 @@ export class OnboardingPage {
     this.inviteCodeDisplay = page.getByTestId('invite-code');
     this.copyButton = page.getByRole('button', { name: '복사하기' });
     this.connectButton = page.getByRole('button', { name: '연결하기' });
-    this.errorMessage = page.getByRole('alert');
+    this.errorMessage = page.locator('p[role="alert"]');
     this.backButton = page.getByRole('button', { name: '뒤로' });
   }
 

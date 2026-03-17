@@ -1,7 +1,13 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { OnboardingPage } from '../page-objects/OnboardingPage';
-import { createTestUser, seedUserDocument, seedCouple } from '../helpers/emulator';
+import {
+  createTestUser,
+  seedUserDocument,
+  seedCouple,
+  findCoupleByInviteCode,
+  addMemberToCouple,
+} from '../helpers/emulator';
 
 test.describe('온보딩', () => {
   test.describe('선택 화면', () => {
@@ -44,21 +50,10 @@ test.describe('온보딩', () => {
 
       // 두 번째 유저가 코드를 입력해 합류하는 상황을 REST API로 시뮬레이션
       // couple.memberUids에 uid2 추가 → 실시간 리스너가 감지 → 대시보드 이동
-      await noCoupleAuthedPage.evaluate(
-        async ({ code, uid2 }) => {
-          const { collection, query, where, getDocs, updateDoc, doc, arrayUnion } =
-            await import('firebase/firestore');
-          const { getDb } = await import('@/lib/firebase/config');
-          const q = query(collection(getDb(), 'couples'), where('inviteCode', '==', code));
-          const snap = await getDocs(q);
-          if (!snap.empty) {
-            await updateDoc(doc(getDb(), 'couples', snap.docs[0].id), {
-              memberUids: arrayUnion(uid2),
-            });
-          }
-        },
-        { code, uid2 }
-      );
+      const coupleId = await findCoupleByInviteCode(code);
+      if (coupleId) {
+        await addMemberToCouple(coupleId, uid2);
+      }
 
       await noCoupleAuthedPage.waitForURL('/');
     });

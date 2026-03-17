@@ -294,7 +294,9 @@ test.describe('월간 대시보드', () => {
 
       const incomeSection = monthly.incomeSection();
       await expect(incomeSection).toBeVisible();
-      await expect(incomeSection.getByText('정기 수입')).toBeVisible();
+      await expect(
+        incomeSection.getByRole('heading', { name: '정기 수입', exact: true })
+      ).toBeVisible();
     });
 
     test('비정기 수입을 추가할 수 있다', async ({ authedContext }) => {
@@ -360,7 +362,7 @@ test.describe('월간 대시보드', () => {
 
       const section = monthly.investmentSection();
       await expect(section).toBeVisible();
-      await expect(section.getByText('투자 내역')).toBeVisible();
+      await expect(section.getByRole('heading', { name: '투자 내역', exact: true })).toBeVisible();
       // 매수 라벨이 표시되는지 확인
       await expect(section.getByText('매수')).toBeVisible();
     });

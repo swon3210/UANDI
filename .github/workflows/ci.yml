@@ -95,10 +95,22 @@ jobs:
 
       - name: Wait for emulators
         run: |
+          echo "Waiting for Auth emulator (9099)..."
           for i in $(seq 1 30); do
             curl -s http://localhost:9099 > /dev/null 2>&1 && break
             sleep 1
           done
+          echo "Waiting for Firestore emulator (8080)..."
+          for i in $(seq 1 30); do
+            curl -s http://localhost:8080 > /dev/null 2>&1 && break
+            sleep 1
+          done
+          echo "Waiting for Storage emulator (9199)..."
+          for i in $(seq 1 30); do
+            curl -s http://localhost:9199 > /dev/null 2>&1 && break
+            sleep 1
+          done
+          echo "All emulators ready."
 
       - name: Run E2E tests
         run: pnpm test:e2e

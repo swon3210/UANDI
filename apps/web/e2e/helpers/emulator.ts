@@ -440,6 +440,72 @@ export async function seedCashbookEntry(
   return entryId;
 }
 
+/**
+ * 커플 문서의 memberUids에 uid를 추가 (상대방 합류 시뮬레이션)
+ */
+export async function addMemberToCouple(coupleId: string, uid: string): Promise<void> {
+  // 현재 커플 문서 조회
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}`
+  );
+  const doc = (await res.json()) as {
+    fields: {
+      memberUids: { arrayValue: { values: { stringValue: string }[] } };
+      [key: string]: unknown;
+    };
+  };
+
+  const currentMembers = doc.fields.memberUids.arrayValue.values || [];
+  currentMembers.push({ stringValue: uid });
+
+  // memberUids 업데이트
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}?updateMask.fieldPaths=memberUids`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          memberUids: { arrayValue: { values: currentMembers } },
+        },
+      }),
+    }
+  );
+}
+
+/**
+ * inviteCode로 커플 문서를 검색하여 coupleId 반환
+ */
+export async function findCoupleByInviteCode(inviteCode: string): Promise<string | null> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'couples' }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'inviteCode' },
+              op: 'EQUAL',
+              value: { stringValue: inviteCode },
+            },
+          },
+          limit: 1,
+        },
+      }),
+    }
+  );
+  const results = (await res.json()) as {
+    document?: { fields: { id: { stringValue: string } } };
+  }[];
+  if (results.length > 0 && results[0].document) {
+    return results[0].document.fields.id.stringValue;
+  }
+  return null;
+}
+
 export async function seedNotificationSettings(
   userId: string,
   options: {
