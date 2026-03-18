@@ -118,9 +118,10 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
             aria-hidden
           />
         )}
-        {currentIndex < photos.length - 1 && (
+        {photos.slice(currentIndex + 1, currentIndex + 6).map((photo) => (
           <Image
-            src={photos[currentIndex + 1].storageUrl}
+            key={photo.id}
+            src={photo.storageUrl}
             alt=""
             fill
             className="invisible"
@@ -129,7 +130,7 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
             priority
             aria-hidden
           />
-        )}
+        ))}
       </div>
 
       {/* 좌우 탭 영역 — 클릭 x좌표로 이전/다음 판별 */}

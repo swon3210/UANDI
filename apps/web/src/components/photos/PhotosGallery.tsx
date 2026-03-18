@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
@@ -228,7 +229,22 @@ function TagsTab({ coupleId }: { coupleId: string }) {
 export function PhotosGallery() {
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
-  const [activeTab, setActiveTab] = useState('all');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get('tab') ?? 'all';
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 'all') {
+        params.delete('tab');
+      } else {
+        params.set('tab', value);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : '/photos');
+    },
+    [searchParams, router]
+  );
   const { data: folders } = useFolders(coupleId);
   const needStats = activeTab === 'folders' || activeTab === 'tags';
   const { data: stats } = usePhotoStats(needStats ? coupleId : null);
@@ -289,7 +305,7 @@ export function PhotosGallery() {
         }
       />
       <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
-        <Tabs defaultValue="all" onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
           <TabsList className="w-full rounded-none bg-background h-11">
             <TabsTrigger value="all" className="flex-1" data-testid="tab-all">
               전체
