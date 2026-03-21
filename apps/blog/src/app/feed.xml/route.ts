@@ -13,7 +13,7 @@ export async function GET() {
       <description><![CDATA[${post.summary}]]></description>
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       <guid>${siteUrl}/posts/${post.slug}</guid>
-    </item>`,
+    </item>`
     )
     .join('');
 

@@ -57,18 +57,13 @@ export function getAllPosts(): PostMeta[] {
   });
 
   // 프로덕션에서는 draft 제외
-  const filtered =
-    process.env.NODE_ENV === 'production'
-      ? posts.filter((p) => !p.draft)
-      : posts;
+  const filtered = process.env.NODE_ENV === 'production' ? posts.filter((p) => !p.draft) : posts;
 
   return filtered.sort((a, b) => dayjs(b.date).unix() - dayjs(a.date).unix());
 }
 
 // slug로 개별 포스트 조회 (HTML 렌더링 포함)
-export async function getPostBySlug(
-  slug: string,
-): Promise<PostData | null> {
+export async function getPostBySlug(slug: string): Promise<PostData | null> {
   const fileName = findFileBySlug(slug);
   if (!fileName) return null;
 

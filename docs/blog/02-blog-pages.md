@@ -17,11 +17,11 @@
 
 ## 라우트 구조
 
-| 경로 | 설명 | 생성 방식 |
-|------|------|-----------|
-| `/` | 글 목록 (최신순, 태그 필터) | SSG |
-| `/posts/[slug]` | 개별 글 | SSG (`generateStaticParams`) |
-| `/tags/[tag]` | 태그별 필터링 | SSG (`generateStaticParams`) |
+| 경로            | 설명                        | 생성 방식                    |
+| --------------- | --------------------------- | ---------------------------- |
+| `/`             | 글 목록 (최신순, 태그 필터) | SSG                          |
+| `/posts/[slug]` | 개별 글                     | SSG (`generateStaticParams`) |
+| `/tags/[tag]`   | 태그별 필터링               | SSG (`generateStaticParams`) |
 
 ---
 
@@ -75,9 +75,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className="min-h-screen bg-white font-sans antialiased">
         <BlogHeader />
-        <main className="mx-auto max-w-2xl px-4 py-8">
-          {children}
-        </main>
+        <main className="mx-auto max-w-2xl px-4 py-8">{children}</main>
       </body>
     </html>
   );
@@ -154,7 +152,9 @@ export default function BlogHomePage() {
     <>
       <TagFilter tags={tags} />
       <div className="mt-6 space-y-8">
-        {posts.map(post => <PostCard key={post.slug} post={post} />)}
+        {posts.map((post) => (
+          <PostCard key={post.slug} post={post} />
+        ))}
       </div>
     </>
   );
@@ -167,7 +167,7 @@ export default function BlogHomePage() {
 
 ```tsx
 export async function generateStaticParams() {
-  return getAllSlugs().map(slug => ({ slug }));
+  return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -189,7 +189,7 @@ export default async function PostPage({ params }: Props) {
 
 ```tsx
 export async function generateStaticParams() {
-  return getAllTags().map(tag => ({ tag }));
+  return getAllTags().map((tag) => ({ tag }));
 }
 
 export default function TagPage({ params }: Props) {
@@ -200,7 +200,9 @@ export default function TagPage({ params }: Props) {
     <>
       <TagFilter tags={tags} activeTag={params.tag} />
       <div className="mt-6 space-y-8">
-        {posts.map(post => <PostCard key={post.slug} post={post} />)}
+        {posts.map((post) => (
+          <PostCard key={post.slug} post={post} />
+        ))}
       </div>
     </>
   );

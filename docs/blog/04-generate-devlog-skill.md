@@ -27,7 +27,7 @@ Claude Code에서 `/generate-devlog` 명령으로 현재 대화 컨텍스트를 
 
 ### `.claude/skills/generate-devlog/SKILL.md`
 
-```markdown
+````markdown
 ---
 name: generate-devlog
 description: 현재 대화 컨텍스트에서 개발 블로그 포스트를 자동 생성합니다.
@@ -81,6 +81,7 @@ tags: ['<관련 태그들>']
 draft: true
 ---
 ```
+````
 
 본문 구조:
 
@@ -118,6 +119,7 @@ draft: true
 - **길이**: 800~1500자 목표 (너무 짧거나 길지 않게)
 - **솔직함**: 삽질이나 실수도 포함 — 이것이 개발 일지의 가치
 - **태그 선택**: 프로젝트 기능 영역 (photos, cashbook, auth 등) + 기술 키워드 (performance, testing 등)
+
 ```
 
 ---
@@ -127,7 +129,9 @@ draft: true
 ### 기본 사용
 
 ```
+
 /generate-devlog
+
 ```
 
 → 현재 대화에서 수행한 작업을 분석해 자동으로 글 생성
@@ -135,8 +139,10 @@ draft: true
 ### 주제 지정
 
 ```
+
 /generate-devlog 사진 갤러리 무한 스크롤 구현
-```
+
+`````
 
 → 지정한 주제에 초점을 맞춰 글 생성
 
@@ -171,11 +177,12 @@ const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
   queryFn: ({ pageParam }) => getPhotos({ coupleId, folderId, cursor: pageParam, limit: 20 }),
   getNextPageParam: (lastPage) => lastPage.nextCursor,
 });
-```
+`````
 
 ## 기술적 결정
 
 `react-virtualized` 대신 단순 무한 스크롤을 선택했다. 이유:
+
 - 사진 그리드는 높이가 고정이라 가상화의 이점이 크지 않음
 - 한 번에 20개씩 로드하면 DOM 노드 수가 관리 가능한 수준
 
@@ -184,7 +191,8 @@ const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
 `useIntersectionObserver`의 `threshold` 옵션을 0.1로 설정하니
 사용자가 스크롤 끝에 도달하기 직전에 다음 페이지를 불러올 수 있었다.
 체감 로딩 시간이 거의 없어진다.
-````
+
+```
 
 ---
 
@@ -212,3 +220,4 @@ const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
 - 선행 단계: `docs/blog/03-rss-feed.md`
 - 기존 스킬 참고: `.claude/skills/plan-page/SKILL.md`
 - 블로그 콘텐츠 구조: `docs/blog/01-blog-setup.md`
+```
