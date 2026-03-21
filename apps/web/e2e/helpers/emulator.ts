@@ -12,6 +12,22 @@ export async function clearEmulatorData() {
   ]);
 }
 
+/**
+ * Auth Emulator에서 이메일로 유저 UID 조회
+ */
+export async function lookupUserUid(email: string): Promise<string | null> {
+  const res = await fetch(
+    `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:lookup?key=fake-api-key`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: [email] }),
+    }
+  );
+  const data = (await res.json()) as { users?: { localId: string }[] };
+  return data.users?.[0]?.localId ?? null;
+}
+
 export async function createTestUser(email: string, password: string): Promise<string> {
   const res = await fetch(
     `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key`,
@@ -438,6 +454,19 @@ export async function seedCashbookEntry(
   );
 
   return entryId;
+}
+
+/**
+ * 유저 문서에서 특정 필드 값 조회
+ */
+export async function getUserField(uid: string, field: string): Promise<string | null> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`
+  );
+  const doc = (await res.json()) as {
+    fields?: Record<string, { stringValue?: string; nullValue?: null }>;
+  };
+  return doc.fields?.[field]?.stringValue ?? null;
 }
 
 /**

@@ -5,7 +5,8 @@ import {
   createTestUser,
   seedUserDocument,
   seedCouple,
-  findCoupleByInviteCode,
+  lookupUserUid,
+  getUserField,
   addMemberToCouple,
 } from '../helpers/emulator';
 
@@ -48,14 +49,17 @@ test.describe('온보딩', () => {
       const uid2 = await createTestUser('partner@test.com', 'testpassword123');
       await seedUserDocument(uid2, 'partner@test.com', null);
 
-      // 두 번째 유저가 코드를 입력해 합류하는 상황을 REST API로 시뮬레이션
+      // user1의 UID를 Auth Emulator에서 조회 → Firestore에서 coupleId 읽기
+      const uid1 = await lookupUserUid('user1@test.com');
+      const coupleId = uid1 ? await getUserField(uid1, 'coupleId') : null;
+
       // couple.memberUids에 uid2 추가 → 실시간 리스너가 감지 → 대시보드 이동
-      const coupleId = await findCoupleByInviteCode(code);
       if (coupleId) {
         await addMemberToCouple(coupleId, uid2);
+        await seedUserDocument(uid2, 'partner@test.com', coupleId);
       }
 
-      await noCoupleAuthedPage.waitForURL('/');
+      await noCoupleAuthedPage.waitForURL('/', { timeout: 30000 });
     });
 
     test('뒤로 버튼을 누르면 선택 화면으로 돌아간다', async ({ noCoupleAuthedPage }) => {

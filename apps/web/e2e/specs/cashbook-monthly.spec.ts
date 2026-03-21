@@ -127,11 +127,11 @@ test.describe('월간 대시보드', () => {
       // 현황 카드 표시 확인
       await expect(monthly.overviewCard).toBeVisible();
 
-      // 수입 금액 표시
-      await expect(monthly.overviewCard.getByText('3,500,000원')).toBeVisible();
+      // 수입 금액 표시 (.first()로 실적 span만 선택 — 예산과 값이 같을 때 strict mode 방지)
+      await expect(monthly.overviewCard.getByText('3,500,000원').first()).toBeVisible();
 
       // 지출 금액 표시
-      await expect(monthly.overviewCard.getByText('1,860,000원')).toBeVisible();
+      await expect(monthly.overviewCard.getByText('1,860,000원').first()).toBeVisible();
 
       // 잔액 표시 (수입 - 지출 = 1,640,000)
       await expect(monthly.overviewCard.getByText('1,640,000원')).toBeVisible();
@@ -319,6 +319,9 @@ test.describe('월간 대시보드', () => {
       const sheet = page.getByRole('dialog');
       await expect(sheet).toBeVisible();
 
+      // EntryForm은 기본 '지출' 탭 → '수입' 탭 전환
+      await sheet.getByRole('tab', { name: '수입' }).click();
+
       // 금액 입력
       await sheet.getByLabel('금액').fill('250000');
 
@@ -451,6 +454,16 @@ test.describe('월간 대시보드', () => {
     test('월 이동 시 해당 월 데이터로 갱신된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
+      const year = new Date().getFullYear();
+      const planId = await seedAnnualPlan(coupleId, year, uid);
+
+      // 지출 예산 설정 (overview가 데이터를 표시하려면 budgetItems 필요)
+      await seedAnnualPlanItem(coupleId, planId, {
+        categoryId: 'cat-expense-food',
+        group: 'expense',
+        subGroup: 'variable_common',
+        annualAmount: 3600000,
+      });
 
       // 이번 달에 지출 추가
       await seedCashbookEntry(coupleId, uid, {
@@ -463,7 +476,7 @@ test.describe('월간 대시보드', () => {
       await monthly.goto();
 
       // 이번 달에 지출이 표시됨
-      await expect(monthly.overviewCard.getByText('100,000원')).toBeVisible();
+      await expect(monthly.overviewCard.getByText('100,000원').first()).toBeVisible();
 
       // 이전 달로 이동 → 데이터 없음
       await monthly.prevMonthButton.click();
