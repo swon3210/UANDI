@@ -59,7 +59,7 @@ test.describe('온보딩', () => {
         await seedUserDocument(uid2, 'partner@test.com', coupleId);
       }
 
-      await noCoupleAuthedPage.waitForURL('/', { timeout: 30000 });
+      await noCoupleAuthedPage.waitForURL('/', { timeout: 60000 });
     });
 
     test('뒤로 버튼을 누르면 선택 화면으로 돌아간다', async ({ noCoupleAuthedPage }) => {

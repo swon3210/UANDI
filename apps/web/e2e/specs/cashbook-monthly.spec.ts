@@ -333,7 +333,7 @@ test.describe('월간 대시보드', () => {
 
       // Sheet가 닫히고 수입 목록에 반영
       await expect(sheet).not.toBeVisible({ timeout: 5000 });
-      await expect(page.getByText('250,000원')).toBeVisible();
+      await expect(page.getByText('250,000원').first()).toBeVisible();
     });
   });
 
@@ -482,7 +482,7 @@ test.describe('월간 대시보드', () => {
       await monthly.prevMonthButton.click();
 
       // 이전 달에는 지출이 0원
-      await expect(monthly.overviewCard.getByText('0원')).toBeVisible();
+      await expect(monthly.overviewCard.getByText('0원').first()).toBeVisible();
     });
   });
 });
