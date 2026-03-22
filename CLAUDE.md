@@ -144,6 +144,16 @@ sh scripts/setup-env.sh
 
 ---
 
+## Firestore 쿼리 규칙
+
+- **전체 컬렉션 스캔 금지**: `getDocs(query(collection(...)))` 처럼 필터 없이 컬렉션 전체를 읽는 쿼리를 작성하지 말 것. 문서 수가 늘어나면 전송량과 비용이 선형 증가한다.
+- **집계/통계가 필요한 경우**: 요약 문서(summary document)를 별도로 유지하고, 데이터 변경 시(생성/수정/삭제) 요약 문서를 함께 업데이트한다. 조회 시에는 요약 문서 1개만 읽는다. (예: `couples/{coupleId}/meta/tagCounts`)
+- **배열 필드에 `!=` 연산자 사용 금지**: Firestore Web SDK에서 `where('arrayField', '!=', [])` 는 동작하지 않는다. 배열 포함 여부는 `array-contains` 또는 요약 문서 패턴을 사용할 것.
+- **Web SDK에서 `select()` 사용 불가**: 필드 선택(`select()`)은 Admin SDK 전용. 클라이언트에서 전송량을 줄이려면 요약 문서 패턴을 사용한다.
+- **페이지네이션 필수**: 목록 조회는 반드시 `limit()` + `startAfter()` 커서 기반 페이지네이션을 적용한다. 슬라이드쇼 등 전체 목록이 필요한 경우에만 예외 허용.
+
+---
+
 ## 주요 Gotcha
 
 - `apps/docs-viewer`는 `../../docs/`에 접근하므로 `next.config.ts`에 `outputFileTracingRoot` 필요

@@ -15,6 +15,8 @@ import {
   Timestamp,
   writeBatch,
   getCountFromServer,
+  increment,
+  deleteField,
   type DocumentSnapshot,
   type QueryConstraint,
 } from 'firebase/firestore';
@@ -23,6 +25,37 @@ import type { Photo } from '@/types';
 
 function photosCol(coupleId: string) {
   return collection(getDb(), `couples/${coupleId}/photos`);
+}
+
+/** 태그 카운트 요약 문서 참조 */
+function tagCountsRef(coupleId: string) {
+  return doc(getDb(), `couples/${coupleId}/meta/tagCounts`);
+}
+
+/** 태그 카운트 증감 (delta: +1 또는 -1) */
+async function adjustTagCounts(coupleId: string, tags: string[], delta: 1 | -1) {
+  if (tags.length === 0) return;
+  const ref = tagCountsRef(coupleId);
+  const updates: Record<string, ReturnType<typeof increment> | ReturnType<typeof deleteField>> = {};
+  tags.forEach((tag) => {
+    updates[tag] = increment(delta);
+  });
+  await setDoc(ref, updates, { merge: true });
+}
+
+/** 0 이하인 태그 카운트 정리 */
+async function cleanupZeroTags(coupleId: string) {
+  const ref = tagCountsRef(coupleId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const data = snap.data() as Record<string, number>;
+  const toDelete: Record<string, ReturnType<typeof deleteField>> = {};
+  Object.entries(data).forEach(([tag, count]) => {
+    if (count <= 0) toDelete[tag] = deleteField();
+  });
+  if (Object.keys(toDelete).length > 0) {
+    await updateDoc(ref, toDelete);
+  }
 }
 
 export type PhotoPage = {
@@ -163,6 +196,7 @@ export async function addPhoto(input: AddPhotoInput): Promise<string> {
     height: input.height,
   };
   await setDoc(docRef, data);
+  await adjustTagCounts(input.coupleId, input.tags, 1);
   return docRef.id;
 }
 
@@ -180,14 +214,33 @@ export async function updatePhoto(
   updates: UpdatePhotoInput
 ): Promise<void> {
   const docRef = doc(getDb(), `couples/${coupleId}/photos/${photoId}`);
-  await updateDoc(docRef, updates);
+
+  if (updates.tags) {
+    const snap = await getDoc(docRef);
+    const oldTags: string[] = (snap.data() as Photo)?.tags ?? [];
+    const newTags = updates.tags;
+    const removed = oldTags.filter((t) => !newTags.includes(t));
+    const added = newTags.filter((t) => !oldTags.includes(t));
+
+    await updateDoc(docRef, updates);
+    await adjustTagCounts(coupleId, removed, -1);
+    await adjustTagCounts(coupleId, added, 1);
+    if (removed.length > 0) await cleanupZeroTags(coupleId);
+  } else {
+    await updateDoc(docRef, updates);
+  }
 }
 
 // --- 삭제 ---
 
 export async function deletePhotoDoc(coupleId: string, photoId: string): Promise<void> {
   const docRef = doc(getDb(), `couples/${coupleId}/photos/${photoId}`);
+  const snap = await getDoc(docRef);
+  const tags: string[] = (snap.data() as Photo)?.tags ?? [];
+
   await deleteDoc(docRef);
+  await adjustTagCounts(coupleId, tags, -1);
+  if (tags.length > 0) await cleanupZeroTags(coupleId);
 }
 
 // --- 일괄 이동 ---
@@ -215,22 +268,12 @@ export type PhotoStats = {
 };
 
 export async function getPhotoStats(coupleId: string): Promise<PhotoStats> {
-  // 태그 집계만 수행 — tags 필드가 비어있지 않은 문서만 조회
-  const q = query(photosCol(coupleId), where('tags', '!=', []));
-  const snap = await getDocs(q);
+  // 요약 문서 1개만 읽어서 태그 카운트 반환
+  const snap = await getDoc(tagCountsRef(coupleId));
+  const data = snap.exists() ? (snap.data() as Record<string, number>) : {};
 
-  const tagMap = new Map<string, number>();
-
-  snap.docs.forEach((d) => {
-    const photo = d.data() as Photo;
-    if (Array.isArray(photo.tags)) {
-      photo.tags.forEach((tag) => {
-        tagMap.set(tag, (tagMap.get(tag) ?? 0) + 1);
-      });
-    }
-  });
-
-  const tags = Array.from(tagMap.entries())
+  const tags = Object.entries(data)
+    .filter(([, count]) => count > 0)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
