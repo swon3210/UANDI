@@ -68,15 +68,14 @@ test.describe('주간 예산', () => {
     test('주간 예산/지출/여유 금액이 정확히 계산된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
 
-      // 이번 주의 월/화에 지출 추가
+      // 오늘 + 어제 지출 추가 (미래 날짜 문제 방지)
       const today = dayjs();
-      const monday = today.startOf('week').add(1, 'day'); // dayjs 기본: 일요일 시작 → +1 = 월요일
-      const tuesday = monday.add(1, 'day');
+      const yesterday = today.subtract(1, 'day');
 
       await seedWeeklyData(coupleId, uid, {
         expenseEntries: [
-          { category: '식비', amount: 85000, date: monday.toISOString() },
-          { category: '식비', amount: 42000, date: tuesday.toISOString() },
+          { category: '식비', amount: 85000, date: today.toISOString() },
+          { category: '식비', amount: 42000, date: yesterday.toISOString() },
         ],
       });
 
@@ -91,10 +90,9 @@ test.describe('주간 예산', () => {
       const { page, uid, coupleId } = authedContext;
 
       const today = dayjs();
-      const monday = today.startOf('week').add(1, 'day');
 
       await seedWeeklyData(coupleId, uid, {
-        expenseEntries: [{ category: '식비', amount: 150000, date: monday.toISOString() }],
+        expenseEntries: [{ category: '식비', amount: 150000, date: today.toISOString() }],
       });
 
       const weekly = new CashbookWeeklyPage(page);
@@ -135,13 +133,13 @@ test.describe('주간 예산', () => {
     test('일별 행을 클릭하면 해당 날짜의 지출 내역이 펼쳐진다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
 
+      // 오늘 날짜에 지출 시드 (미래 날짜 문제 방지)
       const today = dayjs();
-      const monday = today.startOf('week').add(1, 'day');
 
       await seedWeeklyData(coupleId, uid, {
         expenseEntries: [
-          { category: '식비', amount: 35000, date: monday.toISOString() },
-          { category: '교통', amount: 12000, date: monday.toISOString() },
+          { category: '식비', amount: 35000, date: today.toISOString() },
+          { category: '교통', amount: 12000, date: today.toISOString() },
         ],
       });
 
@@ -151,9 +149,9 @@ test.describe('주간 예산', () => {
       // 일별 목록이 표시됨
       await expect(weekly.dailyList).toBeVisible();
 
-      // 월요일 행 클릭
-      const mondayDate = monday.format('M/D');
-      const row = page.getByText(mondayDate).first();
+      // 오늘 날짜 행 클릭
+      const todayDate = today.format('M/D');
+      const row = page.getByText(todayDate).first();
       await row.click();
 
       // 상세 내역이 펼쳐짐
@@ -183,13 +181,14 @@ test.describe('주간 예산', () => {
     test('카테고리별 주간 지출이 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
 
+      // 오늘 + 어제 지출 시드 (미래 날짜 문제 방지)
       const today = dayjs();
-      const monday = today.startOf('week').add(1, 'day');
+      const yesterday = today.subtract(1, 'day');
 
       await seedWeeklyData(coupleId, uid, {
         expenseEntries: [
-          { category: '식비', amount: 120000, date: monday.toISOString() },
-          { category: '교통', amount: 30000, date: monday.add(1, 'day').toISOString() },
+          { category: '식비', amount: 120000, date: today.toISOString() },
+          { category: '교통', amount: 30000, date: yesterday.toISOString() },
         ],
       });
 
@@ -238,9 +237,8 @@ test.describe('주간 예산', () => {
       const { page, uid, coupleId } = authedContext;
 
       const today = dayjs();
-      const monday = today.startOf('week').add(1, 'day');
-      // 이전 주 월요일
-      const prevMonday = monday.subtract(7, 'day');
+      // 이전 주에 해당하는 날짜 (7일 전)
+      const prevMonday = today.subtract(7, 'day');
 
       // 월 변동 예산: 1,000,000 (연 12,000,000)
       // 주당 약 250,000 (4주 기준) ~ 200,000 (5주 기준)
