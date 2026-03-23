@@ -287,7 +287,7 @@
 type AnnualPlan = {
   id: string;
   coupleId: string;
-  year: number;                      // 예: 2026
+  year: number; // 예: 2026
   createdBy: string;
   updatedAt: Timestamp;
   createdAt: Timestamp;
@@ -295,30 +295,31 @@ type AnnualPlan = {
 
 type AnnualPlanItem = {
   id: string;
-  planId: string;                    // AnnualPlan.id 참조
+  planId: string; // AnnualPlan.id 참조
   coupleId: string;
-  categoryId: string;                // CashbookCategory.id 참조
-  group: CategoryGroup;              // 'income' | 'expense' | 'investment' | 'flex'
+  categoryId: string; // CashbookCategory.id 참조
+  group: CategoryGroup; // 'income' | 'expense' | 'investment' | 'flex'
   subGroup: CategorySubGroup;
-  annualAmount: number;              // 연간 총 예산
-  monthlyAmount: number | null;      // 월별 금액 (고정 지출 등)
-  targetMonths: number[] | null;     // 지출 시기 [1, 9] (비월별 지출)
-  ownerUid: string | null;           // null = 공통, userId = 각자
+  annualAmount: number; // 연간 총 예산
+  monthlyAmount: number | null; // 월별 금액 (고정 지출 등)
+  targetMonths: number[] | null; // 지출 시기 [1, 9] (비월별 지출)
+  ownerUid: string | null; // null = 공통, userId = 각자
   updatedAt: Timestamp;
 };
 
 type InvestmentPlan = {
   id: string;
-  planId: string;                    // AnnualPlan.id 참조
+  planId: string; // AnnualPlan.id 참조
   coupleId: string;
-  targetReturnRate: number;          // 목표 수익률 (%, 예: 3)
-  totalAvailable: number;            // 재테크 가능 금액 (자동 계산)
-  targetAmount: number;              // 목표 금액 (자동 계산)
+  targetReturnRate: number; // 목표 수익률 (%, 예: 3)
+  totalAvailable: number; // 재테크 가능 금액 (자동 계산)
+  targetAmount: number; // 목표 금액 (자동 계산)
   updatedAt: Timestamp;
 };
 ```
 
 **Firestore 경로**:
+
 - `couples/{coupleId}/annualPlans/{planId}`
 - `couples/{coupleId}/annualPlans/{planId}/items/{itemId}`
 - `couples/{coupleId}/annualPlans/{planId}/investmentPlan` (단일 문서)

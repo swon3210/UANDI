@@ -16,8 +16,7 @@ export function useInfiniteFolders(coupleId: string | null) {
     queryKey: ['folders', coupleId],
     queryFn: ({ pageParam }) => getFolders(coupleId!, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.folders.length > 0 ? lastPage.lastDoc : undefined,
+    getNextPageParam: (lastPage) => (lastPage.folders.length > 0 ? lastPage.lastDoc : undefined),
     enabled: !!coupleId,
   });
 }

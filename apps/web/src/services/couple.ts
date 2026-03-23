@@ -21,9 +21,7 @@ function generateInviteCode(): string {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-export async function createCouple(
-  uid: string
-): Promise<{ coupleId: string; inviteCode: string }> {
+export async function createCouple(uid: string): Promise<{ coupleId: string; inviteCode: string }> {
   const coupleRef = doc(collection(getDb(), 'couples'));
   const coupleId = coupleRef.id;
 
@@ -86,7 +84,10 @@ export async function joinCoupleByInviteCode(uid: string, code: string): Promise
   await updateUserDocument(uid, { coupleId: coupleDoc.id });
 }
 
-export function subscribeToCouple(coupleId: string, onChange: (couple: Couple) => void): Unsubscribe {
+export function subscribeToCouple(
+  coupleId: string,
+  onChange: (couple: Couple) => void
+): Unsubscribe {
   return onSnapshot(doc(getDb(), 'couples', coupleId), (snap) => {
     if (snap.exists()) onChange(snap.data() as Couple);
   });

@@ -7,7 +7,13 @@ const meta: Meta<typeof MonthlyInvestmentTab> = {
   title: 'Cashbook/MonthlyInvestmentTab',
   component: MonthlyInvestmentTab,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
@@ -27,17 +33,78 @@ const categories = [
 export const WithData: Story = {
   args: {
     budgetItems: [
-      { categoryId: 'cat-domestic', group: 'investment', subGroup: 'investment', budgetAmount: 750000, ownerUid: null },
-      { categoryId: 'cat-foreign', group: 'investment', subGroup: 'investment', budgetAmount: 750000, ownerUid: null },
+      {
+        categoryId: 'cat-domestic',
+        group: 'investment',
+        subGroup: 'investment',
+        budgetAmount: 750000,
+        ownerUid: null,
+      },
+      {
+        categoryId: 'cat-foreign',
+        group: 'investment',
+        subGroup: 'investment',
+        budgetAmount: 750000,
+        ownerUid: null,
+      },
     ],
     entries: [
-      { id: '1', coupleId: 'c1', createdBy: 'u1', type: 'investment', amount: 500000, category: '국내주식', description: '삼성전자 10주', date: earlyMonth, createdAt: now, transactionType: 'buy' },
-      { id: '2', coupleId: 'c1', createdBy: 'u1', type: 'investment', amount: 52000, category: '국내주식', description: '매도 수익', date: midMonth, createdAt: now, transactionType: 'sell' },
-      { id: '3', coupleId: 'c1', createdBy: 'u1', type: 'investment', amount: 700000, category: '해외주식', description: '', date: midMonth, createdAt: now, transactionType: 'buy' },
+      {
+        id: '1',
+        coupleId: 'c1',
+        createdBy: 'u1',
+        type: 'investment',
+        amount: 500000,
+        category: '국내주식',
+        description: '삼성전자 10주',
+        date: earlyMonth,
+        createdAt: now,
+        transactionType: 'buy',
+      },
+      {
+        id: '2',
+        coupleId: 'c1',
+        createdBy: 'u1',
+        type: 'investment',
+        amount: 52000,
+        category: '국내주식',
+        description: '매도 수익',
+        date: midMonth,
+        createdAt: now,
+        transactionType: 'sell',
+      },
+      {
+        id: '3',
+        coupleId: 'c1',
+        createdBy: 'u1',
+        type: 'investment',
+        amount: 700000,
+        category: '해외주식',
+        description: '',
+        date: midMonth,
+        createdAt: now,
+        transactionType: 'buy',
+      },
     ] as CashbookEntry[],
     cashBalances: [
-      { id: 'b1', coupleId: 'c1', categoryId: 'cat-savings', year: 2026, month: 3, balance: 12000000, updatedAt: now },
-      { id: 'b2', coupleId: 'c1', categoryId: 'cat-checking', year: 2026, month: 3, balance: 3500000, updatedAt: now },
+      {
+        id: 'b1',
+        coupleId: 'c1',
+        categoryId: 'cat-savings',
+        year: 2026,
+        month: 3,
+        balance: 12000000,
+        updatedAt: now,
+      },
+      {
+        id: 'b2',
+        coupleId: 'c1',
+        categoryId: 'cat-checking',
+        year: 2026,
+        month: 3,
+        balance: 3500000,
+        updatedAt: now,
+      },
     ],
     categories,
     onAddInvestment: () => {},

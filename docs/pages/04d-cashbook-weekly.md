@@ -133,10 +133,10 @@ const thisWeekBudget = baseBudget + previousWeekRemaining;
 
 ### 예산 경고 알림
 
-| 조건 | 알림 메시지 |
-|------|------------|
-| 주 예산 80% 소진 | "이번 주 예산이 거의 다 됐어요!" |
-| 주 예산 초과 | "이번 주 예산을 초과했어요 😢" |
+| 조건             | 알림 메시지                        |
+| ---------------- | ---------------------------------- |
+| 주 예산 80% 소진 | "이번 주 예산이 거의 다 됐어요!"   |
+| 주 예산 초과     | "이번 주 예산을 초과했어요 😢"     |
 | 월 예산 80% 소진 | "이번 달 예산이 얼마 안 남았어요!" |
 
 ### 알림 설정 UI
@@ -189,8 +189,8 @@ type NotificationSettings = {
   userId: string;
   recordReminder: {
     enabled: boolean;
-    time: string;           // "21:00" (HH:mm)
-    days: number[];         // [1, 2, 3, 4, 5] (1=월, 7=일)
+    time: string; // "21:00" (HH:mm)
+    days: number[]; // [1, 2, 3, 4, 5] (1=월, 7=일)
   };
   budgetWarning: {
     enabled: boolean;

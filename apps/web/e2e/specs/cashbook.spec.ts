@@ -1,9 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import {
-  seedDefaultCategories,
-  seedCashbookEntry,
-} from '../helpers/emulator';
+import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
 import { CashbookPage } from '../page-objects/CashbookPage';
 
 test.describe('가계부', () => {

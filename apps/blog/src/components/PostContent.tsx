@@ -49,9 +49,7 @@ export function PostContent({ post }: { post: PostData }) {
       {/* 메타데이터 */}
       <header className="mb-8 border-b border-gray-100 pb-8">
         <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
-        <p className="mt-2 text-sm text-gray-400">
-          {dayjs(post.date).format('YYYY년 M월 D일')}
-        </p>
+        <p className="mt-2 text-sm text-gray-400">{dayjs(post.date).format('YYYY년 M월 D일')}</p>
         <div className="mt-3 flex gap-2">
           {post.tags.map((tag) => (
             <TagBadge key={tag} tag={tag} />

@@ -20,7 +20,11 @@ import {
   SheetTitle,
 } from '@uandi/ui';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
-import { SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS, COLOR_PRESETS } from '@/constants/default-categories';
+import {
+  SUB_GROUPS_BY_GROUP,
+  SUB_GROUP_LABELS,
+  COLOR_PRESETS,
+} from '@/constants/default-categories';
 import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
 

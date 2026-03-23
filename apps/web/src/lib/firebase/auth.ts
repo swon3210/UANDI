@@ -37,7 +37,11 @@ export async function deleteCurrentUser(): Promise<void> {
   try {
     await deleteUser(user);
   } catch (error: unknown) {
-    if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'auth/requires-recent-login') {
+    if (
+      error instanceof Error &&
+      'code' in error &&
+      (error as { code: string }).code === 'auth/requires-recent-login'
+    ) {
       await reauthenticateWithPopup(user, new GoogleAuthProvider());
       await deleteUser(user);
     } else {

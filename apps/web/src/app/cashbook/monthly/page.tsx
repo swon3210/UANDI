@@ -19,7 +19,12 @@ import {
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useMonthlyBudget, useMonthlyOverview, useCategoryBudgetSummaries, useWeeklyExpenses } from '@/hooks/useMonthlyBudget';
+import {
+  useMonthlyBudget,
+  useMonthlyOverview,
+  useCategoryBudgetSummaries,
+  useWeeklyExpenses,
+} from '@/hooks/useMonthlyBudget';
 import { useCashBalances, useUpsertCashBalance } from '@/hooks/useCashBalance';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlyOverview } from '@/components/cashbook/MonthlyOverview';
@@ -54,7 +59,13 @@ export default function CashbookMonthlyPage() {
   const budgetItems = budget?.items;
   const overview = useMonthlyOverview(budgetItems, entries);
   const categoryBudgets = useCategoryBudgetSummaries(budgetItems, entries, categories);
-  const weeklyExpenses = useWeeklyExpenses(budgetItems, entries, year, month1, categories ?? undefined);
+  const weeklyExpenses = useWeeklyExpenses(
+    budgetItems,
+    entries,
+    year,
+    month1,
+    categories ?? undefined
+  );
 
   // 뮤테이션
   const addMutation = useAddEntry(coupleId);
@@ -157,9 +168,15 @@ export default function CashbookMonthlyPage() {
         <div className="mt-6">
           <Tabs defaultValue="expense">
             <TabsList className="w-full">
-              <TabsTrigger value="expense" className="flex-1">지출</TabsTrigger>
-              <TabsTrigger value="income" className="flex-1">수입</TabsTrigger>
-              <TabsTrigger value="investment" className="flex-1">재테크</TabsTrigger>
+              <TabsTrigger value="expense" className="flex-1">
+                지출
+              </TabsTrigger>
+              <TabsTrigger value="income" className="flex-1">
+                수입
+              </TabsTrigger>
+              <TabsTrigger value="investment" className="flex-1">
+                재테크
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="expense" className="mt-4">

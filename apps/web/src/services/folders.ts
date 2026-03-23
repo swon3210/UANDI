@@ -29,12 +29,14 @@ export type FolderPage = {
   lastDoc: DocumentSnapshot | null;
 };
 
-export async function getFolders(
-  coupleId: string,
-  cursor?: DocumentSnapshot
-): Promise<FolderPage> {
+export async function getFolders(coupleId: string, cursor?: DocumentSnapshot): Promise<FolderPage> {
   const q = cursor
-    ? query(foldersCol(coupleId), orderBy('createdAt', 'desc'), startAfter(cursor), limit(FOLDER_PAGE_SIZE))
+    ? query(
+        foldersCol(coupleId),
+        orderBy('createdAt', 'desc'),
+        startAfter(cursor),
+        limit(FOLDER_PAGE_SIZE)
+      )
     : query(foldersCol(coupleId), orderBy('createdAt', 'desc'), limit(FOLDER_PAGE_SIZE));
   const snap = await getDocs(q);
   const folders = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Folder);
@@ -56,7 +58,11 @@ export async function getFolder(coupleId: string, folderId: string): Promise<Fol
   return { id: snap.id, ...snap.data() } as Folder;
 }
 
-export async function createFolder(coupleId: string, name: string, userId: string): Promise<string> {
+export async function createFolder(
+  coupleId: string,
+  name: string,
+  userId: string
+): Promise<string> {
   const ref = await addDoc(foldersCol(coupleId), {
     coupleId,
     name,
@@ -66,7 +72,11 @@ export async function createFolder(coupleId: string, name: string, userId: strin
   return ref.id;
 }
 
-export async function renameFolder(coupleId: string, folderId: string, newName: string): Promise<void> {
+export async function renameFolder(
+  coupleId: string,
+  folderId: string,
+  newName: string
+): Promise<void> {
   await updateDoc(doc(getDb(), `couples/${coupleId}/folders/${folderId}`), { name: newName });
 }
 

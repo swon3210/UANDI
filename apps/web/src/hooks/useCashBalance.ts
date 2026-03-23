@@ -20,8 +20,7 @@ export function useCashBalances(
 export function useUpsertCashBalance(coupleId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<CashBalance, 'id' | 'updatedAt'>) =>
-      upsertCashBalance(coupleId!, data),
+    mutationFn: (data: Omit<CashBalance, 'id' | 'updatedAt'>) => upsertCashBalance(coupleId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
       toast.success('잔고가 업데이트되었어요.');

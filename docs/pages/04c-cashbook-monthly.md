@@ -17,11 +17,11 @@
 
 ## 상태 색상 체계
 
-| 상태 | 색상 | 조건 | 의미 |
-|------|------|------|------|
-| 안정 | 🟢 초록 (`--income`) | 여유분 ≥ 예산의 20% | 예산 내 안정적 |
+| 상태 | 색상                  | 조건                    | 의미           |
+| ---- | --------------------- | ----------------------- | -------------- |
+| 안정 | 🟢 초록 (`--income`)  | 여유분 ≥ 예산의 20%     | 예산 내 안정적 |
 | 경고 | 🟡 노랑 (`--warning`) | 0 < 여유분 < 예산의 20% | 예산 소진 임박 |
-| 긴급 | 🔴 빨강 (`--expense`) | 여유분 ≤ 0 (마이너스) | 예산 초과 |
+| 긴급 | 🔴 빨강 (`--expense`) | 여유분 ≤ 0 (마이너스)   | 예산 초과      |
 
 > **여유분** = 월 예산 - 월 실제 지출
 
@@ -218,16 +218,16 @@ type EntryType = 'income' | 'expense' | 'investment' | 'flex';
 // 투자 항목 추가 필드
 type InvestmentEntry = CashbookEntry & {
   type: 'investment';
-  transactionType: 'buy' | 'sell';  // 매수 / 매도
+  transactionType: 'buy' | 'sell'; // 매수 / 매도
 };
 
 // 월별 예산 스냅샷 (연간 계획에서 자동 생성)
 type MonthlyBudget = {
   id: string;
   coupleId: string;
-  planId: string;           // AnnualPlan.id
+  planId: string; // AnnualPlan.id
   year: number;
-  month: number;            // 1~12
+  month: number; // 1~12
   items: MonthlyBudgetItem[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -237,23 +237,24 @@ type MonthlyBudgetItem = {
   categoryId: string;
   group: CategoryGroup;
   subGroup: CategorySubGroup;
-  budgetAmount: number;     // 이번 달 예산
-  ownerUid: string | null;  // null = 공통
+  budgetAmount: number; // 이번 달 예산
+  ownerUid: string | null; // null = 공통
 };
 
 // 현금 보유 잔고 (월말 스냅샷)
 type CashBalance = {
   id: string;
   coupleId: string;
-  categoryId: string;       // 예적금 or 입출금 카테고리
+  categoryId: string; // 예적금 or 입출금 카테고리
   year: number;
   month: number;
-  balance: number;          // 잔고
+  balance: number; // 잔고
   updatedAt: Timestamp;
 };
 ```
 
 **Firestore 경로**:
+
 - `couples/{coupleId}/monthlyBudgets/{year}-{month}`
 - `couples/{coupleId}/cashBalances/{balanceId}`
 

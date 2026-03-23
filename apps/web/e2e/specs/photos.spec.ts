@@ -25,8 +25,10 @@ test.describe('사진 갤러리', () => {
 
     test('모바일에서 하단 네비게이션이 표시된다', async ({ authedContext, browserName }) => {
       // BottomNav는 md:hidden이므로 모바일 뷰포트에서만 표시됨
-      test.skip(browserName !== 'chromium' || !(test.info().project.name === 'Mobile Chrome'),
-        '모바일 전용 테스트');
+      test.skip(
+        browserName !== 'chromium' || !(test.info().project.name === 'Mobile Chrome'),
+        '모바일 전용 테스트'
+      );
       const photos = new PhotosPage(authedContext.page);
       await photos.goto();
       await expect(photos.bottomNav).toBeVisible();
@@ -38,9 +40,7 @@ test.describe('사진 갤러리', () => {
       const photos = new PhotosPage(authedContext.page);
       await photos.goto();
       await photos.switchToTab('folders');
-      await expect(photos.getEmptyStateTitle()).toHaveText(
-        '폴더를 만들어 사진을 정리해보세요'
-      );
+      await expect(photos.getEmptyStateTitle()).toHaveText('폴더를 만들어 사진을 정리해보세요');
     });
 
     test('새 폴더를 생성할 수 있다', async ({ authedContext }) => {

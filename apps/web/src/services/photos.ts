@@ -71,10 +71,7 @@ export async function getRecentPhotos(coupleId: string, count = 3): Promise<Phot
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Photo);
 }
 
-export async function getPhotos(
-  coupleId: string,
-  cursor?: DocumentSnapshot
-): Promise<PhotoPage> {
+export async function getPhotos(coupleId: string, cursor?: DocumentSnapshot): Promise<PhotoPage> {
   const constraints: QueryConstraint[] = [orderBy('takenAt', 'desc'), limit(PAGE_SIZE)];
   if (cursor) constraints.push(startAfter(cursor));
 
@@ -108,10 +105,7 @@ export async function getPhotosByFolder(
 }
 
 /** 폴더 내 전체 사진 (슬라이드쇼용) */
-export async function getAllPhotosByFolder(
-  coupleId: string,
-  folderId: string
-): Promise<Photo[]> {
+export async function getAllPhotosByFolder(coupleId: string, folderId: string): Promise<Photo[]> {
   const q = query(
     photosCol(coupleId),
     where('folderId', '==', folderId),
@@ -143,10 +137,7 @@ export async function getPhotosByTag(
 }
 
 /** 태그별 전체 사진 (슬라이드쇼용) */
-export async function getAllPhotosByTag(
-  coupleId: string,
-  tagName: string
-): Promise<Photo[]> {
+export async function getAllPhotosByTag(coupleId: string, tagName: string): Promise<Photo[]> {
   const q = query(
     photosCol(coupleId),
     where('tags', 'array-contains', tagName),
@@ -289,11 +280,7 @@ export type FolderStat = {
 
 export async function getFolderStat(coupleId: string, folderId: string): Promise<FolderStat> {
   const countQuery = query(photosCol(coupleId), where('folderId', '==', folderId));
-  const coverQuery = query(
-    photosCol(coupleId),
-    where('folderId', '==', folderId),
-    limit(1)
-  );
+  const coverQuery = query(photosCol(coupleId), where('folderId', '==', folderId), limit(1));
 
   const [countSnap, coverSnap] = await Promise.all([
     getCountFromServer(countQuery),

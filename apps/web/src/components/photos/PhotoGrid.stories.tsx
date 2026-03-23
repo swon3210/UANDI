@@ -79,9 +79,7 @@ function SelectableWrapper() {
 
   return (
     <div>
-      <p className="p-4 text-sm text-muted-foreground">
-        선택된 사진: {selected.size}장
-      </p>
+      <p className="p-4 text-sm text-muted-foreground">선택된 사진: {selected.size}장</p>
       <PhotoGrid
         photos={mockPhotos}
         uploaderAvatars={uploaderAvatars}

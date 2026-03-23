@@ -11,9 +11,7 @@ export default function BlogHomePage() {
       <TagFilter tags={tags} />
       <div className="mt-6 space-y-8">
         {posts.length === 0 ? (
-          <p className="text-sm text-gray-400">
-            아직 작성된 글이 없습니다.
-          </p>
+          <p className="text-sm text-gray-400">아직 작성된 글이 없습니다.</p>
         ) : (
           posts.map((post) => <PostCard key={post.slug} post={post} />)
         )}

@@ -52,7 +52,9 @@ export function MonthlyInvestmentTab({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">실제</span>
-            <span className="text-sm tabular-nums font-semibold">{formatCurrency(actualTotal)}</span>
+            <span className="text-sm tabular-nums font-semibold">
+              {formatCurrency(actualTotal)}
+            </span>
           </div>
         </div>
       </section>
@@ -72,18 +74,20 @@ export function MonthlyInvestmentTab({
                 {catEntries
                   .sort((a, b) => a.date.toDate().getTime() - b.date.toDate().getTime())
                   .map((entry) => {
-                    const txType = (entry as CashbookEntry & { transactionType?: string }).transactionType;
+                    const txType = (entry as CashbookEntry & { transactionType?: string })
+                      .transactionType;
                     const isSell = txType === 'sell';
                     return (
                       <div key={entry.id} className="flex items-center justify-between pl-6">
                         <span className="text-xs text-muted-foreground">
                           {dayjs(entry.date.toDate()).format('M/D')}
-                          {txType && (
-                            <span className="ml-1.5">{isSell ? '매도' : '매수'}</span>
-                          )}
+                          {txType && <span className="ml-1.5">{isSell ? '매도' : '매수'}</span>}
                         </span>
-                        <span className={`text-sm tabular-nums font-medium ${isSell ? 'text-income' : ''}`}>
-                          {isSell ? '+' : ''}{formatCurrency(entry.amount)}
+                        <span
+                          className={`text-sm tabular-nums font-medium ${isSell ? 'text-income' : ''}`}
+                        >
+                          {isSell ? '+' : ''}
+                          {formatCurrency(entry.amount)}
                         </span>
                       </div>
                     );
@@ -97,11 +101,7 @@ export function MonthlyInvestmentTab({
             </p>
           )}
           <div className="p-3">
-            <Button
-              variant="ghost"
-              className="w-full text-sm"
-              onClick={onAddInvestment}
-            >
+            <Button variant="ghost" className="w-full text-sm" onClick={onAddInvestment}>
               <Plus size={16} className="mr-1" />
               투자 내역 추가
             </Button>
@@ -130,11 +130,7 @@ export function MonthlyInvestmentTab({
             );
           })}
           <div className="p-3">
-            <Button
-              variant="ghost"
-              className="w-full text-sm"
-              onClick={onUpdateBalance}
-            >
+            <Button variant="ghost" className="w-full text-sm" onClick={onUpdateBalance}>
               잔고 업데이트
             </Button>
           </div>

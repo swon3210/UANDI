@@ -6,13 +6,13 @@
 
 > **가계부 기능 문서 구성**
 >
-> | 파일 | 내용 |
-> |------|------|
-> | `04-cashbook.md` | 내역 CRUD + 메인 화면 (이 문서) |
-> | `04a-cashbook-categories.md` | 카테고리 체계 + 관리 대시보드 |
-> | `04b-cashbook-annual-plan.md` | 연간 예산 계획 |
-> | `04c-cashbook-monthly.md` | 월간 대시보드 (목표 vs 실제) |
-> | `04d-cashbook-weekly.md` | 주간 예산 & 지출 추적 |
+> | 파일                          | 내용                            |
+> | ----------------------------- | ------------------------------- |
+> | `04-cashbook.md`              | 내역 CRUD + 메인 화면 (이 문서) |
+> | `04a-cashbook-categories.md`  | 카테고리 체계 + 관리 대시보드   |
+> | `04b-cashbook-annual-plan.md` | 연간 예산 계획                  |
+> | `04c-cashbook-monthly.md`     | 월간 대시보드 (목표 vs 실제)    |
+> | `04d-cashbook-weekly.md`      | 주간 예산 & 지출 추적           |
 
 ---
 

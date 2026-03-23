@@ -11,11 +11,7 @@ type IncomePlanTabProps = {
   items: AnnualPlanItem[];
   categories: CashbookCategory[];
   previousYearItems?: AnnualPlanItem[];
-  onItemAmountChange: (
-    itemId: string,
-    annualAmount: number,
-    monthlyAmount: number | null
-  ) => void;
+  onItemAmountChange: (itemId: string, annualAmount: number, monthlyAmount: number | null) => void;
   onApplySuggestion?: (itemId: string, amount: number) => void;
 };
 
@@ -91,11 +87,7 @@ function SubGroupSection({
   items: AnnualPlanItem[];
   inputMode: 'monthly' | 'annual';
   getCategoryInfo: (categoryId: string) => CashbookCategory | undefined;
-  onItemAmountChange: (
-    itemId: string,
-    annualAmount: number,
-    monthlyAmount: number | null
-  ) => void;
+  onItemAmountChange: (itemId: string, annualAmount: number, monthlyAmount: number | null) => void;
   getPreviousAmount?: (categoryId: string) => number | null;
   onApplySuggestion?: (itemId: string, amount: number) => void;
 }) {
@@ -114,11 +106,7 @@ function SubGroupSection({
                 categoryIcon={cat?.icon ?? ''}
                 categoryColor={cat?.color ?? '#78909C'}
                 inputMode={inputMode}
-                amount={
-                  inputMode === 'monthly'
-                    ? (item.monthlyAmount ?? 0)
-                    : item.annualAmount
-                }
+                amount={inputMode === 'monthly' ? (item.monthlyAmount ?? 0) : item.annualAmount}
                 onAmountChange={(annualAmount, monthlyAmount) =>
                   onItemAmountChange(item.id, annualAmount, monthlyAmount)
                 }

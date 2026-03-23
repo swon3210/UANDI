@@ -14,11 +14,7 @@ type FlexPlanTabProps = {
   flexAvailable: number;
   currentUserUid: string;
   partnerDisplayName?: string;
-  onItemAmountChange: (
-    itemId: string,
-    annualAmount: number,
-    monthlyAmount: number | null
-  ) => void;
+  onItemAmountChange: (itemId: string, annualAmount: number, monthlyAmount: number | null) => void;
 };
 
 export function FlexPlanTab({

@@ -20,10 +20,12 @@ import type { CashbookCategory, CashBalance } from '@/types';
 import { CategoryIcon } from './CategoryIcon';
 
 const schema = z.object({
-  balances: z.array(z.object({
-    categoryId: z.string(),
-    balance: z.number({ error: '금액을 입력해주세요' }).min(0, '0 이상 입력해주세요'),
-  })),
+  balances: z.array(
+    z.object({
+      categoryId: z.string(),
+      balance: z.number({ error: '금액을 입력해주세요' }).min(0, '0 이상 입력해주세요'),
+    })
+  ),
 });
 
 type FormValues = z.infer<typeof schema>;

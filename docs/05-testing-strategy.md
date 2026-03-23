@@ -200,10 +200,7 @@ export async function clearEmulatorData() {
       `${FIRESTORE_EMULATOR}/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`,
       { method: 'DELETE' }
     ),
-    fetch(
-      `${AUTH_EMULATOR}/emulator/v1/projects/${PROJECT_ID}/accounts`,
-      { method: 'DELETE' }
-    ),
+    fetch(`${AUTH_EMULATOR}/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' }),
   ]);
 }
 
@@ -222,11 +219,7 @@ export async function createTestUser(email: string, password: string): Promise<s
 }
 
 // Firestore REST API로 users 문서 직접 생성
-export async function seedUserDocument(
-  uid: string,
-  email: string,
-  coupleId: string | null = null
-) {
+export async function seedUserDocument(uid: string, email: string, coupleId: string | null = null) {
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
     {

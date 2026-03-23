@@ -36,7 +36,9 @@ export async function GET() {
   const posts = getAllPosts();
   const siteUrl = process.env.SITE_URL ?? 'https://blog.uandi.app';
 
-  const items = posts.map(post => `
+  const items = posts
+    .map(
+      (post) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${siteUrl}/posts/${post.slug}</link>
@@ -44,7 +46,9 @@ export async function GET() {
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       <guid>${siteUrl}/posts/${post.slug}</guid>
     </item>
-  `).join('');
+  `
+    )
+    .join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

@@ -5,7 +5,13 @@ const meta: Meta<typeof WeeklyExpenseTable> = {
   title: 'Cashbook/WeeklyExpenseTable',
   component: WeeklyExpenseTable,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;

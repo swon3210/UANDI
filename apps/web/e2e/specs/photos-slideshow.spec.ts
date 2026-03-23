@@ -87,18 +87,18 @@ test.describe('슬라이드쇼', () => {
     // 5.5초 대기
     await page.waitForTimeout(5500);
 
-    const opacity = await page.getByTestId('slideshow-overlay').evaluate(
-      (el) => window.getComputedStyle(el).opacity
-    );
+    const opacity = await page
+      .getByTestId('slideshow-overlay')
+      .evaluate((el) => window.getComputedStyle(el).opacity);
     expect(Number(opacity)).toBe(0);
 
     // 화면 클릭으로 복원 (300ms CSS transition 완료 대기)
     await page.getByTestId('slideshow-container').click({ position: { x: 200, y: 300 } });
 
     await expect(async () => {
-      const restoredOpacity = await page.getByTestId('slideshow-overlay').evaluate(
-        (el) => window.getComputedStyle(el).opacity
-      );
+      const restoredOpacity = await page
+        .getByTestId('slideshow-overlay')
+        .evaluate((el) => window.getComputedStyle(el).opacity);
       expect(Number(restoredOpacity)).toBe(1);
     }).toPass({ timeout: 2000 });
   });

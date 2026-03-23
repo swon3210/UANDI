@@ -143,7 +143,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@uandi/ui';
     <InputOTPSlot index={4} />
     <InputOTPSlot index={5} />
   </InputOTPGroup>
-</InputOTP>
+</InputOTP>;
 ```
 
 - 한 칸 입력 시 자동으로 다음 칸으로 포커스 이동 (shadcn이 처리)

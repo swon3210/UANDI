@@ -27,10 +27,7 @@ function investmentPlanDoc(coupleId: string, planId: string) {
 
 // ── AnnualPlan CRUD ──
 
-export async function getAnnualPlan(
-  coupleId: string,
-  year: number
-): Promise<AnnualPlan | null> {
+export async function getAnnualPlan(coupleId: string, year: number): Promise<AnnualPlan | null> {
   const q = query(plansCol(coupleId), where('year', '==', year));
   const snap = await getDocs(q);
   if (snap.empty) return null;
@@ -58,10 +55,7 @@ export async function createAnnualPlan(
 
 // ── AnnualPlanItem CRUD ──
 
-export async function getPlanItems(
-  coupleId: string,
-  planId: string
-): Promise<AnnualPlanItem[]> {
+export async function getPlanItems(coupleId: string, planId: string): Promise<AnnualPlanItem[]> {
   const snap = await getDocs(itemsCol(coupleId, planId));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AnnualPlanItem);
 }
@@ -115,11 +109,15 @@ export async function upsertInvestmentPlan(
   planId: string,
   data: Omit<InvestmentPlan, 'id'>
 ): Promise<void> {
-  await setDoc(investmentPlanDoc(coupleId, planId), {
-    id: 'main',
-    ...data,
-    updatedAt: Timestamp.now(),
-  }, { merge: true });
+  await setDoc(
+    investmentPlanDoc(coupleId, planId),
+    {
+      id: 'main',
+      ...data,
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
 }
 
 // ── Previous Year Data ──

@@ -10,12 +10,32 @@ type ImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
 };
 
 // Mock for next/image in Storybook
-const Image = ({ src, alt, fill, sizes: _sizes, priority: _priority, quality: _quality, style, ...props }: ImageProps) => (
+const Image = ({
+  src,
+  alt,
+  fill,
+  sizes: _sizes,
+  priority: _priority,
+  quality: _quality,
+  style,
+  ...props
+}: ImageProps) => (
   // eslint-disable-next-line @next/next/no-img-element
   <img
     src={src}
     alt={alt}
-    style={fill ? { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', ...style } : style}
+    style={
+      fill
+        ? {
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            ...style,
+          }
+        : style
+    }
     {...props}
   />
 );

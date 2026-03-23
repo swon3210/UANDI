@@ -47,9 +47,7 @@ function DeleteConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>사진 삭제</DialogTitle>
-          <DialogDescription>
-            이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?
-          </DialogDescription>
+          <DialogDescription>이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
@@ -238,7 +236,10 @@ export function PhotoDetailView({ photoId }: PhotoDetailViewProps) {
           )}
 
           {/* 날짜 + 업로더 */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="photo-meta">
+          <div
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+            data-testid="photo-meta"
+          >
             {takenAtFormatted && <span>{takenAtFormatted}</span>}
             {uploader && (
               <>

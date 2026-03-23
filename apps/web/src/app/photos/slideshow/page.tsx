@@ -24,14 +24,8 @@ function SlideshowContent() {
     isFolderSource ? coupleId : null,
     isFolderSource ? id : null
   );
-  const tagQuery = useAllPhotosByTag(
-    isTagSource ? coupleId : null,
-    isTagSource ? id : null
-  );
-  const { data: folder } = useFolder(
-    isFolderSource ? coupleId : null,
-    isFolderSource ? id : null
-  );
+  const tagQuery = useAllPhotosByTag(isTagSource ? coupleId : null, isTagSource ? id : null);
+  const { data: folder } = useFolder(isFolderSource ? coupleId : null, isFolderSource ? id : null);
 
   const activeQuery = isFolderSource ? folderQuery : tagQuery;
   const photos = activeQuery.data ?? [];

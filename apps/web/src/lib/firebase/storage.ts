@@ -36,11 +36,7 @@ export async function uploadPhotoFile({
   });
 }
 
-export async function deletePhotoFile(
-  coupleId: string,
-  photoId: string,
-  storageUrl?: string
-) {
+export async function deletePhotoFile(coupleId: string, photoId: string, storageUrl?: string) {
   // storageUrl에서 확장자 파싱 (예: original.png → png)
   let ext = 'jpg';
   if (storageUrl) {

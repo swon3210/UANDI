@@ -69,13 +69,8 @@ export function useCreateAnnualPlan(coupleId: string | null) {
 export function useUpsertPlanItem(coupleId: string | null, planId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      itemId,
-      data,
-    }: {
-      itemId: string;
-      data: Omit<AnnualPlanItem, 'id'>;
-    }) => upsertPlanItem(coupleId!, planId!, itemId, data),
+    mutationFn: ({ itemId, data }: { itemId: string; data: Omit<AnnualPlanItem, 'id'> }) =>
+      upsertPlanItem(coupleId!, planId!, itemId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
     onError: () => toast.error('항목 저장에 실패했어요.'),
   });

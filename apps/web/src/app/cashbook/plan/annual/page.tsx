@@ -46,10 +46,7 @@ export default function AnnualPlanPage() {
 
   const { data: plan, isPending: planPending } = useAnnualPlan(coupleId, year);
   const { data: categories, isPending: catPending } = useCashbookCategories(coupleId);
-  const { data: items, isPending: itemsPending } = useAnnualPlanItems(
-    coupleId,
-    plan?.id ?? null
-  );
+  const { data: items, isPending: itemsPending } = useAnnualPlanItems(coupleId, plan?.id ?? null);
   const { data: investmentPlan } = useInvestmentPlan(coupleId, plan?.id ?? null);
   const { data: prevYearData } = usePreviousYearPlan(coupleId, year);
 
@@ -76,9 +73,7 @@ export default function AnnualPlanPage() {
     if (itemsInitRef.current) return;
 
     const existingCategoryIds = new Set(items.map((i) => i.categoryId));
-    const missingCategories = categories.filter(
-      (c) => !existingCategoryIds.has(c.id)
-    );
+    const missingCategories = categories.filter((c) => !existingCategoryIds.has(c.id));
 
     if (missingCategories.length === 0) return;
     itemsInitRef.current = true;
@@ -157,8 +152,7 @@ export default function AnnualPlanPage() {
     [plan, coupleId, summary.availableForInvestment, upsertInvestmentMutation]
   );
 
-  const flexAvailable =
-    summary.availableForInvestment - summary.investmentAllocated;
+  const flexAvailable = summary.availableForInvestment - summary.investmentAllocated;
 
   if (isLoading) return <FullScreenSpinner />;
 
@@ -201,9 +195,7 @@ export default function AnnualPlanPage() {
               items={incomeItems}
               categories={categories ?? []}
               previousYearItems={
-                prevYearData
-                  ? filterItemsByGroup(prevYearData.items, 'income')
-                  : undefined
+                prevYearData ? filterItemsByGroup(prevYearData.items, 'income') : undefined
               }
               onItemAmountChange={handleItemAmountChange}
               onApplySuggestion={handleApplySuggestion}

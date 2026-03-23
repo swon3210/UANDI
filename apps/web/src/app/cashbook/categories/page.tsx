@@ -122,8 +122,8 @@ export default function CashbookCategoriesPage() {
               <DialogHeader>
                 <DialogTitle>카테고리 삭제</DialogTitle>
                 <DialogDescription>
-                  이 카테고리를 사용 중인 항목이 {usedCount}건 있습니다. 삭제해도
-                  기존 항목의 카테고리는 그대로 유지됩니다. 삭제하시겠습니까?
+                  이 카테고리를 사용 중인 항목이 {usedCount}건 있습니다. 삭제해도 기존 항목의
+                  카테고리는 그대로 유지됩니다. 삭제하시겠습니까?
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="gap-2">
@@ -178,10 +178,7 @@ export default function CashbookCategoriesPage() {
       />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as CategoryGroup)}
-        >
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as CategoryGroup)}>
           <TabsList className="w-full">
             {TAB_ORDER.map((group) => (
               <TabsTrigger key={group} value={group} className="flex-1">
@@ -203,11 +200,7 @@ export default function CashbookCategoriesPage() {
         </Tabs>
 
         <div className="mt-4">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleAdd}
-          >
+          <Button variant="outline" className="w-full" onClick={handleAdd}>
             <Plus size={16} className="mr-2" />
             카테고리 추가
           </Button>

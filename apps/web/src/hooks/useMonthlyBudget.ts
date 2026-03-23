@@ -160,11 +160,12 @@ export function useWeeklyExpenses(
     );
 
     const now = new Date();
-    const currentDay = now.getFullYear() === year && now.getMonth() + 1 === month
-      ? now.getDate()
-      : month < (now.getMonth() + 1) || year < now.getFullYear()
-        ? daysInMonth // 과거 달이면 전체 완료
-        : 0; // 미래 달이면 전부 미래
+    const currentDay =
+      now.getFullYear() === year && now.getMonth() + 1 === month
+        ? now.getDate()
+        : month < now.getMonth() + 1 || year < now.getFullYear()
+          ? daysInMonth // 과거 달이면 전체 완료
+          : 0; // 미래 달이면 전부 미래
 
     const weeks: WeeklyExpense[] = [];
     for (let w = 1; w <= totalWeeks; w++) {

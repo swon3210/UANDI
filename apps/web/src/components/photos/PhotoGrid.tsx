@@ -38,7 +38,10 @@ export function PhotoGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5" data-testid="photo-grid">
+    <div
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5"
+      data-testid="photo-grid"
+    >
       {photos.map((photo) => {
         const isSelected = selectedIds?.has(photo.id) ?? false;
         const avatarUrl = uploaderAvatars?.[photo.uploadedBy];
@@ -60,7 +63,10 @@ export function PhotoGrid({
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               />
               {uploaderAvatars && (
-                <Avatar className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white" data-testid="uploader-avatar">
+                <Avatar
+                  className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white"
+                  data-testid="uploader-avatar"
+                >
                   <AvatarImage src={avatarUrl ?? undefined} />
                   <AvatarFallback className="text-[10px]">U</AvatarFallback>
                 </Avatar>
@@ -94,7 +100,10 @@ export function PhotoGrid({
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
             {uploaderAvatars && (
-              <Avatar className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white" data-testid="uploader-avatar">
+              <Avatar
+                className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white"
+                data-testid="uploader-avatar"
+              >
                 <AvatarImage src={avatarUrl ?? undefined} />
                 <AvatarFallback className="text-[10px]">U</AvatarFallback>
               </Avatar>

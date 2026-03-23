@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const isHeaded = process.argv.includes('--headed');
+const isCI = !!process.env.CI;
 
 // .env.test 파일에서 환경변수를 로드
 function loadEnvFile(filePath: string): Record<string, string> {
@@ -30,10 +31,11 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   testDir: './e2e/specs',
   fullyParallel: false,
-  retries: 0,
+  retries: isCI ? 1 : 0,
   workers: 1,
   reporter: 'html',
   ...(isHeaded && { timeout: 60000 }),
+  ...(isCI && { timeout: 60000 }),
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
     trace: 'on-first-retry',
@@ -44,6 +46,9 @@ export default defineConfig({
   },
   ...(isHeaded && {
     expect: { timeout: 30000 },
+  }),
+  ...(isCI && {
+    expect: { timeout: 15000 },
   }),
   projects: [
     {
@@ -58,13 +63,11 @@ export default defineConfig({
   webServer: {
     command: `pnpm next dev --port ${E2E_PORT}`,
     url: `http://localhost:${E2E_PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
+    reuseExistingServer: !isCI,
+    timeout: isCI ? 120000 : 30000,
     env: {
       ...Object.fromEntries(
-        Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] != null
-        )
+        Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] != null)
       ),
       ...testEnv,
     },

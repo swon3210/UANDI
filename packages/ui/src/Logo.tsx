@@ -14,7 +14,7 @@ import type { SVGProps } from 'react';
 
 export type LogoVariant = 'full' | 'icon' | 'app-icon';
 
-export type LogoProps = SVGProps<SVGSVGElement> & {
+export type LogoProps = Omit<SVGProps<SVGSVGElement>, 'ref'> & {
   variant?: LogoVariant;
 };
 

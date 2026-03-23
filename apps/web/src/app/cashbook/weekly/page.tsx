@@ -42,15 +42,26 @@ export default function CashbookWeeklyPage() {
   const [month, setMonth] = useState(today.month() + 1); // 1~12
 
   const weeks = getWeeksInMonth(year, month);
-  const initialWeek = year === today.year() && month === today.month() + 1
-    ? getCurrentWeekNumber(today, weeks)
-    : 1;
+  const initialWeek =
+    year === today.year() && month === today.month() + 1 ? getCurrentWeekNumber(today, weeks) : 1;
   const [weekNumber, setWeekNumber] = useState(initialWeek);
 
   // 데이터 로딩
-  const { data: entries, isPending: entriesPending, isError: entriesError } = useCashbookEntries(coupleId, year, month - 1); // 0-indexed
-  const { data: categories, isPending: categoriesPending, isError: categoriesError } = useCashbookCategories(coupleId);
-  const { data: budget, isPending: budgetPending, isError: budgetError } = useMonthlyBudget(coupleId, year, month);
+  const {
+    data: entries,
+    isPending: entriesPending,
+    isError: entriesError,
+  } = useCashbookEntries(coupleId, year, month - 1); // 0-indexed
+  const {
+    data: categories,
+    isPending: categoriesPending,
+    isError: categoriesError,
+  } = useCashbookCategories(coupleId);
+  const {
+    data: budget,
+    isPending: budgetPending,
+    isError: budgetError,
+  } = useMonthlyBudget(coupleId, year, month);
 
   const isLoading = entriesPending || categoriesPending || budgetPending;
   const isError = entriesError || categoriesError || budgetError;
@@ -200,9 +211,7 @@ export default function CashbookWeeklyPage() {
             title="예산 데이터가 없습니다"
             description="연간 계획을 먼저 설정해주세요"
             action={
-              <Button onClick={() => router.push('/cashbook/annual-plan')}>
-                연간 계획 설정
-              </Button>
+              <Button onClick={() => router.push('/cashbook/annual-plan')}>연간 계획 설정</Button>
             }
           />
         )}

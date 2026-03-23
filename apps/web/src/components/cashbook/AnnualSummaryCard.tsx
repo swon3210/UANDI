@@ -42,16 +42,14 @@ function SummaryRow({
   prefix?: string;
 }) {
   return (
-    <div
-      className="flex items-center justify-between"
-      data-testid={`summary-row-${label}`}
-    >
+    <div className="flex items-center justify-between" data-testid={`summary-row-${label}`}>
       <span className="text-sm text-muted-foreground">{label}</span>
       <span
         className={`text-base font-semibold tabular-nums ${colorClass}`}
         data-testid="summary-amount"
       >
-        {prefix}{formatCurrency(amount)}
+        {prefix}
+        {formatCurrency(amount)}
       </span>
     </div>
   );

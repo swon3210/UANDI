@@ -83,11 +83,7 @@ function SinglePhotoWrapper() {
     );
   }
   return (
-    <SlideshowView
-      photos={[mockPhotos[0]]}
-      folder={mockFolder}
-      onClose={() => setOpen(false)}
-    />
+    <SlideshowView photos={[mockPhotos[0]]} folder={mockFolder} onClose={() => setOpen(false)} />
   );
 }
 

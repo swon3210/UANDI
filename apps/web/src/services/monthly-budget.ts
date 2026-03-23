@@ -16,10 +16,7 @@ export type ComputedMonthlyBudget = {
  * - targetMonths가 있으면 → 해당 월에만 배정 (annualAmount ÷ targetMonths.length)
  * - 둘 다 없으면 → annualAmount ÷ 12
  */
-function computeMonthlyBudgetItem(
-  item: AnnualPlanItem,
-  month: number
-): MonthlyBudgetItem | null {
+function computeMonthlyBudgetItem(item: AnnualPlanItem, month: number): MonthlyBudgetItem | null {
   let budgetAmount: number;
 
   if (item.monthlyAmount != null) {

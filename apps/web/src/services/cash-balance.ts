@@ -1,12 +1,4 @@
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  setDoc,
-  doc,
-  Timestamp,
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, doc, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
 import type { CashBalance } from '@/types';
 
@@ -19,11 +11,7 @@ export async function getCashBalances(
   year: number,
   month: number // 1~12
 ): Promise<CashBalance[]> {
-  const q = query(
-    balancesCol(coupleId),
-    where('year', '==', year),
-    where('month', '==', month)
-  );
+  const q = query(balancesCol(coupleId), where('year', '==', year), where('month', '==', month));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashBalance);
 }

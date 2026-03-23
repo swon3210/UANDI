@@ -17,8 +17,10 @@ export default function TagDetailPage() {
   const coupleId = user?.coupleId ?? null;
   const tagName = decodeURIComponent(params.tagName);
 
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    usePhotosByTag(coupleId, tagName);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = usePhotosByTag(
+    coupleId,
+    tagName
+  );
   const uploaderAvatars = useUploaderAvatars(coupleId);
 
   const [uploaderFilter, setUploaderFilter] = useState<UploaderFilter>('all');
@@ -61,9 +63,7 @@ export default function TagDetailPage() {
             variant="ghost"
             size="icon"
             onClick={() =>
-              router.push(
-                `/photos/slideshow?source=tag&id=${encodeURIComponent(tagName)}`
-              )
+              router.push(`/photos/slideshow?source=tag&id=${encodeURIComponent(tagName)}`)
             }
             aria-label="슬라이드쇼"
             data-testid="slideshow-btn"
@@ -85,10 +85,7 @@ export default function TagDetailPage() {
             />
           ) : (
             <>
-              <PhotoGrid
-                photos={filteredPhotos}
-                uploaderAvatars={uploaderAvatars}
-              />
+              <PhotoGrid photos={filteredPhotos} uploaderAvatars={uploaderAvatars} />
               {isFetchingNextPage && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
                   {Array.from({ length: 4 }).map((_, i) => (
