@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   reauthenticateWithPopup,
   deleteUser,
   signOut as firebaseSignOut,
@@ -11,6 +12,12 @@ import { getAuth } from './config';
 
 const provider = new GoogleAuthProvider();
 
+function isInAppWebView(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /wv|WebView/i.test(ua) || (/Android/.test(ua) && /Version\/[\d.]+/.test(ua));
+}
+
 export async function signInWithGoogle(): Promise<void> {
   // E2E 테스트에서 에러 시나리오 모킹용 (config.ts에서 window.__signInWithGoogle 설정)
   const w = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null;
@@ -18,7 +25,12 @@ export async function signInWithGoogle(): Promise<void> {
     await (w.__signInWithGoogleMock as () => Promise<void>)();
     return;
   }
-  await signInWithPopup(getAuth(), provider);
+
+  if (isInAppWebView()) {
+    await signInWithRedirect(getAuth(), provider);
+  } else {
+    await signInWithPopup(getAuth(), provider);
+  }
 }
 
 export async function signOut(): Promise<void> {
