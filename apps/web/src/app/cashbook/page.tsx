@@ -24,6 +24,7 @@ import {
   useDeleteEntry,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
@@ -125,6 +126,8 @@ export default function CashbookPage() {
           </div>
         }
       />
+
+      <CashbookSubNav />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />

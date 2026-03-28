@@ -7,7 +7,7 @@ import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/ko';
-import { ChevronLeft, Bell, CalendarX2, AlertCircle } from 'lucide-react';
+import { Bell, CalendarX2, AlertCircle } from 'lucide-react';
 import { Header, Button, Sheet, FullScreenSpinner, EmptyState } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
@@ -20,6 +20,7 @@ import {
   useDailyExpenses,
   useWeeklyCategorySummary,
 } from '@/hooks/useWeeklyBudget';
+import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { WeekSelector } from '@/components/cashbook/WeekSelector';
 import { WeeklySummaryCard } from '@/components/cashbook/WeeklySummaryCard';
 import { DailyExpenseList } from '@/components/cashbook/DailyExpenseList';
@@ -139,18 +140,7 @@ export default function CashbookWeeklyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        title="주간 예산"
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => router.back()}
-            aria-label="뒤로가기"
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
+        title="가계부"
         rightSlot={
           <Button
             variant="ghost"
@@ -163,6 +153,8 @@ export default function CashbookWeeklyPage() {
           </Button>
         }
       />
+
+      <CashbookSubNav />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-2 pb-20 space-y-5">
         {weeklyData && (
@@ -200,7 +192,7 @@ export default function CashbookWeeklyPage() {
             title="예산 데이터가 없습니다"
             description="연간 계획을 먼저 설정해주세요"
             action={
-              <Button onClick={() => router.push('/cashbook/annual-plan')}>
+              <Button onClick={() => router.push('/cashbook/plan/annual')}>
                 연간 계획 설정
               </Button>
             }
