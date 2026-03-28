@@ -12,7 +12,7 @@ import {
   Button,
   Sheet,
   EmptyState,
-  FullScreenSpinner,
+  Skeleton,
 } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -41,9 +41,9 @@ export default function CashbookPage() {
   const year = dayjs(selectedDate).year();
   const month = dayjs(selectedDate).month();
 
-  const { data: entries, isPending: entriesPending } = useCashbookEntries(coupleId, year, month);
-  const { data: categories, isPending: categoriesPending } = useCashbookCategories(coupleId);
-  const isLoading = entriesPending || categoriesPending;
+  const { data: entries, isLoading: entriesLoading } = useCashbookEntries(coupleId, year, month);
+  const { data: categories, isLoading: categoriesLoading } = useCashbookCategories(coupleId);
+  const isLoading = entriesLoading || categoriesLoading;
   const summary = useMonthlySummary(entries);
   const groups = useGroupedEntries(entries);
 
@@ -96,8 +96,6 @@ export default function CashbookPage() {
     ));
   };
 
-  if (isLoading) return <FullScreenSpinner />;
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header
@@ -131,32 +129,44 @@ export default function CashbookPage() {
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
 
-        <div className="mt-4">
-          <MonthlySummary
-            income={summary.income}
-            expense={summary.expense}
-            balance={summary.balance}
-          />
-        </div>
+        {isLoading ? (
+          <div className="mt-4 space-y-4">
+            <Skeleton className="h-[108px] rounded-xl" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-16 rounded-lg" />
+            <Skeleton className="h-16 rounded-lg" />
+            <Skeleton className="h-16 rounded-lg" />
+          </div>
+        ) : (
+          <>
+            <div className="mt-4">
+              <MonthlySummary
+                income={summary.income}
+                expense={summary.expense}
+                balance={summary.balance}
+              />
+            </div>
 
-        <div className="mt-6">
-          {groups.length > 0 ? (
-            <EntryList
-              groups={groups}
-              categories={categories ?? []}
-              onEntryClick={handleEntryClick}
-            />
-          ) : (
-            <EmptyState
-              icon={<BookOpen size={48} className="text-muted-foreground" />}
-              title="아직 내역이 없어요"
-              description="가계부를 시작해보세요"
-              action={
-                <Button onClick={handleAdd}>추가하기</Button>
-              }
-            />
-          )}
-        </div>
+            <div className="mt-6">
+              {groups.length > 0 ? (
+                <EntryList
+                  groups={groups}
+                  categories={categories ?? []}
+                  onEntryClick={handleEntryClick}
+                />
+              ) : (
+                <EmptyState
+                  icon={<BookOpen size={48} className="text-muted-foreground" />}
+                  title="아직 내역이 없어요"
+                  description="가계부를 시작해보세요"
+                  action={
+                    <Button onClick={handleAdd}>추가하기</Button>
+                  }
+                />
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       <BottomNav activeTab="cashbook" />
