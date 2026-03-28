@@ -11,6 +11,7 @@ import type { User as FirebaseUser, Unsubscribe } from 'firebase/auth';
 import { getAuth } from './config';
 
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
 
 function isInAppWebView(): boolean {
   if (typeof navigator === 'undefined') return false;
