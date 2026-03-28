@@ -1,7 +1,7 @@
 'use client';
 
 import { FolderOpen } from 'lucide-react';
-import { EmptyState } from '@uandi/ui';
+import { EmptyState, Skeleton } from '@uandi/ui';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 import { SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS, GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryItem } from './CategoryItem';
@@ -9,12 +9,37 @@ import { CategoryItem } from './CategoryItem';
 type CategoryListProps = {
   categories: CashbookCategory[];
   group: CategoryGroup;
+  isLoading?: boolean;
   onEdit: (category: CashbookCategory) => void;
   onDelete: (category: CashbookCategory) => void;
 };
 
-export function CategoryList({ categories, group, onEdit, onDelete }: CategoryListProps) {
+function CategoryListSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[0, 1].map((group) => (
+        <div key={group}>
+          <Skeleton className="mb-1 mx-2 h-3 w-16" />
+          <div className="rounded-xl bg-card border border-border divide-y divide-border">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="flex items-center gap-3 px-4 py-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CategoryList({ categories, group, isLoading, onEdit, onDelete }: CategoryListProps) {
   const subGroups = SUB_GROUPS_BY_GROUP[group];
+
+  if (isLoading) {
+    return <CategoryListSkeleton />;
+  }
 
   if (categories.length === 0) {
     return (

@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  FullScreenSpinner,
 } from '@uandi/ui';
 import { ChevronLeft, Plus } from 'lucide-react';
 import { userAtom } from '@/stores/auth.store';
@@ -56,8 +55,8 @@ export default function CashbookCategoriesPage() {
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <CategoryForm
           group={activeTab}
-          onSubmit={(data) => {
-            addMutation.mutate({
+          onSubmit={async (data) => {
+            await addMutation.mutateAsync({
               group: activeTab,
               subGroup: data.subGroup as CashbookCategory['subGroup'],
               name: data.name,
@@ -82,8 +81,8 @@ export default function CashbookCategoriesPage() {
         <CategoryForm
           group={category.group}
           editingCategory={category}
-          onSubmit={(data) => {
-            updateMutation.mutate({
+          onSubmit={async (data) => {
+            await updateMutation.mutateAsync({
               categoryId: category.id,
               data: {
                 name: data.name,
@@ -157,8 +156,6 @@ export default function CashbookCategoriesPage() {
     deleteMutation.mutate(category.id);
   };
 
-  if (isLoading) return <FullScreenSpinner />;
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header
@@ -195,6 +192,7 @@ export default function CashbookCategoriesPage() {
               <CategoryList
                 categories={filterCategoriesByGroup(categories, group)}
                 group={group}
+                isLoading={isLoading}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />

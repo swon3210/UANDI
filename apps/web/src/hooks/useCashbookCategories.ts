@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getCategories,
   addCategory,
@@ -32,6 +33,7 @@ export function useAddCategory(coupleId: string | null) {
     mutationFn: (data: Omit<CashbookCategory, 'id' | 'coupleId' | 'createdAt'>) =>
       addCategory(coupleId!, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('카테고리 추가에 실패했습니다'),
   });
 }
 
@@ -46,6 +48,7 @@ export function useUpdateCategory(coupleId: string | null) {
       data: Partial<Pick<CashbookCategory, 'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder'>>;
     }) => updateCategory(coupleId!, categoryId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('카테고리 수정에 실패했습니다'),
   });
 }
 
@@ -54,6 +57,7 @@ export function useDeleteCategory(coupleId: string | null) {
   return useMutation({
     mutationFn: (categoryId: string) => deleteCategory(coupleId!, categoryId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('카테고리 삭제에 실패했습니다'),
   });
 }
 
