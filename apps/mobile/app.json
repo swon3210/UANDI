@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "UANDI",
-    "slug": "uandi",
+    "slug": "my-react-native-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -51,6 +51,7 @@
       "eas": {
         "projectId": "0de212de-7fe9-45d0-9a52-6ac42634b83a"
       }
-    }
+    },
+    "owner": "swon3210"
   }
 }

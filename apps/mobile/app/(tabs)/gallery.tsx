@@ -1,21 +1,5 @@
-import { StyleSheet } from 'react-native';
-
-import Constants from 'expo-constants';
-import { WebView } from 'react-native-webview';
-
+import { AppWebView } from '@/components/app-webview';
 
 export default function GalleryScreen() {
-  return (
-    <WebView
-    style={styles.container}
-    source={{ uri: 'https://my-timer-chi.vercel.app/gallery-timer' }}
-  />
-  );
+  return <AppWebView path="/photos" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    marginTop: Constants.statusBarHeight,
-  },
-});
