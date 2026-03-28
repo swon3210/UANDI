@@ -2,10 +2,9 @@ import type { SVGProps } from 'react';
 
 // ─── UANDI 로고 ─────────────────────────────────────────────────────────────
 //
-// 아이콘 마크: "ui" 리가처
-//   - U 아크(하단 곡선) + 두 수직선 → "U" (You)
-//   - U의 오른쪽 다리 위에 점(dot) → "i" (I)
-//   - 두 요소가 하나의 스트로크로 연결 → "You and I" = UANDI
+// 아이콘 마크: 코랄색 하트
+//   - 통통하고 둥근 하트 아이콘 + 좌상단 하이라이트(반짝임)
+//   - 코랄색 "UANDI" 워드마크 (둥근 모서리)
 //
 // 세 가지 variant:
 //   full      — 아이콘 + 워드마크 수평 조합 (헤더 등에 사용)
@@ -23,22 +22,38 @@ export type LogoProps = SVGProps<SVGSVGElement> & {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CORAL = '#E8837A';
-const INK = '#1C1917'; // stone-900
 
-// "ui" 리가처 경로 (44×48 좌표계)
-//  M5 11  — U 왼쪽 상단
-//  L5 29  — 왼쪽 다리 하강
-//  Q5 44 21 44  — 하단 곡선 왼쪽 절반
-//  Q37 44 37 29 — 하단 곡선 오른쪽 절반
-//  L37 11 — 오른쪽 다리 상승 (← 이 선이 "i"의 몸통)
-const UI_PATH = 'M5 11L5 29Q5 44 21 44Q37 44 37 29L37 11';
+// 하트 경로 (48×48 좌표계)
+// — 통통한 로브 + Q 커브로 하단 부드럽게 마감
+const HEART_PATH = [
+  'M24 10',
+  'C23.5 7 21 3.5 16.5 3.5', // 상단 중심 → 왼쪽 로브 상단
+  'C9 3.5 3.5 9 3.5 16', // 왼쪽 로브 원형
+  'C3.5 24 15 33 22 36.5', // 왼쪽 하단 곡선
+  'Q24 38 26 36.5', // 하단 끝 — Q 커브로 둥글게
+  'C33 33 44.5 24 44.5 16', // 오른쪽 하단 곡선
+  'C44.5 9 39 3.5 31.5 3.5', // 오른쪽 로브 원형
+  'C27 3.5 24.5 7 24 10Z', // 오른쪽 로브 → 상단 중심
+].join('');
+
+// app-icon용 하트 (40×40 좌표계)
+const HEART_PATH_SM = [
+  'M20 10',
+  'C19.5 7.5 17.5 4.5 14 4.5',
+  'C8 4.5 4 9 4 14.5',
+  'C4 21 13 28 18.5 31',
+  'Q20 32.5 21.5 31',
+  'C27 28 36 21 36 14.5',
+  'C36 9 32 4.5 26 4.5',
+  'C22.5 4.5 20.5 7.5 20 10Z',
+].join('');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Logo 컴포넌트
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function Logo({ variant = 'full', ...props }: LogoProps) {
-  // ── app-icon: 코랄 배경 + 흰 마크 ─────────────────────────────────────────
+  // ── app-icon: 투명 배경 코랄 하트 + 하이라이트 ─────────────────────────────
   if (variant === 'app-icon') {
     return (
       <svg
@@ -48,68 +63,84 @@ export function Logo({ variant = 'full', ...props }: LogoProps) {
         aria-label="UANDI"
         {...props}
       >
-        {/* 코랄 배경 */}
-        <rect width="40" height="40" rx="9" fill={CORAL} />
-        {/* 흰 "ui" 리가처 (40×40 좌표계로 축소) */}
-        {/*  원본 44×48 → 40×40: x *= 0.83, y *= 0.79  */}
-        <path
-          d="M4 8L4 22Q4 34 20 34Q36 34 36 22L36 8"
-          stroke="white"
-          strokeWidth="3"
-          strokeLinecap="round"
+        <path d={HEART_PATH_SM} fill={CORAL} />
+        {/* 좌상단 하이라이트 */}
+        <ellipse
+          cx="12"
+          cy="12"
+          rx="4"
+          ry="3.5"
+          fill="white"
+          opacity="0.3"
+          transform="rotate(-20 12 12)"
         />
-        {/* 흰 "i" 점 */}
-        <circle cx="36" cy="3.5" r="2.8" fill="white" />
       </svg>
     );
   }
 
-  // ── icon: 투명 배경 코랄 마크 ─────────────────────────────────────────────
+  // ── icon: 투명 배경 코랄 하트 ───────────────────────────────────────────────
   if (variant === 'icon') {
     return (
       <svg
-        viewBox="0 0 44 48"
+        viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-label="UANDI"
         {...props}
       >
-        <path d={UI_PATH} stroke={CORAL} strokeWidth="3.5" strokeLinecap="round" />
-        {/* "i" 점 — U 오른쪽 다리 (x=37) 위에 위치 */}
-        <circle cx="37" cy="4.5" r="3.5" fill={CORAL} />
+        <path d={HEART_PATH} fill={CORAL} />
+        {/* 좌상단 하이라이트 */}
+        <ellipse
+          cx="14"
+          cy="13"
+          rx="5"
+          ry="4.5"
+          fill="white"
+          opacity="0.3"
+          transform="rotate(-20 14 13)"
+        />
       </svg>
     );
   }
 
-  // ── full: 아이콘 + 워드마크 수평 조합 ────────────────────────────────────
-  //   viewBox 너비: 44(아이콘) + 14(간격) + ~90(텍스트) ≈ 148
-  //   * <text> 너비는 폰트에 따라 달라지므로 overflow="visible" 사용
+  // ── full: 하트 아이콘 + 워드마크 수평 조합 ─────────────────────────────────
   return (
     <svg
-      viewBox="0 0 148 48"
+      viewBox="0 0 160 48"
       fill="none"
       overflow="visible"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="UANDI"
       {...props}
     >
-      {/* 아이콘 마크 */}
-      <path d={UI_PATH} stroke={CORAL} strokeWidth="3.5" strokeLinecap="round" />
-      <circle cx="37" cy="4.5" r="3.5" fill={CORAL} />
+      {/* 하트 아이콘 */}
+      <path d={HEART_PATH} fill={CORAL} />
+      {/* 좌상단 하이라이트 */}
+      <ellipse
+        cx="14"
+        cy="13"
+        rx="5"
+        ry="4.5"
+        fill="white"
+        opacity="0.3"
+        transform="rotate(-20 14 13)"
+      />
 
-      {/* 워드마크 ─────────────────────────────────────────────────────────── */}
-      {/* 수직 중앙 정렬: dominant-baseline="middle" + y="24" (48px 기준 중심) */}
-      {/*                                                                      */}
-      {/* ※ 프로덕션에서는 텍스트를 path로 변환해 폰트 의존성을 없애는 것 권장  */}
+      {/* 워드마크 — stroke + round join으로 글자 모서리를 둥글게 */}
       <text
-        x="58"
+        x="54"
         y="24"
         dominantBaseline="middle"
-        fontFamily="Pretendard Variable, Pretendard, -apple-system, sans-serif"
-        fontSize="28"
-        fontWeight="700"
-        fill={INK}
-        letterSpacing="-0.5"
+        fontFamily="Nunito, Varela Round, Pretendard Variable, Pretendard, -apple-system, sans-serif"
+        fontSize="26"
+        fontWeight="800"
+        fill={CORAL}
+        stroke={CORAL}
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        paintOrder="stroke"
+        letterSpacing="1.5"
       >
         UANDI
       </text>
