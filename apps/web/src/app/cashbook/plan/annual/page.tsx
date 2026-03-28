@@ -222,6 +222,7 @@ export default function AnnualPlanPage() {
 
           <TabsContent value="investment" className="mt-4">
             <InvestmentPlanTab
+              key={investmentPlan?.id ?? 'init'}
               items={investmentItems}
               categories={categories ?? []}
               totalIncome={summary.totalIncome}

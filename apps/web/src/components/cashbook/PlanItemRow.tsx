@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useDebounce } from '@uidotdev/usehooks';
+import { useState, useCallback, useRef } from 'react';
 import { Input } from '@uandi/ui';
 import { CategoryIcon } from './CategoryIcon';
 import { formatCurrency } from '@/utils/currency';
@@ -29,26 +28,19 @@ export function PlanItemRow({
   onTargetMonthsChange,
 }: PlanItemRowProps) {
   const [localAmount, setLocalAmount] = useState(amount);
-  const debouncedAmount = useDebounce(localAmount, 500);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Ref로 콜백을 안정화하여 useEffect 무한 루프 방지
-  const onAmountChangeRef = useRef(onAmountChange);
-  useEffect(() => {
-    onAmountChangeRef.current = onAmountChange;
-  }, [onAmountChange]);
-
-  useEffect(() => {
-    setLocalAmount(amount);
-  }, [amount]);
-
-  useEffect(() => {
-    if (debouncedAmount === amount) return;
-    if (inputMode === 'monthly') {
-      onAmountChangeRef.current(debouncedAmount * 12, debouncedAmount);
-    } else {
-      onAmountChangeRef.current(debouncedAmount, null);
-    }
-  }, [debouncedAmount, inputMode, amount]);
+  const handleAmountChange = (value: number) => {
+    setLocalAmount(value);
+    clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      if (inputMode === 'monthly') {
+        onAmountChange(value * 12, value);
+      } else {
+        onAmountChange(value, null);
+      }
+    }, 500);
+  };
 
   const annualTotal =
     inputMode === 'monthly' ? localAmount * 12 : localAmount;
@@ -85,7 +77,7 @@ export function PlanItemRow({
             type="number"
             className="w-32 text-right tabular-nums text-sm h-8"
             value={localAmount || ''}
-            onChange={(e) => setLocalAmount(Number(e.target.value) || 0)}
+            onChange={(e) => handleAmountChange(Number(e.target.value) || 0)}
             aria-label={`${categoryName} 금액`}
           />
           <span className="text-xs text-muted-foreground shrink-0">

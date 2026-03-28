@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useDebounce } from '@uidotdev/usehooks';
+import { useState, useCallback, useRef } from 'react';
 import { Input, Badge, Separator } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { PlanItemRow } from './PlanItemRow';
@@ -33,17 +32,15 @@ export function InvestmentPlanTab({
 }: InvestmentPlanTabProps) {
   const availableAmount = totalIncome - totalExpense;
   const [localRate, setLocalRate] = useState(targetReturnRate);
-  const debouncedRate = useDebounce(localRate, 500);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    setLocalRate(targetReturnRate);
-  }, [targetReturnRate]);
-
-  useEffect(() => {
-    if (debouncedRate !== targetReturnRate) {
-      onTargetReturnRateChange(debouncedRate);
-    }
-  }, [debouncedRate, targetReturnRate, onTargetReturnRateChange]);
+  const handleRateChange = (value: number) => {
+    setLocalRate(value);
+    clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      onTargetReturnRateChange(value);
+    }, 500);
+  };
 
   const targetAmount = Math.round(availableAmount * (1 + localRate / 100));
   const allocationTotal = items.reduce((sum, item) => sum + item.annualAmount, 0);
@@ -90,7 +87,7 @@ export function InvestmentPlanTab({
             type="number"
             className="w-16 text-right text-sm h-8"
             value={localRate || ''}
-            onChange={(e) => setLocalRate(Number(e.target.value) || 0)}
+            onChange={(e) => handleRateChange(Number(e.target.value) || 0)}
             aria-label="목표 수익률"
           />
           <span className="text-sm text-muted-foreground">%</span>
