@@ -28,7 +28,7 @@ export function PlanItemRow({
   onTargetMonthsChange,
 }: PlanItemRowProps) {
   const [localAmount, setLocalAmount] = useState(amount);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleAmountChange = (value: number) => {
     setLocalAmount(value);

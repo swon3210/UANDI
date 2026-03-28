@@ -32,7 +32,7 @@ export function InvestmentPlanTab({
 }: InvestmentPlanTabProps) {
   const availableAmount = totalIncome - totalExpense;
   const [localRate, setLocalRate] = useState(targetReturnRate);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleRateChange = (value: number) => {
     setLocalRate(value);
