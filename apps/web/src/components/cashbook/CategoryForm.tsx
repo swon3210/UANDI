@@ -36,7 +36,7 @@ type FormValues = z.infer<typeof schema>;
 type CategoryFormProps = {
   group: CategoryGroup;
   editingCategory?: CashbookCategory;
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: FormValues) => Promise<void>;
   onClose: () => void;
 };
 
@@ -53,9 +53,13 @@ export function CategoryForm({ group, editingCategory, onSubmit, onClose }: Cate
     },
   });
 
-  const handleSubmit = (data: FormValues) => {
-    onSubmit(data);
-    onClose();
+  const handleSubmit = async (data: FormValues) => {
+    try {
+      await onSubmit(data);
+      onClose();
+    } catch {
+      // mutation onError에서 toast 처리
+    }
   };
 
   return (
