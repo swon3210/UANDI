@@ -1,5 +1,5 @@
-import { Redirect } from 'expo-router';
+import { AppWebView } from '@/components/app-webview';
 
-export default function Index() {
-  return <Redirect href="/gallery" />;
+export default function HomeScreen() {
+  return <AppWebView path="/" />;
 }
