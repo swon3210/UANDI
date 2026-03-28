@@ -21,6 +21,7 @@ import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget, useMonthlyOverview, useCategoryBudgetSummaries, useWeeklyExpenses } from '@/hooks/useMonthlyBudget';
 import { useCashBalances, useUpsertCashBalance } from '@/hooks/useCashBalance';
+import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlyOverview } from '@/components/cashbook/MonthlyOverview';
 import { MonthlyExpenseTab } from '@/components/cashbook/MonthlyExpenseTab';
@@ -133,7 +134,7 @@ export default function CashbookMonthlyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        title="월간 대시보드"
+        title="가계부"
         rightSlot={
           <Button
             variant="ghost"
@@ -146,6 +147,8 @@ export default function CashbookMonthlyPage() {
           </Button>
         }
       />
+
+      <CashbookSubNav />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
