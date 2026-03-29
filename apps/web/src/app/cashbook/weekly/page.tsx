@@ -141,17 +141,19 @@ export default function CashbookWeeklyPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         title="가계부"
+        leftSlot={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => router.push('/cashbook/weekly/notifications')}
+            aria-label="알림 설정"
+          >
+            <Bell size={20} />
+          </Button>
+        }
         rightSlot={
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/weekly/notifications')}
-              aria-label="알림 설정"
-            >
-              <Bell size={20} />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
