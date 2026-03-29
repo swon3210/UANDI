@@ -5,9 +5,9 @@ import { markdownToHtml } from './markdown';
 // apps/docs/ 기준 ../../docs = 모노레포 루트의 docs/ 폴더
 const DOCS_ROOT = path.join(process.cwd(), '../../docs');
 
-// "00-overview" → "overview", "ai-workflow" → "ai-workflow"
+// "00-overview" → "overview", "03a-gallery-scaffold" → "gallery-scaffold"
 function stripNumberPrefix(name: string): string {
-  return name.replace(/^\d+-/, '');
+  return name.replace(/^\d+[a-z]?-/, '');
 }
 
 // 파일 목록에서 slug → 절대 경로 맵 생성
