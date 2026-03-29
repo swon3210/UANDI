@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { Settings } from 'lucide-react';
+import { Plus, Tag, CalendarDays, Bell } from 'lucide-react';
 import {
   Header,
   Button,
@@ -136,15 +136,45 @@ export default function CashbookMonthlyPage() {
       <Header
         title="가계부"
         rightSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => router.push('/cashbook/plan/annual')}
-            aria-label="예산 설정"
-          >
-            <Settings size={20} />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => router.push('/cashbook/weekly/notifications')}
+              aria-label="알림 설정"
+            >
+              <Bell size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => router.push('/cashbook/plan/annual')}
+              aria-label="연간 계획"
+            >
+              <CalendarDays size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => router.push('/cashbook/categories')}
+              aria-label="카테고리 설정"
+            >
+              <Tag size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleAddIrregularIncome}
+              aria-label="추가"
+              data-testid="add-entry-button"
+            >
+              <Plus size={20} />
+            </Button>
+          </div>
         }
       />
 

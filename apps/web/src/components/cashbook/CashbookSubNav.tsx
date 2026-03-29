@@ -6,8 +6,8 @@ import { cn } from '@uandi/ui';
 
 const TABS = [
   { label: '내역', href: '/cashbook', exact: true },
-  { label: '월간', href: '/cashbook/monthly', exact: false },
   { label: '주간', href: '/cashbook/weekly', exact: false },
+  { label: '월간', href: '/cashbook/monthly', exact: false },
 ] as const;
 
 export function CashbookSubNav() {
