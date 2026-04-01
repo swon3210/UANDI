@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import Markdown from 'react-markdown';
@@ -17,20 +17,18 @@ type AiSpendingAnalysisProps = {
 
 export function AiSpendingAnalysis({ params, analyzeFn }: AiSpendingAnalysisProps) {
   const [content, setContent] = useState('');
-  const streamingRef = useRef(false);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const mutation = useMutation({
     mutationFn: async () => {
       setContent('');
-      streamingRef.current = true;
+      setIsStreaming(true);
       await analyzeFn(params, (chunk) => {
         setContent((prev) => prev + chunk);
       });
-      streamingRef.current = false;
+      setIsStreaming(false);
     },
   });
-
-  const isStreaming = streamingRef.current && mutation.isPending;
 
   if (!mutation.isPending && !mutation.isSuccess && !mutation.isError) {
     return (
