@@ -47,6 +47,13 @@ type FormValues = z.infer<typeof schema>;
 type EntryFormProps = {
   categories: CashbookCategory[];
   editingEntry?: CashbookEntry;
+  prefill?: {
+    type?: CashbookEntryType;
+    amount?: number;
+    category?: string;
+    description?: string;
+    date?: string;
+  };
   onSubmit: (data: {
     type: CashbookEntryType;
     amount: number;
@@ -63,24 +70,25 @@ type EntryFormProps = {
 export function EntryForm({
   categories,
   editingEntry,
+  prefill,
   onSubmit,
   onDelete,
   onClose,
   createdBy,
 }: EntryFormProps) {
   const [activeType, setActiveType] = useState<CashbookEntryType>(
-    editingEntry?.type ?? 'expense'
+    editingEntry?.type ?? prefill?.type ?? 'expense'
   );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      amount: editingEntry?.amount ?? ('' as unknown as number),
-      category: editingEntry?.category ?? '',
+      amount: editingEntry?.amount ?? prefill?.amount ?? ('' as unknown as number),
+      category: editingEntry?.category ?? prefill?.category ?? '',
       date: editingEntry
         ? dayjs(editingEntry.date.toDate()).format('YYYY-MM-DD')
-        : dayjs().format('YYYY-MM-DD'),
-      description: editingEntry?.description ?? '',
+        : prefill?.date ?? dayjs().format('YYYY-MM-DD'),
+      description: editingEntry?.description ?? prefill?.description ?? '',
     },
   });
 

@@ -27,6 +27,8 @@ import {
   Progress,
 } from '@uandi/ui';
 import { TagInput } from '@/components/photos/TagInput';
+import { AiTagSuggestions } from '@/components/photos/AiTagSuggestions';
+import { suggestPhotoTags } from '@/services/ai';
 import type { Folder } from '@/types';
 
 const uploadSchema = z.object({
@@ -235,6 +237,16 @@ export function PhotoUploadSheet({
                     suggestions={tagSuggestions}
                   />
                 </FormControl>
+                <AiTagSuggestions
+                  disabled={selectedFiles.length === 0}
+                  existingTags={tagSuggestions ?? []}
+                  imageFile={selectedFiles[0]?.file ?? null}
+                  suggestFn={suggestPhotoTags}
+                  onTagsSelected={(tags) => {
+                    const merged = new Set([...field.value, ...tags]);
+                    field.onChange(Array.from(merged));
+                  }}
+                />
               </FormItem>
             )}
           />

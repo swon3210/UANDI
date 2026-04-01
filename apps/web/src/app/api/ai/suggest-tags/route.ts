@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAnthropicClient } from '@/lib/ai/anthropic';
+import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
 const requestSchema = z.object({
-  imageUrl: z.string().url(),
+  imageBase64: z.string().min(1),
   existingTags: z.array(z.string()),
+});
+
+const responseSchema = z.object({
+  suggestedTags: z.array(z.string()),
 });
 
 const MOCK_RESPONSE = {
@@ -38,21 +42,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(MOCK_RESPONSE);
   }
 
-  const { imageUrl, existingTags } = parsed.data;
+  const { imageBase64, existingTags } = parsed.data;
 
   try {
-    const client = getAnthropicClient();
-
-    // 이미지를 URL에서 가져와서 base64로 변환
-    const imageResponse = await fetch(imageUrl);
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64 = Buffer.from(imageBuffer).toString('base64');
-    const contentType = imageResponse.headers.get('content-type') ?? 'image/jpeg';
-
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250514',
+    const client = getOpenAIClient();
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 256,
-      system: `너는 사진 태그를 제안하는 AI야.
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `너는 사진 태그를 제안하는 AI야.
 사진을 분석해서 적절한 한국어 태그 3~5개를 제안해.
 
 기존에 사용된 태그 목록:
@@ -64,17 +65,13 @@ ${existingTags.length > 0 ? existingTags.join(', ') : '(없음)'}
 - 한국어로 작성
 - 반드시 아래 JSON 형식으로만 응답:
 { "suggestedTags": ["태그1", "태그2", "태그3"] }`,
-      messages: [
+        },
         {
           role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: contentType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
-                data: base64,
-              },
+              type: 'image_url',
+              image_url: { url: imageBase64 },
             },
             { type: 'text', text: '이 사진에 적합한 태그를 제안해줘.' },
           ],
@@ -82,15 +79,15 @@ ${existingTags.length > 0 ? existingTags.join(', ') : '(없음)'}
       ],
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
       return NextResponse.json(
         { error: 'AI 응답을 처리할 수 없습니다' },
         { status: 500 }
       );
     }
 
-    const result = JSON.parse(content.text);
+    const result = responseSchema.parse(JSON.parse(content));
     return NextResponse.json(result);
   } catch (error) {
     console.error('[suggest-tags] AI 호출 실패:', error);

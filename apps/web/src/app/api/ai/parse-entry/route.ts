@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import { z } from 'zod';
-import { getAnthropicClient } from '@/lib/ai/anthropic';
+import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
 const requestSchema = z.object({
   text: z.string().min(1).max(200),
   categories: z.array(z.string()),
+});
+
+const responseSchema = z.object({
+  type: z.enum(['income', 'expense', 'investment', 'flex']),
+  amount: z.number().positive(),
+  category: z.string(),
+  description: z.string(),
+  date: z.string(),
+  confidence: z.number().min(0).max(1),
 });
 
 const MOCK_RESPONSE = {
@@ -52,11 +61,15 @@ export async function POST(req: NextRequest) {
   const today = dayjs().format('YYYY-MM-DD');
 
   try {
-    const client = getAnthropicClient();
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const client = getOpenAIClient();
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 256,
-      system: `너는 가계부 자연어 입력을 구조화된 JSON으로 변환하는 파서야.
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `너는 가계부 자연어 입력을 구조화된 JSON으로 변환하는 파서야.
 오늘 날짜: ${today}
 
 사용 가능한 카테고리 목록:
@@ -79,18 +92,20 @@ ${categories.join(', ')}
 - "어제", "그제" 등 상대 날짜도 올바르게 변환
 - category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택
 - confidence는 파싱 확실도 (모호한 입력일수록 낮게)`,
-      messages: [{ role: 'user', content: text }],
+        },
+        { role: 'user', content: text },
+      ],
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
       return NextResponse.json(
         { error: 'AI 응답을 처리할 수 없습니다' },
         { status: 500 }
       );
     }
 
-    const result = JSON.parse(content.text);
+    const result = responseSchema.parse(JSON.parse(content));
     return NextResponse.json(result);
   } catch (error) {
     console.error('[parse-entry] AI 호출 실패:', error);

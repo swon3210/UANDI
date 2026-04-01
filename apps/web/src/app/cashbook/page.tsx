@@ -20,7 +20,10 @@ import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
 import { EntryForm } from '@/components/cashbook/EntryForm';
-import type { CashbookEntry } from '@/types';
+import { AiParseInput } from '@/components/cashbook/AiParseInput';
+import { AiSpendingAnalysis } from '@/components/cashbook/AiSpendingAnalysis';
+import { parseEntryFromText, analyzeSpending } from '@/services/ai';
+import type { CashbookEntry, CashbookEntryType } from '@/types';
 
 export default function CashbookPage() {
   const user = useAtomValue(userAtom);
@@ -41,12 +44,19 @@ export default function CashbookPage() {
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
 
-  const handleAdd = () => {
+  const handleAdd = (prefill?: {
+    type?: CashbookEntryType;
+    amount?: number;
+    category?: string;
+    description?: string;
+    date?: string;
+  }) => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <EntryForm
           categories={categories ?? []}
           createdBy={uid}
+          prefill={prefill}
           onSubmit={(data) => addMutation.mutate(data)}
           onClose={() => {
             close();
@@ -88,7 +98,23 @@ export default function CashbookPage() {
 
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-      <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+      <AiParseInput
+        categories={(categories ?? []).map((c) => c.name)}
+        parseFn={parseEntryFromText}
+        onParsed={(result) => {
+          handleAdd({
+            type: result.type as CashbookEntryType,
+            amount: result.amount,
+            category: result.category,
+            description: result.description,
+            date: result.date,
+          });
+        }}
+      />
+
+      <div className="mt-4">
+        <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+      </div>
 
       {isLoading ? (
         <div className="mt-4 space-y-4">
@@ -108,6 +134,25 @@ export default function CashbookPage() {
             />
           </div>
 
+          {(entries ?? []).length > 0 && (
+            <div className="mt-4">
+              <AiSpendingAnalysis
+                params={{
+                  entries: (entries ?? []).map((e) => ({
+                    type: e.type,
+                    amount: e.amount,
+                    category: e.category,
+                    date: dayjs(e.date.toDate()).format('YYYY-MM-DD'),
+                    description: e.description,
+                  })),
+                  year,
+                  month: month + 1,
+                }}
+                analyzeFn={analyzeSpending}
+              />
+            </div>
+          )}
+
           <div className="mt-6">
             {groups.length > 0 ? (
               <EntryList
@@ -121,7 +166,7 @@ export default function CashbookPage() {
                 title="아직 내역이 없어요"
                 description="가계부를 시작해보세요"
                 action={
-                  <Button onClick={handleAdd}>추가하기</Button>
+                  <Button onClick={() => handleAdd()}>추가하기</Button>
                 }
               />
             )}
