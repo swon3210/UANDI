@@ -2,7 +2,7 @@
 
 ## 개요
 
-UANDI에 3가지 AI 기능을 추가한다. 모두 **Claude API**(Anthropic)를 사용하며,
+UANDI에 3가지 AI 기능을 추가한다. 모두 **OpenAI API**를 사용하며,
 Next.js API Route를 통해 서버 사이드에서 호출한다 (API 키 보호).
 
 ---
@@ -10,9 +10,9 @@ Next.js API Route를 통해 서버 사이드에서 호출한다 (API 키 보호)
 ## 공통 아키텍처
 
 ```
-[클라이언트] → [Next.js API Route] → [Claude API]
+[클라이언트] → [Next.js API Route] → [OpenAI API]
                     │
-                    └── API 키는 서버 환경변수 (ANTHROPIC_API_KEY)
+                    └── API 키는 서버 환경변수 (OPENAI_API_KEY)
 ```
 
 ### API Route 구조
@@ -30,7 +30,7 @@ apps/web/src/app/api/ai/
 - Firebase Auth 토큰으로 인증 검증 (미인증 시 401)
 - 응답은 JSON 형식
 - 에러 시 `{ error: string }` 반환
-- 일일 사용량 제한: 사용자당 50회/일 (Firestore 카운터)
+- 일일 사용량 제한: 커플당 50회/일 (Firestore 카운터)
 
 ---
 
@@ -89,7 +89,7 @@ Response:
 ### 프롬프트 전략
 
 - 시스템 프롬프트에 카테고리 목록 포함
-- JSON 출력 강제 (`response_format` 또는 프롬프트 지시)
+- JSON 출력 강제 (`response_format: { type: "json_object" }`)
 - 오늘 날짜를 컨텍스트로 전달
 - Few-shot 예시 포함
 
@@ -135,7 +135,7 @@ Response:
 
 ### 프롬프트 전략
 
-- Vision 모델 사용 (Claude claude-sonnet-4-5-20250514 이상)
+- Vision 모델 사용 (GPT-4o)
 - 기존 태그 목록을 컨텍스트로 전달 → 유사한 태그명 재사용 유도
 - 한국어 태그 생성 지시
 - 태그는 짧고 구체적으로 (1~3 단어)
@@ -150,7 +150,7 @@ Response:
 
 ### UI 위치
 
-월간 대시보드(`/cashbook/monthly`) 하단에 "AI 분석" 섹션 추가.
+가계부 페이지(`/cashbook`) 월간 요약 섹션 하단에 "AI 분석" 버튼 추가.
 
 ### API Route
 
@@ -191,7 +191,7 @@ Response (스트리밍):
 
 ### UX 플로우
 
-1. 월간 대시보드에서 "AI 분석 보기" 버튼
+1. 가계부 페이지에서 "AI 분석 보기" 버튼
 2. 클릭 → 스트리밍으로 분석 텍스트가 점진적으로 표시
 3. 마크다운 렌더링 (리스트, 강조 등)
 4. "다시 분석" 버튼으로 재생성 가능
@@ -209,7 +209,7 @@ Response (스트리밍):
 
 ```env
 # apps/web/.env.local에 추가
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 ```
 
 > 이 값은 **서버 사이드 전용** (NEXT_PUBLIC_ 접두사 없음).
@@ -232,9 +232,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 | 기능 | 모델 | 입력 토큰 | 출력 토큰 | 건당 비용 (약) |
 |------|------|----------|----------|--------------|
-| 자연어 파싱 | Haiku | ~200 | ~100 | $0.001 |
-| 사진 태깅 | Sonnet | ~1000 (이미지) | ~100 | $0.01 |
-| 지출 분석 | Sonnet | ~500 | ~500 | $0.01 |
+| 자연어 파싱 | GPT-4o mini | ~200 | ~100 | $0.001 |
+| 사진 태깅 | GPT-4o | ~1000 (이미지) | ~100 | $0.01 |
+| 지출 분석 | GPT-4o | ~500 | ~500 | $0.01 |
 
 **월 예상**: 커플 1쌍이 매일 사용 시 약 $5~10/월
 

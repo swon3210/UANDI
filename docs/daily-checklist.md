@@ -10,8 +10,8 @@
 
 ### Week 1: AI 인프라 + 자연어 입력 시작 (3/23 ~ 3/28)
 
-- [x] **3/23 (월)** — AI 명세 작성(`docs/pages/05-ai-features.md`), Anthropic SDK 설치, API Route 구조 생성
-- [ ] **3/24 (화)** — `.env.local`에 `ANTHROPIC_API_KEY` 추가, parse-entry API Route 로컬 테스트 (curl/Postman)
+- [x] **3/23 (월)** — AI 명세 작성(`docs/pages/05-ai-features.md`), OpenAI SDK 설치, API Route 구조 생성
+- [ ] **3/24 (화)** — `.env.local`에 `OPENAI_API_KEY` 추가, parse-entry API Route 로컬 테스트 (curl/Postman)
 - [ ] **3/25 (수)** — 자연어 입력 E2E 테스트 작성 (`e2e/cashbook-ai.spec.ts`) — 모킹 응답 사용, Red 확인
 - [ ] **3/26 (목)** — `NaturalLanguageInput` 컴포넌트 구현 (텍스트 필드 + 전송 버튼 + 로딩 상태)
 - [ ] **3/27 (금)** — `NaturalLanguageInput` Storybook 스토리 작성 → `/storybook-review`
@@ -61,7 +61,7 @@
 
 - [ ] **4/27 (월)** — 배포 전략 결정: Vercel vs Firebase Hosting (학습 + 비교)
 - [ ] **4/28 (화)** — 배포 플랫폼 계정 설정, 프로젝트 연결 (git 연동)
-- [ ] **4/29 (수)** — 환경변수 설정 (ANTHROPIC_API_KEY, Firebase 설정 등)
+- [ ] **4/29 (수)** — 환경변수 설정 (OPENAI_API_KEY, Firebase 설정 등)
 - [ ] **4/30 (목)** — 첫 배포 시도, 빌드 에러 해결
 - [ ] **5/1 (금)** — 배포 완료 확인, HTTPS + 도메인 설정
 - [ ] **5/2 (토)** — Firebase 보안 규칙 프로덕션용으로 작성 및 배포
@@ -214,4 +214,4 @@
 
 - [ ] Apple Developer Program 가입 ($99/년) — 심사에 며칠 걸림
 - [ ] Google Play Developer 가입 ($25) — 즉시 활성화
-- [ ] `ANTHROPIC_API_KEY` 발급 + `.env.local`에 추가
+- [ ] `OPENAI_API_KEY` 발급 + `.env.local`에 추가

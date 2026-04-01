@@ -48,14 +48,14 @@ export type SuggestedTags = {
 };
 
 export async function suggestPhotoTags(
-  imageUrl: string,
+  imageBase64: string,
   existingTags: string[]
 ): Promise<SuggestedTags> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/ai/suggest-tags', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ imageUrl, existingTags }),
+    body: JSON.stringify({ imageBase64, existingTags }),
   });
 
   if (!res.ok) {

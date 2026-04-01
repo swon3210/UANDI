@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getAnthropicClient } from '@/lib/ai/anthropic';
+import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
@@ -89,11 +89,15 @@ export async function POST(req: NextRequest) {
     .join('\n');
 
   try {
-    const client = getAnthropicClient();
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-5-20250514',
+    const client = getOpenAIClient();
+    const stream = await client.chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
-      system: `너는 커플 가계부 앱의 지출 분석 AI야.
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: `너는 커플 가계부 앱의 지출 분석 AI야.
 주어진 데이터를 바탕으로 친근하고 실용적인 분석을 제공해.
 
 규칙:
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
 - 비판적이지 않고 격려하는 톤
 - 구체적이고 실행 가능한 절약 팁 1~2개 포함
 - 커플 맥락 반영 (공동 지출 vs 개인 지출 언급 시)`,
-      messages: [
+        },
         {
           role: 'user',
           content: `${year}년 ${month}월 가계부 데이터를 분석해줘.
@@ -126,14 +130,12 @@ ${budgetInfo}
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (
-              event.type === 'content_block_delta' &&
-              event.delta.type === 'text_delta'
-            ) {
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content;
+            if (text) {
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ text: event.delta.text })}\n\n`
+                  `data: ${JSON.stringify({ text })}\n\n`
                 )
               );
             }
