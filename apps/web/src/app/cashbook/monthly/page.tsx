@@ -1,14 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { Plus, Tag, CalendarDays, Bell } from 'lucide-react';
 import {
-  Header,
-  Button,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -21,7 +17,6 @@ import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget, useMonthlyOverview, useCategoryBudgetSummaries, useWeeklyExpenses } from '@/hooks/useMonthlyBudget';
 import { useCashBalances, useUpsertCashBalance } from '@/hooks/useCashBalance';
-import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlyOverview } from '@/components/cashbook/MonthlyOverview';
 import { MonthlyExpenseTab } from '@/components/cashbook/MonthlyExpenseTab';
@@ -30,10 +25,8 @@ import { MonthlyInvestmentTab } from '@/components/cashbook/MonthlyInvestmentTab
 import { InvestmentEntryForm } from '@/components/cashbook/InvestmentEntryForm';
 import { CashBalanceForm } from '@/components/cashbook/CashBalanceForm';
 import { EntryForm } from '@/components/cashbook/EntryForm';
-import { BottomNav } from '@/components/BottomNav';
 
 export default function CashbookMonthlyPage() {
-  const router = useRouter();
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
@@ -132,100 +125,49 @@ export default function CashbookMonthlyPage() {
   }));
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header
-        title="가계부"
-        rightSlot={
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/weekly/notifications')}
-              aria-label="알림 설정"
-            >
-              <Bell size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/plan/annual')}
-              aria-label="연간 계획"
-            >
-              <CalendarDays size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/categories')}
-              aria-label="카테고리 설정"
-            >
-              <Tag size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleAddIrregularIncome}
-              aria-label="추가"
-              data-testid="add-entry-button"
-            >
-              <Plus size={20} />
-            </Button>
-          </div>
-        }
-      />
+    <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
+      <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
 
-      <CashbookSubNav />
+      <div className="mt-4">
+        <MonthlyOverview {...overview} />
+      </div>
 
-      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-        <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+      <div className="mt-6">
+        <Tabs defaultValue="expense">
+          <TabsList className="w-full">
+            <TabsTrigger value="expense" className="flex-1">지출</TabsTrigger>
+            <TabsTrigger value="income" className="flex-1">수입</TabsTrigger>
+            <TabsTrigger value="investment" className="flex-1">재테크</TabsTrigger>
+          </TabsList>
 
-        <div className="mt-4">
-          <MonthlyOverview {...overview} />
-        </div>
+          <TabsContent value="expense" className="mt-4">
+            <MonthlyExpenseTab
+              categoryBudgets={categoryBudgets}
+              weeklyExpenses={weeklyExpenses}
+            />
+          </TabsContent>
 
-        <div className="mt-6">
-          <Tabs defaultValue="expense">
-            <TabsList className="w-full">
-              <TabsTrigger value="expense" className="flex-1">지출</TabsTrigger>
-              <TabsTrigger value="income" className="flex-1">수입</TabsTrigger>
-              <TabsTrigger value="investment" className="flex-1">재테크</TabsTrigger>
-            </TabsList>
+          <TabsContent value="income" className="mt-4">
+            <MonthlyIncomeTab
+              budgetItems={budgetItems ?? []}
+              entries={entries ?? []}
+              categories={simplifiedCategories}
+              onAddIrregularIncome={handleAddIrregularIncome}
+            />
+          </TabsContent>
 
-            <TabsContent value="expense" className="mt-4">
-              <MonthlyExpenseTab
-                categoryBudgets={categoryBudgets}
-                weeklyExpenses={weeklyExpenses}
-              />
-            </TabsContent>
-
-            <TabsContent value="income" className="mt-4">
-              <MonthlyIncomeTab
-                budgetItems={budgetItems ?? []}
-                entries={entries ?? []}
-                categories={simplifiedCategories}
-                onAddIrregularIncome={handleAddIrregularIncome}
-              />
-            </TabsContent>
-
-            <TabsContent value="investment" className="mt-4">
-              <MonthlyInvestmentTab
-                budgetItems={budgetItems ?? []}
-                entries={entries ?? []}
-                cashBalances={cashBalances ?? []}
-                categories={simplifiedCategories}
-                onAddInvestment={handleAddInvestment}
-                onUpdateBalance={handleUpdateBalance}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-
-      <BottomNav activeTab="cashbook" />
-    </div>
+          <TabsContent value="investment" className="mt-4">
+            <MonthlyInvestmentTab
+              budgetItems={budgetItems ?? []}
+              entries={entries ?? []}
+              cashBalances={cashBalances ?? []}
+              categories={simplifiedCategories}
+              onAddInvestment={handleAddInvestment}
+              onUpdateBalance={handleUpdateBalance}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </main>
   );
 }

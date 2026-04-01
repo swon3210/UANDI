@@ -7,8 +7,8 @@ import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/ko';
-import { Plus, Tag, CalendarDays, Bell, CalendarX2, AlertCircle } from 'lucide-react';
-import { Header, Button, Sheet, FullScreenSpinner, EmptyState } from '@uandi/ui';
+import { CalendarX2, AlertCircle } from 'lucide-react';
+import { Button, Sheet, FullScreenSpinner, EmptyState } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
@@ -20,13 +20,11 @@ import {
   useDailyExpenses,
   useWeeklyCategorySummary,
 } from '@/hooks/useWeeklyBudget';
-import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { WeekSelector } from '@/components/cashbook/WeekSelector';
 import { WeeklySummaryCard } from '@/components/cashbook/WeeklySummaryCard';
 import { DailyExpenseList } from '@/components/cashbook/DailyExpenseList';
 import { WeeklyCategoryBreakdown } from '@/components/cashbook/WeeklyCategoryBreakdown';
 import { EntryForm } from '@/components/cashbook/EntryForm';
-import { BottomNav } from '@/components/BottomNav';
 
 dayjs.extend(isoWeek);
 dayjs.locale('ko');
@@ -124,7 +122,7 @@ export default function CashbookWeeklyPage() {
 
   if (isError) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="flex flex-1 items-center justify-center px-4">
         <EmptyState
           icon={<AlertCircle size={48} />}
           title="데이터를 불러올 수 없습니다"
@@ -138,99 +136,48 @@ export default function CashbookWeeklyPage() {
   const catSimple = (categories ?? []).map((c) => ({ name: c.name, icon: c.icon }));
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header
-        title="가계부"
-        rightSlot={
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/weekly/notifications')}
-              aria-label="알림 설정"
-            >
-              <Bell size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/plan/annual')}
-              aria-label="연간 계획"
-            >
-              <CalendarDays size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => router.push('/cashbook/categories')}
-              aria-label="카테고리 설정"
-            >
-              <Tag size={20} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleAddExpense}
-              aria-label="추가"
-              data-testid="add-entry-button"
-            >
-              <Plus size={20} />
-            </Button>
-          </div>
-        }
-      />
-
-      <CashbookSubNav />
-
-      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-2 pb-20 space-y-5">
-        {weeklyData && (
-          <>
-            <WeekSelector
-              month={month}
-              weekInfo={weeklyData.weekInfo}
-              onPrev={handlePrevWeek}
-              onNext={handleNextWeek}
-              isNextDisabled={isCurrentOrFutureWeek}
-            />
-
-            <WeeklySummaryCard
-              budget={weeklyData.budget}
-              carryOver={weeklyData.carryOver}
-              spent={weeklyData.spent}
-              remaining={weeklyData.remaining}
-              percentage={weeklyData.percentage}
-              status={weeklyData.status}
-            />
-
-            <DailyExpenseList days={dailyExpenses} categories={catSimple} />
-
-            <WeeklyCategoryBreakdown categories={categorySummary} />
-
-            <Button className="w-full" onClick={handleAddExpense}>
-              + 지출 추가
-            </Button>
-          </>
-        )}
-
-        {!weeklyData && (
-          <EmptyState
-            icon={<CalendarX2 size={48} />}
-            title="예산 데이터가 없습니다"
-            description="연간 계획을 먼저 설정해주세요"
-            action={
-              <Button onClick={() => router.push('/cashbook/plan/annual')}>
-                연간 계획 설정
-              </Button>
-            }
+    <main className="flex-1 max-w-md mx-auto w-full px-4 pt-2 pb-20 space-y-5">
+      {weeklyData && (
+        <>
+          <WeekSelector
+            month={month}
+            weekInfo={weeklyData.weekInfo}
+            onPrev={handlePrevWeek}
+            onNext={handleNextWeek}
+            isNextDisabled={isCurrentOrFutureWeek}
           />
-        )}
-      </main>
 
-      <BottomNav activeTab="cashbook" />
-    </div>
+          <WeeklySummaryCard
+            budget={weeklyData.budget}
+            carryOver={weeklyData.carryOver}
+            spent={weeklyData.spent}
+            remaining={weeklyData.remaining}
+            percentage={weeklyData.percentage}
+            status={weeklyData.status}
+          />
+
+          <DailyExpenseList days={dailyExpenses} categories={catSimple} />
+
+          <WeeklyCategoryBreakdown categories={categorySummary} />
+
+          <Button className="w-full" onClick={handleAddExpense}>
+            + 지출 추가
+          </Button>
+        </>
+      )}
+
+      {!weeklyData && (
+        <EmptyState
+          icon={<CalendarX2 size={48} />}
+          title="예산 데이터가 없습니다"
+          description="연간 계획을 먼저 설정해주세요"
+          action={
+            <Button onClick={() => router.push('/cashbook/plan/annual')}>
+              연간 계획 설정
+            </Button>
+          }
+        />
+      )}
+    </main>
   );
 }
