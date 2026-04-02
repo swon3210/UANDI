@@ -91,13 +91,13 @@ test.describe('알림 설정', () => {
     const { page } = authedContext;
 
     // 주간 페이지로 이동 (예산 데이터 없어도 헤더는 표시됨)
-    await page.goto('/cashbook/weekly');
+    await page.goto('/cashbook/history/weekly');
 
     // 알림 설정 버튼 클릭
     const bellButton = page.getByRole('button', { name: '알림 설정' });
     await bellButton.click();
 
     // 알림 설정 페이지로 이동됨
-    await expect(page).toHaveURL(/\/cashbook\/weekly\/notifications/);
+    await expect(page).toHaveURL(/\/cashbook\/history\/weekly\/notifications/);
   });
 });

@@ -16,7 +16,7 @@ export class CashbookPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook');
+    await this.page.goto('/cashbook/history');
   }
 
   // Month selector

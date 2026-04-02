@@ -9,7 +9,6 @@ import { Header, Button, Sheet } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { CashbookSubNav } from '@/components/cashbook/CashbookSubNav';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { BottomNav } from '@/components/BottomNav';
 
@@ -48,7 +47,7 @@ export default function CashbookLayout({ children }: { children: ReactNode }) {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => router.push('/cashbook/weekly/notifications')}
+            onClick={() => router.push('/cashbook/history/weekly/notifications')}
             aria-label="알림 설정"
           >
             <Bell size={20} />
@@ -87,8 +86,6 @@ export default function CashbookLayout({ children }: { children: ReactNode }) {
           </div>
         }
       />
-
-      <CashbookSubNav />
 
       {children}
 

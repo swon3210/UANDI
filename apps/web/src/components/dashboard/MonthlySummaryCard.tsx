@@ -18,7 +18,7 @@ export function MonthlySummaryCard({ coupleId }: MonthlySummaryCardProps) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">이번 달 가계부</h2>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/cashbook">전체 보기</Link>
+          <Link href="/cashbook/history">전체 보기</Link>
         </Button>
       </div>
 

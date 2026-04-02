@@ -172,7 +172,7 @@ export default function AnnualPlanPage() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => router.push('/cashbook')}
+            onClick={() => router.push('/cashbook/history')}
             aria-label="뒤로"
           >
             <ChevronLeft size={20} />

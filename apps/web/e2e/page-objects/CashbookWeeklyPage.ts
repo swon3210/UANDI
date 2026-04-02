@@ -22,7 +22,7 @@ export class CashbookWeeklyPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/weekly');
+    await this.page.goto('/cashbook/history/weekly');
     await this.page.waitForSelector('[data-testid="weekly-summary"]', { timeout: 15000 });
   }
 
