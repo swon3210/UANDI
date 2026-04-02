@@ -13,7 +13,7 @@ type BottomNavProps = {
 const TABS = [
   { id: 'home' as Tab, label: '홈', href: '/', Icon: Home },
   { id: 'photos' as Tab, label: '사진', href: '/photos', Icon: Image },
-  { id: 'cashbook' as Tab, label: '가계부', href: '/cashbook', Icon: BookOpen },
+  { id: 'cashbook' as Tab, label: '가계부', href: '/cashbook/history', Icon: BookOpen },
 ];
 
 export function BottomNav({ activeTab }: BottomNavProps) {

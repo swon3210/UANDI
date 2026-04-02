@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       start(controller) {
         const mockText =
-          '## 이번 달 지출 분석\n\n- **식비**가 전체 지출의 35%를 차지하고 있어요.\n- 예산 대비 지출이 적절한 수준이에요.\n\n### 절약 팁\n- 주 2회 이상 외식을 줄이면 월 5만원 정도 절약할 수 있어요.';
+          '## 📊 총정리\n**총수입** 3,500,000원 - **총지출** 2,100,000원 = **남은 금액 1,400,000원**\n\n## 💰 예산 분석\n이번 달은 식비에 80만원, 교통비에 15만원이 배정되어 있어요. 식비는 70% 사용 중이에요.\n\n## 📉 지출 분석\n이번 달은 **식비**를 많이 쓰고 **문화생활**은 적게 사용했네요.\n\n## 📈 월평균 대비 분석\n전체적으로 지출이 안정적이에요! 식비만 조금 줄이면 더 좋겠어요.\n\n## 🔮 미래 예측\n이 추세라면 12월 말에는 약 **16,800,000원** 정도 남을 것 같아요!';
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: mockText })}\n\n`));
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         controller.close();
@@ -100,20 +100,40 @@ export async function POST(req: NextRequest) {
           content: `너는 커플 가계부 앱의 지출 분석 AI야.
 주어진 데이터를 바탕으로 친근하고 실용적인 분석을 제공해.
 
+반드시 아래 5개 섹션을 순서대로 작성해:
+
+## 📊 총정리
+총수입 - 총지출 = 남은 금액을 한 줄로 정리
+
+## 💰 예산 분석
+설정된 예산 항목별로 배정 금액과 현재 사용률을 간단히 언급
+
+## 📉 지출 분석
+이번 달에 많이 쓴 카테고리와 적게 쓴 카테고리를 비교 분석
+
+## 📈 월평균 대비 분석
+전체적인 지출 추세를 바탕으로 이번 달 조절이 필요한 부분 제안
+
+## 🔮 미래 예측
+현재 추세가 연말까지 계속된다면 예상되는 연말 잔액 예측
+
 규칙:
 - 한국어로 작성
 - 마크다운 포맷 사용 (##, -, **강조**)
-- 200~300자 내외로 간결하게
+- 각 섹션은 1~2문장으로 간결하게
 - 비판적이지 않고 격려하는 톤
-- 구체적이고 실행 가능한 절약 팁 1~2개 포함
-- 커플 맥락 반영 (공동 지출 vs 개인 지출 언급 시)`,
+- 커플 맥락 반영 (공동 지출 vs 개인 지출 언급 시)
+- 예산 데이터가 없으면 예산 분석 섹션은 "예산을 설정하면 더 정확한 분석이 가능해요!" 로 대체`,
         },
         {
           role: 'user',
           content: `${year}년 ${month}월 가계부 데이터를 분석해줘.
 
+현재 날짜: ${year}년 ${month}월 (연말까지 ${12 - month}개월 남음)
+
 총 수입: ${totalIncome.toLocaleString()}원
 총 지출: ${totalExpense.toLocaleString()}원
+남은 금액: ${(totalIncome - totalExpense).toLocaleString()}원
 
 카테고리별 지출:
 ${categoryBreakdown || '  (지출 내역 없음)'}

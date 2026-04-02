@@ -8,7 +8,7 @@ test.describe('자연어 가계부 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook');
+    await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 자연어 입력 필드 확인
@@ -35,7 +35,7 @@ test.describe('자연어 가계부 입력', () => {
   test('빈 텍스트로는 전송 버튼이 비활성화된다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook');
+    await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const submitBtn = page.getByTestId('ai-parse-submit');
@@ -45,7 +45,7 @@ test.describe('자연어 가계부 입력', () => {
   test('자연어 파싱 중 로딩 상태가 표시된다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook');
+    await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const aiInput = page.getByTestId('ai-parse-input');
@@ -77,7 +77,7 @@ test.describe('지출 패턴 AI 분석', () => {
       description: '월급',
     });
 
-    await page.goto('/cashbook');
+    await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // AI 분석 버튼 클릭
@@ -100,7 +100,7 @@ test.describe('지출 패턴 AI 분석', () => {
       category: '식비',
     });
 
-    await page.goto('/cashbook');
+    await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('ai-analyze-btn').click();

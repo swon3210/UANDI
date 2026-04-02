@@ -22,7 +22,7 @@ export class CashbookMonthlyPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/monthly');
+    await this.page.goto('/cashbook/history/monthly');
     await this.page.waitForSelector('[data-testid="monthly-overview"]', { timeout: 15000 });
   }
 

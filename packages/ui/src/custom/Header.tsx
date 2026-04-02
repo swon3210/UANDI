@@ -12,7 +12,7 @@ export function Header({ title, leftSlot, rightSlot, className, ...props }: Head
   return (
     <header
       className={cn(
-        'h-14 flex items-center justify-between px-4 bg-background border-b border-border',
+        'sticky top-0 z-50 h-14 flex items-center justify-between px-4 bg-background border-b border-border',
         className
       )}
       {...props}

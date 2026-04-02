@@ -18,7 +18,7 @@ export class NotificationSettingsPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/weekly/notifications');
+    await this.page.goto('/cashbook/history/weekly/notifications');
     await this.page.waitForSelector('[data-testid="notification-settings-header"]', {
       timeout: 15000,
     });

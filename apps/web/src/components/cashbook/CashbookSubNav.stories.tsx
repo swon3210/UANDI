@@ -22,18 +22,18 @@ type Story = StoryObj<typeof CashbookSubNav>;
 
 export const Default: Story = {
   parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook' } },
+    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook/history' } },
   },
 };
 
 export const MonthlyActive: Story = {
   parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook/monthly' } },
+    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook/history/monthly' } },
   },
 };
 
 export const WeeklyActive: Story = {
   parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook/weekly' } },
+    nextjs: { appDirectory: true, navigation: { pathname: '/cashbook/history/weekly' } },
   },
 };
