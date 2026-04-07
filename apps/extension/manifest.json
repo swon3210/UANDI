@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuOFFE1heaWnCqplD38GzUbdbJERs7TgVt1BbsmlskzDJ28U0D8ww/YFMDfWWQYj+WzAUsSaD5xgG20zqYtNohaqL5ibRgc/zvA4pDNWI639cpfgcuyBWmHeNNYheD4C/GEadEgV61PKg5JA8vnkzMPOe77akMfuBqf5gXRGL0ljQM4c536B/wIpgM4twRyC1GCSgyaMEyT5rlKZ8pHcQ8rORemLro4aU+u0fpWjw8q5CdJ6WzwMXIS3BXn82jH57xwX4xXQTJD84ejQIAO5qzfyGZY5viu1b2FSozzFrRwy948IyzBGy2zqdvd7Aupu7DMIzBTCFnlSiKEqDvUu4DwIDAQAB",
   "name": "UANDI 가계부",
   "version": "0.1.0",
   "description": "UANDI 커플 가계부 빠른 입력",
   "permissions": ["identity", "storage"],
+  "host_permissions": ["http://localhost:3000/*", "https://*.vercel.app/*"],
   "action": {
     "default_popup": "src/popup/index.html",
     "default_icon": {
