@@ -19,32 +19,39 @@ export function MonthlySummary({
   onNextMonth,
 }: MonthlySummaryProps) {
   return (
-    <div className="p-3 border-b">
-      <div className="flex items-center justify-between mb-2">
-        <Button variant="ghost" size="icon" onClick={onPrevMonth} className="h-7 w-7">
-          <ChevronLeft className="h-4 w-4" />
+    <div className="space-y-2">
+      {/* 월 선택기 */}
+      <div className="flex items-center justify-center gap-2 py-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onPrevMonth}>
+          <ChevronLeft size={20} />
         </Button>
-        <span className="text-sm font-medium">{`${year}년 ${month + 1}월`}</span>
-        <Button variant="ghost" size="icon" onClick={onNextMonth} className="h-7 w-7">
-          <ChevronRight className="h-4 w-4" />
+        <span className="text-base font-semibold min-w-[120px] text-center">
+          {`${year}년 ${month + 1}월`}
+        </span>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onNextMonth}>
+          <ChevronRight size={20} />
         </Button>
       </div>
-      <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div>
-          <p className="text-muted-foreground">수입</p>
-          <p className="font-medium text-[hsl(var(--income))]">
-            {formatCurrency(summary.totalIncome)}
-          </p>
+
+      {/* 요약 카드 */}
+      <div className="rounded-xl bg-card border border-border p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">수입</span>
+          <span className="text-base font-semibold tabular-nums text-income">
+            +{formatCurrency(summary.totalIncome)}
+          </span>
         </div>
-        <div>
-          <p className="text-muted-foreground">지출</p>
-          <p className="font-medium text-destructive">
-            {formatCurrency(summary.totalExpense)}
-          </p>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">지출</span>
+          <span className="text-base font-semibold tabular-nums text-expense">
+            -{formatCurrency(summary.totalExpense)}
+          </span>
         </div>
-        <div>
-          <p className="text-muted-foreground">잔액</p>
-          <p className="font-medium">{formatCurrency(summary.balance)}</p>
+        <div className="border-t border-border pt-2 flex items-center justify-between">
+          <span className="text-sm font-medium">잔액</span>
+          <span className="text-base font-bold tabular-nums">
+            {formatCurrency(summary.balance)}
+          </span>
         </div>
       </div>
     </div>

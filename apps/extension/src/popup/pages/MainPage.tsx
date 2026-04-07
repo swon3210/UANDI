@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import dayjs from 'dayjs';
-import { Button } from '@uandi/ui';
+import { Button, Logo } from '@uandi/ui';
 import { Plus, LogOut, Sparkles, X } from 'lucide-react';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import {
@@ -54,8 +54,11 @@ export function MainPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b">
-        <span className="text-sm font-medium">{user?.displayName}</span>
+      <div className="flex items-center justify-between px-4 h-14 border-b border-border">
+        <div className="flex items-center gap-2">
+          <Logo variant="symbol" className="h-5 w-5" />
+          <span className="text-sm font-medium">{user?.displayName}</span>
+        </div>
         <div className="flex items-center gap-1">
           {inputMode === 'closed' ? (
             <>
@@ -63,7 +66,7 @@ export function MainPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setInputMode('ai')}
-                className="h-7 w-7"
+                className="h-8 w-8"
                 title="AI 빠른 입력"
               >
                 <Sparkles className="h-4 w-4" />
@@ -72,7 +75,7 @@ export function MainPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setInputMode('manual')}
-                className="h-7 w-7"
+                className="h-8 w-8"
                 title="직접 입력"
               >
                 <Plus className="h-4 w-4" />
@@ -83,47 +86,54 @@ export function MainPage() {
               variant="ghost"
               size="icon"
               onClick={closeInput}
-              className="h-7 w-7"
+              className="h-8 w-8"
             >
               <X className="h-4 w-4" />
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={signOut} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* 입력 영역 */}
-      {inputMode === 'ai' && user && (
-        <AiInput
-          uid={user.uid}
-          categories={categories}
-          addEntry={addEntry}
-          onSuccess={closeInput}
-        />
-      )}
-      {inputMode === 'manual' && user && (
-        <ManualEntryForm
-          uid={user.uid}
-          categories={categories}
-          addEntry={addEntry}
-          onSuccess={closeInput}
-        />
-      )}
-
-      {/* 월별 요약 */}
-      <MonthlySummary
-        year={year}
-        month={month}
-        summary={summary}
-        onPrevMonth={handlePrevMonth}
-        onNextMonth={handleNextMonth}
-      />
-
-      {/* 내역 목록 */}
+      {/* 메인 콘텐츠 */}
       <div className="flex-1 overflow-y-auto">
-        <EntryList groupedEntries={groupedEntries} isLoading={entriesLoading} />
+        <div className="px-4 pt-2 pb-4 space-y-4">
+          {/* 입력 영역 */}
+          {inputMode === 'ai' && user && (
+            <AiInput
+              uid={user.uid}
+              categories={categories}
+              addEntry={addEntry}
+              onSuccess={closeInput}
+            />
+          )}
+          {inputMode === 'manual' && user && (
+            <ManualEntryForm
+              uid={user.uid}
+              categories={categories}
+              addEntry={addEntry}
+              onSuccess={closeInput}
+            />
+          )}
+
+          {/* 월별 요약 */}
+          <MonthlySummary
+            year={year}
+            month={month}
+            summary={summary}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+          />
+
+          {/* 내역 목록 */}
+          <EntryList
+            groupedEntries={groupedEntries}
+            categories={categories}
+            isLoading={entriesLoading}
+          />
+        </div>
       </div>
     </div>
   );

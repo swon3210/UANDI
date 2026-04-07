@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { Button, Input } from '@uandi/ui';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, ArrowUp } from 'lucide-react';
 import type { CashbookCategory } from '@uandi/cashbook-core';
 import { parseEntryFromText } from '@/lib/ai';
 import { toast } from 'sonner';
@@ -47,32 +47,37 @@ export function AiInput({ uid, categories, addEntry, onSuccess }: AiInputProps) 
   };
 
   return (
-    <div className="p-3 border-b space-y-2">
+    <div className="space-y-1">
       <div className="flex gap-2">
-        <Input
-          placeholder="예: 점심 15000원"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
-          disabled={parsing}
-          className="flex-1 text-sm"
-          autoFocus
-        />
+        <div className="relative flex-1">
+          <Sparkles
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            value={text}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+            placeholder="점심 김치찌개 9000원"
+            className="pl-9"
+            disabled={parsing}
+            autoFocus
+          />
+        </div>
         <Button
           size="icon"
           onClick={handleSubmit}
           disabled={parsing || !text.trim()}
-          className="h-9 w-9 shrink-0"
         >
           {parsing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 size={16} className="animate-spin" />
           ) : (
-            <Sparkles className="h-4 w-4" />
+            <ArrowUp size={16} />
           )}
         </Button>
       </div>
