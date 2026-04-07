@@ -1,22 +1,12 @@
 import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp,
-} from 'firebase/firestore';
-import dayjs from 'dayjs';
-import { getDb } from '@/lib/firebase/config';
+  getMonthlyEntries as _getMonthlyEntries,
+  addEntry as _addEntry,
+  updateEntry as _updateEntry,
+  deleteEntry as _deleteEntry,
+  countEntriesByCategory as _countEntriesByCategory,
+} from '@uandi/cashbook-core';
 import type { CashbookEntry } from '@/types';
-
-function entriesCol(coupleId: string) {
-  return collection(getDb(), `couples/${coupleId}/cashbookEntries`);
-}
+import { getDb } from '@/lib/firebase/config';
 
 /** @param month 0-indexed (0 = 1월). dayjs().month() 값을 그대로 전달. */
 export async function getMonthlyEntries(
@@ -24,29 +14,14 @@ export async function getMonthlyEntries(
   year: number,
   month: number
 ): Promise<CashbookEntry[]> {
-  const start = dayjs().year(year).month(month).startOf('month').toDate();
-  const end = dayjs().year(year).month(month).endOf('month').toDate();
-
-  const q = query(
-    entriesCol(coupleId),
-    where('date', '>=', Timestamp.fromDate(start)),
-    where('date', '<=', Timestamp.fromDate(end)),
-    orderBy('date', 'desc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashbookEntry);
+  return _getMonthlyEntries(getDb(), coupleId, year, month);
 }
 
 export async function addEntry(
   coupleId: string,
   data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
 ): Promise<string> {
-  const docRef = await addDoc(entriesCol(coupleId), {
-    ...data,
-    coupleId,
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
+  return _addEntry(getDb(), coupleId, data);
 }
 
 export async function updateEntry(
@@ -54,20 +29,16 @@ export async function updateEntry(
   entryId: string,
   data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>
 ): Promise<void> {
-  const ref = doc(getDb(), `couples/${coupleId}/cashbookEntries/${entryId}`);
-  await updateDoc(ref, data);
+  return _updateEntry(getDb(), coupleId, entryId, data);
 }
 
 export async function deleteEntry(coupleId: string, entryId: string): Promise<void> {
-  const ref = doc(getDb(), `couples/${coupleId}/cashbookEntries/${entryId}`);
-  await deleteDoc(ref);
+  return _deleteEntry(getDb(), coupleId, entryId);
 }
 
 export async function countEntriesByCategory(
   coupleId: string,
   categoryName: string
 ): Promise<number> {
-  const q = query(entriesCol(coupleId), where('category', '==', categoryName));
-  const snap = await getDocs(q);
-  return snap.size;
+  return _countEntriesByCategory(getDb(), coupleId, categoryName);
 }
