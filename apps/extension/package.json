@@ -1,0 +1,38 @@
+{
+  "name": "extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.66.0",
+    "@uandi/cashbook-core": "workspace:*",
+    "@uandi/ui": "workspace:*",
+    "dayjs": "^1.11.0",
+    "firebase": "^11.3.1",
+    "jotai": "^2.11.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.71.2",
+    "sonner": "^2.0.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/chrome": "^0.0.304",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@uandi/tsconfig": "workspace:*",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.0"
+  }
+}

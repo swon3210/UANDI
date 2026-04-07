@@ -1,39 +1,22 @@
 import {
-  collection,
-  query,
-  orderBy,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp,
-  writeBatch,
-} from 'firebase/firestore';
-import { getDb } from '@/lib/firebase/config';
+  getCategories as _getCategories,
+  addCategory as _addCategory,
+  updateCategory as _updateCategory,
+  deleteCategory as _deleteCategory,
+  initDefaultCategories as _initDefaultCategories,
+} from '@uandi/cashbook-core';
 import type { CashbookCategory } from '@/types';
-import { DEFAULT_CATEGORIES } from '@/constants/default-categories';
-
-function categoriesCol(coupleId: string) {
-  return collection(getDb(), `couples/${coupleId}/cashbookCategories`);
-}
+import { getDb } from '@/lib/firebase/config';
 
 export async function getCategories(coupleId: string): Promise<CashbookCategory[]> {
-  const q = query(categoriesCol(coupleId), orderBy('group'), orderBy('sortOrder'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashbookCategory);
+  return _getCategories(getDb(), coupleId);
 }
 
 export async function addCategory(
   coupleId: string,
   data: Omit<CashbookCategory, 'id' | 'coupleId' | 'createdAt'>
 ): Promise<string> {
-  const docRef = await addDoc(categoriesCol(coupleId), {
-    ...data,
-    coupleId,
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
+  return _addCategory(getDb(), coupleId, data);
 }
 
 export async function updateCategory(
@@ -41,28 +24,13 @@ export async function updateCategory(
   categoryId: string,
   data: Partial<Pick<CashbookCategory, 'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder'>>
 ): Promise<void> {
-  const ref = doc(getDb(), `couples/${coupleId}/cashbookCategories/${categoryId}`);
-  await updateDoc(ref, data);
+  return _updateCategory(getDb(), coupleId, categoryId, data);
 }
 
 export async function deleteCategory(coupleId: string, categoryId: string): Promise<void> {
-  const ref = doc(getDb(), `couples/${coupleId}/cashbookCategories/${categoryId}`);
-  await deleteDoc(ref);
+  return _deleteCategory(getDb(), coupleId, categoryId);
 }
 
 export async function initDefaultCategories(coupleId: string): Promise<void> {
-  const db = getDb();
-  const batch = writeBatch(db);
-
-  for (const cat of DEFAULT_CATEGORIES) {
-    const ref = doc(categoriesCol(coupleId));
-    batch.set(ref, {
-      ...cat,
-      coupleId,
-      isDefault: true,
-      createdAt: Timestamp.now(),
-    });
-  }
-
-  await batch.commit();
+  return _initDefaultCategories(getDb(), coupleId);
 }

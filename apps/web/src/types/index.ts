@@ -1,5 +1,16 @@
 import type { Timestamp } from 'firebase/firestore';
 
+// ── 가계부 관련 타입: @uandi/cashbook-core에서 re-export ──
+export type {
+  CashbookEntry,
+  CashbookEntryType,
+  CashbookCategory,
+  CategoryGroup,
+  CategorySubGroup,
+} from '@uandi/cashbook-core';
+
+// ── 앱 전용 타입 ──
+
 export type User = {
   uid: string;
   email: string;
@@ -40,68 +51,6 @@ export type Photo = {
   height: number;
 };
 
-export type CashbookEntryType = 'income' | 'expense' | 'investment' | 'flex';
-
-export type CashbookEntry = {
-  id: string;
-  coupleId: string;
-  createdBy: string;
-  type: CashbookEntryType;
-  amount: number;
-  category: string;
-  description: string;
-  date: Timestamp;
-  createdAt: Timestamp;
-};
-
-export type CategoryGroup = 'income' | 'expense' | 'investment' | 'flex';
-
-export type CategorySubGroup =
-  // 수입
-  | 'regular_income'
-  | 'irregular_income'
-  // 지출
-  | 'fixed_expense'
-  | 'variable_common'
-  | 'variable_personal'
-  // 재테크
-  | 'cash_holding'
-  | 'investment'
-  // Flex
-  | 'joint_flex'
-  | 'personal_flex';
-
-export type CashbookCategory = {
-  id: string;
-  coupleId: string;
-  group: CategoryGroup;
-  subGroup: CategorySubGroup;
-  name: string;
-  icon: string;
-  color: string;
-  isDefault: boolean;
-  sortOrder: number;
-  createdAt: Timestamp;
-};
-
-export const EXPENSE_CATEGORIES = [
-  '식비',
-  '교통',
-  '쇼핑',
-  '의료',
-  '문화/여가',
-  '주거/관리비',
-  '통신',
-  '보험',
-  '저축',
-  '기타',
-] as const;
-
-export const INCOME_CATEGORIES = ['월급', '용돈', '부수입', '기타'] as const;
-
-export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
-export type IncomeCategory = (typeof INCOME_CATEGORIES)[number];
-
 export type AnnualPlan = {
   id: string;
   coupleId: string;
@@ -116,8 +65,8 @@ export type AnnualPlanItem = {
   planId: string;
   coupleId: string;
   categoryId: string;
-  group: CategoryGroup;
-  subGroup: CategorySubGroup;
+  group: import('@uandi/cashbook-core').CategoryGroup;
+  subGroup: import('@uandi/cashbook-core').CategorySubGroup;
   annualAmount: number;
   monthlyAmount: number | null;
   targetMonths: number[] | null;
@@ -136,7 +85,7 @@ export type InvestmentPlan = {
 };
 
 // 투자 항목 (CashbookEntry 확장)
-export type InvestmentEntry = CashbookEntry & {
+export type InvestmentEntry = import('@uandi/cashbook-core').CashbookEntry & {
   type: 'investment';
   transactionType: 'buy' | 'sell';
 };
@@ -155,8 +104,8 @@ export type MonthlyBudget = {
 
 export type MonthlyBudgetItem = {
   categoryId: string;
-  group: CategoryGroup;
-  subGroup: CategorySubGroup;
+  group: import('@uandi/cashbook-core').CategoryGroup;
+  subGroup: import('@uandi/cashbook-core').CategorySubGroup;
   budgetAmount: number;
   ownerUid: string | null;
 };
