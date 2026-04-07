@@ -63,7 +63,7 @@ export function ManualEntryForm({ uid, categories, addEntry, onSuccess }: Manual
   };
 
   return (
-    <div className="p-3 border-b space-y-3 overflow-y-auto max-h-[380px]">
+    <div className="rounded-xl bg-card border border-border p-4 space-y-3 overflow-y-auto max-h-[380px]">
       {/* 타입 탭 */}
       <div className="flex rounded-lg bg-muted p-0.5 gap-0.5">
         {TYPE_TABS.map((t) => (
@@ -93,7 +93,7 @@ export function ManualEntryForm({ uid, categories, addEntry, onSuccess }: Manual
           inputMode="numeric"
           placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
           className="text-right text-base font-semibold"
           autoFocus
         />
@@ -116,7 +116,7 @@ export function ManualEntryForm({ uid, categories, addEntry, onSuccess }: Manual
         <Input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)}
           className="text-sm"
         />
       </div>
@@ -129,7 +129,7 @@ export function ManualEntryForm({ uid, categories, addEntry, onSuccess }: Manual
         <Input
           placeholder="메모를 입력하세요"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
           className="text-sm"
         />
       </div>

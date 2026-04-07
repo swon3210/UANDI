@@ -81,7 +81,7 @@ export function CategorySelector({
             className="mt-1.5 text-sm"
             placeholder="카테고리를 입력하세요"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
             autoFocus
           />
         )}
