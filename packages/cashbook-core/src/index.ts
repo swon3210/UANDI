@@ -5,7 +5,7 @@ export type {
   CashbookCategory,
   CategoryGroup,
   CategorySubGroup,
-} from './types.js';
+} from './types';
 
 // Services
 export {
@@ -14,24 +14,24 @@ export {
   updateEntry,
   deleteEntry,
   countEntriesByCategory,
-} from './services/cashbook.js';
+} from './services/cashbook';
 export {
   getCategories,
   addCategory,
   updateCategory,
   deleteCategory,
   initDefaultCategories,
-} from './services/cashbook-categories.js';
+} from './services/cashbook-categories';
 
 // Constants
-export type { DefaultCategory } from './constants/default-categories.js';
+export type { DefaultCategory } from './constants/default-categories';
 export {
   DEFAULT_CATEGORIES,
   SUB_GROUP_LABELS,
   GROUP_LABELS,
   SUB_GROUPS_BY_GROUP,
   COLOR_PRESETS,
-} from './constants/default-categories.js';
+} from './constants/default-categories';
 
 // Utils
-export { formatCurrency, formatAmount } from './utils/currency.js';
+export { formatCurrency, formatAmount } from './utils/currency';

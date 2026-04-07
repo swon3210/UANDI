@@ -1,4 +1,4 @@
-import type { CategoryGroup, CategorySubGroup } from '../types.js';
+import type { CategoryGroup, CategorySubGroup } from '../types';
 
 export type DefaultCategory = {
   group: CategoryGroup;

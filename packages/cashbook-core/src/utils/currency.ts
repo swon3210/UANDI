@@ -1,4 +1,4 @@
-import type { CashbookEntryType } from '../types.js';
+import type { CashbookEntryType } from '../types';
 
 export function formatCurrency(amount: number): string {
   return `${amount.toLocaleString('ko-KR')}원`;

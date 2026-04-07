@@ -13,7 +13,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import dayjs from 'dayjs';
-import type { CashbookEntry } from '../types.js';
+import type { CashbookEntry } from '../types';
 
 function entriesCol(db: Firestore, coupleId: string) {
   return collection(db, `couples/${coupleId}/cashbookEntries`);

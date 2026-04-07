@@ -11,8 +11,8 @@ import {
   writeBatch,
   type Firestore,
 } from 'firebase/firestore';
-import type { CashbookCategory } from '../types.js';
-import { DEFAULT_CATEGORIES } from '../constants/default-categories.js';
+import type { CashbookCategory } from '../types';
+import { DEFAULT_CATEGORIES } from '../constants/default-categories';
 
 function categoriesCol(db: Firestore, coupleId: string) {
   return collection(db, `couples/${coupleId}/cashbookCategories`);
