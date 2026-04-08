@@ -24,6 +24,7 @@ export const NAV_ITEMS: NavGroup[] = [
       { title: '테스트 전략', slug: 'testing-strategy' },
       { title: '문서 사이트', slug: 'docs-site' },
       { title: 'AI 워크플로우', slug: 'ai-workflow' },
+      { title: '크롬 익스텐션', slug: 'extension' },
     ],
   },
   {
