@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { Skeleton } from '@uandi/ui';
 import { formatAmount } from '@uandi/cashbook-core';
 import type { CashbookCategory } from '@uandi/cashbook-core';
+import type { CashbookEntry } from '@uandi/cashbook-core';
 import type { GroupedEntries } from '@/hooks/useCashbook';
 import { CategoryIcon } from './CategoryIcon';
 
@@ -9,9 +10,10 @@ type EntryListProps = {
   groupedEntries: GroupedEntries[];
   categories: CashbookCategory[] | undefined;
   isLoading: boolean;
+  onEntryClick?: (entry: CashbookEntry) => void;
 };
 
-export function EntryList({ groupedEntries, categories, isLoading }: EntryListProps) {
+export function EntryList({ groupedEntries, categories, isLoading, onEntryClick }: EntryListProps) {
   const categoryMap = new Map(categories?.map((c) => [c.name, c]) ?? []);
 
   if (isLoading) {
@@ -47,9 +49,11 @@ export function EntryList({ groupedEntries, categories, isLoading }: EntryListPr
               const color = cat?.color ?? '#78909C';
 
               return (
-                <div
+                <button
                   key={entry.id}
-                  className="flex w-full items-center gap-3 rounded-xl bg-card border border-border p-3"
+                  type="button"
+                  onClick={() => onEntryClick?.(entry)}
+                  className="flex w-full items-center gap-3 rounded-xl bg-card border border-border p-3 text-left hover:bg-accent/50 transition-colors cursor-pointer"
                 >
                   <span
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
@@ -72,7 +76,7 @@ export function EntryList({ groupedEntries, categories, isLoading }: EntryListPr
                   >
                     {formatAmount(entry.amount, entry.type)}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
