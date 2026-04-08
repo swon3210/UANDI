@@ -43,7 +43,7 @@ import {
   Tag,
 } from '@phosphor-icons/react';
 
-const CATEGORY_ICON_MAP: Record<string, ComponentType<IconProps>> = {
+export const CATEGORY_ICON_MAP: Record<string, ComponentType<IconProps>> = {
   wallet: Wallet,
   gift: Gift,
   trophy: Trophy,
@@ -85,6 +85,8 @@ const CATEGORY_ICON_MAP: Record<string, ComponentType<IconProps>> = {
   star: Star,
   tag: Tag,
 };
+
+export const ICON_PRESET_KEYS = Object.keys(CATEGORY_ICON_MAP);
 
 type CategoryIconProps = {
   name: string;
