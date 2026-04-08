@@ -73,7 +73,7 @@ export function MainPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-border">
         <div className="flex items-center gap-2">
-          <Logo variant="symbol" className="h-5 w-5" />
+          <Logo variant="full" className="h-5 w-5" />
           <span className="text-sm font-medium">{user?.displayName}</span>
         </div>
         <div className="flex items-center gap-1">
