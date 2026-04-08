@@ -125,6 +125,13 @@ export type NotificationSettings = {
   updatedAt: Timestamp;
 };
 
+// 가계부 디스플레이 설정 (유저 개인)
+export type CashbookDisplaySettings = {
+  userId: string;
+  backgroundImageUrl: string | null;
+  updatedAt: Timestamp;
+};
+
 // 현금 보유 잔고 (월말 스냅샷)
 export type CashBalance = {
   id: string;
