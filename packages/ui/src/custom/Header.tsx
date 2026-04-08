@@ -17,7 +17,7 @@ export function Header({ title, leftSlot, rightSlot, className, ...props }: Head
       )}
       {...props}
     >
-      <div className="w-10">{leftSlot}</div>
+      <div className="w-10 flex">{leftSlot}</div>
       <span className="text-base font-semibold text-foreground">{title}</span>
       <div className="w-10 flex justify-end">{rightSlot}</div>
     </header>

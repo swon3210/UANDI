@@ -4,9 +4,14 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // 에뮬레이터 테스트용: 모든 접근 허용
-    match /{allPaths=**} {
-      allow read, write: if true;
+    // 커플 사진
+    match /couples/{coupleId}/photos/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 가계부 배경 이미지 (유저 개인)
+    match /users/{userId}/cashbook/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
