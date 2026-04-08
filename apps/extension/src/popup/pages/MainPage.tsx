@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { Button, Logo } from '@uandi/ui';
-import { Plus, LogOut, Sparkles, X } from 'lucide-react';
+import { Plus, LogOut, Sparkles, Settings, X } from 'lucide-react';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import type { CashbookEntry } from '@uandi/cashbook-core';
 import {
@@ -18,8 +18,9 @@ import { ManualEntryForm } from '../components/ManualEntryForm';
 import { EditEntryForm } from '../components/EditEntryForm';
 import { MonthlySummary } from '../components/MonthlySummary';
 import { EntryList } from '../components/EntryList';
+import { CategoriesPage } from './CategoriesPage';
 
-type InputMode = 'closed' | 'ai' | 'manual' | 'edit';
+type InputMode = 'closed' | 'ai' | 'manual' | 'edit' | 'categories';
 
 export function MainPage() {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export function MainPage() {
     setInputMode('edit');
   };
 
-  const isOverlayOpen = inputMode === 'manual' || inputMode === 'edit';
+  const isOverlayOpen = inputMode === 'manual' || inputMode === 'edit' || inputMode === 'categories';
 
   return (
     <div className="relative flex flex-col h-full">
@@ -107,6 +108,15 @@ export function MainPage() {
                     title="직접 입력"
                   >
                     <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setInputMode('categories')}
+                    className="h-8 w-8"
+                    title="카테고리 설정"
+                  >
+                    <Settings className="h-4 w-4" />
                   </Button>
                 </>
               )}
@@ -151,7 +161,7 @@ export function MainPage() {
       </div>
 
       {/* 오버레이 패널 (수동 입력 / 수정) */}
-      {isOverlayOpen && (
+      {(inputMode === 'manual' || inputMode === 'edit') && (
         <div className="absolute inset-0 z-10 flex flex-col bg-background">
           {/* 오버레이 헤더 */}
           <div className="flex items-center justify-between px-4 h-14 border-b border-border">
@@ -189,6 +199,13 @@ export function MainPage() {
               />
             )}
           </div>
+        </div>
+      )}
+
+      {/* 카테고리 설정 오버레이 */}
+      {inputMode === 'categories' && coupleId && (
+        <div className="absolute inset-0 z-10 flex flex-col bg-background">
+          <CategoriesPage coupleId={coupleId} onClose={closeInput} />
         </div>
       )}
     </div>
