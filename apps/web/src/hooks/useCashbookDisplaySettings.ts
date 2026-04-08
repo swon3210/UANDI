@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+'use client';
+
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocalStorage } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
 import {
   getCashbookDisplaySettings,
@@ -36,20 +39,14 @@ const OPACITY_KEY = 'cashbook-opacity';
 const DEFAULT_OPACITY = 1;
 
 export function useCashbookOpacity(): [number, (v: number) => void] {
-  const [opacity, setOpacityState] = useState(DEFAULT_OPACITY);
+  const [opacity, setOpacity] = useLocalStorage(OPACITY_KEY, DEFAULT_OPACITY);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(OPACITY_KEY);
-    if (stored !== null) {
-      const parsed = Number(stored);
-      if (!Number.isNaN(parsed)) setOpacityState(parsed);
-    }
-  }, []);
+  const handleSetOpacity = useCallback(
+    (value: number) => {
+      setOpacity(value);
+    },
+    [setOpacity],
+  );
 
-  const setOpacity = useCallback((value: number) => {
-    setOpacityState(value);
-    localStorage.setItem(OPACITY_KEY, String(value));
-  }, []);
-
-  return [opacity, setOpacity];
+  return [opacity, handleSetOpacity];
 }
