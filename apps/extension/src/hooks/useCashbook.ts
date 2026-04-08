@@ -29,6 +29,23 @@ export function useAddEntry(coupleId: string | null) {
   });
 }
 
+export function useUpdateEntry(coupleId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      entryId,
+      data,
+    }: {
+      entryId: string;
+      data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>;
+    }) => updateEntry(db, coupleId!, entryId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cashbookEntries', coupleId] });
+    },
+  });
+}
+
 export function useDeleteEntry(coupleId: string | null) {
   const queryClient = useQueryClient();
 
