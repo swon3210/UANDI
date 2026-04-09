@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { Button, Logo } from '@uandi/ui';
-import { Plus, LogOut, Sparkles, Settings, X } from 'lucide-react';
+import { Plus, LogOut, Sparkles, Tag, SlidersHorizontal, X } from 'lucide-react';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import type { CashbookEntry } from '@uandi/cashbook-core';
 import {
@@ -13,14 +13,16 @@ import {
   groupEntriesByDate,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCashbookOpacity } from '@/hooks/useCashbookOpacity';
 import { AiInput } from '../components/AiInput';
 import { ManualEntryForm } from '../components/ManualEntryForm';
 import { EditEntryForm } from '../components/EditEntryForm';
 import { MonthlySummary } from '../components/MonthlySummary';
 import { EntryList } from '../components/EntryList';
 import { CategoriesPage } from './CategoriesPage';
+import { SettingsPage } from './SettingsPage';
 
-type InputMode = 'closed' | 'ai' | 'manual' | 'edit' | 'categories';
+type InputMode = 'closed' | 'ai' | 'manual' | 'edit' | 'categories' | 'settings';
 
 export function MainPage() {
   const { user } = useAuth();
@@ -30,6 +32,7 @@ export function MainPage() {
   const [month, setMonth] = useState(() => dayjs().month());
   const [inputMode, setInputMode] = useState<InputMode>('closed');
   const [editingEntry, setEditingEntry] = useState<CashbookEntry | null>(null);
+  const [opacity] = useCashbookOpacity();
 
   const { data: entries, isLoading: entriesLoading } = useCashbookEntries(coupleId, year, month);
   const { data: categories } = useCashbookCategories(coupleId);
@@ -67,12 +70,19 @@ export function MainPage() {
     setInputMode('edit');
   };
 
-  const isOverlayOpen = inputMode === 'manual' || inputMode === 'edit' || inputMode === 'categories';
+  const isOverlayOpen =
+    inputMode === 'manual' ||
+    inputMode === 'edit' ||
+    inputMode === 'categories' ||
+    inputMode === 'settings';
 
   return (
     <div className="relative flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-border">
+      <div
+        className="flex items-center justify-between px-4 h-14 border-b border-border"
+        style={{ opacity }}
+      >
         <div className="flex items-center gap-2">
           <Logo variant="full" className="h-5 w-5" />
           <span className="text-sm font-medium">{user?.displayName}</span>
@@ -116,7 +126,16 @@ export function MainPage() {
                     className="h-8 w-8"
                     title="카테고리 설정"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Tag className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setInputMode('settings')}
+                    className="h-8 w-8"
+                    title="디스플레이 설정"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
                   </Button>
                 </>
               )}
@@ -129,7 +148,7 @@ export function MainPage() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" style={{ opacity }}>
         <div className="px-4 pt-2 pb-4 space-y-4">
           {/* AI 입력 (인라인) */}
           {inputMode === 'ai' && user && (
@@ -206,6 +225,13 @@ export function MainPage() {
       {inputMode === 'categories' && coupleId && (
         <div className="absolute inset-0 z-10 flex flex-col bg-background">
           <CategoriesPage coupleId={coupleId} onClose={closeInput} />
+        </div>
+      )}
+
+      {/* 디스플레이 설정 오버레이 */}
+      {inputMode === 'settings' && (
+        <div className="absolute inset-0 z-10 flex flex-col bg-background">
+          <SettingsPage onClose={closeInput} />
         </div>
       )}
     </div>
