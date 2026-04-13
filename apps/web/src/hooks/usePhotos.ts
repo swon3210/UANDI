@@ -144,36 +144,41 @@ export function useUploadPhotos() {
     mutationFn: async (params: UploadPhotosParams) => {
       const { files, onProgress } = params;
       const total = files.length;
-      const photoIds: string[] = [];
+      const CONCURRENCY = 5;
 
-      for (let i = 0; i < total; i++) {
-        const entry = files[i];
+      // 1단계: 이미지 압축 병렬 처리
+      const imageCompression = (await import('browser-image-compression')).default;
+      const compressed = await Promise.all(
+        files.map(async (entry) => {
+          let fileToUpload = entry.file;
+          if (entry.file.size > 1.5 * 1024 * 1024) {
+            fileToUpload = await imageCompression(entry.file, {
+              maxWidthOrHeight: 1920,
+              initialQuality: 0.85,
+              useWebWorker: true,
+            });
+          }
+          return { ...entry, file: fileToUpload };
+        })
+      );
 
-        // browser-image-compression으로 리사이즈 (1.5MB 초과 시)
-        let fileToUpload = entry.file;
-        if (entry.file.size > 1.5 * 1024 * 1024) {
-          const imageCompression = (await import('browser-image-compression')).default;
-          fileToUpload = await imageCompression(entry.file, {
-            maxWidthOrHeight: 1920,
-            initialQuality: 0.85,
-            useWebWorker: true,
-          });
-        }
+      // 2단계: 업로드 + Firestore 저장을 동시성 제한하여 병렬 실행
+      let completedCount = 0;
+      const photoIds: string[] = new Array(total);
 
+      const uploadOne = async (index: number) => {
+        const entry = compressed[index];
         const tempId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-        // Storage 업로드 (개별 파일 진행률을 전체 진행률로 환산)
         const storageUrl = await uploadPhotoFile({
           coupleId: params.coupleId,
           photoId: tempId,
-          file: fileToUpload,
-          onProgress: (filePercent) => {
-            const overall = Math.round(((i + filePercent / 100) / total) * 100);
-            onProgress?.(overall, i + 1, total);
+          file: entry.file,
+          onProgress: () => {
+            // 개별 파일 진행률은 생략하고 완료 기준으로 전체 진행률 보고
           },
         });
 
-        // Firestore 문서 생성
         const input: AddPhotoInput = {
           coupleId: params.coupleId,
           uploadedBy: params.uploadedBy,
@@ -187,8 +192,22 @@ export function useUploadPhotos() {
         };
 
         const photoId = await addPhoto(input);
-        photoIds.push(photoId);
-      }
+        photoIds[index] = photoId;
+
+        completedCount++;
+        const overall = Math.round((completedCount / total) * 100);
+        onProgress?.(overall, completedCount, total);
+      };
+
+      // 동시성 제한 실행 (worker pool 패턴)
+      let nextIndex = 0;
+      const worker = async () => {
+        while (nextIndex < total) {
+          const idx = nextIndex++;
+          await uploadOne(idx);
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker()));
 
       return photoIds;
     },
