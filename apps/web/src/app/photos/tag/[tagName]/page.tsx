@@ -6,9 +6,10 @@ import { Header, EmptyState, Button, Skeleton } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotosByTag } from '@/hooks/usePhotos';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/UploaderFilterChips';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function TagDetailPage() {
   const params = useParams<{ tagName: string }>();
@@ -30,22 +31,11 @@ export default function TagDetailPage() {
     return allPhotos.filter((p) => p.uploadedBy !== user?.uid);
   }, [data?.pages, uploaderFilter, user?.uid]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current || !hasNextPage || isFetchingNextPage) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', handleScroll);
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -73,7 +63,7 @@ export default function TagDetailPage() {
         }
       />
       <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
           {isLoading ? (
             <PhotoGrid photos={[]} isLoading />
@@ -96,6 +86,7 @@ export default function TagDetailPage() {
                   ))}
                 </div>
               )}
+              <div ref={sentinelRef} className="h-1" />
             </>
           )}
         </div>

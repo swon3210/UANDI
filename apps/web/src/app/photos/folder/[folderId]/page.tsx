@@ -9,13 +9,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFolder, useRenameFolder, useDeleteFolder, useFolders } from '@/hooks/useFolders';
 import { usePhotosByFolder, useMovePhotos } from '@/hooks/usePhotos';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderMenuSheet } from '@/components/photos/FolderMenuSheet';
 import { RenameFolderSheet } from '@/components/photos/RenameFolderSheet';
 import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/UploaderFilterChips';
 import { SelectionModeBar } from '@/components/photos/SelectionModeBar';
 import { MovePhotosSheet } from '@/components/photos/MovePhotosSheet';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function FolderDetailPage() {
   const params = useParams<{ folderId: string }>();
@@ -48,22 +49,11 @@ export default function FolderDetailPage() {
     return allPhotos.filter((p) => p.uploadedBy !== user?.uid);
   }, [data?.pages, uploaderFilter, user?.uid]);
 
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const handleToggleSelect = (photoId: string) => {
     setSelectedIds((prev) => {

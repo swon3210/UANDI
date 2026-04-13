@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -26,6 +26,7 @@ import {
 } from '@/hooks/usePhotos';
 import { useFolders, useInfiniteFolders, useCreateFolder } from '@/hooks/useFolders';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { BottomNav } from '@/components/BottomNav';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderCard } from '@/components/photos/FolderCard';
@@ -36,24 +37,14 @@ import Link from 'next/link';
 function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const photos = data?.pages.flatMap((p) => p.photos) ?? [];
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   if (isLoading) {
     return <PhotoGrid photos={[]} isLoading />;
@@ -94,24 +85,14 @@ function FoldersTab({ coupleId }: { coupleId: string }) {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfiniteFolders(coupleId);
   const createMutation = useCreateFolder(coupleId);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const folders = data?.pages.flatMap((p) => p.folders) ?? [];
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const handleCreateFolder = () => {
     overlay.open(({ isOpen, close, unmount }) => (
