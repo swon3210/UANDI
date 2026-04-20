@@ -2,7 +2,9 @@ import { getAuth } from '@/lib/firebase/config';
 import type { CashbookEntryType } from '@/types';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const user = getAuth().currentUser;
+  const auth = getAuth();
+  await auth.authStateReady();
+  const user = auth.currentUser;
   if (!user) throw new Error('NOT_AUTHENTICATED');
   const token = await user.getIdToken();
   return {
@@ -11,7 +13,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   };
 }
 
-// ── 자연어 가계부 파싱 ──
+// ── 자연어 가계부 다건 파싱 ──
 
 export type ParsedEntry = {
   type: CashbookEntryType;
@@ -22,12 +24,12 @@ export type ParsedEntry = {
   confidence: number;
 };
 
-export async function parseEntryFromText(
+export async function parseEntriesFromText(
   text: string,
   categories: string[]
-): Promise<ParsedEntry> {
+): Promise<ParsedEntry[]> {
   const headers = await getAuthHeaders();
-  const res = await fetch('/api/ai/parse-entry', {
+  const res = await fetch('/api/ai/parse-entries', {
     method: 'POST',
     headers,
     body: JSON.stringify({ text, categories }),
@@ -38,7 +40,8 @@ export async function parseEntryFromText(
     throw new Error(error.error ?? 'AI 파싱에 실패했습니다');
   }
 
-  return res.json();
+  const { entries } = (await res.json()) as { entries: ParsedEntry[] };
+  return entries;
 }
 
 // ── 사진 태그 제안 ──

@@ -27,7 +27,7 @@ export async function parseEntryFromText(
   categories: string[]
 ): Promise<ParsedEntry> {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${WEB_APP_URL}/api/ai/parse-entry`, {
+  const res = await fetch(`${WEB_APP_URL}/api/ai/parse-entries`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ text, categories }),
@@ -44,5 +44,9 @@ export async function parseEntryFromText(
     throw new Error(message);
   }
 
-  return res.json();
+  const { entries } = (await res.json()) as { entries: ParsedEntry[] };
+  if (!entries || entries.length === 0) {
+    throw new Error('파싱 결과가 비어 있습니다');
+  }
+  return entries[0];
 }

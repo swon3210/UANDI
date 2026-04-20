@@ -111,7 +111,11 @@ export function EntryForm({
   };
 
   return (
-    <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] flex flex-col">
+    <SheetContent
+      side="bottom"
+      className="rounded-t-[20px] max-h-[90vh] flex flex-col"
+      data-testid="entry-form-sheet"
+    >
       <SheetHeader>
         <SheetTitle>{editingEntry ? '내역 수정' : '내역 추가'}</SheetTitle>
       </SheetHeader>

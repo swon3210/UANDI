@@ -34,34 +34,58 @@ apps/web/src/app/api/ai/
 
 ---
 
-## 기능 1: 자연어 가계부 입력
+## 기능 1: 자연어 가계부 입력 (다건)
 
 ### 목적
 
-"점심 김치찌개 9000원" 같은 자연어 입력을 구조화된 가계부 데이터로 변환한다.
+"점심 김치찌개 9000원, 어제 택시 15000원, 월급 350만원" 같은 자연어 입력을
+**한 번에 여러 건의** 구조화된 가계부 데이터로 변환한다.
+항목이 1건이어도 동일하게 배열로 반환되어 UX가 일관된다.
 
 ### UI 위치
 
-가계부 메인 페이지(`/cashbook`) 상단에 텍스트 입력 필드 추가.
+가계부 메인 페이지(`/cashbook/history`) 상단의 **textarea** (여러 줄 입력 허용).
 기존 `+` 버튼(수동 입력)과 병행 사용.
 
 ### 입력 → 출력 예시
 
-| 입력 | 출력 |
+단건 입력:
+
+| 입력 | 출력 (entries[0]) |
 |------|------|
 | "점심 김치찌개 9000원" | `{ type: "expense", amount: 9000, category: "식비", description: "김치찌개", date: "오늘" }` |
 | "월급 350만원" | `{ type: "income", amount: 3500000, category: "정기급여", description: "월급", date: "오늘" }` |
-| "3월 15일 데이트 카페 12000원" | `{ type: "expense", amount: 12000, category: "데이트", description: "카페", date: "2026-03-15" }` |
-| "택시 15000" | `{ type: "expense", amount: 15000, category: "교통", description: "택시", date: "오늘" }` |
+
+다건 입력:
+
+입력:
+```
+점심 김치찌개 9000원
+어제 택시 15000원
+월급 350만원
+```
+
+출력:
+```ts
+{
+  entries: [
+    { type: "expense", amount: 9000, category: "식비", description: "김치찌개", date: "오늘", confidence: 0.95 },
+    { type: "expense", amount: 15000, category: "교통", description: "택시", date: "어제", confidence: 0.9 },
+    { type: "income", amount: 3500000, category: "정기급여", description: "월급", date: "오늘", confidence: 0.95 },
+  ]
+}
+```
+
+항목은 **줄바꿈, 쉼표, '그리고' 등**으로 구분된다. 최대 10건까지 허용.
 
 ### API Route
 
-**`POST /api/ai/parse-entry`**
+**`POST /api/ai/parse-entries`**
 
 Request:
 ```ts
 {
-  text: string;           // 사용자 자연어 입력
+  text: string;           // 사용자 자연어 입력 (여러 줄 가능, max 1000자)
   categories: string[];   // 현재 커플의 카테고리 이름 목록 (매칭용)
 }
 ```
@@ -69,29 +93,36 @@ Request:
 Response:
 ```ts
 {
-  type: CashbookEntryType;  // 'income' | 'expense' | 'investment' | 'flex'
-  amount: number;
-  category: string;         // categories 목록에서 가장 적합한 것 선택
-  description: string;
-  date: string;             // ISO 8601 (YYYY-MM-DD)
-  confidence: number;       // 0~1 (파싱 신뢰도)
+  entries: {
+    type: CashbookEntryType;  // 'income' | 'expense' | 'investment' | 'flex'
+    amount: number;
+    category: string;         // categories 목록에서 가장 적합한 것 선택
+    description: string;
+    date: string;             // ISO 8601 (YYYY-MM-DD)
+    confidence: number;       // 0~1 (파싱 신뢰도)
+  }[];                        // 1~10개
 }
 ```
 
 ### UX 플로우
 
-1. 사용자가 텍스트 입력 → Enter 또는 전송 버튼
+1. 사용자가 textarea에 자연어 입력 (Shift+Enter 줄바꿈, Enter 전송)
 2. API 호출 중 로딩 표시
-3. 파싱 결과를 EntryForm에 미리 채움 (pre-fill)
-4. 사용자가 확인/수정 후 저장
-5. `confidence < 0.7`이면 "정확하지 않을 수 있어요" 경고 표시
+3. **항상** 미리보기 바텀시트 오픈 (1건이든 N건이든 동일 경로)
+4. 미리보기에서 각 항목 확인
+   - 카드 탭 → 기존 `EntryForm` 오버레이로 개별 편집
+   - 카드 `X` 아이콘 → 해당 항목 삭제
+   - `confidence < 0.7` 항목에 경고 표시
+5. "N건 모두 추가" → Firestore batch write → 월간 리스트 반영
+6. 모든 항목 삭제 시 빈 상태 + 취소 CTA만 표시
 
 ### 프롬프트 전략
 
 - 시스템 프롬프트에 카테고리 목록 포함
 - JSON 출력 강제 (`response_format: { type: "json_object" }`)
 - 오늘 날짜를 컨텍스트로 전달
-- Few-shot 예시 포함
+- 항목 구분자(줄바꿈/쉼표/그리고) 지침 명시
+- `max_tokens: 1024` (최대 10건 가정)
 
 ---
 

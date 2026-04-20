@@ -11,6 +11,7 @@ export type {
 export {
   getMonthlyEntries,
   addEntry,
+  addEntries,
   updateEntry,
   deleteEntry,
   countEntriesByCategory,
