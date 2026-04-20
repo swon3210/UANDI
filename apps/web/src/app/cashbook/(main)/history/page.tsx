@@ -12,6 +12,7 @@ import {
   useMonthlySummary,
   useGroupedEntries,
   useAddEntry,
+  useAddEntries,
   useUpdateEntry,
   useDeleteEntry,
 } from '@/hooks/useCashbook';
@@ -21,8 +22,9 @@ import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
+import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
 import { AiSpendingAnalysis } from '@/components/cashbook/AiSpendingAnalysis';
-import { parseEntryFromText, analyzeSpending } from '@/services/ai';
+import { parseEntriesFromText, analyzeSpending } from '@/services/ai';
 import type { CashbookEntry, CashbookEntryType } from '@/types';
 
 export default function CashbookPage() {
@@ -41,6 +43,7 @@ export default function CashbookPage() {
   const groups = useGroupedEntries(entries);
 
   const addMutation = useAddEntry(coupleId);
+  const addManyMutation = useAddEntries(coupleId);
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
 
@@ -100,15 +103,30 @@ export default function CashbookPage() {
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
       <AiParseInput
         categories={(categories ?? []).map((c) => c.name)}
-        parseFn={parseEntryFromText}
-        onParsed={(result) => {
-          handleAdd({
-            type: result.type as CashbookEntryType,
-            amount: result.amount,
-            category: result.category,
-            description: result.description,
-            date: result.date,
-          });
+        parseFn={parseEntriesFromText}
+        onParsed={(results) => {
+          const initialEntries = results.map((r) => ({
+            type: r.type as CashbookEntryType,
+            amount: r.amount,
+            category: r.category,
+            description: r.description,
+            date: r.date,
+            confidence: r.confidence,
+          }));
+          overlay.open(({ isOpen, close, unmount }) => (
+            <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+              <AiBulkPreviewSheet
+                initialEntries={initialEntries}
+                categories={categories ?? []}
+                createdBy={uid}
+                onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
+                onClose={() => {
+                  close();
+                  setTimeout(unmount, 300);
+                }}
+              />
+            </Sheet>
+          ));
         }}
       />
 

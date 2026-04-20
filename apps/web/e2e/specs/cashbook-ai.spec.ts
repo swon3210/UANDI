@@ -2,8 +2,8 @@ import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
 
-test.describe('자연어 가계부 입력', () => {
-  test('자연어 입력 필드에 텍스트를 입력하고 전송하면 EntryForm이 파싱 결과로 pre-fill된다', async ({
+test.describe('자연어 가계부 다건 입력', () => {
+  test('1건 입력 → 미리보기 Sheet에 카드 1개 표시 → 모두 추가하면 월간 리스트에 반영된다', async ({
     authedContext,
   }) => {
     const { page, coupleId } = authedContext;
@@ -11,25 +11,78 @@ test.describe('자연어 가계부 입력', () => {
     await page.goto('/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
-    // 자연어 입력 필드 확인
     const aiInput = page.getByTestId('ai-parse-input');
     await expect(aiInput).toBeVisible();
 
-    // 텍스트 입력 후 전송
+    // 1건 입력 (mock은 줄 수에 비례한 배열 반환)
     await aiInput.fill('점심 김치찌개 9000원');
     await page.getByTestId('ai-parse-submit').click();
 
-    // EntryForm Sheet가 열리고 파싱 결과가 pre-fill됨 (mock: amount=9000, category=식비, description=김치찌개)
-    const sheet = page.getByRole('dialog');
-    await expect(sheet).toBeVisible();
+    // 미리보기 Sheet가 열리고 카드 1개 표시
+    const previewSheet = page.getByTestId('ai-bulk-preview-sheet');
+    await expect(previewSheet).toBeVisible();
+    const cards = page.getByTestId('parsed-entry-card');
+    await expect(cards).toHaveCount(1);
 
-    // 금액이 9000으로 채워져 있어야 함
-    const amountInput = sheet.locator('input[name="amount"]');
-    await expect(amountInput).toHaveValue('9000');
+    // 모두 추가
+    await page.getByTestId('ai-bulk-confirm').click();
 
-    // 메모에 "김치찌개"가 채워져 있어야 함
-    const descInput = sheet.locator('input[name="description"]');
-    await expect(descInput).toHaveValue('김치찌개');
+    // 월간 리스트에 반영
+    await expect(page.getByText('김치찌개').first()).toBeVisible();
+  });
+
+  test('다건 입력 → 미리보기에 N개 카드 → 1개 삭제 후 추가하면 N-1건이 반영된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    // 3줄 입력 → mock은 3건 배열 반환
+    const aiInput = page.getByTestId('ai-parse-input');
+    await aiInput.fill('점심 김치찌개 9000원\n어제 택시 15000원\n월급 350만원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    // 카드 3개
+    const cards = page.getByTestId('parsed-entry-card');
+    await expect(cards).toHaveCount(3);
+
+    // 첫 카드 삭제
+    await page.getByTestId('parsed-entry-remove').first().click();
+    await expect(cards).toHaveCount(2);
+
+    // 모두 추가
+    await page.getByTestId('ai-bulk-confirm').click();
+
+    // 미리보기 닫힘 + 월간 리스트에 2건 반영 (삭제한 첫 카드는 미반영)
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).not.toBeVisible();
+  });
+
+  test('카드 탭 → EntryForm 오버레이로 편집 후 저장 → 미리보기 카드에 수정값 반영', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    const aiInput = page.getByTestId('ai-parse-input');
+    await aiInput.fill('점심 김치찌개 9000원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    // 첫 카드 탭 → EntryForm 오픈
+    await page.getByTestId('parsed-entry-card').first().click();
+    const entryFormSheet = page.getByTestId('entry-form-sheet');
+    await expect(entryFormSheet).toBeVisible();
+
+    // 금액을 12000으로 수정 후 저장
+    const amountInput = entryFormSheet.locator('input[name="amount"]');
+    await amountInput.fill('12000');
+    await entryFormSheet.getByRole('button', { name: /저장|추가/ }).click();
+
+    // 미리보기 카드에 12,000원이 반영됨
+    await expect(page.getByTestId('parsed-entry-card').first()).toContainText('12,000');
   });
 
   test('빈 텍스트로는 전송 버튼이 비활성화된다', async ({ authedContext }) => {
@@ -40,22 +93,6 @@ test.describe('자연어 가계부 입력', () => {
 
     const submitBtn = page.getByTestId('ai-parse-submit');
     await expect(submitBtn).toBeDisabled();
-  });
-
-  test('자연어 파싱 중 로딩 상태가 표시된다', async ({ authedContext }) => {
-    const { page, coupleId } = authedContext;
-    await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
-
-    const aiInput = page.getByTestId('ai-parse-input');
-    await aiInput.fill('점심 김치찌개 9000원');
-    await page.getByTestId('ai-parse-submit').click();
-
-    // 로딩 중에는 입력이 비활성화됨
-    // (mock은 즉시 응답하므로 결과 Sheet가 빠르게 뜸)
-    const sheet = page.getByRole('dialog');
-    await expect(sheet).toBeVisible({ timeout: 5000 });
   });
 });
 

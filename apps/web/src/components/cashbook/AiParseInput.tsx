@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Sparkles, Loader2, ArrowUp } from 'lucide-react';
-import { Input, Button } from '@uandi/ui';
+import { Textarea, Button } from '@uandi/ui';
 
 type ParseResult = {
   type: string;
@@ -15,9 +15,9 @@ type ParseResult = {
 };
 
 type AiParseInputProps = {
-  onParsed: (result: ParseResult) => void;
+  onParsed: (results: ParseResult[]) => void;
   categories: string[];
-  parseFn: (text: string, categories: string[]) => Promise<ParseResult>;
+  parseFn: (text: string, categories: string[]) => Promise<ParseResult[]>;
 };
 
 export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProps) {
@@ -25,8 +25,8 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
 
   const mutation = useMutation({
     mutationFn: (input: string) => parseFn(input, categories),
-    onSuccess: (result) => {
-      onParsed(result);
+    onSuccess: (results) => {
+      onParsed(results);
       setText('');
     },
   });
@@ -36,8 +36,8 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
     mutation.mutate(text.trim());
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSubmit();
     }
@@ -45,19 +45,20 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
 
   return (
     <div className="space-y-1">
-      <div className="flex gap-2">
+      <div className="flex items-end gap-2">
         <div className="relative flex-1">
           <Sparkles
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-3 top-3 text-muted-foreground"
           />
-          <Input
+          <Textarea
             data-testid="ai-parse-input"
             value={text}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+            onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="점심 김치찌개 9000원"
-            className="pl-9"
+            placeholder={'여러 건 입력 가능 (Shift+Enter 줄바꿈)\n예: 점심 김밥 5천원\n어제 택시 15000원'}
+            className="pl-9 min-h-[100px] max-h-40"
+            rows={1}
             disabled={mutation.isPending}
           />
         </div>
@@ -75,11 +76,6 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
           )}
         </Button>
       </div>
-      {mutation.data && mutation.data.confidence < 0.7 && (
-        <p className="text-xs text-amber-500" data-testid="ai-low-confidence">
-          정확하지 않을 수 있어요. 결과를 확인해주세요.
-        </p>
-      )}
       {mutation.error && (
         <p className="text-xs text-destructive">
           {mutation.error.message || 'AI 파싱에 실패했습니다'}

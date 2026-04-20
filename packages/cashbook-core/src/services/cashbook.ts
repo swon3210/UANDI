@@ -9,6 +9,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  writeBatch,
   Timestamp,
   type Firestore,
 } from 'firebase/firestore';
@@ -50,6 +51,22 @@ export async function addEntry(
     createdAt: Timestamp.now(),
   });
   return docRef.id;
+}
+
+export async function addEntries(
+  db: Firestore,
+  coupleId: string,
+  entries: Array<Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>>
+): Promise<number> {
+  if (entries.length === 0) return 0;
+  const batch = writeBatch(db);
+  const createdAt = Timestamp.now();
+  for (const data of entries) {
+    const ref = doc(entriesCol(db, coupleId));
+    batch.set(ref, { ...data, coupleId, createdAt });
+  }
+  await batch.commit();
+  return entries.length;
 }
 
 export async function updateEntry(

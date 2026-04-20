@@ -1,6 +1,7 @@
 import {
   getMonthlyEntries as _getMonthlyEntries,
   addEntry as _addEntry,
+  addEntries as _addEntries,
   updateEntry as _updateEntry,
   deleteEntry as _deleteEntry,
   countEntriesByCategory as _countEntriesByCategory,
@@ -22,6 +23,13 @@ export async function addEntry(
   data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
 ): Promise<string> {
   return _addEntry(getDb(), coupleId, data);
+}
+
+export async function addEntries(
+  coupleId: string,
+  entries: Array<Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>>
+): Promise<number> {
+  return _addEntries(getDb(), coupleId, entries);
 }
 
 export async function updateEntry(
