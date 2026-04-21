@@ -102,40 +102,42 @@ function SubGroupSection({
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
-      <div className="space-y-3">
-        {items.map((item) => {
-          const cat = getCategoryInfo(item.categoryId);
-          const prevAmount = getPreviousAmount?.(item.categoryId);
+      {items.length > 0 && (
+        <div className="rounded-xl bg-card border border-border p-4 space-y-4">
+          {items.map((item) => {
+            const cat = getCategoryInfo(item.categoryId);
+            const prevAmount = getPreviousAmount?.(item.categoryId);
 
-          return (
-            <div key={item.id} className="space-y-2">
-              <PlanItemRow
-                categoryName={cat?.name ?? ''}
-                categoryIcon={cat?.icon ?? ''}
-                categoryColor={cat?.color ?? '#78909C'}
-                inputMode={inputMode}
-                amount={
-                  inputMode === 'monthly'
-                    ? (item.monthlyAmount ?? 0)
-                    : item.annualAmount
-                }
-                onAmountChange={(annualAmount, monthlyAmount) =>
-                  onItemAmountChange(item.id, annualAmount, monthlyAmount)
-                }
-              />
-              {prevAmount != null && prevAmount > 0 && onApplySuggestion && (
-                <div className="pl-11">
-                  <PreviousYearSuggestion
-                    categoryName={cat?.name ?? ''}
-                    previousAmount={prevAmount}
-                    onApply={(amount) => onApplySuggestion(item.id, amount)}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div key={item.id} className="space-y-2">
+                <PlanItemRow
+                  categoryName={cat?.name ?? ''}
+                  categoryIcon={cat?.icon ?? ''}
+                  categoryColor={cat?.color ?? '#78909C'}
+                  inputMode={inputMode}
+                  amount={
+                    inputMode === 'monthly'
+                      ? (item.monthlyAmount ?? 0)
+                      : item.annualAmount
+                  }
+                  onAmountChange={(annualAmount, monthlyAmount) =>
+                    onItemAmountChange(item.id, annualAmount, monthlyAmount)
+                  }
+                />
+                {prevAmount != null && prevAmount > 0 && onApplySuggestion && (
+                  <div className="pl-11">
+                    <PreviousYearSuggestion
+                      categoryName={cat?.name ?? ''}
+                      previousAmount={prevAmount}
+                      onApply={(amount) => onApplySuggestion(item.id, amount)}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function MonthlyInvestmentTab({
     <div className="space-y-6" data-testid="investment-tab-content">
       {/* 월별 재테크 현황 */}
       <section>
-        <div className="rounded-xl border border-border p-4 space-y-2">
+        <div className="rounded-xl bg-card border border-border p-4 space-y-2">
           <h4 className="text-sm font-semibold">이번 달 재테크</h4>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">계획</span>
@@ -60,7 +60,7 @@ export function MonthlyInvestmentTab({
       {/* 투자 내역 */}
       <section>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">투자 내역</h4>
-        <div className="rounded-xl border border-border divide-y divide-border">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {Array.from(entriesByCategory.entries()).map(([catName, catEntries]) => {
             const cat = categories.find((c) => c.name === catName);
             return (
@@ -114,7 +114,7 @@ export function MonthlyInvestmentTab({
       {/* 현금 보유 */}
       <section>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">현금 보유</h4>
-        <div className="rounded-xl border border-border divide-y divide-border">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {cashHoldingCategories.map((cat) => {
             const balance = cashBalances.find((b) => b.categoryId === cat.id);
             return (

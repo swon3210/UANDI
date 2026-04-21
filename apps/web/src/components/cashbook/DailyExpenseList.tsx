@@ -25,7 +25,7 @@ export function DailyExpenseList({ days, categories }: DailyExpenseListProps) {
   return (
     <div data-testid="daily-expense-list" className="space-y-1">
       <h3 className="text-sm font-semibold text-muted-foreground mb-2">일별 지출</h3>
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className="rounded-xl bg-card border border-border overflow-hidden">
         {days.map((day) => {
           const dateKey = day.date.format('YYYY-MM-DD');
           const isExpanded = expandedDate === dateKey;

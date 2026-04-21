@@ -106,7 +106,7 @@ export function InvestmentPlanTab({
           <h3 className="text-sm font-medium text-muted-foreground">
             {SUB_GROUP_LABELS.cash_holding}
           </h3>
-          <div className="space-y-3">
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
             {cashHoldingItems.map((item) => {
               const cat = getCategoryInfo(item.categoryId);
               return (
@@ -132,7 +132,7 @@ export function InvestmentPlanTab({
           <h3 className="text-sm font-medium text-muted-foreground">
             {SUB_GROUP_LABELS.investment}
           </h3>
-          <div className="space-y-3">
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
             {investmentItems.map((item) => {
               const cat = getCategoryInfo(item.categoryId);
               return (

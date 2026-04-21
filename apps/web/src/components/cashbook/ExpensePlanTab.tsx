@@ -58,57 +58,61 @@ export function ExpensePlanTab({
         <h3 className="text-sm font-medium text-muted-foreground">
           {SUB_GROUP_LABELS.fixed_expense}
         </h3>
-        <div className="space-y-3">
-          {fixedItems.map((item) => {
-            const cat = getCategoryInfo(item.categoryId);
-            const mode = getInputMode(item);
-            return (
-              <PlanItemRow
-                key={item.id}
-                categoryName={cat?.name ?? ''}
-                categoryIcon={cat?.icon ?? ''}
-                categoryColor={cat?.color ?? '#D8635A'}
-                inputMode={mode}
-                amount={
-                  mode === 'monthly'
-                    ? (item.monthlyAmount ?? 0)
-                    : item.annualAmount
-                }
-                targetMonths={item.targetMonths ?? undefined}
-                onAmountChange={(annualAmount, monthlyAmount) =>
-                  onItemAmountChange(item.id, annualAmount, monthlyAmount)
-                }
-                onTargetMonthsChange={(months) =>
-                  onTargetMonthsChange(item.id, months)
-                }
-              />
-            );
-          })}
-        </div>
+        {fixedItems.length > 0 && (
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
+            {fixedItems.map((item) => {
+              const cat = getCategoryInfo(item.categoryId);
+              const mode = getInputMode(item);
+              return (
+                <PlanItemRow
+                  key={item.id}
+                  categoryName={cat?.name ?? ''}
+                  categoryIcon={cat?.icon ?? ''}
+                  categoryColor={cat?.color ?? '#D8635A'}
+                  inputMode={mode}
+                  amount={
+                    mode === 'monthly'
+                      ? (item.monthlyAmount ?? 0)
+                      : item.annualAmount
+                  }
+                  targetMonths={item.targetMonths ?? undefined}
+                  onAmountChange={(annualAmount, monthlyAmount) =>
+                    onItemAmountChange(item.id, annualAmount, monthlyAmount)
+                  }
+                  onTargetMonthsChange={(months) =>
+                    onTargetMonthsChange(item.id, months)
+                  }
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-muted-foreground">
           {SUB_GROUP_LABELS.variable_common}
         </h3>
-        <div className="space-y-3">
-          {variableCommonItems.map((item) => {
-            const cat = getCategoryInfo(item.categoryId);
-            return (
-              <PlanItemRow
-                key={item.id}
-                categoryName={cat?.name ?? ''}
-                categoryIcon={cat?.icon ?? ''}
-                categoryColor={cat?.color ?? '#D8635A'}
-                inputMode="monthly"
-                amount={item.monthlyAmount ?? 0}
-                onAmountChange={(annualAmount, monthlyAmount) =>
-                  onItemAmountChange(item.id, annualAmount, monthlyAmount)
-                }
-              />
-            );
-          })}
-        </div>
+        {variableCommonItems.length > 0 && (
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
+            {variableCommonItems.map((item) => {
+              const cat = getCategoryInfo(item.categoryId);
+              return (
+                <PlanItemRow
+                  key={item.id}
+                  categoryName={cat?.name ?? ''}
+                  categoryIcon={cat?.icon ?? ''}
+                  categoryColor={cat?.color ?? '#D8635A'}
+                  inputMode="monthly"
+                  amount={item.monthlyAmount ?? 0}
+                  onAmountChange={(annualAmount, monthlyAmount) =>
+                    onItemAmountChange(item.id, annualAmount, monthlyAmount)
+                  }
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {(myItems.length > 0 || partnerItems.length > 0) && (
@@ -122,7 +126,7 @@ export function ExpensePlanTab({
               <h4 className="text-xs font-medium text-muted-foreground pl-1">
                 👤 나의 지출
               </h4>
-              <div className="space-y-3">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 {myItems.map((item) => {
                   const cat = getCategoryInfo(item.categoryId);
                   return (
@@ -148,7 +152,7 @@ export function ExpensePlanTab({
               <h4 className="text-xs font-medium text-muted-foreground pl-1">
                 👤 {partnerDisplayName}
               </h4>
-              <div className="space-y-3">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 {partnerItems.map((item) => {
                   const cat = getCategoryInfo(item.categoryId);
                   return (

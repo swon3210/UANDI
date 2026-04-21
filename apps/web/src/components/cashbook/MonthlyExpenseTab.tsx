@@ -19,7 +19,7 @@ export function MonthlyExpenseTab({
       {/* 카테고리별 지출 */}
       <section>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">카테고리별 지출</h4>
-        <div className="rounded-xl border border-border px-3">
+        <div className="rounded-xl bg-card border border-border px-3">
           {categoryBudgets.length > 0 ? (
             categoryBudgets.map((budget) => (
               <CategoryBudgetRow
