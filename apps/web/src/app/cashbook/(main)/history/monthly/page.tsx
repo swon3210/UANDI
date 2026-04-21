@@ -60,6 +60,7 @@ export default function CashbookMonthlyPage() {
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <EntryForm
           categories={categories ?? []}
+          coupleId={coupleId}
           createdBy={uid}
           onSubmit={(data) => addMutation.mutate(data)}
           onClose={() => {

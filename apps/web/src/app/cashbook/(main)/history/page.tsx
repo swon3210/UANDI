@@ -58,6 +58,7 @@ export default function CashbookPage() {
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <EntryForm
           categories={categories ?? []}
+          coupleId={coupleId}
           createdBy={uid}
           prefill={prefill}
           onSubmit={(data) => addMutation.mutate(data)}
@@ -75,6 +76,7 @@ export default function CashbookPage() {
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <EntryForm
           categories={categories ?? []}
+          coupleId={coupleId}
           editingEntry={entry}
           createdBy={uid}
           onSubmit={(data) => {
@@ -118,6 +120,7 @@ export default function CashbookPage() {
               <AiBulkPreviewSheet
                 initialEntries={initialEntries}
                 categories={categories ?? []}
+                coupleId={coupleId}
                 createdBy={uid}
                 onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
                 onClose={() => {
