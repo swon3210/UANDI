@@ -55,6 +55,7 @@ export function useCreateFolder(coupleId: string | null) {
       createFolder(coupleId!, name, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['allFolders', coupleId] });
     },
   });
 }
