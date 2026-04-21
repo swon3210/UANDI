@@ -64,7 +64,7 @@ export function FlexPlanTab({
           <h3 className="text-sm font-medium text-muted-foreground">
             {SUB_GROUP_LABELS.joint_flex}
           </h3>
-          <div className="space-y-3">
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
             {jointItems.map((item) => {
               const cat = getCategoryInfo(item.categoryId);
               return (
@@ -95,7 +95,7 @@ export function FlexPlanTab({
           {myItems.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-xs font-medium text-muted-foreground pl-1">👤 나</h4>
-              <div className="space-y-3">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 {myItems.map((item) => {
                   const cat = getCategoryInfo(item.categoryId);
                   return (
@@ -121,7 +121,7 @@ export function FlexPlanTab({
               <h4 className="text-xs font-medium text-muted-foreground pl-1">
                 👤 {partnerDisplayName}
               </h4>
-              <div className="space-y-3">
+              <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                 {partnerItems.map((item) => {
                   const cat = getCategoryInfo(item.categoryId);
                   return (

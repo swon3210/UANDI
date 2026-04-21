@@ -41,7 +41,7 @@ export function MonthlyIncomeTab({
       {/* 정기 수입 */}
       <section>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">정기 수입</h4>
-        <div className="rounded-xl border border-border divide-y divide-border">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {regularBudgets.length > 0 ? (
             regularBudgets.map((b) => {
               const cat = categories.find((c) => c.id === b.categoryId);
@@ -77,7 +77,7 @@ export function MonthlyIncomeTab({
       {/* 비정기 수입 */}
       <section>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">비정기 수입</h4>
-        <div className="rounded-xl border border-border divide-y divide-border">
+        <div className="rounded-xl bg-card border border-border divide-y divide-border">
           {irregularBudgets.map((b) => {
             const cat = categories.find((c) => c.id === b.categoryId);
             const catName = cat?.name ?? '기타';
@@ -128,7 +128,7 @@ export function MonthlyIncomeTab({
       <Separator />
 
       {/* 수입 요약 */}
-      <div className="rounded-xl border border-border p-4 space-y-2">
+      <div className="rounded-xl bg-card border border-border p-4 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">계획</span>
           <span className="text-sm tabular-nums font-semibold">{formatCurrency(planTotal)}</span>

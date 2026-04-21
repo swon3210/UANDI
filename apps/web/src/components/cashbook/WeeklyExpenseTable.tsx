@@ -23,7 +23,7 @@ function getWeekStatusEmoji(status: WeeklyExpense['status']): string {
 
 export function WeeklyExpenseTable({ weeks }: WeeklyExpenseTableProps) {
   return (
-    <div data-testid="weekly-expense-table" className="rounded-xl border border-border overflow-hidden">
+    <div data-testid="weekly-expense-table" className="rounded-xl bg-card border border-border overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-secondary">
