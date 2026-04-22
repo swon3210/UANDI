@@ -1,20 +1,23 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { DocumentSnapshot } from 'firebase/firestore';
 import {
-  getFolders,
+  getFoldersByParent,
   getAllFolders,
   getFolder,
+  getFolderAncestors,
   createFolder,
   renameFolder,
   deleteFolder,
   getFolderPhotoCount,
+  countFolderDescendants,
 } from '@/services/folders';
+import type { Folder } from '@/types';
 
-/** 페이지네이션된 폴더 목록 (폴더 탭용) */
-export function useInfiniteFolders(coupleId: string | null) {
+/** 페이지네이션된 폴더 목록 (특정 부모 아래) */
+export function useInfiniteFolders(coupleId: string | null, parentFolderId: string | null) {
   return useInfiniteQuery({
-    queryKey: ['folders', coupleId],
-    queryFn: ({ pageParam }) => getFolders(coupleId!, pageParam),
+    queryKey: ['folders', coupleId, parentFolderId],
+    queryFn: ({ pageParam }) => getFoldersByParent(coupleId!, parentFolderId, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.folders.length > 0 ? lastPage.lastDoc : undefined,
@@ -22,7 +25,7 @@ export function useInfiniteFolders(coupleId: string | null) {
   });
 }
 
-/** 전체 폴더 목록 (업로드 시트의 폴더 선택 등) */
+/** 전체 폴더 목록 (Combobox 등) */
 export function useFolders(coupleId: string | null) {
   return useQuery({
     queryKey: ['allFolders', coupleId],
@@ -39,6 +42,14 @@ export function useFolder(coupleId: string | null, folderId: string | null) {
   });
 }
 
+export function useFolderAncestors(coupleId: string | null, folder: Folder | null | undefined) {
+  return useQuery({
+    queryKey: ['folderAncestors', coupleId, folder?.id, folder?.path],
+    queryFn: () => getFolderAncestors(coupleId!, folder!),
+    enabled: !!coupleId && !!folder,
+  });
+}
+
 export function useFolderPhotoCount(coupleId: string | null, folderId: string | null) {
   return useQuery({
     queryKey: ['folderPhotoCount', coupleId, folderId],
@@ -47,12 +58,27 @@ export function useFolderPhotoCount(coupleId: string | null, folderId: string | 
   });
 }
 
+export function useFolderDescendantCount(coupleId: string | null, folderId: string | null) {
+  return useQuery({
+    queryKey: ['folderDescendantCount', coupleId, folderId],
+    queryFn: () => countFolderDescendants(coupleId!, folderId!),
+    enabled: !!coupleId && !!folderId,
+  });
+}
+
 export function useCreateFolder(coupleId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ name, userId }: { name: string; userId: string }) =>
-      createFolder(coupleId!, name, userId),
+    mutationFn: ({
+      name,
+      userId,
+      parentFolderId = null,
+    }: {
+      name: string;
+      userId: string;
+      parentFolderId?: string | null;
+    }) => createFolder(coupleId!, name, userId, parentFolderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders', coupleId] });
       queryClient.invalidateQueries({ queryKey: ['allFolders', coupleId] });
@@ -69,6 +95,7 @@ export function useRenameFolder(coupleId: string | null) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders', coupleId] });
       queryClient.invalidateQueries({ queryKey: ['folder', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['allFolders', coupleId] });
     },
   });
 }
@@ -80,6 +107,9 @@ export function useDeleteFolder(coupleId: string | null) {
     mutationFn: (folderId: string) => deleteFolder(coupleId!, folderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['allFolders', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['photos', coupleId] });
+      queryClient.invalidateQueries({ queryKey: ['photoStats', coupleId] });
     },
   });
 }

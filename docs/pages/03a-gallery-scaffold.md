@@ -171,6 +171,9 @@ type Folder = {
   name: string;
   createdBy: string;
   createdAt: Timestamp;
+  parentFolderId: string | null; // 루트 폴더면 null
+  depth: number; // 0~4
+  path: string[]; // 루트→부모까지의 id 배열
 };
 
 type Photo = {
@@ -235,10 +238,27 @@ query(
 
 ### 폴더 관리
 
-- 생성: 폴더 탭 [+ 새 폴더] 버튼 → Bottom Sheet
+- 생성: 폴더 탭 [+ 새 폴더] 버튼 → Bottom Sheet (루트 생성)
+- 하위 폴더 생성: 폴더 상세 페이지 상단 하위 폴더 섹션의 [+ 새 하위 폴더] 버튼
+  - `parentFolderId`는 현재 폴더 id, `depth`는 `parent.depth + 1`, `path`는 `[...parent.path, parent.id]`로 계산
+  - `depth > 4`가 되면 생성 불가 → 버튼 비활성화 + 툴팁 "최대 5단계까지만 만들 수 있어요"
 - 삭제: 폴더 상세 페이지 헤더에서 [⋮] → "폴더 삭제"
-  - 폴더 내 사진이 있으면 삭제 불가 → "사진을 먼저 다른 폴더로 이동해주세요" 안내
+  - 확인 Sheet에 "이 폴더와 하위 폴더 N개, 사진 M장을 모두 삭제할까요?" 문구
+  - 확인 시 **재귀 삭제**: 하위 폴더 전체 + 해당 사진 Firestore 문서 + Storage 파일까지 제거
 - 이름 수정: 폴더 상세 페이지 헤더에서 [⋮] → "이름 변경" → Bottom Sheet
+
+### 폴더 서비스 API (시그니처)
+
+```ts
+createFolder(coupleId, name, userId, parentFolderId: string | null): Promise<string>
+getFoldersByParent(coupleId, parentFolderId: string | null, cursor?): Promise<FolderPage>
+getAllFolders(coupleId): Promise<Folder[]>
+getFolder(coupleId, folderId): Promise<Folder | null>
+getFolderAncestors(coupleId, folder: Folder): Promise<Folder[]>
+renameFolder(coupleId, folderId, newName): Promise<void>
+deleteFolder(coupleId, folderId): Promise<void> // 재귀 삭제
+countFolderDescendants(coupleId, folderId): Promise<{ folders: number; photos: number }>
+```
 
 ### 그리드 레이아웃
 

@@ -67,10 +67,18 @@ type Folder = {
   name: string; // 폴더 이름
   createdBy: string; // userId
   createdAt: Timestamp;
+  parentFolderId: string | null; // 부모 폴더 id. 루트면 null
+  depth: number; // 루트 = 0, 하위로 내려갈수록 +1, 최대 4 (총 5단계)
+  path: string[]; // 루트부터 부모까지의 id 배열. 자기 자신 id는 미포함. 루트면 []
 };
 ```
 
 > **커버 이미지**: 별도 필드 없음. 해당 폴더의 가장 최근 사진(`takenAt DESC` 첫 번째)을 자동으로 커버로 사용.
+
+> **중첩 규칙**: 폴더는 다른 폴더의 하위로 만들 수 있다. 최대 5단계(`depth 0~4`)까지 허용.
+> - 생성 시 `depth = parent.depth + 1`, `path = [...parent.path, parent.id]` 로 계산.
+> - `path`는 `array-contains`로 "특정 폴더 및 그 하위 전체"를 한 번에 조회하기 위한 캐시.
+> - 삭제는 재귀 삭제(하위 폴더/사진 모두 함께 제거).
 
 **Firestore 경로**: `couples/{coupleId}/folders/{folderId}`
 
@@ -165,5 +173,7 @@ const INCOME_CATEGORIES = ['월급', '용돈', '부수입', '기타'] as const;
 | photos          | `coupleId ASC`, `takenAt DESC`         | 갤러리 시간순 정렬 |
 | photos          | `coupleId ASC`, `folderId ASC`, `takenAt DESC` | 폴더별 사진 조회 |
 | photos          | `coupleId ASC`, `tags ARRAY_CONTAINS`, `takenAt DESC` | 태그별 사진 조회 |
+| folders         | `parentFolderId ASC`, `createdAt DESC` | 부모 폴더별 하위 폴더 조회 |
+| folders         | `path ARRAY_CONTAINS`                  | 특정 폴더의 하위 전체 조회 (재귀 삭제) |
 | cashbookEntries | `coupleId ASC`, `date DESC`            | 가계부 최신순      |
 | cashbookEntries | `coupleId ASC`, `date ASC` (월 필터용) | 월별 조회          |

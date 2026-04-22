@@ -6,13 +6,26 @@ import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import { Header, EmptyState, Button, Sheet, Skeleton } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useFolder, useRenameFolder, useDeleteFolder, useFolders } from '@/hooks/useFolders';
+import {
+  useFolder,
+  useRenameFolder,
+  useDeleteFolder,
+  useFolders,
+  useFolderAncestors,
+  useInfiniteFolders,
+  useCreateFolder,
+  useFolderDescendantCount,
+} from '@/hooks/useFolders';
 import { usePhotosByFolder, useMovePhotos } from '@/hooks/usePhotos';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderMenuSheet } from '@/components/photos/FolderMenuSheet';
 import { RenameFolderSheet } from '@/components/photos/RenameFolderSheet';
+import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
+import { FolderBreadcrumb } from '@/components/photos/FolderBreadcrumb';
+import { SubFolderSection } from '@/components/photos/SubFolderSection';
+import { DeleteFolderConfirmSheet } from '@/components/photos/DeleteFolderConfirmSheet';
 import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/UploaderFilterChips';
 import { SelectionModeBar } from '@/components/photos/SelectionModeBar';
 import { MovePhotosSheet } from '@/components/photos/MovePhotosSheet';
@@ -26,11 +39,22 @@ export default function FolderDetailPage() {
   const folderId = params.folderId;
 
   const { data: folder, isLoading: folderLoading } = useFolder(coupleId, folderId);
+  const { data: ancestors } = useFolderAncestors(coupleId, folder ?? null);
+  const {
+    data: subFoldersData,
+    isLoading: subFoldersLoading,
+  } = useInfiniteFolders(coupleId, folderId);
+  const subFolders = useMemo(
+    () => subFoldersData?.pages.flatMap((p) => p.folders) ?? [],
+    [subFoldersData?.pages]
+  );
+
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     usePhotosByFolder(coupleId, folderId);
   const { data: allFolders } = useFolders(coupleId);
   const renameMutation = useRenameFolder(coupleId);
   const deleteMutation = useDeleteFolder(coupleId);
+  const createMutation = useCreateFolder(coupleId);
   const moveMutation = useMovePhotos(coupleId);
   const uploaderAvatars = useUploaderAvatars(coupleId);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -106,10 +130,12 @@ export default function FolderDetailPage() {
               handleRename();
             }, 300);
           }}
-          onDelete={async () => {
+          onDelete={() => {
             close();
-            setTimeout(unmount, 300);
-            handleDelete();
+            setTimeout(() => {
+              unmount();
+              handleDelete();
+            }, 300);
           }}
         />
       </Sheet>
@@ -133,14 +159,59 @@ export default function FolderDetailPage() {
     ));
   };
 
-  const handleDelete = async () => {
-    try {
-      setDeleteError(null);
-      await deleteMutation.mutateAsync(folderId);
-      router.push('/photos');
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : '폴더 삭제에 실패했어요');
-    }
+  const handleCreateSubFolder = () => {
+    if (!folder || !user) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <CreateFolderSheet
+          isPending={createMutation.isPending}
+          onSubmit={async (name) => {
+            try {
+              await createMutation.mutateAsync({
+                name,
+                userId: user.uid,
+                parentFolderId: folder.id,
+              });
+              close();
+              setTimeout(unmount, 300);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : '하위 폴더를 만들지 못했어요';
+              toast.error(msg);
+            }
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const handleDelete = () => {
+    if (!folder) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <DeleteFolderConfirmDialog
+        folder={folder}
+        coupleId={coupleId}
+        isOpen={isOpen}
+        isDeleting={deleteMutation.isPending}
+        onConfirm={async () => {
+          try {
+            setDeleteError(null);
+            await deleteMutation.mutateAsync(folder.id);
+            close();
+            setTimeout(unmount, 300);
+            router.push('/photos?tab=folders');
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '폴더 삭제에 실패했어요';
+            setDeleteError(msg);
+            close();
+            setTimeout(unmount, 300);
+          }
+        }}
+        onClose={() => {
+          close();
+          setTimeout(unmount, 300);
+        }}
+      />
+    ));
   };
 
   return (
@@ -194,6 +265,9 @@ export default function FolderDetailPage() {
           }
         />
       )}
+      {!isSelectMode && folder && (
+        <FolderBreadcrumb ancestors={ancestors ?? []} current={folder} />
+      )}
       {deleteError && (
         <div className="max-w-5xl mx-auto w-full px-4 mt-2">
           <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="delete-error">
@@ -206,6 +280,14 @@ export default function FolderDetailPage() {
       )}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
+          {folder && !isSelectMode && (
+            <SubFolderSection
+              parentDepth={folder.depth}
+              subFolders={subFolders}
+              isLoading={subFoldersLoading}
+              onCreateClick={handleCreateSubFolder}
+            />
+          )}
           {isLoading ? (
             <PhotoGrid photos={[]} isLoading />
           ) : filteredPhotos.length === 0 ? (
@@ -236,5 +318,37 @@ export default function FolderDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+type DeleteFolderConfirmDialogProps = {
+  folder: { id: string; name: string };
+  coupleId: string | null;
+  isOpen: boolean;
+  isDeleting: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+};
+
+function DeleteFolderConfirmDialog({
+  folder,
+  coupleId,
+  isOpen,
+  isDeleting,
+  onConfirm,
+  onClose,
+}: DeleteFolderConfirmDialogProps) {
+  const { data: count, isLoading } = useFolderDescendantCount(coupleId, folder.id);
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DeleteFolderConfirmSheet
+        folderName={folder.name}
+        count={count ?? null}
+        isLoading={isLoading}
+        isDeleting={isDeleting}
+        onConfirm={onConfirm}
+        onCancel={onClose}
+      />
+    </Sheet>
   );
 }

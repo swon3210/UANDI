@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   SheetContent,
   SheetHeader,
@@ -27,6 +27,11 @@ export function MovePhotosSheet({
 }: MovePhotosSheetProps) {
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
   const availableFolders = folders.filter((f) => f.id !== currentFolderId);
+  const folderMap = useMemo(() => {
+    const m = new Map<string, Folder>();
+    for (const f of folders) m.set(f.id, f);
+    return m;
+  }, [folders]);
 
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh]">
@@ -38,17 +43,28 @@ export function MovePhotosSheet({
           value={targetFolderId ?? undefined}
           onValueChange={(val) => setTargetFolderId(val)}
         >
-          {availableFolders.map((folder) => (
-            <Label
-              key={folder.id}
-              htmlFor={`folder-${folder.id}`}
-              className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-              data-testid={`move-folder-${folder.id}`}
-            >
-              <RadioGroupItem value={folder.id} id={`folder-${folder.id}`} />
-              <span className="text-base">{folder.name}</span>
-            </Label>
-          ))}
+          {availableFolders.map((folder) => {
+            const pathNames = (folder.path ?? [])
+              .map((id) => folderMap.get(id)?.name)
+              .filter(Boolean) as string[];
+            const pathHint = pathNames.length > 0 ? pathNames.join(' / ') : null;
+            return (
+              <Label
+                key={folder.id}
+                htmlFor={`folder-${folder.id}`}
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                data-testid={`move-folder-${folder.id}`}
+              >
+                <RadioGroupItem value={folder.id} id={`folder-${folder.id}`} />
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-base">{folder.name}</span>
+                  {pathHint && (
+                    <span className="truncate text-xs text-muted-foreground">{pathHint}</span>
+                  )}
+                </div>
+              </Label>
+            );
+          })}
         </RadioGroup>
       </div>
       <div className="px-4 pb-6">

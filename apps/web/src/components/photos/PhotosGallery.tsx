@@ -83,7 +83,7 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
 function FoldersTab({ coupleId }: { coupleId: string }) {
   const { user } = useAuth();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteFolders(coupleId);
+    useInfiniteFolders(coupleId, null);
   const createMutation = useCreateFolder(coupleId);
 
   const folders = data?.pages.flatMap((p) => p.folders) ?? [];
