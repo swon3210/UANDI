@@ -131,6 +131,7 @@ type Story = StoryObj<typeof AiBulkPreviewSheet>;
 
 const commonArgs = {
   categories: mockCategories,
+  coupleId: 'couple-1',
   createdBy: 'user-1',
   onConfirm: (entries: unknown) => console.log('confirm', entries),
   onClose: () => console.log('close'),

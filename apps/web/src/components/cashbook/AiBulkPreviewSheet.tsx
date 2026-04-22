@@ -29,6 +29,7 @@ export type ConfirmedEntry = {
 type AiBulkPreviewSheetProps = {
   initialEntries: ParsedEntryCardData[];
   categories: CashbookCategory[];
+  coupleId: string | null;
   createdBy: string;
   onConfirm: (entries: ConfirmedEntry[]) => void;
   onClose: () => void;
@@ -37,6 +38,7 @@ type AiBulkPreviewSheetProps = {
 export function AiBulkPreviewSheet({
   initialEntries,
   categories,
+  coupleId,
   createdBy,
   onConfirm,
   onClose,
@@ -53,6 +55,7 @@ export function AiBulkPreviewSheet({
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <EntryForm
           categories={categories}
+          coupleId={coupleId}
           createdBy={createdBy}
           prefill={{
             type: target.type,

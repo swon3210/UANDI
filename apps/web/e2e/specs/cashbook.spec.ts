@@ -181,7 +181,7 @@ test.describe('가계부', () => {
       await expect(cashbook.categoryChip('정기급여')).toBeVisible();
     });
 
-    test('직접 입력으로 커스텀 카테고리를 사용할 수 있다', async ({ authedContext }) => {
+    test('내역 추가 중 새 카테고리를 만들어 바로 사용할 수 있다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
 
@@ -192,8 +192,18 @@ test.describe('가계부', () => {
       await cashbook.sheet.waitFor({ state: 'visible' });
 
       await cashbook.amountInput.fill('15000');
-      await page.getByTestId('category-chip-custom').click();
-      await page.getByTestId('custom-category-input').fill('커피');
+
+      // "+ 카테고리 추가" 칩 클릭 → 카테고리 생성 시트가 열림
+      await page.getByTestId('category-chip-add').click();
+      const categorySheet = page.getByTestId('category-form-sheet');
+      await categorySheet.waitFor({ state: 'visible' });
+
+      await categorySheet.getByLabel('이름').fill('커피');
+      await categorySheet.getByTestId('icon-option-coffee').click();
+      await categorySheet.getByRole('button', { name: '저장' }).click();
+
+      // 새 카테고리가 칩 목록에 나타나고 자동 선택됨
+      await expect(cashbook.categoryChip('커피')).toBeVisible();
 
       await cashbook.saveButton.click();
 

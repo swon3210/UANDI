@@ -6,6 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Timestamp } from 'firebase/firestore';
+import { overlay } from 'overlay-kit';
+import { Plus } from 'lucide-react';
 import dayjs from 'dayjs';
 import {
   Form,
@@ -16,6 +18,7 @@ import {
   FormMessage,
   Input,
   Button,
+  Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -30,7 +33,9 @@ import type {
   CategoryGroup,
 } from '@/types';
 import { GROUP_LABELS, SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS } from '@/constants/default-categories';
+import { useAddCategory } from '@/hooks/useCashbookCategories';
 import { CategoryIcon } from './CategoryIcon';
+import { CategoryForm } from './CategoryForm';
 import type { CategorySubGroup } from '@/types';
 
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'investment', 'flex'];
@@ -46,6 +51,7 @@ type FormValues = z.infer<typeof schema>;
 
 type EntryFormProps = {
   categories: CashbookCategory[];
+  coupleId: string | null;
   editingEntry?: CashbookEntry;
   prefill?: {
     type?: CashbookEntryType;
@@ -69,6 +75,7 @@ type EntryFormProps = {
 
 export function EntryForm({
   categories,
+  coupleId,
   editingEntry,
   prefill,
   onSubmit,
@@ -79,6 +86,7 @@ export function EntryForm({
   const [activeType, setActiveType] = useState<CashbookEntryType>(
     editingEntry?.type ?? prefill?.type ?? 'expense'
   );
+  const addCategoryMutation = useAddCategory(coupleId);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -174,6 +182,37 @@ export function EntryForm({
                     activeType={activeType}
                     value={field.value}
                     onChange={field.onChange}
+                    disableAdd={!coupleId}
+                    onAddCategory={() => {
+                      overlay.open(({ isOpen, close, unmount }) => (
+                        <Sheet
+                          open={isOpen}
+                          onOpenChange={(open) => !open && close()}
+                        >
+                          <CategoryForm
+                            group={activeType as CategoryGroup}
+                            isSubmitting={addCategoryMutation.isPending}
+                            onSubmit={async (data) => {
+                              await addCategoryMutation.mutateAsync({
+                                group: activeType as CategoryGroup,
+                                subGroup:
+                                  data.subGroup as CashbookCategory['subGroup'],
+                                name: data.name,
+                                icon: data.icon,
+                                color: data.color,
+                                isDefault: false,
+                                sortOrder: typeCategories.length,
+                              });
+                              field.onChange(data.name);
+                            }}
+                            onClose={() => {
+                              close();
+                              setTimeout(unmount, 300);
+                            }}
+                          />
+                        </Sheet>
+                      ));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -241,27 +280,19 @@ function CategoryChips({
   activeType,
   value,
   onChange,
+  onAddCategory,
+  disableAdd,
 }: {
   categories: CashbookCategory[];
   activeType: CashbookEntryType;
   value: string;
   onChange: (v: string) => void;
+  onAddCategory: () => void;
+  disableAdd?: boolean;
 }) {
-  const [isCustom, setIsCustom] = useState(false);
   const subGroups = SUB_GROUPS_BY_GROUP[activeType as CategoryGroup] ?? [];
-
   const presetNames = new Set(categories.map((c) => c.name));
-  const showCustomInput = isCustom || (value !== '' && !presetNames.has(value));
-
-  const handleCustomToggle = () => {
-    setIsCustom(true);
-    onChange('');
-  };
-
-  const handlePresetClick = (name: string) => {
-    setIsCustom(false);
-    onChange(name);
-  };
+  const hasOrphanValue = value !== '' && !presetNames.has(value);
 
   return (
     <div className="space-y-3">
@@ -280,11 +311,11 @@ function CategoryChips({
                   type="button"
                   data-testid={`category-chip-${cat.name}`}
                   className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                    value === cat.name && !showCustomInput
+                    value === cat.name
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-secondary border-border hover:bg-accent'
                   }`}
-                  onClick={() => handlePresetClick(cat.name)}
+                  onClick={() => onChange(cat.name)}
                 >
                   <CategoryIcon name={cat.icon} size={16} />
                   {cat.name}
@@ -294,30 +325,29 @@ function CategoryChips({
           </div>
         );
       })}
-      <div>
-        <button
-          type="button"
-          data-testid="category-chip-custom"
-          className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-            showCustomInput
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-secondary border-border hover:bg-accent'
-          }`}
-          onClick={handleCustomToggle}
-        >
-          직접 입력
-        </button>
-        {showCustomInput && (
-          <Input
-            className="mt-2"
-            placeholder="카테고리를 입력하세요"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            data-testid="custom-category-input"
-            autoFocus
-          />
-        )}
-      </div>
+      {hasOrphanValue && (
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">선택됨</div>
+          <button
+            type="button"
+            data-testid={`category-chip-${value}`}
+            className="rounded-full border px-3 py-1.5 text-sm bg-primary text-primary-foreground border-primary"
+            onClick={() => onChange(value)}
+          >
+            {value}
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        data-testid="category-chip-add"
+        className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-background disabled:hover:text-muted-foreground"
+        onClick={onAddCategory}
+        disabled={disableAdd}
+      >
+        <Plus size={14} />
+        카테고리 추가
+      </button>
     </div>
   );
 }

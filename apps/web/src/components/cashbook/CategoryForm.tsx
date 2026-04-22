@@ -36,11 +36,18 @@ type FormValues = z.infer<typeof schema>;
 type CategoryFormProps = {
   group: CategoryGroup;
   editingCategory?: CashbookCategory;
+  isSubmitting?: boolean;
   onSubmit: (data: FormValues) => Promise<void>;
   onClose: () => void;
 };
 
-export function CategoryForm({ group, editingCategory, onSubmit, onClose }: CategoryFormProps) {
+export function CategoryForm({
+  group,
+  editingCategory,
+  isSubmitting,
+  onSubmit,
+  onClose,
+}: CategoryFormProps) {
   const subGroups = SUB_GROUPS_BY_GROUP[group];
 
   const form = useForm<FormValues>({
@@ -63,7 +70,11 @@ export function CategoryForm({ group, editingCategory, onSubmit, onClose }: Cate
   };
 
   return (
-    <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] flex flex-col">
+    <SheetContent
+      side="bottom"
+      className="rounded-t-[20px] max-h-[90vh] flex flex-col"
+      data-testid="category-form-sheet"
+    >
       <SheetHeader>
         <SheetTitle>{editingCategory ? '카테고리 편집' : '카테고리 추가'}</SheetTitle>
       </SheetHeader>
@@ -151,8 +162,8 @@ export function CategoryForm({ group, editingCategory, onSubmit, onClose }: Cate
             )}
           />
 
-          <Button type="submit" className="w-full">
-            저장
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? '저장 중...' : '저장'}
           </Button>
         </form>
       </Form>
