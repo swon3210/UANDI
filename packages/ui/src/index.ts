@@ -77,6 +77,17 @@ export {
   useFormField,
 } from './components/form';
 export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandSeparator,
+} from './components/command';
 export { Toaster } from './components/sonner';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
 export { Checkbox } from './components/checkbox';

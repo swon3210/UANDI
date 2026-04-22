@@ -29,6 +29,10 @@ export const Default: Story = {
   args: {
     folders: mockFolders,
     tagSuggestions: ['벚꽃', '바다', '카페', '여행'],
+    onCreateFolder: async (name) => {
+      await new Promise((r) => setTimeout(r, 300));
+      return `new-${name}`;
+    },
     onSubmit: async () => {
       await new Promise((r) => setTimeout(r, 2000));
     },
@@ -39,6 +43,10 @@ export const NoFolders: Story = {
   args: {
     folders: [],
     tagSuggestions: [],
+    onCreateFolder: async (name) => {
+      await new Promise((r) => setTimeout(r, 300));
+      return `new-${name}`;
+    },
     onSubmit: async () => {},
   },
 };

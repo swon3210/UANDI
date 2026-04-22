@@ -227,6 +227,7 @@ export function PhotosGallery() {
     [searchParams, router]
   );
   const { data: folders } = useFolders(coupleId);
+  const createFolderMutation = useCreateFolder(coupleId);
   const needStats = activeTab === 'folders' || activeTab === 'tags';
   const { data: stats } = usePhotoStats(needStats ? coupleId : null);
   const uploadMutation = useUploadPhotos();
@@ -241,6 +242,9 @@ export function PhotosGallery() {
         <PhotoUploadSheet
           folders={folders ?? []}
           tagSuggestions={tagSuggestions}
+          onCreateFolder={async (name) =>
+            createFolderMutation.mutateAsync({ name, userId: user.uid })
+          }
           onSubmit={async (data, onProgress) => {
             try {
               await uploadMutation.mutateAsync({

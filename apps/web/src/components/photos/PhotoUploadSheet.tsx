@@ -17,17 +17,13 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
   Textarea,
   Input,
   Progress,
 } from '@uandi/ui';
 import { TagInput } from '@/components/photos/TagInput';
 import { AiTagSuggestions } from '@/components/photos/AiTagSuggestions';
+import { FolderCombobox } from '@/components/photos/FolderCombobox';
 import { suggestPhotoTags } from '@/services/ai';
 import type { Folder } from '@/types';
 
@@ -56,6 +52,7 @@ type ProgressInfo = {
 type PhotoUploadSheetProps = {
   folders: Folder[];
   tagSuggestions?: string[];
+  onCreateFolder?: (name: string) => Promise<string>;
   onSubmit: (
     data: UploadFormValues & { files: SelectedFile[] },
     onProgress: (percent: number, current: number, total: number) => void
@@ -65,6 +62,7 @@ type PhotoUploadSheetProps = {
 export function PhotoUploadSheet({
   folders,
   tagSuggestions = [],
+  onCreateFolder,
   onSubmit,
 }: PhotoUploadSheetProps) {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
@@ -191,18 +189,13 @@ export function PhotoUploadSheet({
                   폴더 <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isUploading}>
-                    <SelectTrigger aria-label="폴더">
-                      <SelectValue placeholder="폴더 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {folders.map((f) => (
-                        <SelectItem key={f.id} value={f.id}>
-                          {f.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FolderCombobox
+                    folders={folders}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onCreateFolder={onCreateFolder}
+                    disabled={isUploading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
