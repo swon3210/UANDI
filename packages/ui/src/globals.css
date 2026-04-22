@@ -60,6 +60,10 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /* 팝오버 (Popover, Command, DropdownMenu, Select 등) */
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
   /* 주요 */
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
@@ -113,6 +117,10 @@
   /* 카드 */
   --card: 0 0% 100%;
   --card-foreground: 20 6% 10%;
+
+  /* 팝오버 */
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 6% 10%;
 
   /* 주요 색상 — coral-400 */
   --primary: 4 74% 69%; /* #E8837A */

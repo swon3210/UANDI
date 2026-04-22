@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState, type UIEvent } from 'react';
 import { ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import {
   Popover,
@@ -9,13 +9,16 @@ import {
   Command,
   CommandInput,
   CommandList,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandSeparator,
   cn,
 } from '@uandi/ui';
 import type { Folder } from '@/types';
+
+const INITIAL_VISIBLE = 20;
+const LOAD_MORE_CHUNK = 20;
+const SCROLL_LOAD_MORE_THRESHOLD = 120;
 
 type FolderComboboxProps = {
   folders: Folder[];
@@ -38,6 +41,7 @@ export function FolderCombobox({
 }: FolderComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
   const [isCreating, setIsCreating] = useState(false);
   const [justCreated, setJustCreated] = useState<{ id: string; name: string } | null>(null);
   const listId = useId();
@@ -47,11 +51,41 @@ export function FolderCombobox({
   const displayName = selected?.name ?? pendingName;
 
   const trimmed = query.trim();
+  const filtered = useMemo(() => {
+    if (!trimmed) return folders;
+    const q = trimmed.toLowerCase();
+    return folders.filter((f) => f.name.toLowerCase().includes(q));
+  }, [folders, trimmed]);
   const hasExactMatch = useMemo(
     () => folders.some((f) => f.name.trim().toLowerCase() === trimmed.toLowerCase()),
     [folders, trimmed]
   );
   const showCreateOption = !!onCreateFolder && trimmed.length > 0 && !hasExactMatch;
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visible.length;
+  const showEmptyMessage = filtered.length === 0 && !showCreateOption;
+
+  const handleQueryChange = (next: string) => {
+    setQuery(next);
+    setVisibleCount(INITIAL_VISIBLE);
+  };
+
+  const handleListScroll = (e: UIEvent<HTMLDivElement>) => {
+    if (!hasMore) return;
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_LOAD_MORE_THRESHOLD) {
+      setVisibleCount((c) => c + LOAD_MORE_CHUNK);
+    }
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    if (isCreating) return;
+    setOpen(next);
+    if (!next) {
+      setVisibleCount(INITIAL_VISIBLE);
+    }
+  };
 
   const handleCreate = async () => {
     if (!onCreateFolder || !trimmed || isCreating) return;
@@ -75,7 +109,7 @@ export function FolderCombobox({
   };
 
   return (
-    <Popover open={open} onOpenChange={(next) => !isCreating && setOpen(next)}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -100,30 +134,29 @@ export function FolderCombobox({
       <PopoverContent
         align="start"
         sideOffset={6}
+        collisionPadding={12}
         className="p-0 border-border/60 shadow-lg shadow-black/5"
         style={{ width: 'var(--radix-popover-trigger-width)' }}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <Command
-          shouldFilter
-          filter={(itemValue: string, search: string) => {
-            if (itemValue.startsWith('__create__')) return 0;
-            return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-          }}
-        >
+        <Command shouldFilter={false} disablePointerSelection>
           <CommandInput
             placeholder="폴더 검색 또는 새로 만들기"
             value={query}
-            onValueChange={setQuery}
+            onValueChange={handleQueryChange}
             data-testid="folder-combobox-input"
           />
-          <CommandList id={listId}>
-            {folders.length > 0 && (
+          <CommandList
+            id={listId}
+            style={{ maxHeight: 'min(300px, 60vh)' }}
+            onScroll={handleListScroll}
+          >
+            {visible.length > 0 && (
               <CommandGroup>
-                {folders.map((folder) => (
+                {visible.map((folder) => (
                   <CommandItem
                     key={folder.id}
-                    value={folder.name}
+                    value={folder.id}
                     onSelect={() => handleSelect(folder.id)}
                     data-testid={`folder-combobox-item-${folder.id}`}
                   >
@@ -137,18 +170,26 @@ export function FolderCombobox({
                     <span className="truncate">{folder.name}</span>
                   </CommandItem>
                 ))}
+                {hasMore && (
+                  <div
+                    className="py-2 text-center text-xs text-muted-foreground"
+                    data-testid="folder-combobox-more"
+                  >
+                    스크롤해서 더 보기 ({filtered.length - visible.length}개)
+                  </div>
+                )}
               </CommandGroup>
             )}
-            {!showCreateOption && (
-              <CommandEmpty>
+            {showEmptyMessage && (
+              <div className="py-6 text-center text-sm text-muted-foreground">
                 {onCreateFolder
                   ? '폴더 이름을 입력하면 새로 만들 수 있어요'
                   : '일치하는 폴더가 없어요'}
-              </CommandEmpty>
+              </div>
             )}
             {showCreateOption && (
               <>
-                {folders.length > 0 && <CommandSeparator />}
+                {visible.length > 0 && <CommandSeparator />}
                 <CommandGroup forceMount>
                   <CommandItem
                     value={`__create__${trimmed}`}
