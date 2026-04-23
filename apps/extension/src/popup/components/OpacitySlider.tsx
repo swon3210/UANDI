@@ -3,13 +3,20 @@ import { Label, Slider } from '@uandi/ui';
 type OpacitySliderProps = {
   value: number;
   onChange: (value: number) => void;
+  label?: string;
+  description?: string;
 };
 
-export function OpacitySlider({ value, onChange }: OpacitySliderProps) {
+export function OpacitySlider({
+  value,
+  onChange,
+  label = '투명도',
+  description = '낮을수록 화면이 투명해집니다',
+}: OpacitySliderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label>투명도</Label>
+        <Label>{label}</Label>
         <span className="text-sm text-muted-foreground">{Math.round(value * 100)}%</span>
       </div>
       <Slider
@@ -19,7 +26,7 @@ export function OpacitySlider({ value, onChange }: OpacitySliderProps) {
         value={[value]}
         onValueChange={([v]) => onChange(v)}
       />
-      <p className="text-xs text-muted-foreground">낮을수록 화면이 투명해집니다</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
     </div>
   );
 }
