@@ -26,13 +26,14 @@ export type ParsedEntry = {
 
 export async function parseEntriesFromText(
   text: string,
-  categories: string[]
+  categories: string[],
+  images?: string[]
 ): Promise<ParsedEntry[]> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/ai/parse-entries', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text, categories }),
+    body: JSON.stringify({ text, categories, images }),
   });
 
   if (!res.ok) {
