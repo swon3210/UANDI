@@ -94,6 +94,61 @@ test.describe('자연어 가계부 다건 입력', () => {
     const submitBtn = page.getByTestId('ai-parse-submit');
     await expect(submitBtn).toBeDisabled();
   });
+
+  test('영수증 이미지 2장 첨부 → 썸네일 노출 → 제출 → 미리보기에 카드 표시', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    // 영수증 이미지 2장 첨부 (buffer로 임시 이미지 생성)
+    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    await fileInput.setInputFiles([
+      { name: 'receipt-1.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
+      { name: 'receipt-2.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
+    ]);
+
+    // 썸네일 2개 노출
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
+    await expect(page.getByTestId('ai-parse-thumbnail-1')).toBeVisible();
+
+    // 텍스트 없이도 전송 버튼 활성화
+    const submitBtn = page.getByTestId('ai-parse-submit');
+    await expect(submitBtn).toBeEnabled();
+
+    // 제출 → mock은 이미지 개수(2)만큼 entries 반환
+    await submitBtn.click();
+
+    // 미리보기 Sheet에 카드 2개
+    const previewSheet = page.getByTestId('ai-bulk-preview-sheet');
+    await expect(previewSheet).toBeVisible();
+    await expect(page.getByTestId('parsed-entry-card')).toHaveCount(2);
+  });
+
+  test('첨부한 썸네일을 X 버튼으로 제거할 수 있다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    await fileInput.setInputFiles([
+      { name: 'receipt-1.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
+      { name: 'receipt-2.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
+    ]);
+
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
+    await expect(page.getByTestId('ai-parse-thumbnail-1')).toBeVisible();
+
+    // 첫 썸네일 제거
+    await page.getByTestId('ai-parse-thumbnail-remove-0').click();
+
+    // 남은 썸네일 1개 (index 0만 남음)
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
+    await expect(page.getByTestId('ai-parse-thumbnail-1')).toHaveCount(0);
+  });
 });
 
 test.describe('지출 패턴 AI 분석', () => {
