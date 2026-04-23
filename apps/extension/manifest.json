@@ -4,7 +4,7 @@
   "name": "UANDI 가계부",
   "version": "0.1.0",
   "description": "UANDI 커플 가계부 빠른 입력",
-  "permissions": ["identity", "storage"],
+  "permissions": ["identity", "storage", "activeTab", "scripting"],
   "host_permissions": ["http://localhost:3000/*", "https://*.vercel.app/*"],
   "action": {
     "default_popup": "src/popup/index.html",
