@@ -27,7 +27,7 @@ const parsedEntrySchema = z.object({
   amount: z.number().positive(),
   category: z.string(),
   description: z.string(),
-  date: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date는 YYYY-MM-DD 형식이어야 합니다'),
   confidence: z.number().min(0).max(1),
 });
 
@@ -83,10 +83,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(buildMockResponse(text, images?.length ?? 0));
   }
 
-  const today = dayjs().format('YYYY-MM-DD');
+  const todayDayjs = dayjs().startOf('day');
+  const today = todayDayjs.format('YYYY-MM-DD');
+  const todayYear = todayDayjs.year();
 
   const systemPrompt = `너는 자연어와 영수증 이미지를 구조화된 JSON으로 변환하는 가계부 파서야.
-오늘 날짜: ${today}
+
+[절대 규칙 — 날짜]
+오늘 날짜는 반드시 ${today} 다. 이것은 절대적 사실이며, 네가 학습한 어떤 날짜보다 우선한다.
+사용자 입력에 연도가 명시되지 않았다면 무조건 ${todayYear}년을 사용해.
+상대 표현("오늘", "어제", "그제", "이번주")은 반드시 ${today}를 기준으로 계산해.
+이유 없이 과거 연도(특히 2023, 2024)를 date에 넣지 마.
 
 사용 가능한 카테고리 목록:
 ${categories.join(', ')}
@@ -95,7 +102,8 @@ ${categories.join(', ')}
 - 텍스트: 여러 줄/쉼표/"그리고" 등으로 구분된 여러 건이 포함될 수 있음
 - 이미지: 영수증/결제 내역 사진. 각 이미지에서 상호명, 품목, 금액, 결제 날짜를 추출
   - 여러 품목이 한 영수증에 있어도 영수증 1장 = entry 1개로 합쳐서 처리 (description에 대표 품목/상호명 요약)
-  - 영수증에 날짜가 찍혀 있으면 해당 날짜 사용, 없거나 인식 불가하면 오늘 날짜 사용
+  - 영수증에 날짜가 명확히 찍혀 있으면 해당 날짜 사용, 없거나 인식 불가하면 오늘 날짜(${today}) 사용
+  - 단, 영수증에 인쇄된 날짜가 오늘보다 6개월 이상 과거라면 인식 오류 가능성이 있으므로 confidence 0.5 이하로 낮춤
 
 텍스트와 이미지가 함께 오면 **둘을 합쳐서 하나의 entries 배열**로 응답해. 다른 텍스트는 절대 포함하지 마.
 
@@ -116,8 +124,7 @@ ${categories.join(', ')}
 - 최소 1개, 최대 10개의 entry를 생성
 - amount는 반드시 양의 정수 (원 단위)
 - "만원"은 10000, "천원"은 1000으로 변환
-- date가 명시되지 않으면 오늘 날짜 사용
-- "어제", "그제" 등 상대 날짜도 올바르게 변환
+- date가 명시되지 않으면 반드시 오늘 날짜(${today})를 사용
 - category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택
 - confidence는 파싱 확실도 (영수증이 흐리거나 정보가 불명확할수록 낮게)
 - 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정`;
@@ -160,7 +167,22 @@ ${categories.join(', ')}
     }
 
     const result = responseSchema.parse(JSON.parse(content));
-    return NextResponse.json(result);
+
+    const minAllowed = todayDayjs.subtract(2, 'year');
+    const maxAllowed = todayDayjs.add(1, 'day');
+    const normalizedEntries = result.entries.map((entry) => {
+      const d = dayjs(entry.date);
+      if (!d.isValid() || d.isBefore(minAllowed) || d.isAfter(maxAllowed)) {
+        return {
+          ...entry,
+          date: today,
+          confidence: Math.min(entry.confidence, 0.5),
+        };
+      }
+      return entry;
+    });
+
+    return NextResponse.json({ entries: normalizedEntries });
   } catch (error) {
     console.error('[parse-entries] AI 호출 실패:', error);
     return NextResponse.json(
