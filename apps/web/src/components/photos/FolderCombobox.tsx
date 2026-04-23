@@ -51,6 +51,17 @@ export function FolderCombobox({
   const displayName = selected?.name ?? pendingName;
 
   const trimmed = query.trim();
+  const folderMap = useMemo(() => {
+    const m = new Map<string, Folder>();
+    for (const f of folders) m.set(f.id, f);
+    return m;
+  }, [folders]);
+  const resolvePathHint = (folder: Folder): string | null => {
+    if (!folder.path || folder.path.length === 0) return null;
+    const names = folder.path.map((id) => folderMap.get(id)?.name).filter(Boolean) as string[];
+    if (names.length === 0) return null;
+    return names.join(' / ');
+  };
   const filtered = useMemo(() => {
     if (!trimmed) return folders;
     const q = trimmed.toLowerCase();
@@ -153,23 +164,33 @@ export function FolderCombobox({
           >
             {visible.length > 0 && (
               <CommandGroup>
-                {visible.map((folder) => (
-                  <CommandItem
-                    key={folder.id}
-                    value={folder.id}
-                    onSelect={() => handleSelect(folder.id)}
-                    data-testid={`folder-combobox-item-${folder.id}`}
-                  >
-                    <Check
-                      size={16}
-                      className={cn(
-                        'mr-2 shrink-0',
-                        value === folder.id ? 'opacity-100' : 'opacity-0'
-                      )}
-                    />
-                    <span className="truncate">{folder.name}</span>
-                  </CommandItem>
-                ))}
+                {visible.map((folder) => {
+                  const pathHint = trimmed.length > 0 ? resolvePathHint(folder) : null;
+                  return (
+                    <CommandItem
+                      key={folder.id}
+                      value={folder.id}
+                      onSelect={() => handleSelect(folder.id)}
+                      data-testid={`folder-combobox-item-${folder.id}`}
+                    >
+                      <Check
+                        size={16}
+                        className={cn(
+                          'mr-2 shrink-0',
+                          value === folder.id ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate">{folder.name}</span>
+                        {pathHint && (
+                          <span className="truncate text-xs text-muted-foreground">
+                            {pathHint}
+                          </span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
                 {hasMore && (
                   <div
                     className="py-2 text-center text-xs text-muted-foreground"

@@ -34,7 +34,12 @@ export type Folder = {
   name: string;
   createdBy: string;
   createdAt: Timestamp;
+  parentFolderId: string | null;
+  depth: number;
+  path: string[];
 };
+
+export const MAX_FOLDER_DEPTH = 4;
 
 export type Photo = {
   id: string;
