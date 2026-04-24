@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
 import type { Photo } from '@/types';
 import type { Folder } from '@/types';
 import { SlideshowOverlay } from './SlideshowOverlay';
@@ -94,40 +93,31 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
     >
       {/* 사진 */}
       <div className="relative h-full w-full">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={currentPhoto.storageUrl}
           alt={currentPhoto.caption || `사진 ${currentIndex + 1}`}
-          fill
-          className="object-contain"
-          sizes="100vw"
-          quality={90}
-          priority
+          className="absolute inset-0 h-full w-full object-contain"
           data-testid="slideshow-image"
         />
 
-        {/* 인접 이미지 프리로드 (Next.js Image 최적화 활용) */}
+        {/* 인접 이미지 프리로드 — 숨겨진 img로 브라우저 캐시 워밍 */}
         {currentIndex > 0 && (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={photos[currentIndex - 1].storageUrl}
             alt=""
-            fill
-            className="invisible"
-            sizes="100vw"
-            quality={90}
-            priority
+            className="hidden"
             aria-hidden
           />
         )}
         {photos.slice(currentIndex + 1, currentIndex + 6).map((photo) => (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             key={photo.id}
             src={photo.storageUrl}
             alt=""
-            fill
-            className="invisible"
-            sizes="100vw"
-            quality={90}
-            priority
+            className="hidden"
             aria-hidden
           />
         ))}

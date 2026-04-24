@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button, Skeleton } from '@uandi/ui';
@@ -36,11 +35,13 @@ export function RecentPhotos({ coupleId }: RecentPhotosProps) {
               href={`/photos/${photo.id}`}
               data-testid="photo-thumbnail"
             >
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={photo.thumbnailUrl ?? photo.storageUrl}
                 alt={photo.caption || '사진'}
                 width={200}
                 height={200}
+                loading="lazy"
                 className="aspect-square w-full rounded-xl object-cover"
               />
             </Link>

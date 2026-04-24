@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Image from 'next/image';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { Button, Progress } from '@uandi/ui';
 import {
@@ -61,12 +60,11 @@ export function BackgroundImageUploader({
     <div className="space-y-3">
       {currentImageUrl ? (
         <div className="relative h-40 overflow-hidden rounded-lg">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={currentImageUrl}
             alt="가계부 배경"
-            fill
-            className="object-cover"
-            sizes="(max-width: 448px) 100vw, 448px"
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/30">
             <Button
