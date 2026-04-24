@@ -135,6 +135,25 @@ type UploadPhotosParams = {
   onProgress?: (percent: number, current: number, total: number) => void;
 };
 
+/**
+ * 업로드 파이프라인 동시성 계산. 하드웨어 코어 수와 메모리 기반으로 적응적으로 결정한다.
+ * - 모바일(메모리 <=2GB): 3~4로 제한해 탭 크래시 방지
+ * - 데스크톱 고성능: 최대 10까지 허용
+ * - hardwareConcurrency는 논리 코어 수라 절반만 사용 (압축이 CPU 바운드이므로)
+ */
+function computeUploadConcurrency(): number {
+  if (typeof navigator === 'undefined') return 3;
+
+  const cores = navigator.hardwareConcurrency ?? 4;
+  // deviceMemory는 일부 브라우저(Safari)에서 미지원
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+
+  if (memory !== undefined && memory <= 2) return 3;
+  if (memory !== undefined && memory <= 4) return Math.min(6, Math.max(3, Math.floor(cores / 2)));
+
+  return Math.min(10, Math.max(3, Math.floor(cores / 2)));
+}
+
 async function readImageSize(blob: Blob): Promise<{ width: number; height: number }> {
   if (typeof createImageBitmap === 'function') {
     const bitmap = await createImageBitmap(blob);
@@ -166,8 +185,8 @@ export function useUploadPhotos() {
       const { files, onProgress } = params;
       const total = files.length;
       // 압축(Web Worker) + 업로드를 한 파이프라인으로 묶어 동시성 제한.
-      // 너무 크게 잡으면 워커·디코드 메모리가 폭증하고 탭이 터짐. 80장 이상에서도 안전한 수준.
-      const CONCURRENCY = 3;
+      // 너무 크게 잡으면 워커·디코드 메모리가 폭증하고 탭이 터짐. 기기 성능에 맞춰 적응적으로 결정.
+      const CONCURRENCY = computeUploadConcurrency();
 
       const imageCompression = (await import('browser-image-compression')).default;
 
