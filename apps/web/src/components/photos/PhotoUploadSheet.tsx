@@ -39,8 +39,6 @@ type UploadFormValues = z.infer<typeof uploadSchema>;
 type SelectedFile = {
   file: File;
   previewUrl: string;
-  width: number;
-  height: number;
 };
 
 type ProgressInfo = {
@@ -84,17 +82,11 @@ export function PhotoUploadSheet({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        setSelectedFiles((prev) => [
-          ...prev,
-          { file, previewUrl: url, width: img.naturalWidth, height: img.naturalHeight },
-        ]);
-      };
-      img.src = url;
-    });
+    const next: SelectedFile[] = Array.from(files).map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setSelectedFiles((prev) => [...prev, ...next]);
 
     // input 초기화 (같은 파일 재선택 가능)
     e.target.value = '';
@@ -141,6 +133,8 @@ export function PhotoUploadSheet({
                   <img
                     src={sf.previewUrl}
                     alt={`선택된 사진 ${i + 1}`}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover rounded-md"
                   />
                   <button
