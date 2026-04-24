@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { Skeleton, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
@@ -52,12 +51,12 @@ export function PhotoGrid({
               data-testid={`photo-item-${photo.id}`}
               onClick={() => onToggleSelect?.(photo.id)}
             >
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={photo.thumbnailUrl ?? photo.storageUrl}
                 alt={photo.caption || '사진'}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover"
               />
               {uploaderAvatars && (
                 <Avatar className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white" data-testid="uploader-avatar">
@@ -86,12 +85,12 @@ export function PhotoGrid({
             className="aspect-square relative overflow-hidden"
             data-testid={`photo-item-${photo.id}`}
           >
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={photo.thumbnailUrl ?? photo.storageUrl}
               alt={photo.caption || '사진'}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
             />
             {uploaderAvatars && (
               <Avatar className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white" data-testid="uploader-avatar">

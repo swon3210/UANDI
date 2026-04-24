@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -199,14 +198,13 @@ export function PhotoDetailView({ photoId }: PhotoDetailViewProps) {
       <main className="flex-1 max-w-5xl mx-auto w-full">
         {/* 이미지 */}
         <div className="relative w-full" data-testid="photo-detail-image">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={photo.storageUrl}
             alt={photo.caption || '사진'}
             width={photo.width}
             height={photo.height}
             className="w-full object-contain"
-            sizes="100vw"
-            priority
           />
         </div>
 

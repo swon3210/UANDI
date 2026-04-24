@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { FolderOpen } from 'lucide-react';
 import { Skeleton } from '@uandi/ui';
@@ -24,12 +23,12 @@ export function FolderCard({ folder }: FolderCardProps) {
         {isLoading ? (
           <Skeleton className="absolute inset-0" />
         ) : stat?.coverUrl ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={stat.coverUrl}
             alt={folder.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
