@@ -122,8 +122,6 @@ export function useFolderStat(coupleId: string | null, folderId: string | null) 
 
 type UploadFileEntry = {
   file: File;
-  width: number;
-  height: number;
 };
 
 type UploadPhotosParams = {
@@ -137,6 +135,29 @@ type UploadPhotosParams = {
   onProgress?: (percent: number, current: number, total: number) => void;
 };
 
+async function readImageSize(blob: Blob): Promise<{ width: number; height: number }> {
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(blob);
+    try {
+      return { width: bitmap.width, height: bitmap.height };
+    } finally {
+      bitmap.close?.();
+    }
+  }
+  // Safari 폴백
+  const url = URL.createObjectURL(blob);
+  try {
+    return await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = reject;
+      img.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function useUploadPhotos() {
   const queryClient = useQueryClient();
 
@@ -144,39 +165,33 @@ export function useUploadPhotos() {
     mutationFn: async (params: UploadPhotosParams) => {
       const { files, onProgress } = params;
       const total = files.length;
-      const CONCURRENCY = 5;
+      // 압축(Web Worker) + 업로드를 한 파이프라인으로 묶어 동시성 제한.
+      // 너무 크게 잡으면 워커·디코드 메모리가 폭증하고 탭이 터짐. 80장 이상에서도 안전한 수준.
+      const CONCURRENCY = 3;
 
-      // 1단계: 이미지 압축 병렬 처리
       const imageCompression = (await import('browser-image-compression')).default;
-      const compressed = await Promise.all(
-        files.map(async (entry) => {
-          let fileToUpload = entry.file;
-          if (entry.file.size > 1.5 * 1024 * 1024) {
-            fileToUpload = await imageCompression(entry.file, {
-              maxWidthOrHeight: 1920,
-              initialQuality: 0.85,
-              useWebWorker: true,
-            });
-          }
-          return { ...entry, file: fileToUpload };
-        })
-      );
 
-      // 2단계: 업로드 + Firestore 저장을 동시성 제한하여 병렬 실행
       let completedCount = 0;
       const photoIds: string[] = new Array(total);
 
-      const uploadOne = async (index: number) => {
-        const entry = compressed[index];
-        const tempId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const processOne = async (index: number) => {
+        const entry = files[index];
+        let fileToUpload: File = entry.file;
+        if (entry.file.size > 1.5 * 1024 * 1024) {
+          fileToUpload = await imageCompression(entry.file, {
+            maxWidthOrHeight: 1920,
+            initialQuality: 0.85,
+            useWebWorker: true,
+          });
+        }
 
+        const { width, height } = await readImageSize(fileToUpload);
+
+        const tempId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
         const storageUrl = await uploadPhotoFile({
           coupleId: params.coupleId,
           photoId: tempId,
-          file: entry.file,
-          onProgress: () => {
-            // 개별 파일 진행률은 생략하고 완료 기준으로 전체 진행률 보고
-          },
+          file: fileToUpload,
         });
 
         const input: AddPhotoInput = {
@@ -187,8 +202,8 @@ export function useUploadPhotos() {
           storageUrl,
           caption: params.caption,
           takenAt: params.takenAt,
-          width: entry.width,
-          height: entry.height,
+          width,
+          height,
         };
 
         const photoId = await addPhoto(input);
@@ -199,12 +214,12 @@ export function useUploadPhotos() {
         onProgress?.(overall, completedCount, total);
       };
 
-      // 동시성 제한 실행 (worker pool 패턴)
+      // 워커 풀 패턴: 파일 단위 파이프라인(압축→크기→업로드→Firestore)을 동시성 제한해 실행
       let nextIndex = 0;
       const worker = async () => {
         while (nextIndex < total) {
           const idx = nextIndex++;
-          await uploadOne(idx);
+          await processOne(idx);
         }
       };
       await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker()));

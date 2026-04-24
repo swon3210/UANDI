@@ -248,11 +248,7 @@ export function PhotosGallery() {
           onSubmit={async (data, onProgress) => {
             try {
               await uploadMutation.mutateAsync({
-                files: data.files.map((f) => ({
-                  file: f.file,
-                  width: f.width,
-                  height: f.height,
-                })),
+                files: data.files.map((f) => ({ file: f.file })),
                 coupleId,
                 uploadedBy: user.uid,
                 folderId: data.folderId,
