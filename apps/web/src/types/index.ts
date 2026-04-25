@@ -115,6 +115,16 @@ export type MonthlyBudgetItem = {
   ownerUid: string | null;
 };
 
+// FCM 푸시 토큰 (다중 디바이스 지원)
+export type FcmToken = {
+  id: string; // 토큰 자체의 SHA 해시 또는 토큰 prefix를 id로 사용
+  userId: string;
+  token: string; // FCM registration token
+  userAgent: string;
+  createdAt: Timestamp;
+  lastUsedAt: Timestamp;
+};
+
 // 알림 설정
 export type NotificationSettings = {
   coupleId: string;

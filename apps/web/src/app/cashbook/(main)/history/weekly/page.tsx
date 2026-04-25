@@ -13,6 +13,7 @@ import { userAtom } from '@/stores/auth.store';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget } from '@/hooks/useMonthlyBudget';
+import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
 import {
   getWeeksInMonth,
   getCurrentWeekNumber,
@@ -62,6 +63,7 @@ export default function CashbookWeeklyPage() {
 
   // 뮤테이션
   const addMutation = useAddEntry(coupleId);
+  const { notifyTransition } = useBudgetAlerts(coupleId, year, month);
 
   // 주 이동
   const handlePrevWeek = () => {
@@ -109,7 +111,9 @@ export default function CashbookWeeklyPage() {
           categories={categories ?? []}
           coupleId={coupleId}
           createdBy={uid}
-          onSubmit={(data) => addMutation.mutate(data)}
+          onSubmit={(data) =>
+            addMutation.mutate(data, { onSuccess: () => notifyTransition(data) })
+          }
           onClose={() => {
             close();
             setTimeout(unmount, 300);
