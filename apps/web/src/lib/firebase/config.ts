@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth';
 import { getFirestore as firebaseGetFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage as firebaseGetStorage, connectStorageEmulator } from 'firebase/storage';
+import { getMessaging as firebaseGetMessaging, isSupported as messagingIsSupported, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -50,3 +51,11 @@ function getFirebaseApp(): FirebaseApp {
 export const getAuth = () => firebaseGetAuth(getFirebaseApp());
 export const getDb = () => firebaseGetFirestore(getFirebaseApp());
 export const getStorage = () => firebaseGetStorage(getFirebaseApp());
+
+export async function getMessagingIfSupported(): Promise<Messaging | null> {
+  if (typeof window === 'undefined') return null;
+  if (!(await messagingIsSupported())) return null;
+  return firebaseGetMessaging(getFirebaseApp());
+}
+
+export { firebaseConfig };

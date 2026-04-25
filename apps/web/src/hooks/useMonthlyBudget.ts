@@ -28,6 +28,18 @@ export function getBudgetStatus(budget: number, actual: number): BudgetStatus {
   return 'stable';
 }
 
+// 알림 임계값: safe(<80%) / warn80(80~99%) / over100(100~119%) / over120(120%~)
+export type BudgetThreshold = 'safe' | 'warn80' | 'over100' | 'over120';
+
+export function getBudgetThreshold(budget: number, actual: number): BudgetThreshold {
+  if (budget <= 0) return 'safe';
+  const ratio = actual / budget;
+  if (ratio >= 1.2) return 'over120';
+  if (ratio >= 1.0) return 'over100';
+  if (ratio >= 0.8) return 'warn80';
+  return 'safe';
+}
+
 export function getStatusColor(status: BudgetStatus): string {
   switch (status) {
     case 'stable':

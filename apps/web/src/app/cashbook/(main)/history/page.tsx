@@ -17,6 +17,7 @@ import {
   useDeleteEntry,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
@@ -46,6 +47,7 @@ export default function CashbookPage() {
   const addManyMutation = useAddEntries(coupleId);
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
+  const { notifyTransition } = useBudgetAlerts(coupleId, year, month + 1);
 
   const handleAdd = (prefill?: {
     type?: CashbookEntryType;
@@ -61,7 +63,9 @@ export default function CashbookPage() {
           coupleId={coupleId}
           createdBy={uid}
           prefill={prefill}
-          onSubmit={(data) => addMutation.mutate(data)}
+          onSubmit={(data) =>
+            addMutation.mutate(data, { onSuccess: () => notifyTransition(data) })
+          }
           onClose={() => {
             close();
             setTimeout(unmount, 300);
