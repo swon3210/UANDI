@@ -93,7 +93,10 @@ function pushBody(t: Transition): string {
 }
 
 export const onCashbookEntryCreated = onDocumentCreated(
-  'couples/{coupleId}/cashbookEntries/{entryId}',
+  {
+    document: 'couples/{coupleId}/cashbookEntries/{entryId}',
+    region: 'asia-northeast3',
+  },
   async (event) => {
     const snap = event.data;
     if (!snap) return;
