@@ -183,7 +183,7 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              '여러 건 입력 가능 (Shift+Enter 줄바꿈)\n예: 점심 김밥 5천원\n어제 택시 15000원'
+              '예: 점심 김밥 5천원\n어제 택시 15000원'
             }
             className="pl-9 pr-10 min-h-[100px] max-h-40"
             rows={1}
