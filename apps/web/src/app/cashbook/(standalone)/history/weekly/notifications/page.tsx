@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { toast } from 'sonner';
-import { Header, Button, FullScreenSpinner } from '@uandi/ui';
+import { Header, Button, FullScreenSpinner, Separator } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
   useNotificationSettings,
@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useNotificationSettings';
 import { useFcmToken, type FcmEnableState } from '@/hooks/useFcmToken';
 import { NotificationSettingsForm } from '@/components/cashbook/NotificationSettingsForm';
+import { sendTestPush } from '@/services/test-push';
 
 function reportFcmResult(result: FcmEnableState) {
   if (result === 'denied') {
@@ -44,6 +45,28 @@ export default function NotificationSettingsPage() {
   const { data: settings, isPending } = useNotificationSettings(uid);
   const updateMutation = useUpdateNotificationSettings(uid);
   const { enable: enableFcm } = useFcmToken();
+  const [testPushSending, setTestPushSending] = useState(false);
+
+  const handleSendTestPush = async () => {
+    setTestPushSending(true);
+    try {
+      const result = await sendTestPush();
+      if (result.successCount > 0) {
+        toast.success(
+          `테스트 푸시를 발송했어요 (성공 ${result.successCount}, 실패 ${result.failureCount})`
+        );
+      } else {
+        toast.error(
+          `발송에 모두 실패했어요. 첫 실패 사유: ${result.failures[0]?.error ?? '알 수 없음'}`
+        );
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : '테스트 푸시 발송에 실패했어요.';
+      toast.error(message);
+    } finally {
+      setTestPushSending(false);
+    }
+  };
 
   const shouldAutoEnable =
     !!settings && (settings.budgetWarning.enabled || settings.recordReminder.enabled);
@@ -108,6 +131,25 @@ export default function NotificationSettingsPage() {
           }
           isSaving={updateMutation.isPending}
         />
+
+        <Separator className="my-6" />
+
+        <section className="space-y-2 pb-12" data-testid="test-push-section">
+          <h3 className="text-base font-semibold">알림 동작 확인</h3>
+          <p className="text-sm text-muted-foreground">
+            등록된 디바이스로 테스트 푸시를 1건 발송해 셋업이 정상인지 확인할 수 있어요.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleSendTestPush}
+            disabled={testPushSending}
+            data-testid="send-test-push-button"
+          >
+            {testPushSending ? '발송 중…' : '테스트 푸시 보내기'}
+          </Button>
+        </section>
       </main>
     </div>
   );

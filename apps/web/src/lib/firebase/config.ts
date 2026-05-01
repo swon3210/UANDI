@@ -7,6 +7,7 @@ import {
 import { getFirestore as firebaseGetFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage as firebaseGetStorage, connectStorageEmulator } from 'firebase/storage';
 import { getMessaging as firebaseGetMessaging, isSupported as messagingIsSupported, type Messaging } from 'firebase/messaging';
+import { getFunctions as firebaseGetFunctions, type Functions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -51,6 +52,9 @@ function getFirebaseApp(): FirebaseApp {
 export const getAuth = () => firebaseGetAuth(getFirebaseApp());
 export const getDb = () => firebaseGetFirestore(getFirebaseApp());
 export const getStorage = () => firebaseGetStorage(getFirebaseApp());
+
+export const getFunctionsAsia = (): Functions =>
+  firebaseGetFunctions(getFirebaseApp(), 'asia-northeast3');
 
 export async function getMessagingIfSupported(): Promise<Messaging | null> {
   if (typeof window === 'undefined') return null;
