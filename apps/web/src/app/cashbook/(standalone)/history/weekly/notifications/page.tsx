@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { useAtomValue } from 'jotai';
@@ -71,14 +71,20 @@ export default function NotificationSettingsPage() {
   const shouldAutoEnable =
     !!settings && (settings.budgetWarning.enabled || settings.recordReminder.enabled);
 
+  // 저장 직후 settings refetch로 shouldAutoEnable이 다시 true가 될 때 onSave 쪽 enable과 중복
+  // 호출되어 SW 등록 레이스가 나는 것을 막기 위해 mount 동안 1회만 트리거한다.
+  const autoEnableTriggeredRef = useRef(false);
+
   // 다른 디바이스에서 이미 알림을 켠 사용자가 이 디바이스에서는 토큰이 등록되지 않은 채로
   // 사용하는 경우를 막기 위해, 권한이 이미 granted라면 진입 시 자동 등록한다.
   // 권한 다이얼로그는 항상 사용자 액션(저장 버튼)에서만 띄운다.
   useEffect(() => {
+    if (autoEnableTriggeredRef.current) return;
     if (!shouldAutoEnable) return;
     if (typeof window === 'undefined') return;
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
+    autoEnableTriggeredRef.current = true;
     void enableFcm({ skipPermissionPrompt: true });
   }, [shouldAutoEnable, enableFcm]);
 

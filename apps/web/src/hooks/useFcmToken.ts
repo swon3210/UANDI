@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { getToken } from 'firebase/messaging';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '@/stores/auth.store';
@@ -45,59 +45,73 @@ export function useFcmToken() {
   const uid = user?.uid ?? null;
   const [state, setState] = useState<FcmEnableState>('idle');
   const [token, setToken] = useState<string | null>(null);
+  const inFlightRef = useRef<Promise<FcmEnableState> | null>(null);
 
   const enable = useCallback(
     async (options: { skipPermissionPrompt?: boolean } = {}): Promise<FcmEnableState> => {
-      if (!uid) return 'idle';
-      if (typeof window === 'undefined') return 'idle';
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        setState('unsupported');
-        return 'unsupported';
-      }
-      if (!VAPID_KEY || !hasAllConfig()) {
-        setState('unsupported');
-        return 'unsupported';
-      }
+      // 동시 호출 시 같은 promise를 재사용해 SW register / getToken 레이스를 방지한다.
+      if (inFlightRef.current) return inFlightRef.current;
 
-      setState('requesting');
-
-      let permission: NotificationPermission = Notification.permission;
-      if (permission === 'default') {
-        if (options.skipPermissionPrompt) {
-          setState('idle');
-          return 'idle';
-        }
-        permission = await Notification.requestPermission();
-      }
-      if (permission !== 'granted') {
-        setState('denied');
-        return 'denied';
-      }
-
-      try {
-        const messaging = await getMessagingIfSupported();
-        if (!messaging) {
+      const run = async (): Promise<FcmEnableState> => {
+        if (!uid) return 'idle';
+        if (typeof window === 'undefined') return 'idle';
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
           setState('unsupported');
           return 'unsupported';
         }
-        const registration = await navigator.serviceWorker.register(buildSwUrl(), { scope: '/' });
-        const fcmToken = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: registration,
-        });
+        if (!VAPID_KEY || !hasAllConfig()) {
+          setState('unsupported');
+          return 'unsupported';
+        }
 
-        if (!fcmToken) {
+        setState('requesting');
+
+        let permission: NotificationPermission = Notification.permission;
+        if (permission === 'default') {
+          if (options.skipPermissionPrompt) {
+            setState('idle');
+            return 'idle';
+          }
+          permission = await Notification.requestPermission();
+        }
+        if (permission !== 'granted') {
+          setState('denied');
+          return 'denied';
+        }
+
+        try {
+          const messaging = await getMessagingIfSupported();
+          if (!messaging) {
+            setState('unsupported');
+            return 'unsupported';
+          }
+          const registration = await navigator.serviceWorker.register(buildSwUrl(), { scope: '/' });
+          const fcmToken = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration,
+          });
+
+          if (!fcmToken) {
+            setState('error');
+            return 'error';
+          }
+
+          await upsertFcmToken(uid, fcmToken, navigator.userAgent);
+          setToken(fcmToken);
+          setState('granted');
+          return 'granted';
+        } catch {
           setState('error');
           return 'error';
         }
+      };
 
-        await upsertFcmToken(uid, fcmToken, navigator.userAgent);
-        setToken(fcmToken);
-        setState('granted');
-        return 'granted';
-      } catch {
-        setState('error');
-        return 'error';
+      const p = run();
+      inFlightRef.current = p;
+      try {
+        return await p;
+      } finally {
+        inFlightRef.current = null;
       }
     },
     [uid]
