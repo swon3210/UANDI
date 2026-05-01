@@ -25,7 +25,6 @@ export function AuthInit() {
       let userDoc: User | null = null;
       try {
         userDoc = await getUserDocument(firebaseUser.uid);
-        console.log('[AuthInit] getUserDocument result:', JSON.stringify(userDoc));
       } catch (e) {
         console.log('[AuthInit] getUserDocument ERROR:', e);
       }
