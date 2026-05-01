@@ -46,6 +46,10 @@ export function useFcmToken() {
   const [state, setState] = useState<FcmEnableState>('idle');
   const [token, setToken] = useState<string | null>(null);
 
+  console.log({
+    VAPID_KEY
+  })
+
   const enable = useCallback(
     async (options: { skipPermissionPrompt?: boolean } = {}): Promise<FcmEnableState> => {
       if (!uid) return 'idle';
