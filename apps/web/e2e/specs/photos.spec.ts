@@ -68,6 +68,83 @@ test.describe('사진 갤러리', () => {
       await photos.switchToTab('folders');
       await expect(photos.getFolderCards()).toHaveCount(2, { timeout: 10000 });
     });
+
+    test('검색어로 폴더를 필터링할 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+
+      await seedFolder(coupleId, uid, { name: '제주도 여행' });
+      await seedFolder(coupleId, uid, { name: '서울 카페' });
+      await seedFolder(coupleId, uid, { name: '일상' });
+
+      const photos = new PhotosPage(page);
+      await photos.goto();
+      await photos.switchToTab('folders');
+      await expect(photos.getFolderCards()).toHaveCount(3, { timeout: 10000 });
+
+      await photos.searchFolders('카페');
+      await expect(photos.getFolderCards()).toHaveCount(1);
+      await expect(photos.getFolderCards().first()).toContainText('서울 카페');
+    });
+
+    test('검색 결과가 없으면 안내 메시지가 표시된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+
+      await seedFolder(coupleId, uid, { name: '여행 사진' });
+
+      const photos = new PhotosPage(page);
+      await photos.goto();
+      await photos.switchToTab('folders');
+      await expect(photos.getFolderCards()).toHaveCount(1, { timeout: 10000 });
+
+      await photos.searchFolders('없는키워드');
+      await expect(photos.getEmptyStateTitle()).toHaveText('검색 결과가 없어요');
+    });
+
+    test('글자순 정렬이 적용된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+
+      await seedFolder(coupleId, uid, { name: '다람쥐' });
+      await new Promise((r) => setTimeout(r, 5));
+      await seedFolder(coupleId, uid, { name: '가나다' });
+      await new Promise((r) => setTimeout(r, 5));
+      await seedFolder(coupleId, uid, { name: '바나나' });
+
+      const photos = new PhotosPage(page);
+      await photos.goto();
+      await photos.switchToTab('folders');
+      await expect(photos.getFolderCards()).toHaveCount(3, { timeout: 10000 });
+
+      await photos.sortFoldersBy('name');
+      await expect(photos.getFolderCards().nth(0)).toContainText('가나다');
+      await expect(photos.getFolderCards().nth(1)).toContainText('다람쥐');
+      await expect(photos.getFolderCards().nth(2)).toContainText('바나나');
+    });
+
+    test('최신순 / 오래된순 정렬이 적용된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+
+      // 글자순 기본값에서는 '하하하' < '가가가'가 안 되므로,
+      // 최신/오래된순과 글자순 결과가 명확히 달라지도록 데이터 구성
+      await seedFolder(coupleId, uid, { name: '하하하' }); // 먼저 생성, 글자순으로 마지막
+      await new Promise((r) => setTimeout(r, 5));
+      await seedFolder(coupleId, uid, { name: '가가가' }); // 나중 생성, 글자순으로 첫번째
+
+      const photos = new PhotosPage(page);
+      await photos.goto();
+      await photos.switchToTab('folders');
+      await expect(photos.getFolderCards()).toHaveCount(2, { timeout: 10000 });
+
+      // 기본은 글자순 — '가가가'가 먼저
+      await expect(photos.getFolderCards().first()).toContainText('가가가');
+
+      // 최신순 — 나중 생성한 '가가가'가 먼저
+      await photos.sortFoldersBy('latest');
+      await expect(photos.getFolderCards().first()).toContainText('가가가');
+
+      // 오래된순 — 먼저 생성한 '하하하'가 먼저
+      await photos.sortFoldersBy('oldest');
+      await expect(photos.getFolderCards().first()).toContainText('하하하');
+    });
   });
 
   test.describe('태그 탭', () => {

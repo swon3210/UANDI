@@ -10,6 +10,8 @@ export class PhotosPage {
   readonly folderNameInput: Locator;
   readonly submitFolderBtn: Locator;
   readonly folderMenuBtn: Locator;
+  readonly folderSearchInput: Locator;
+  readonly folderSortTrigger: Locator;
   readonly bottomNav: Locator;
 
   // 업로드 관련
@@ -32,6 +34,8 @@ export class PhotosPage {
     this.folderNameInput = page.getByLabel('폴더 이름');
     this.submitFolderBtn = page.getByRole('button', { name: '만들기' });
     this.folderMenuBtn = page.getByTestId('folder-menu-btn');
+    this.folderSearchInput = page.getByTestId('folder-search-input');
+    this.folderSortTrigger = page.getByTestId('folder-sort-select');
     this.bottomNav = page.getByTestId('bottom-nav');
 
     // 업로드
@@ -56,6 +60,16 @@ export class PhotosPage {
   async switchToTab(tab: 'all' | 'folders' | 'tags') {
     const tabMap = { all: this.tabAll, folders: this.tabFolders, tags: this.tabTags };
     await tabMap[tab].click();
+  }
+
+  async searchFolders(text: string) {
+    await this.folderSearchInput.fill(text);
+  }
+
+  async sortFoldersBy(value: 'latest' | 'oldest' | 'name') {
+    const labelMap = { latest: '최신순', oldest: '오래된순', name: '글자순' };
+    await this.folderSortTrigger.click();
+    await this.page.getByRole('option', { name: labelMap[value] }).click();
   }
 
   getPhotoThumbnails() {
