@@ -18,11 +18,17 @@ export class PhotosPage {
   readonly uploadBtn: Locator;
   readonly uploadSubmitBtn: Locator;
 
-  // 상세 페이지 관련
-  readonly detailImage: Locator;
-  readonly detailCaption: Locator;
-  readonly detailFolderLink: Locator;
-  readonly moreMenuBtn: Locator;
+  // 슬라이드쇼 관련
+  readonly slideshowContainer: Locator;
+  readonly slideshowImage: Locator;
+  readonly slideshowPosition: Locator;
+  readonly slideshowFolderLink: Locator;
+  readonly slideshowTags: Locator;
+  readonly slideshowCloseBtn: Locator;
+  readonly slideshowEditBtn: Locator;
+  readonly slideshowDeleteBtn: Locator;
+  readonly slideshowCaption: Locator;
+  readonly slideshowCaptionToggle: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -42,19 +48,21 @@ export class PhotosPage {
     this.uploadBtn = page.getByRole('button', { name: '사진 업로드' });
     this.uploadSubmitBtn = page.getByTestId('upload-submit-btn');
 
-    // 상세
-    this.detailImage = page.getByTestId('photo-detail-image');
-    this.detailCaption = page.getByTestId('photo-caption');
-    this.detailFolderLink = page.getByTestId('photo-folder-link');
-    this.moreMenuBtn = page.getByTestId('photo-more-menu');
+    // 슬라이드쇼
+    this.slideshowContainer = page.getByTestId('slideshow-container');
+    this.slideshowImage = page.getByTestId('slideshow-image');
+    this.slideshowPosition = page.getByTestId('slideshow-position');
+    this.slideshowFolderLink = page.getByTestId('slideshow-folder-name');
+    this.slideshowTags = page.getByTestId('slideshow-tags');
+    this.slideshowCloseBtn = page.getByTestId('slideshow-close-btn');
+    this.slideshowEditBtn = page.getByTestId('slideshow-edit-btn');
+    this.slideshowDeleteBtn = page.getByTestId('slideshow-delete-btn');
+    this.slideshowCaption = page.getByTestId('slideshow-caption');
+    this.slideshowCaptionToggle = page.getByTestId('slideshow-caption-toggle');
   }
 
   async goto() {
     await this.page.goto('/photos');
-  }
-
-  async gotoDetail(photoId: string) {
-    await this.page.goto(`/photos/${photoId}`);
   }
 
   async switchToTab(tab: 'all' | 'folders' | 'tags') {
@@ -73,7 +81,7 @@ export class PhotosPage {
   }
 
   getPhotoThumbnails() {
-    return this.page.locator('.grid a[href^="/photos/"]');
+    return this.page.locator('[data-testid^="photo-item-"]');
   }
 
   getFolderCards() {
@@ -88,7 +96,9 @@ export class PhotosPage {
     return this.page.locator('p.text-base.font-semibold');
   }
 
-  getDetailTagLinks() {
-    return this.page.locator('[data-testid="photo-tags"] a');
+  /** 그리드의 N번째(0-base) 썸네일 클릭 → 슬라이드쇼 진입 대기 */
+  async clickPhotoToOpenSlideshow(index: number) {
+    await this.getPhotoThumbnails().nth(index).click();
+    await this.slideshowContainer.waitFor({ state: 'visible' });
   }
 }

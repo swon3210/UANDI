@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { X, Type } from 'lucide-react';
+import { X, Type, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@uandi/ui';
-import type { Photo } from '@/types';
-import type { Folder } from '@/types';
+import type { Photo, Folder } from '@/types';
 
 type SlideshowOverlayProps = {
   photo: Photo;
@@ -15,6 +14,8 @@ type SlideshowOverlayProps = {
   visible: boolean;
   onClose: () => void;
   onToggleCaption: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
 export function SlideshowOverlay({
@@ -26,6 +27,8 @@ export function SlideshowOverlay({
   visible,
   onClose,
   onToggleCaption,
+  onEdit,
+  onDelete,
 }: SlideshowOverlayProps) {
   return (
     <div
@@ -46,16 +49,42 @@ export function SlideshowOverlay({
         >
           <X size={24} />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`text-white hover:bg-white/20 ${showCaption ? 'bg-white/20' : ''}`}
-          onClick={onToggleCaption}
-          aria-label="캡션 토글"
-          data-testid="slideshow-caption-toggle"
-        >
-          <Type size={20} />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`text-white hover:bg-white/20 ${showCaption ? 'bg-white/20' : ''}`}
+            onClick={onToggleCaption}
+            aria-label="캡션 토글"
+            data-testid="slideshow-caption-toggle"
+          >
+            <Type size={20} />
+          </Button>
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={onEdit}
+              aria-label="편집"
+              data-testid="slideshow-edit-btn"
+            >
+              <Pencil size={20} />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={onDelete}
+              aria-label="삭제"
+              data-testid="slideshow-delete-btn"
+            >
+              <Trash2 size={20} />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* 하단 오버레이 */}

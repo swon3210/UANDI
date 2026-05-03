@@ -16,6 +16,8 @@ type PhotoGridProps = {
   selectedIds?: Set<string>;
   /** 선택 모드에서 사진 클릭 시 호출 */
   onToggleSelect?: (photoId: string) => void;
+  /** 일반 모드에서 썸네일 클릭 시 호출 (인덱스 전달) */
+  onPhotoClick?: (index: number) => void;
 };
 
 export function PhotoGrid({
@@ -25,6 +27,7 @@ export function PhotoGrid({
   selectable,
   selectedIds,
   onToggleSelect,
+  onPhotoClick,
 }: PhotoGridProps) {
   if (isLoading) {
     return (
@@ -38,53 +41,12 @@ export function PhotoGrid({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5" data-testid="photo-grid">
-      {photos.map((photo) => {
+      {photos.map((photo, index) => {
         const isSelected = selectedIds?.has(photo.id) ?? false;
         const avatarUrl = uploaderAvatars?.[photo.uploadedBy];
 
-        if (selectable) {
-          return (
-            <button
-              key={photo.id}
-              type="button"
-              className="aspect-square relative overflow-hidden"
-              data-testid={`photo-item-${photo.id}`}
-              onClick={() => onToggleSelect?.(photo.id)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photo.thumbnailUrl ?? photo.storageUrl}
-                alt={photo.caption || '사진'}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              {uploaderAvatars && (
-                <Avatar className="absolute bottom-1 left-1 h-6 w-6 border-2 border-white" data-testid="uploader-avatar">
-                  <AvatarImage src={avatarUrl ?? undefined} />
-                  <AvatarFallback className="text-[10px]">U</AvatarFallback>
-                </Avatar>
-              )}
-              {isSelected && (
-                <div
-                  className="absolute inset-0 bg-primary/30 flex items-center justify-center"
-                  data-testid="check-overlay"
-                >
-                  <div className="rounded-full bg-primary p-1">
-                    <Check size={16} className="text-primary-foreground" />
-                  </div>
-                </div>
-              )}
-            </button>
-          );
-        }
-
-        return (
-          <Link
-            key={photo.id}
-            href={`/photos/${photo.id}`}
-            className="aspect-square relative overflow-hidden"
-            data-testid={`photo-item-${photo.id}`}
-          >
+        const inner = (
+          <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photo.thumbnailUrl ?? photo.storageUrl}
@@ -98,6 +60,55 @@ export function PhotoGrid({
                 <AvatarFallback className="text-[10px]">U</AvatarFallback>
               </Avatar>
             )}
+            {isSelected && (
+              <div
+                className="absolute inset-0 bg-primary/30 flex items-center justify-center"
+                data-testid="check-overlay"
+              >
+                <div className="rounded-full bg-primary p-1">
+                  <Check size={16} className="text-primary-foreground" />
+                </div>
+              </div>
+            )}
+          </>
+        );
+
+        if (selectable) {
+          return (
+            <button
+              key={photo.id}
+              type="button"
+              className="aspect-square relative overflow-hidden"
+              data-testid={`photo-item-${photo.id}`}
+              onClick={() => onToggleSelect?.(photo.id)}
+            >
+              {inner}
+            </button>
+          );
+        }
+
+        if (onPhotoClick) {
+          return (
+            <button
+              key={photo.id}
+              type="button"
+              className="aspect-square relative overflow-hidden"
+              data-testid={`photo-item-${photo.id}`}
+              onClick={() => onPhotoClick(index)}
+            >
+              {inner}
+            </button>
+          );
+        }
+
+        return (
+          <Link
+            key={photo.id}
+            href={`/photos/${photo.id}`}
+            className="aspect-square relative overflow-hidden"
+            data-testid={`photo-item-${photo.id}`}
+          >
+            {inner}
           </Link>
         );
       })}

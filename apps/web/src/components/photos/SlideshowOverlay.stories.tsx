@@ -57,8 +57,10 @@ const meta: Meta<typeof SlideshowOverlay> = {
 export default meta;
 type Story = StoryObj<typeof SlideshowOverlay>;
 
+const noop = () => {};
+
 export const Active: Story = {
-  name: 'Active (오버레이 표시)',
+  name: 'Active (편집/삭제 버튼 포함)',
   args: {
     photo: mockPhoto,
     folder: mockFolder,
@@ -66,8 +68,10 @@ export const Active: Story = {
     totalCount: 12,
     showCaption: false,
     visible: true,
-    onClose: () => {},
-    onToggleCaption: () => {},
+    onClose: noop,
+    onToggleCaption: noop,
+    onEdit: noop,
+    onDelete: noop,
   },
 };
 
@@ -80,8 +84,10 @@ export const ActiveWithCaption: Story = {
     totalCount: 12,
     showCaption: true,
     visible: true,
-    onClose: () => {},
-    onToggleCaption: () => {},
+    onClose: noop,
+    onToggleCaption: noop,
+    onEdit: noop,
+    onDelete: noop,
   },
 };
 
@@ -94,8 +100,10 @@ export const Idle: Story = {
     totalCount: 12,
     showCaption: false,
     visible: false,
-    onClose: () => {},
-    onToggleCaption: () => {},
+    onClose: noop,
+    onToggleCaption: noop,
+    onEdit: noop,
+    onDelete: noop,
   },
 };
 
@@ -108,8 +116,10 @@ export const NoTags: Story = {
     totalCount: 5,
     showCaption: false,
     visible: true,
-    onClose: () => {},
-    onToggleCaption: () => {},
+    onClose: noop,
+    onToggleCaption: noop,
+    onEdit: noop,
+    onDelete: noop,
   },
 };
 
@@ -122,7 +132,23 @@ export const NoFolder: Story = {
     totalCount: 1,
     showCaption: true,
     visible: true,
-    onClose: () => {},
-    onToggleCaption: () => {},
+    onClose: noop,
+    onToggleCaption: noop,
+    onEdit: noop,
+    onDelete: noop,
+  },
+};
+
+export const ReadOnly: Story = {
+  name: '읽기 전용 (편집/삭제 버튼 숨김)',
+  args: {
+    photo: mockPhoto,
+    folder: mockFolder,
+    currentIndex: 2,
+    totalCount: 12,
+    showCaption: false,
+    visible: true,
+    onClose: noop,
+    onToggleCaption: noop,
   },
 };
