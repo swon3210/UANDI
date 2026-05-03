@@ -117,3 +117,32 @@ export const WithoutFolder: Story = {
   name: '폴더 없이 (태그 기준)',
   render: () => <NoFolderWrapper />,
 };
+
+function StartFromMiddleWrapper() {
+  const [open, setOpen] = useState(true);
+  if (!open) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <button
+          className="rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+          onClick={() => setOpen(true)}
+        >
+          슬라이드쇼 다시 열기 (3번째 사진부터)
+        </button>
+      </div>
+    );
+  }
+  return (
+    <SlideshowView
+      photos={mockPhotos}
+      initialIndex={2}
+      folder={mockFolder}
+      onClose={() => setOpen(false)}
+    />
+  );
+}
+
+export const StartFromMiddle: Story = {
+  name: '특정 인덱스부터 시작 (initialIndex=2)',
+  render: () => <StartFromMiddleWrapper />,
+};

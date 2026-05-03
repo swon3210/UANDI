@@ -98,6 +98,27 @@ export const SelectionMode: Story = {
   render: () => <SelectableWrapper />,
 };
 
+function ClickableWrapper() {
+  const [clicked, setClicked] = useState<number | null>(null);
+  return (
+    <div>
+      <p className="p-4 text-sm text-muted-foreground">
+        {clicked === null ? '썸네일을 클릭하면 인덱스가 표시됩니다' : `클릭한 인덱스: ${clicked}`}
+      </p>
+      <PhotoGrid
+        photos={mockPhotos}
+        uploaderAvatars={uploaderAvatars}
+        onPhotoClick={setClicked}
+      />
+    </div>
+  );
+}
+
+export const Clickable: Story = {
+  name: '썸네일 클릭 (onPhotoClick)',
+  render: () => <ClickableWrapper />,
+};
+
 export const FewPhotos: Story = {
   name: '사진 3장',
   args: {

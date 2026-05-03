@@ -1,8 +1,22 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import type { Photo } from '@/types';
-import type { Folder } from '@/types';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { overlay } from 'overlay-kit';
+import {
+  Sheet,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+} from '@uandi/ui';
+import type { Photo, Folder } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import { useFolders } from '@/hooks/useFolders';
+import { useUpdatePhoto, useDeletePhoto, useTagSummary } from '@/hooks/usePhotos';
+import { PhotoEditSheet } from '@/components/photos/PhotoEditSheet';
 import { SlideshowOverlay } from './SlideshowOverlay';
 
 const IDLE_TIMEOUT = 5000;
@@ -10,12 +24,25 @@ const SWIPE_THRESHOLD = 50;
 
 type SlideshowViewProps = {
   photos: Photo[];
+  initialIndex?: number;
   folder?: Folder | null;
   onClose: () => void;
 };
 
-export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function SlideshowView({
+  photos: initialPhotos,
+  initialIndex = 0,
+  folder,
+  onClose,
+}: SlideshowViewProps) {
+  const { user } = useAuth();
+  const coupleId = user?.coupleId ?? null;
+
+  // 편집/삭제로 변하는 사진 목록을 자체 state로 관리. 부모의 props는 진입 시점만 사용.
+  const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    Math.min(Math.max(initialIndex, 0), Math.max(initialPhotos.length - 1, 0))
+  );
   const [showCaption, setShowCaption] = useState(() => {
     if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('slideshow-show-caption') === 'true';
@@ -24,7 +51,17 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
 
+  const { data: folders } = useFolders(coupleId);
+  const { data: tagSummary } = useTagSummary(coupleId);
+  const updateMutation = useUpdatePhoto(coupleId);
+  const deleteMutation = useDeletePhoto(coupleId);
+
   const currentPhoto = photos[currentIndex];
+  const currentFolder = useMemo(() => {
+    if (!currentPhoto) return folder ?? null;
+    return folders?.find((f) => f.id === currentPhoto.folderId) ?? folder ?? null;
+  }, [folders, currentPhoto, folder]);
+  const tagSuggestions = tagSummary?.map((t) => t.name) ?? [];
 
   const startIdleTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -46,7 +83,6 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
     resetIdleTimer();
   }, [resetIdleTimer]);
 
-  // 초기 타이머 설정 + 인터랙션 이벤트 리스너 + 키보드 탐색
   useEffect(() => {
     startIdleTimer();
 
@@ -81,6 +117,98 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
     }
     touchStartXRef.current = null;
   };
+
+  const handleEdit = useCallback(() => {
+    if (!currentPhoto || !folders) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <PhotoEditSheet
+          photo={currentPhoto}
+          folders={folders}
+          tagSuggestions={tagSuggestions}
+          isPending={updateMutation.isPending}
+          onSubmit={async (data) => {
+            await updateMutation.mutateAsync({
+              photoId: currentPhoto.id,
+              updates: {
+                folderId: data.folderId,
+                tags: data.tags,
+                caption: data.caption,
+              },
+            });
+            // 로컬 photos 배열도 갱신
+            setPhotos((prev) =>
+              prev.map((p) =>
+                p.id === currentPhoto.id
+                  ? { ...p, folderId: data.folderId, tags: data.tags, caption: data.caption }
+                  : p
+              )
+            );
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
+    resetIdleTimer();
+  }, [currentPhoto, folders, tagSuggestions, updateMutation, resetIdleTimer]);
+
+  const handleDelete = useCallback(async () => {
+    if (!currentPhoto) return;
+    const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && close(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>사진 삭제</DialogTitle>
+            <DialogDescription>
+              이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                close(false);
+                setTimeout(unmount, 300);
+              }}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                close(true);
+                setTimeout(unmount, 300);
+              }}
+            >
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    ));
+
+    resetIdleTimer();
+    if (!confirmed) return;
+
+    const deletedId = currentPhoto.id;
+    await deleteMutation.mutateAsync({
+      photoId: deletedId,
+      storageUrl: currentPhoto.storageUrl,
+    });
+
+    setPhotos((prev) => {
+      const next = prev.filter((p) => p.id !== deletedId);
+      if (next.length === 0) {
+        // 마지막 사진 삭제 → 슬라이드쇼 닫기
+        onClose();
+        return next;
+      }
+      // 인덱스 보정 — 마지막 사진을 지웠다면 한 칸 앞으로
+      setCurrentIndex((idx) => Math.min(idx, next.length - 1));
+      return next;
+    });
+  }, [currentPhoto, deleteMutation, onClose, resetIdleTimer]);
 
   if (!currentPhoto) return null;
 
@@ -138,7 +266,7 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
       {/* 오버레이 */}
       <SlideshowOverlay
         photo={currentPhoto}
-        folder={folder}
+        folder={currentFolder}
         currentIndex={currentIndex}
         totalCount={photos.length}
         showCaption={showCaption}
@@ -152,6 +280,8 @@ export function SlideshowView({ photos, folder, onClose }: SlideshowViewProps) {
           });
           resetIdleTimer();
         }}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </div>
   );

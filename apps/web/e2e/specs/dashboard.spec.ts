@@ -35,6 +35,18 @@ test.describe('대시보드', () => {
       await dashboard.recentPhotosViewAll.click();
       await expect(authedPage).toHaveURL(/\/photos/);
     });
+
+    test('썸네일 클릭 시 /photos로 이동한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedPhoto(coupleId, uid, {});
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.photoThumbnails).toHaveCount(1, { timeout: 10000 });
+      await dashboard.photoThumbnails.first().click();
+      await expect(page).toHaveURL(/\/photos$/);
+    });
   });
 
   test.describe('이번 달 가계부', () => {
