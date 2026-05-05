@@ -10,6 +10,7 @@ export type {
 // Services
 export {
   getMonthlyEntries,
+  getEntriesInRange,
   addEntry,
   addEntries,
   updateEntry,

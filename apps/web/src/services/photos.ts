@@ -65,12 +65,6 @@ export type PhotoPage = {
 
 const PAGE_SIZE = 20;
 
-export async function getRecentPhotos(coupleId: string, count = 3): Promise<Photo[]> {
-  const q = query(photosCol(coupleId), orderBy('takenAt', 'desc'), limit(count));
-  const snap = await getDocs(q);
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Photo);
-}
-
 export async function getPhotos(
   coupleId: string,
   cursor?: DocumentSnapshot
