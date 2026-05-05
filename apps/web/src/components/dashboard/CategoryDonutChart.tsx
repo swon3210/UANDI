@@ -1,7 +1,14 @@
 'use client';
 
 import { Cell, Pie, PieChart } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@uandi/ui';
+import { PieChart as PieChartIcon } from 'lucide-react';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  EmptyState,
+  type ChartConfig,
+} from '@uandi/ui';
 import type { CategorySlice } from '@/hooks/useDashboardData';
 
 type Props = {
@@ -10,6 +17,18 @@ type Props = {
 
 export function CategoryDonutChart({ data }: Props) {
   const total = data.reduce((sum, d) => sum + d.amount, 0);
+
+  if (data.length === 0 || total === 0) {
+    return (
+      <div data-testid="category-donut">
+        <EmptyState
+          icon={<PieChartIcon size={32} />}
+          title="카테고리 내역이 없어요"
+          description="다른 그룹을 선택하거나 기간을 바꿔보세요"
+        />
+      </div>
+    );
+  }
 
   const config = data.reduce<ChartConfig>((acc, slice) => {
     acc[slice.category] = { label: slice.category, color: slice.color };

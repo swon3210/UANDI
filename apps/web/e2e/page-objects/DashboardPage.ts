@@ -31,6 +31,11 @@ export class DashboardPage {
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
   readonly emptyState: Locator;
+  readonly categorySelector: Locator;
+
+  categoryChip(name: string): Locator {
+    return this.page.getByTestId(`category-chip-${name}`);
+  }
 
   // 제거된 영역 검증용
   readonly recentPhotosSection: Locator;
@@ -65,6 +70,7 @@ export class DashboardPage {
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
+    this.categorySelector = page.getByTestId('category-selector');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

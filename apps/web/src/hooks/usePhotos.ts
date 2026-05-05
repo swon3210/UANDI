@@ -249,7 +249,6 @@ export function useUploadPhotos() {
     },
     onSuccess: (_photoIds, params) => {
       queryClient.invalidateQueries({ queryKey: ['photos', params.coupleId] });
-      queryClient.invalidateQueries({ queryKey: ['recentPhotos', params.coupleId] });
       queryClient.invalidateQueries({ queryKey: ['photoStats', params.coupleId] });
     },
   });
@@ -297,7 +296,6 @@ export function useDeletePhoto(coupleId: string | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos', coupleId] });
-      queryClient.invalidateQueries({ queryKey: ['recentPhotos', coupleId] });
       queryClient.invalidateQueries({ queryKey: ['photoStats', coupleId] });
     },
   });

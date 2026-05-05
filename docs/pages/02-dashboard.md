@@ -58,7 +58,8 @@
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
-│  │  [시계열 막대 차트] │  │  ← 일/주/월 단위 추이
+│  │ [카테고리 칩 멀티셀] │  │  ← 비교할 카테고리 선택 (max 5)
+│  │  [시계열 다중 라인] │  │  ← 카테고리당 라인 1개, 추이 비교
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
@@ -122,16 +123,25 @@ query(
 - `data-testid="group-tabs"`
 - `all`이면 모든 entries, 그 외엔 `entry.type === group`로 필터
 
-### 시계열 막대 차트 (`BudgetTrendChart`)
+### 카테고리 비교 선택기 (`CategorySelector`)
 
-- `recharts BarChart` + shadcn `ChartContainer`
+- 칩 멀티 토글 (`data-testid="category-selector"`, 칩별 `data-testid="category-chip-{name}"`)
+- 옵션은 현재 그룹 탭 + 기간에서 데이터가 있는 카테고리(amount 내림차순)
+- 최대 동시 선택: **5개** (`MAX_TREND_CATEGORIES`)
+- 기본 선택: 기간 내 금액 상위 **3개** (`DEFAULT_TREND_TOP_N`)
+- 그룹/기간/cursor 변경 시 사용자 선택은 자동 리셋되어 다시 자동 상위 3개로 돌아감
+
+### 시계열 추이 차트 (`BudgetTrendChart`)
+
+- `recharts LineChart` + shadcn `ChartContainer` + Legend
 - `data-testid="trend-chart"`
+- 선택된 카테고리당 라인 1개 (스트로크 색 = 카테고리 메타 `color`)
 - 버킷 규칙:
   - weekly: 일별 7개 (일~토)
   - monthly: 일별 (해당 월의 일수, 28~31)
   - yearly: 월별 12개
 - X축 라벨: 요일 / 일자 / 월
-- 막대 색상: 그룹별 시맨틱 컬러 (지출=`--expense`, 수입=`--income`, 투자=stone-500, flex=primary, 전체=primary)
+- 선택 0개일 때는 안전망으로 EmptyState 표시 ("비교할 카테고리를 선택해주세요")
 
 ### 카테고리 도넛 차트 (`CategoryDonutChart`)
 
@@ -140,12 +150,16 @@ query(
 - 카테고리별 합계 → 도넛 슬라이스
 - 카테고리 메타 `color` 사용, 메타 없으면 fallback palette
 - 우측 또는 하단에 범례(라벨+%)
-- 빈 데이터 시 `EmptyState` 메시지
+- 빈 데이터 처리:
+  - 부모(`BudgetDashboard`)는 그룹 필터 적용 후 entries가 비면 `dashboard-empty` 통합 EmptyState로 차트 영역 전체를 대체한다.
+  - 도넛 컴포넌트 자체도 안전망으로 `data=[]` 또는 `total=0`일 때 EmptyState를 표시한다 (재사용 시 보호).
 
 ### 합계 KPI 카드
 
 - `data-testid="dashboard-total"`
-- 선택 그룹의 기간 총합 (group이 `all`이면 수입-지출 차이, 그 외엔 해당 그룹 합계)
+- 선택 그룹의 기간 총합:
+  - `all`: 수입(`type==='income'`) 합 − 지출(`type==='expense'`) 합. flex/investment는 제외.
+  - 그 외: 해당 그룹의 `amount` 합계
 - 색상: 지출=expense, 수입=income, 그 외=foreground
 
 ### 로딩 상태
@@ -154,7 +168,7 @@ query(
 
 ### 빈 데이터 상태
 
-- "이 기간엔 내역이 없어요" `EmptyState` (차트 영역 통합)
+- 그룹 필터 적용 후 entries가 비면 차트 영역 전체를 `dashboard-empty` 통합 `EmptyState`로 대체한다 ("이 기간엔 내역이 없어요").
 
 ---
 

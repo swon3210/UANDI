@@ -1,26 +1,22 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+import { LineChart as LineChartIcon } from 'lucide-react';
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  EmptyState,
   type ChartConfig,
 } from '@uandi/ui';
-import type { TrendPoint } from '@/hooks/useDashboardData';
-import type { GroupFilter } from '@/hooks/useDashboardData';
-
-const COLOR_BY_GROUP: Record<GroupFilter, string> = {
-  all: 'hsl(var(--primary))',
-  expense: 'hsl(var(--expense))',
-  income: 'hsl(var(--income))',
-  flex: 'hsl(var(--primary))',
-  investment: 'hsl(28 9% 54%)',
-};
+import type { TrendByCategoryPoint } from '@/hooks/useDashboardData';
+import type { CategoryOption } from './CategorySelector';
 
 type Props = {
-  data: TrendPoint[];
-  group: GroupFilter;
+  data: TrendByCategoryPoint[];
+  selectedCategories: CategoryOption[];
 };
 
 function formatCompact(n: number): string {
@@ -31,10 +27,23 @@ function formatCompact(n: number): string {
   return String(n);
 }
 
-export function BudgetTrendChart({ data, group }: Props) {
-  const config = {
-    total: { label: '합계', color: COLOR_BY_GROUP[group] },
-  } satisfies ChartConfig;
+export function BudgetTrendChart({ data, selectedCategories }: Props) {
+  if (selectedCategories.length === 0) {
+    return (
+      <div data-testid="trend-chart">
+        <EmptyState
+          icon={<LineChartIcon size={32} />}
+          title="비교할 카테고리를 선택해주세요"
+          description="아래 칩에서 카테고리를 골라 추이를 비교할 수 있어요"
+        />
+      </div>
+    );
+  }
+
+  const config = selectedCategories.reduce<ChartConfig>((acc, c) => {
+    acc[c.name] = { label: c.name, color: c.color };
+    return acc;
+  }, {});
 
   return (
     <ChartContainer
@@ -42,7 +51,7 @@ export function BudgetTrendChart({ data, group }: Props) {
       data-testid="trend-chart"
       className="aspect-[16/9] w-full"
     >
-      <BarChart data={data} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+      <LineChart data={data} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="label"
@@ -63,16 +72,28 @@ export function BudgetTrendChart({ data, group }: Props) {
           content={
             <ChartTooltipContent
               indicator="dot"
-              formatter={(value) => (
+              formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
+                  {String(name)}{' '}
                   {typeof value === 'number' ? value.toLocaleString() : value}원
                 </span>
               )}
             />
           }
         />
-        <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <ChartLegend content={<ChartLegendContent />} />
+        {selectedCategories.map((c) => (
+          <Line
+            key={c.name}
+            type="monotone"
+            dataKey={c.name}
+            stroke={c.color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+        ))}
+      </LineChart>
     </ChartContainer>
   );
 }
