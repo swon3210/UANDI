@@ -12,6 +12,7 @@ import {
   deletePhotoDoc,
   movePhotosToFolder,
   getFolderStat,
+  getAllPhotos,
   getAllPhotosByFolder,
   getAllPhotosByTag,
   type AddPhotoInput,
@@ -90,6 +91,15 @@ export function useFolderPhotoCounts(coupleId: string | null) {
 export function useFolderCovers(coupleId: string | null) {
   const { data: stats, ...rest } = usePhotoStats(coupleId);
   return { data: stats?.folderCovers, ...rest };
+}
+
+/** 커플의 전체 사진 (슬라이드쇼용) */
+export function useAllPhotos(coupleId: string | null) {
+  return useQuery({
+    queryKey: ['allPhotos', coupleId, 'all'],
+    queryFn: () => getAllPhotos(coupleId!),
+    enabled: !!coupleId,
+  });
 }
 
 /** 폴더 내 전체 사진 (슬라이드쇼용) */

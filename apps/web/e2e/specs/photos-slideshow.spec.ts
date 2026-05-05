@@ -63,40 +63,24 @@ test.describe('슬라이드쇼', () => {
       await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
     });
 
-    test('폴더 [▶] 버튼은 첫 번째 사진부터 전체 사진 슬라이드쇼를 시작한다', async ({
+    test('폴더 페이지의 마지막 썸네일 클릭 시 마지막 사진부터 슬라이드쇼가 시작된다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
       const folderId = await seedFolder(coupleId, uid, { name: '제주도 여행' });
-      await seedPhoto(coupleId, uid, { folderId, caption: '첫번째' });
-      await seedPhoto(coupleId, uid, { folderId, caption: '두번째' });
-      await seedPhoto(coupleId, uid, { folderId, caption: '세번째', tags: ['벚꽃'] });
+      // takenAt DESC 정렬: 마지막 시드가 인덱스 0
+      await seedPhoto(coupleId, uid, { folderId, caption: '세번째 (인덱스 2)', tags: ['벚꽃'] });
+      await seedPhoto(coupleId, uid, { folderId, caption: '두번째 (인덱스 1)' });
+      await seedPhoto(coupleId, uid, { folderId, caption: '첫번째 (인덱스 0)' });
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await expect(page.getByTestId('slideshow-btn')).toBeVisible();
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await expect(photos.getPhotoThumbnails()).toHaveCount(3, { timeout: 10000 });
 
-      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*3/);
+      await photos.clickPhotoToOpenSlideshow(2);
+      await expect(photos.slideshowPosition).toHaveText(/3\s*\/\s*3/);
       await expect(photos.slideshowFolderLink).toContainText('제주도 여행');
       await expect(photos.slideshowTags).toContainText('#벚꽃');
-    });
-
-    test('태그 [▶] 버튼은 첫 번째 사진부터 슬라이드쇼를 시작한다', async ({
-      authedContext,
-    }) => {
-      const { page, uid, coupleId } = authedContext;
-      await seedPhoto(coupleId, uid, { tags: ['벚꽃'] });
-      await seedPhoto(coupleId, uid, { tags: ['벚꽃'] });
-
-      const photos = new PhotosPage(page);
-      await page.goto(`/photos/tag/${encodeURIComponent('벚꽃')}`);
-      await expect(page.getByTestId('slideshow-btn')).toBeVisible();
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
-
-      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/);
     });
   });
 
@@ -110,8 +94,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*3/);
 
@@ -134,8 +117,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await clickRight(page);
       await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
@@ -153,8 +135,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(photos.slideshowCaption).not.toBeVisible();
       await photos.slideshowCaptionToggle.click();
@@ -176,8 +157,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(page.getByTestId('slideshow-overlay')).toBeVisible();
 
@@ -205,8 +185,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowFolderLink.click();
       await expect(page).toHaveURL(new RegExp(`/photos/folder/${folderId}`));
@@ -219,8 +198,7 @@ test.describe('슬라이드쇼', () => {
 
       const photos = new PhotosPage(page);
       await page.goto(`/photos/folder/${folderId}`);
-      await page.getByTestId('slideshow-btn').click();
-      await photos.slideshowContainer.waitFor({ state: 'visible' });
+      await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowTags.getByText('#벚꽃').click();
       await expect(page).toHaveURL(/\/photos\/tag\//);

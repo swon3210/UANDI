@@ -32,7 +32,7 @@ export function RecentPhotos({ coupleId }: RecentPhotosProps) {
           {photos?.map((photo) => (
             <Link
               key={photo.id}
-              href={`/photos/${photo.id}`}
+              href={`/photos/slideshow?source=all&photoId=${photo.id}`}
               data-testid="photo-thumbnail"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

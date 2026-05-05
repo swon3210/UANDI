@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Header, EmptyState, Button, Skeleton } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotosByTag } from '@/hooks/usePhotos';
@@ -46,21 +46,6 @@ export default function TagDetailPage() {
             <ArrowLeft size={20} />
           </Button>
         }
-        rightSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              router.push(
-                `/photos/slideshow?source=tag&id=${encodeURIComponent(tagName)}`
-              )
-            }
-            aria-label="슬라이드쇼"
-            data-testid="slideshow-btn"
-          >
-            <Play size={20} />
-          </Button>
-        }
       />
       <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />
       <div className="flex-1">
@@ -78,6 +63,11 @@ export default function TagDetailPage() {
               <PhotoGrid
                 photos={filteredPhotos}
                 uploaderAvatars={uploaderAvatars}
+                onPhotoClick={(index) =>
+                  router.push(
+                    `/photos/slideshow?source=tag&id=${encodeURIComponent(tagName)}&photoId=${filteredPhotos[index].id}`
+                  )
+                }
               />
               {isFetchingNextPage && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
