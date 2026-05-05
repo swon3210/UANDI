@@ -2,15 +2,20 @@ import type { Meta, StoryObj } from '@storybook/react';
 import type { Folder } from '@/types';
 import { SubFolderSection } from './SubFolderSection';
 
-const ts = { toDate: () => new Date(), seconds: 0, nanoseconds: 0 };
+const ts = (ms: number) => ({
+  toDate: () => new Date(ms),
+  toMillis: () => ms,
+  seconds: Math.floor(ms / 1000),
+  nanoseconds: 0,
+});
 
-function makeFolder(id: string, name: string): Folder {
+function makeFolder(id: string, name: string, createdAtMs = Date.now()): Folder {
   return {
     id,
     coupleId: 'c',
     name,
     createdBy: 'u',
-    createdAt: ts,
+    createdAt: ts(createdAtMs),
     parentFolderId: 'parent',
     depth: 1,
     path: ['parent'],
@@ -25,55 +30,46 @@ const meta: Meta<typeof SubFolderSection> = {
     docs: {
       description: {
         component:
-          '폴더 상세 페이지 상단의 하위 폴더 섹션. 하위 폴더 카드 그리드 + "새 하위 폴더" 버튼.',
+          '폴더 상세 페이지 상단의 하위 폴더 섹션. 검색/정렬 툴바와 하위 폴더 카드 그리드를 포함한다. "새 하위 폴더" 버튼은 페이지 헤더로 분리되어 이 컴포넌트에 포함되지 않는다.',
       },
     },
-  },
-  args: {
-    onCreateClick: () => {},
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof SubFolderSection>;
 
-export const Empty: Story = {
-  name: '하위 폴더 없음 (생성 가능)',
-  args: {
-    parentDepth: 0,
-    subFolders: [],
-  },
-};
-
 export const TwoChildren: Story = {
   name: '하위 폴더 2개',
   args: {
-    parentDepth: 0,
-    subFolders: [makeFolder('a', '일본'), makeFolder('b', '제주도')],
+    subFolders: [makeFolder('a', '일본', 1700000000000), makeFolder('b', '제주도', 1710000000000)],
+  },
+};
+
+export const ManyChildren: Story = {
+  name: '검색/정렬 가능한 다수의 하위 폴더',
+  args: {
+    subFolders: [
+      makeFolder('a', '일본', 1700000000000),
+      makeFolder('b', '제주도', 1710000000000),
+      makeFolder('c', '오사카', 1720000000000),
+      makeFolder('d', '교토', 1730000000000),
+      makeFolder('e', '부산', 1740000000000),
+    ],
   },
 };
 
 export const Loading: Story = {
   name: '로딩 중',
   args: {
-    parentDepth: 0,
     subFolders: [],
     isLoading: true,
   },
 };
 
-export const MaxDepthReached: Story = {
-  name: 'depth 4 (생성 불가, 빈 상태이므로 렌더 X)',
+export const Empty: Story = {
+  name: '하위 폴더 없음 (섹션 미렌더)',
   args: {
-    parentDepth: 4,
     subFolders: [],
-  },
-};
-
-export const MaxDepthWithChildren: Story = {
-  name: 'depth 4지만 하위가 이미 있는 경우 — 버튼만 비활성',
-  args: {
-    parentDepth: 4,
-    subFolders: [makeFolder('a', '레거시 폴더')],
   },
 };

@@ -26,10 +26,7 @@ const meta: Meta<typeof FolderToolbar> = {
 export default meta;
 type Story = StoryObj<typeof FolderToolbar>;
 
-function InteractiveTemplate(args: {
-  initialSearch?: string;
-  initialSort?: SortOption;
-}) {
+function InteractiveTemplate(args: { initialSearch?: string; initialSort?: SortOption }) {
   const [searchQuery, setSearchQuery] = useState(args.initialSearch ?? '');
   const [sortBy, setSortBy] = useState<SortOption>(args.initialSort ?? 'name');
   return (
