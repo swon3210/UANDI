@@ -1,9 +1,10 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, CheckSquare, Play } from 'lucide-react';
+import { ArrowLeft, MoreVertical, CheckSquare, Plus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
+import dayjs from 'dayjs';
 import { Header, EmptyState, Button, Sheet, Skeleton } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -16,7 +17,12 @@ import {
   useCreateFolder,
   useFolderDescendantCount,
 } from '@/hooks/useFolders';
-import { usePhotosByFolder, useMovePhotos } from '@/hooks/usePhotos';
+import {
+  usePhotosByFolder,
+  useMovePhotos,
+  useUploadPhotos,
+  usePhotoStats,
+} from '@/hooks/usePhotos';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
@@ -29,6 +35,7 @@ import { DeleteFolderConfirmSheet } from '@/components/photos/DeleteFolderConfir
 import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/UploaderFilterChips';
 import { SelectionModeBar } from '@/components/photos/SelectionModeBar';
 import { MovePhotosSheet } from '@/components/photos/MovePhotosSheet';
+import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import { useMemo, useState } from 'react';
 
 export default function FolderDetailPage() {
@@ -52,12 +59,19 @@ export default function FolderDetailPage() {
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     usePhotosByFolder(coupleId, folderId);
   const { data: allFolders } = useFolders(coupleId);
+  const { data: photoStats } = usePhotoStats(coupleId);
   const renameMutation = useRenameFolder(coupleId);
   const deleteMutation = useDeleteFolder(coupleId);
   const createMutation = useCreateFolder(coupleId);
   const moveMutation = useMovePhotos(coupleId);
+  const uploadMutation = useUploadPhotos();
   const uploaderAvatars = useUploaderAvatars(coupleId);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const tagSuggestions = useMemo(
+    () => photoStats?.tags.map((t) => t.name) ?? [],
+    [photoStats?.tags]
+  );
 
   // 업로더 필터
   const [uploaderFilter, setUploaderFilter] = useState<UploaderFilter>('all');
@@ -113,6 +127,41 @@ export default function FolderDetailPage() {
             setTimeout(unmount, 300);
             handleExitSelectMode();
             toast.success(`${count}장의 사진을 '${targetFolder?.name}'로 이동했어요`);
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const handleUpload = () => {
+    if (!user || !coupleId || !folder) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <PhotoUploadSheet
+          folders={allFolders ?? []}
+          tagSuggestions={tagSuggestions}
+          defaultFolderId={folder.id}
+          onCreateFolder={async (name) =>
+            createMutation.mutateAsync({ name, userId: user.uid })
+          }
+          onSubmit={async (data, onProgress) => {
+            try {
+              await uploadMutation.mutateAsync({
+                files: data.files.map((f) => ({ file: f.file })),
+                coupleId,
+                uploadedBy: user.uid,
+                folderId: data.folderId,
+                tags: data.tags,
+                caption: data.caption,
+                takenAt: dayjs(data.takenAt).toDate(),
+                onProgress,
+              });
+              close();
+              setTimeout(unmount, 300);
+            } catch {
+              toast.error('사진 업로드에 실패했어요. 다시 시도해주세요.');
+              throw new Error('upload failed');
+            }
           }}
         />
       </Sheet>
@@ -235,13 +284,12 @@ export default function FolderDetailPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() =>
-                  router.push(`/photos/slideshow?source=folder&id=${folderId}`)
-                }
-                aria-label="슬라이드쇼"
-                data-testid="slideshow-btn"
+                onClick={handleUpload}
+                aria-label="사진 업로드"
+                data-testid="folder-upload-btn"
+                data-auth-ready={!!user && !!coupleId && !!folder ? 'true' : 'false'}
               >
-                <Play size={20} />
+                <Plus size={20} />
               </Button>
               <Button
                 variant="ghost"
@@ -304,6 +352,11 @@ export default function FolderDetailPage() {
                 selectable={isSelectMode}
                 selectedIds={selectedIds}
                 onToggleSelect={handleToggleSelect}
+                onPhotoClick={(index) =>
+                  router.push(
+                    `/photos/slideshow?source=folder&id=${folderId}&photoId=${filteredPhotos[index].id}`
+                  )
+                }
               />
               {isFetchingNextPage && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">

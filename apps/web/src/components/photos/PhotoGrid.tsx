@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { Skeleton, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
 import type { Photo } from '@/types';
@@ -87,29 +86,16 @@ export function PhotoGrid({
           );
         }
 
-        if (onPhotoClick) {
-          return (
-            <button
-              key={photo.id}
-              type="button"
-              className="aspect-square relative overflow-hidden"
-              data-testid={`photo-item-${photo.id}`}
-              onClick={() => onPhotoClick(index)}
-            >
-              {inner}
-            </button>
-          );
-        }
-
         return (
-          <Link
+          <button
             key={photo.id}
-            href={`/photos/${photo.id}`}
+            type="button"
             className="aspect-square relative overflow-hidden"
             data-testid={`photo-item-${photo.id}`}
+            onClick={() => onPhotoClick?.(index)}
           >
             {inner}
-          </Link>
+          </button>
         );
       })}
     </div>

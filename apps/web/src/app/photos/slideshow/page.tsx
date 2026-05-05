@@ -1,12 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { FullScreenSpinner } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useAllPhotosByFolder, useAllPhotosByTag } from '@/hooks/usePhotos';
+import {
+  useAllPhotos,
+  useAllPhotosByFolder,
+  useAllPhotosByTag,
+} from '@/hooks/usePhotos';
 import { useFolder } from '@/hooks/useFolders';
 import { SlideshowView } from '@/components/photos/SlideshowView';
+
+type Source = 'all' | 'folder' | 'tag';
 
 function SlideshowContent() {
   const searchParams = useSearchParams();
@@ -14,12 +20,15 @@ function SlideshowContent() {
   const { user, authStatus } = useAuth();
   const coupleId = user?.coupleId ?? null;
 
-  const source = searchParams.get('source') as 'folder' | 'tag' | null;
+  const source = searchParams.get('source') as Source | null;
   const id = searchParams.get('id');
+  const photoId = searchParams.get('photoId');
 
+  const isAllSource = source === 'all';
   const isFolderSource = source === 'folder';
   const isTagSource = source === 'tag';
 
+  const allQuery = useAllPhotos(isAllSource ? coupleId : null);
   const folderQuery = useAllPhotosByFolder(
     isFolderSource ? coupleId : null,
     isFolderSource ? id : null
@@ -33,14 +42,24 @@ function SlideshowContent() {
     isFolderSource ? id : null
   );
 
-  const activeQuery = isFolderSource ? folderQuery : tagQuery;
-  const photos = activeQuery.data ?? [];
+  const activeQuery = isAllSource ? allQuery : isFolderSource ? folderQuery : tagQuery;
+  const photos = useMemo(() => activeQuery.data ?? [], [activeQuery.data]);
   const isFetched = activeQuery.isFetched;
+
+  const initialIndex = useMemo(() => {
+    if (!photoId) return 0;
+    const idx = photos.findIndex((p) => p.id === photoId);
+    return idx >= 0 ? idx : 0;
+  }, [photos, photoId]);
 
   const hasRedirected = useRef(false);
 
-  // 파라미터 없으면 즉시 리다이렉트, 데이터 로드 완료 후 사진 없으면 리다이렉트
-  const invalidParams = !source || !id;
+  // 파라미터 검증: source 필수, folder/tag일 때만 id 필수
+  const invalidParams =
+    !source ||
+    (isFolderSource && !id) ||
+    (isTagSource && !id) ||
+    (!isAllSource && !isFolderSource && !isTagSource);
   const emptyAfterFetch = isFetched && photos.length === 0;
   const shouldRedirect = invalidParams || emptyAfterFetch;
 
@@ -58,6 +77,7 @@ function SlideshowContent() {
   return (
     <SlideshowView
       photos={photos}
+      initialIndex={initialIndex}
       folder={isFolderSource ? folder : undefined}
       onClose={() => router.back()}
     />

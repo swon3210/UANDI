@@ -34,6 +34,7 @@ import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import Link from 'next/link';
 
 function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
+  const router = useRouter();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
 
@@ -66,7 +67,13 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
 
   return (
     <div>
-      <PhotoGrid photos={photos} uploaderAvatars={uploaderAvatars} />
+      <PhotoGrid
+        photos={photos}
+        uploaderAvatars={uploaderAvatars}
+        onPhotoClick={(index) =>
+          router.push(`/photos/slideshow?source=all&photoId=${photos[index].id}`)
+        }
+      />
       {isFetchingNextPage && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
           {Array.from({ length: 4 }).map((_, i) => (

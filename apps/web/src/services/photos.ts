@@ -156,6 +156,13 @@ export async function getAllPhotosByTag(
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
 }
 
+/** 커플의 전체 사진 (슬라이드쇼용) */
+export async function getAllPhotos(coupleId: string): Promise<Photo[]> {
+  const q = query(photosCol(coupleId), orderBy('takenAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Photo);
+}
+
 // --- 단건 조회 ---
 
 export async function getPhoto(coupleId: string, photoId: string): Promise<Photo | null> {
