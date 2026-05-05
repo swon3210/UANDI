@@ -10,7 +10,7 @@ const meta: Meta<typeof FolderToolbar> = {
     docs: {
       description: {
         component:
-          '폴더 탭 상단 툴바. 폴더 제목 검색 입력, 정렬(최신순/오래된순/글자순) Select, 새 폴더 버튼을 담는다. 모든 상태는 controlled 방식으로 부모에서 전달.',
+          '폴더 탭 상단 툴바. 폴더 제목 검색 입력과 정렬(최신순/오래된순/글자순) Select를 담는다. 새 폴더 추가는 페이지 헤더의 액션 버튼에서 수행한다. 모든 상태는 controlled 방식으로 부모에서 전달.',
       },
     },
   },
@@ -26,21 +26,15 @@ const meta: Meta<typeof FolderToolbar> = {
 export default meta;
 type Story = StoryObj<typeof FolderToolbar>;
 
-function InteractiveTemplate(args: {
-  initialSearch?: string;
-  initialSort?: SortOption;
-  withCreate?: boolean;
-}) {
+function InteractiveTemplate(args: { initialSearch?: string; initialSort?: SortOption }) {
   const [searchQuery, setSearchQuery] = useState(args.initialSearch ?? '');
   const [sortBy, setSortBy] = useState<SortOption>(args.initialSort ?? 'name');
-  const withCreate = args.withCreate ?? true;
   return (
     <FolderToolbar
       searchQuery={searchQuery}
       onSearchQueryChange={setSearchQuery}
       sortBy={sortBy}
       onSortByChange={setSortBy}
-      onCreateFolder={withCreate ? () => alert('새 폴더 만들기') : undefined}
     />
   );
 }
@@ -58,9 +52,4 @@ export const WithSearchQuery: Story = {
 export const SortByLatest: Story = {
   name: '최신순 정렬 선택',
   render: () => <InteractiveTemplate initialSort="latest" />,
-};
-
-export const WithoutCreateButton: Story = {
-  name: '생성 버튼 없음 (하위 폴더 섹션용)',
-  render: () => <InteractiveTemplate withCreate={false} />,
 };

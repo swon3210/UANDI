@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { FolderPlus, ImagePlus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
@@ -25,6 +25,7 @@ import {
   useUploadPhotos,
 } from '@/hooks/usePhotos';
 import { useFolders, useCreateFolder } from '@/hooks/useFolders';
+import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { BottomNav } from '@/components/BottomNav';
@@ -161,6 +162,22 @@ export function PhotosGallery() {
 
   const tagSuggestions = stats?.tags.map((t) => t.name) ?? [];
 
+  const handleCreateFolder = () => {
+    if (!user || !coupleId) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <CreateFolderSheet
+          isPending={createFolderMutation.isPending}
+          onSubmit={async (name) => {
+            await createFolderMutation.mutateAsync({ name, userId: user.uid });
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
   const handleUpload = () => {
     if (!user || !coupleId) return;
     overlay.open(({ isOpen, close, unmount }) => (
@@ -200,15 +217,29 @@ export function PhotosGallery() {
       <Header
         title="사진"
         rightSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleUpload}
-            aria-label="사진 업로드"
-            data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
-          >
-            <Plus size={20} />
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleUpload}
+              aria-label="사진 업로드"
+              data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
+            >
+              <ImagePlus size={20} />
+            </Button>
+            {activeTab === 'folders' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCreateFolder}
+                aria-label="새 폴더"
+                data-testid="create-folder-btn"
+                data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
+              >
+                <FolderPlus size={20} />
+              </Button>
+            )}
+          </div>
         }
       />
       <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
@@ -228,7 +259,7 @@ export function PhotosGallery() {
             {coupleId && <AllPhotosTab coupleId={coupleId} uploaderAvatars={uploaderAvatars} />}
           </TabsContent>
           <TabsContent value="folders" className="flex-1 mt-0">
-            {coupleId && <FoldersTab coupleId={coupleId} />}
+            {coupleId && <FoldersTab coupleId={coupleId} onCreateFolder={handleCreateFolder} />}
           </TabsContent>
           <TabsContent value="tags" className="flex-1 mt-0">
             {coupleId && <TagsTab coupleId={coupleId} />}

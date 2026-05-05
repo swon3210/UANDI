@@ -2,22 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
-import { overlay } from 'overlay-kit';
-import { Button, EmptyState, Sheet, Skeleton } from '@uandi/ui';
-import { useAuth } from '@/hooks/useAuth';
-import { useCreateFolder, useFolders } from '@/hooks/useFolders';
+import { Button, EmptyState, Skeleton } from '@uandi/ui';
+import { useFolders } from '@/hooks/useFolders';
 import { FolderCard } from '@/components/photos/FolderCard';
-import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
 import { FolderToolbar, type SortOption } from '@/components/photos/FolderToolbar';
 
 type FoldersTabProps = {
   coupleId: string;
+  onCreateFolder: () => void;
 };
 
-export function FoldersTab({ coupleId }: FoldersTabProps) {
-  const { user } = useAuth();
+export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
   const { data, isLoading } = useFolders(coupleId);
-  const createMutation = useCreateFolder(coupleId);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -34,21 +30,6 @@ export function FoldersTab({ coupleId }: FoldersTabProps) {
       return sortBy === 'latest' ? bMs - aMs : aMs - bMs;
     });
   }, [data, debouncedQuery, sortBy]);
-
-  const handleCreateFolder = () => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <CreateFolderSheet
-          isPending={createMutation.isPending}
-          onSubmit={async (name) => {
-            await createMutation.mutateAsync({ name, userId: user!.uid });
-            close();
-            setTimeout(unmount, 300);
-          }}
-        />
-      </Sheet>
-    ));
-  };
 
   if (isLoading) {
     return (
@@ -69,7 +50,6 @@ export function FoldersTab({ coupleId }: FoldersTabProps) {
         onSearchQueryChange={setSearchQuery}
         sortBy={sortBy}
         onSortByChange={setSortBy}
-        onCreateFolder={handleCreateFolder}
       />
       {folders.length === 0 ? (
         isSearching ? (
@@ -83,7 +63,7 @@ export function FoldersTab({ coupleId }: FoldersTabProps) {
             icon="📁"
             title="폴더를 만들어 사진을 정리해보세요"
             description="여행, 일상 등 주제별로 사진을 분류할 수 있어요"
-            action={<Button onClick={handleCreateFolder}>새 폴더 만들기</Button>}
+            action={<Button onClick={onCreateFolder}>새 폴더 만들기</Button>}
           />
         )
       ) : (

@@ -20,16 +20,6 @@ export function Hero() {
           filter: 'blur(80px)',
         }}
       />
-      <div
-        className="pointer-events-none absolute rounded-full bg-sage-50 opacity-60"
-        style={{
-          bottom: '5%',
-          left: '-5%',
-          width: 'min(30vw, 400px)',
-          height: 'min(30vw, 400px)',
-          filter: 'blur(60px)',
-        }}
-      />
 
       <div className="flex w-full max-w-[1100px] flex-wrap items-center justify-between gap-12">
         {/* left: copy */}
