@@ -27,24 +27,28 @@ export type DashboardData = {
   isLoading: boolean;
 };
 
-const FALLBACK_PALETTE = [
-  '#E8837A',
-  '#4CAF86',
-  '#F9B2AC',
-  '#98D9BF',
-  '#D5CFCA',
-  '#BE4B44',
-  '#368869',
-  '#B4AEA8',
+// 카테고리별 시각적 구분을 위한 고대비 팔레트.
+// 카테고리 메타의 color는 대부분 코랄 계열이라 라인/슬라이스가 구분이 안 되어
+// 차트 표시 시에는 메타 색상을 덮어쓴다.
+const CHART_PALETTE = [
+  '#D8635A', // coral red (지출 시맨틱)
+  '#4CAF86', // sage green (수입 시맨틱)
+  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#14B8A6', // teal
+  '#A855F7', // purple
+  '#F97316', // orange
+  '#0EA5E9', // sky
 ];
 
 function categoryColor(
-  name: string,
-  categories: CashbookCategory[] | undefined,
-  fallbackIndex: number
+  _name: string,
+  _categories: CashbookCategory[] | undefined,
+  index: number
 ): string {
-  const meta = categories?.find((c) => c.name === name);
-  return meta?.color ?? FALLBACK_PALETTE[fallbackIndex % FALLBACK_PALETTE.length];
+  return CHART_PALETTE[index % CHART_PALETTE.length];
 }
 
 function bucketKeyFor(period: PeriodKind, date: dayjs.Dayjs): string {

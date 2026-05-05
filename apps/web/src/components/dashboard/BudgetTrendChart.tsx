@@ -85,12 +85,12 @@ export function BudgetTrendChart({ data, selectedCategories }: Props) {
         {selectedCategories.map((c) => (
           <Line
             key={c.name}
-            type="monotone"
+            type="linear"
             dataKey={c.name}
             stroke={c.color}
             strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4 }}
+            dot={{ r: 3, fill: c.color, strokeWidth: 0 }}
+            activeDot={{ r: 5 }}
           />
         ))}
       </LineChart>
