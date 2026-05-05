@@ -29,16 +29,18 @@ type Story = StoryObj<typeof FolderToolbar>;
 function InteractiveTemplate(args: {
   initialSearch?: string;
   initialSort?: SortOption;
+  withCreate?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState(args.initialSearch ?? '');
   const [sortBy, setSortBy] = useState<SortOption>(args.initialSort ?? 'name');
+  const withCreate = args.withCreate ?? true;
   return (
     <FolderToolbar
       searchQuery={searchQuery}
       onSearchQueryChange={setSearchQuery}
       sortBy={sortBy}
       onSortByChange={setSortBy}
-      onCreateFolder={() => alert('새 폴더 만들기')}
+      onCreateFolder={withCreate ? () => alert('새 폴더 만들기') : undefined}
     />
   );
 }
@@ -56,4 +58,9 @@ export const WithSearchQuery: Story = {
 export const SortByLatest: Story = {
   name: '최신순 정렬 선택',
   render: () => <InteractiveTemplate initialSort="latest" />,
+};
+
+export const WithoutCreateButton: Story = {
+  name: '생성 버튼 없음 (하위 폴더 섹션용)',
+  render: () => <InteractiveTemplate withCreate={false} />,
 };

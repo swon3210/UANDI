@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, CheckSquare, Plus } from 'lucide-react';
+import { ArrowLeft, MoreVertical, CheckSquare, Plus, FolderPlus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
@@ -24,6 +24,7 @@ import {
   usePhotoStats,
 } from '@/hooks/usePhotos';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
+import { MAX_FOLDER_DEPTH } from '@/types';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FolderMenuSheet } from '@/components/photos/FolderMenuSheet';
@@ -47,17 +48,19 @@ export default function FolderDetailPage() {
 
   const { data: folder, isLoading: folderLoading } = useFolder(coupleId, folderId);
   const { data: ancestors } = useFolderAncestors(coupleId, folder ?? null);
-  const {
-    data: subFoldersData,
-    isLoading: subFoldersLoading,
-  } = useInfiniteFolders(coupleId, folderId);
+  const { data: subFoldersData, isLoading: subFoldersLoading } = useInfiniteFolders(
+    coupleId,
+    folderId
+  );
   const subFolders = useMemo(
     () => subFoldersData?.pages.flatMap((p) => p.folders) ?? [],
     [subFoldersData?.pages]
   );
 
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    usePhotosByFolder(coupleId, folderId);
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = usePhotosByFolder(
+    coupleId,
+    folderId
+  );
   const { data: allFolders } = useFolders(coupleId);
   const { data: photoStats } = usePhotoStats(coupleId);
   const renameMutation = useRenameFolder(coupleId);
@@ -141,9 +144,7 @@ export default function FolderDetailPage() {
           folders={allFolders ?? []}
           tagSuggestions={tagSuggestions}
           defaultFolderId={folder.id}
-          onCreateFolder={async (name) =>
-            createMutation.mutateAsync({ name, userId: user.uid })
-          }
+          onCreateFolder={async (name) => createMutation.mutateAsync({ name, userId: user.uid })}
           onSubmit={async (data, onProgress) => {
             try {
               await uploadMutation.mutateAsync({
@@ -294,6 +295,21 @@ export default function FolderDetailPage() {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={handleCreateSubFolder}
+                aria-label="새 하위 폴더"
+                data-testid="create-subfolder-btn"
+                disabled={!folder || folder.depth >= MAX_FOLDER_DEPTH}
+                title={
+                  folder && folder.depth >= MAX_FOLDER_DEPTH
+                    ? '최대 5단계까지만 만들 수 있어요'
+                    : '새 하위 폴더 만들기'
+                }
+              >
+                <FolderPlus size={20} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsSelectMode(true)}
                 aria-label="선택 모드"
                 data-testid="select-mode-btn"
@@ -313,28 +329,22 @@ export default function FolderDetailPage() {
           }
         />
       )}
-      {!isSelectMode && folder && (
-        <FolderBreadcrumb ancestors={ancestors ?? []} current={folder} />
-      )}
+      {!isSelectMode && folder && <FolderBreadcrumb ancestors={ancestors ?? []} current={folder} />}
       {deleteError && (
         <div className="max-w-5xl mx-auto w-full px-4 mt-2">
-          <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="delete-error">
+          <div
+            className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            data-testid="delete-error"
+          >
             {deleteError}
           </div>
         </div>
       )}
-      {!isSelectMode && (
-        <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />
-      )}
+      {!isSelectMode && <UploaderFilterChips value={uploaderFilter} onChange={setUploaderFilter} />}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
           {folder && !isSelectMode && (
-            <SubFolderSection
-              parentDepth={folder.depth}
-              subFolders={subFolders}
-              isLoading={subFoldersLoading}
-              onCreateClick={handleCreateSubFolder}
-            />
+            <SubFolderSection subFolders={subFolders} isLoading={subFoldersLoading} />
           )}
           {isLoading ? (
             <PhotoGrid photos={[]} isLoading />
