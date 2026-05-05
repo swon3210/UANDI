@@ -47,7 +47,9 @@ export function CTA() {
           우리 둘만의 공간이 기다리고 있어요.
         </p>
         <a
-          href="#"
+          href="https://uandi-web.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-2.5 rounded-2xl bg-coral-400 px-9 py-4 text-[17px] font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 hover:bg-coral-500"
           style={{ boxShadow: '0 4px 24px hsl(4 74% 69% / 0.35)' }}
         >

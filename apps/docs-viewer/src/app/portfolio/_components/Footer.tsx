@@ -5,7 +5,7 @@ import { Github, ExternalLink } from 'lucide-react';
 import { useReveal } from './useReveal';
 
 const REPO_URL = 'https://github.com/swon3210/UANDI';
-const DEMO_URL = '/intro';
+const DEMO_URL = 'https://uandi-web.vercel.app';
 
 export function Footer() {
   const ref = useReveal();
@@ -32,6 +32,8 @@ export function Footer() {
         </a>
         <a
           href={DEMO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-lg bg-coral-400 px-4 py-[9px] text-[13px] font-medium text-white transition-colors duration-150 hover:bg-coral-500"
         >
           Live Demo

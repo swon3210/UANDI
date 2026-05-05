@@ -27,7 +27,9 @@ export function Nav() {
     >
       <Logo variant="full" height={36} />
       <a
-        href="#cta"
+        href="https://uandi-web.vercel.app"
+        target="_blank"
+        rel="noopener noreferrer"
         className="rounded-[10px] bg-coral-400 px-[22px] py-[9px] text-[14px] font-medium text-white transition-colors duration-150 hover:bg-coral-500 active:bg-coral-600"
       >
         시작하기

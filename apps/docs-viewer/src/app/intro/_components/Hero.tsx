@@ -63,7 +63,9 @@ export function Hero() {
           </p>
           <div className="flex flex-wrap gap-3">
             <a
-              href="#cta"
+              href="https://uandi-web.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-coral-400 px-7 py-3.5 text-[16px] font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-coral-500"
             >
               <GoogleIcon size={16} />

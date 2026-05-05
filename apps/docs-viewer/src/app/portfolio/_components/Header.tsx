@@ -2,7 +2,7 @@ import { Logo } from '@uandi/ui';
 import { Github, ExternalLink } from 'lucide-react';
 
 const REPO_URL = 'https://github.com/swon3210/UANDI';
-const DEMO_URL = '/intro';
+const DEMO_URL = 'https://uandi-web.vercel.app';
 
 export function Header() {
   return (
@@ -20,6 +20,8 @@ export function Header() {
         </a>
         <a
           href={DEMO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-lg bg-coral-400 px-3.5 py-[7px] text-[13px] font-medium text-white transition-colors duration-150 hover:bg-coral-500"
         >
           Live Demo

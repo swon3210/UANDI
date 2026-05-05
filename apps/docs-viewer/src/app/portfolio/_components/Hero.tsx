@@ -5,7 +5,7 @@ import { Phone, GalleryMock, DashMock } from './Phone';
 import { useReveal } from './useReveal';
 
 const REPO_URL = 'https://github.com/swon3210/UANDI';
-const DEMO_URL = '/intro';
+const DEMO_URL = 'https://uandi-web.vercel.app';
 
 export function Hero() {
   const ref = useReveal();
@@ -58,6 +58,8 @@ export function Hero() {
           </a>
           <a
             href={DEMO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-[10px] bg-coral-400 px-5 py-2.5 text-[13.5px] font-medium text-white transition-colors duration-150 hover:bg-coral-500"
           >
             Live Demo
