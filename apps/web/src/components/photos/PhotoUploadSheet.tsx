@@ -50,6 +50,7 @@ type ProgressInfo = {
 type PhotoUploadSheetProps = {
   folders: Folder[];
   tagSuggestions?: string[];
+  defaultFolderId?: string;
   onCreateFolder?: (name: string) => Promise<string>;
   onSubmit: (
     data: UploadFormValues & { files: SelectedFile[] },
@@ -60,6 +61,7 @@ type PhotoUploadSheetProps = {
 export function PhotoUploadSheet({
   folders,
   tagSuggestions = [],
+  defaultFolderId,
   onCreateFolder,
   onSubmit,
 }: PhotoUploadSheetProps) {
@@ -71,7 +73,7 @@ export function PhotoUploadSheet({
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
-      folderId: '',
+      folderId: defaultFolderId ?? '',
       takenAt: dayjs().format('YYYY-MM-DD'),
       tags: [],
       caption: '',
