@@ -15,9 +15,8 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
 import { BottomNav } from '@/components/BottomNav';
-import { RecentPhotos } from './RecentPhotos';
-import { MonthlySummaryCard } from './MonthlySummaryCard';
-import { RecentEntries } from './RecentEntries';
+import { EntryButtons } from './EntryButtons';
+import { BudgetDashboard } from './BudgetDashboard';
 
 export function Dashboard() {
   const router = useRouter();
@@ -64,10 +63,9 @@ export function Dashboard() {
           </DropdownMenu>
         }
       />
-      <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-6">
-        <RecentPhotos coupleId={coupleId} />
-        <MonthlySummaryCard coupleId={coupleId} />
-        <RecentEntries coupleId={coupleId} />
+      <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
+        <EntryButtons />
+        <BudgetDashboard coupleId={coupleId} />
       </main>
       <BottomNav activeTab="home" />
     </>

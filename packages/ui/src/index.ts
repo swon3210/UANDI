@@ -94,3 +94,12 @@ export { Checkbox } from './components/checkbox';
 export { Slider } from './components/slider';
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './components/collapsible';
 export { Switch } from './components/switch';
+export {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+} from './components/chart';
+export type { ChartConfig } from './components/chart';

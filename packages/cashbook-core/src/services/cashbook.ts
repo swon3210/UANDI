@@ -29,7 +29,15 @@ export async function getMonthlyEntries(
 ): Promise<CashbookEntry[]> {
   const start = dayjs().year(year).month(month).startOf('month').toDate();
   const end = dayjs().year(year).month(month).endOf('month').toDate();
+  return getEntriesInRange(db, coupleId, start, end);
+}
 
+export async function getEntriesInRange(
+  db: Firestore,
+  coupleId: string,
+  start: Date,
+  end: Date
+): Promise<CashbookEntry[]> {
   const q = query(
     entriesCol(db, coupleId),
     where('date', '>=', Timestamp.fromDate(start)),

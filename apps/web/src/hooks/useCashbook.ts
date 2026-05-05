@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import {
   getMonthlyEntries,
+  getEntriesInRange,
   addEntry,
   addEntries,
   updateEntry,
@@ -28,6 +29,18 @@ export function useCashbookEntries(
 export function useMonthlyEntries(coupleId: string | null) {
   const now = dayjs();
   return useCashbookEntries(coupleId, now.year(), now.month());
+}
+
+export function useCashbookEntriesInRange(
+  coupleId: string | null,
+  start: Date,
+  end: Date
+) {
+  return useQuery({
+    queryKey: [QUERY_KEY, coupleId, 'range', start.toISOString(), end.toISOString()],
+    queryFn: () => getEntriesInRange(coupleId!, start, end),
+    enabled: !!coupleId,
+  });
 }
 
 export type MonthlySummary = {

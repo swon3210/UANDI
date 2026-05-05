@@ -1,7 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { DocumentSnapshot } from 'firebase/firestore';
 import {
-  getRecentPhotos,
   getPhotos,
   getPhoto,
   getPhotosByFolder,
@@ -19,14 +18,6 @@ import {
   type UpdatePhotoInput,
 } from '@/services/photos';
 import { uploadPhotoFile, deletePhotoFile } from '@/lib/firebase/storage';
-
-export function useRecentPhotos(coupleId: string | null) {
-  return useQuery({
-    queryKey: ['recentPhotos', coupleId],
-    queryFn: () => getRecentPhotos(coupleId!, 3),
-    enabled: !!coupleId,
-  });
-}
 
 export function usePhoto(coupleId: string | null, photoId: string | null) {
   return useQuery({
@@ -258,7 +249,6 @@ export function useUploadPhotos() {
     },
     onSuccess: (_photoIds, params) => {
       queryClient.invalidateQueries({ queryKey: ['photos', params.coupleId] });
-      queryClient.invalidateQueries({ queryKey: ['recentPhotos', params.coupleId] });
       queryClient.invalidateQueries({ queryKey: ['photoStats', params.coupleId] });
     },
   });
@@ -306,7 +296,6 @@ export function useDeletePhoto(coupleId: string | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos', coupleId] });
-      queryClient.invalidateQueries({ queryKey: ['recentPhotos', coupleId] });
       queryClient.invalidateQueries({ queryKey: ['photoStats', coupleId] });
     },
   });
