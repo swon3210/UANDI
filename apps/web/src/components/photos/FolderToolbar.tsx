@@ -1,8 +1,7 @@
 'use client';
 
-import { Plus, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import {
-  Button,
   Input,
   Select,
   SelectContent,
@@ -18,7 +17,6 @@ type FolderToolbarProps = {
   onSearchQueryChange: (value: string) => void;
   sortBy: SortOption;
   onSortByChange: (value: SortOption) => void;
-  onCreateFolder: () => void;
 };
 
 export function FolderToolbar({
@@ -26,7 +24,6 @@ export function FolderToolbar({
   onSearchQueryChange,
   sortBy,
   onSortByChange,
-  onCreateFolder,
 }: FolderToolbarProps) {
   return (
     <div className="flex items-center gap-2 px-4 py-2">
@@ -59,15 +56,6 @@ export function FolderToolbar({
           <SelectItem value="name">글자순</SelectItem>
         </SelectContent>
       </Select>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onCreateFolder}
-        data-testid="create-folder-btn"
-        className="shrink-0"
-      >
-        <Plus size={16} className="mr-1" />새 폴더
-      </Button>
     </div>
   );
 }
