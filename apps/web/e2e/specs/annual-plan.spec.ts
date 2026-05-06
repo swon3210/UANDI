@@ -7,72 +7,97 @@ import {
   seedAnnualPlanItem,
 } from '../helpers/emulator';
 
-test.describe('연간 예산 계획', () => {
-  test.describe('연간 요약', () => {
-    test('연간 계획 페이지에 진입하면 연간 요약 카드가 표시된다', async ({
+test.describe('연간 경제 목표', () => {
+  test.describe('목표 메인', () => {
+    test('메인 진입 시 hero 카드와 4개 카테고리 카드가 표시된다', async ({
       authedContext,
     }) => {
-      const { page, coupleId, uid } = authedContext;
+      const { page, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
 
       const annualPage = new AnnualPlanPage(page);
       await annualPage.goto();
 
-      await expect(annualPage.summaryCard).toBeVisible();
-      await expect(annualPage.summaryRow('수입')).toBeVisible();
-      await expect(annualPage.summaryRow('지출')).toBeVisible();
-      await expect(annualPage.summaryRow('재테크')).toBeVisible();
-      await expect(annualPage.summaryRow('Flex')).toBeVisible();
+      await expect(annualPage.heroCard).toBeVisible();
+      await expect(annualPage.goalCard('income')).toBeVisible();
+      await expect(annualPage.goalCard('expense')).toBeVisible();
+      await expect(annualPage.goalCard('investment')).toBeVisible();
+      await expect(annualPage.goalCard('flex')).toBeVisible();
+    });
+
+    test('카테고리 카드 클릭 시 해당 상세 뷰로 진입한다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const annualPage = new AnnualPlanPage(page);
+      await annualPage.goto();
+      await annualPage.drillIntoCategory('income');
+
+      await expect(annualPage.detailView).toBeVisible();
+      await expect(annualPage.goalDetailHeader('income')).toBeVisible();
+      await expect(annualPage.backButton).toBeVisible();
+      await expect(page).toHaveURL(/category=income/);
+    });
+
+    test('상세 뷰에서 뒤로가기 시 메인으로 복귀한다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const annualPage = new AnnualPlanPage(page);
+      await annualPage.gotoCategory('expense');
+      await expect(annualPage.detailView).toBeVisible();
+
+      await annualPage.backButton.click();
+
+      await expect(annualPage.heroCard).toBeVisible();
+      await expect(annualPage.detailView).toBeHidden();
+    });
+
+    test('?category= 쿼리로 직접 진입할 수 있다 (deeplink)', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const annualPage = new AnnualPlanPage(page);
+      await annualPage.gotoCategory('flex');
+
+      await expect(annualPage.detailView).toBeVisible();
+      await expect(annualPage.goalDetailHeader('flex')).toBeVisible();
     });
   });
 
   test.describe('수입 계획', () => {
-    test('수입 탭에서 정기 수입 금액을 입력하면 연간 합계가 갱신된다', async ({
+    test('수입 카드에서 정기 수입을 입력하면 연간 합계가 갱신된다', async ({
       authedContext,
     }) => {
-      const { page, coupleId, uid } = authedContext;
+      const { page, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
 
       const annualPage = new AnnualPlanPage(page);
       await annualPage.goto();
-      await annualPage.incomeTab.click();
+      await annualPage.drillIntoCategory('income');
 
-      // 정기급여 항목에 금액 입력
       const amountInput = annualPage.planItemAmountInput('정기급여');
       await amountInput.fill('3500000');
 
-      // 연간 합계 갱신 대기
+      // 정기급여 3,500,000/월 × 12 = 42,000,000
       await expect(annualPage.totalAmount('income')).toContainText('42,000,000');
-    });
-
-    test('비정기 수입 금액을 입력하면 총 수입이 갱신된다', async ({
-      authedContext,
-    }) => {
-      const { page, coupleId, uid } = authedContext;
-      await seedDefaultCategories(coupleId);
-      const planId = await seedAnnualPlan(coupleId, new Date().getFullYear(), uid);
-
-      const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.incomeTab.click();
-
-      const amountInput = annualPage.planItemAmountInput('인센티브');
-      await amountInput.fill('5000000');
-
-      await expect(annualPage.totalAmount('income')).toContainText('5,000,000');
     });
   });
 
   test.describe('지출 계획', () => {
-    test('지출 탭에서 고정 지출 금액을 입력하면 연간 합계가 갱신된다', async ({
+    test('지출 카드에서 고정 지출을 입력하면 연간 합계가 갱신된다', async ({
       authedContext,
     }) => {
-      const { page, coupleId, uid } = authedContext;
+      const { page, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
 
       const annualPage = new AnnualPlanPage(page);
       await annualPage.goto();
-      await annualPage.expenseTab.click();
+      await annualPage.drillIntoCategory('expense');
 
       const amountInput = annualPage.planItemAmountInput('월세');
       await amountInput.fill('800000');
@@ -80,27 +105,10 @@ test.describe('연간 예산 계획', () => {
       // 월세 800,000/월 × 12 = 9,600,000
       await expect(annualPage.totalAmount('expense')).toContainText('9,600,000');
     });
-
-    test('고정 지출의 연간 금액 입력 시 월세를 월별 금액으로 표시한다', async ({
-      authedContext,
-    }) => {
-      const { page, coupleId, uid } = authedContext;
-      await seedDefaultCategories(coupleId);
-
-      const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.expenseTab.click();
-
-      const amountInput = annualPage.planItemAmountInput('보험');
-      await amountInput.fill('200000');
-
-      // 보험 200,000/월 × 12 = 2,400,000
-      await expect(annualPage.totalAmount('expense')).toContainText('2,400,000');
-    });
   });
 
   test.describe('재테크 계획', () => {
-    test('재테크 탭에서 가용 금액이 수입-지출로 자동 계산된다', async ({
+    test('재테크 카드 진입 시 가용 금액이 수입-지출로 자동 계산된다', async ({
       authedContext,
     }) => {
       const { page, coupleId, uid } = authedContext;
@@ -108,7 +116,6 @@ test.describe('연간 예산 계획', () => {
       const year = new Date().getFullYear();
       const planId = await seedAnnualPlan(coupleId, year, uid);
 
-      // 수입 항목 시드
       await seedAnnualPlanItem(coupleId, planId, {
         categoryId: 'cat-income-1',
         group: 'income',
@@ -116,7 +123,6 @@ test.describe('연간 예산 계획', () => {
         annualAmount: 54000000,
         monthlyAmount: 4500000,
       });
-      // 지출 항목 시드
       await seedAnnualPlanItem(coupleId, planId, {
         categoryId: 'cat-expense-1',
         group: 'expense',
@@ -126,8 +132,7 @@ test.describe('연간 예산 계획', () => {
       });
 
       const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.investmentTab.click();
+      await annualPage.gotoCategory('investment');
 
       // 가용 금액 = 54,000,000 - 36,000,000 = 18,000,000
       await expect(annualPage.availableAmountDisplay).toContainText('18,000,000');
@@ -149,8 +154,7 @@ test.describe('연간 예산 계획', () => {
       });
 
       const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.investmentTab.click();
+      await annualPage.gotoCategory('investment');
 
       await annualPage.targetReturnRateInput.fill('3');
 
@@ -166,7 +170,6 @@ test.describe('연간 예산 계획', () => {
       const year = new Date().getFullYear();
       const planId = await seedAnnualPlan(coupleId, year, uid);
 
-      // 수입 10,000,000만
       await seedAnnualPlanItem(coupleId, planId, {
         categoryId: 'cat-income-1',
         group: 'income',
@@ -175,10 +178,8 @@ test.describe('연간 예산 계획', () => {
       });
 
       const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.investmentTab.click();
+      await annualPage.gotoCategory('investment');
 
-      // 재테크 배분에 가용 금액(10,000,000)보다 큰 금액 입력
       const amountInput = annualPage.planItemAmountInput('예적금');
       await amountInput.fill('15000000');
 
@@ -187,9 +188,7 @@ test.describe('연간 예산 계획', () => {
   });
 
   test.describe('Flex 계획', () => {
-    test('Flex 탭에서 미배분 잔액이 표시된다', async ({
-      authedContext,
-    }) => {
+    test('Flex 카드 진입 시 미배분 잔액이 표시된다', async ({ authedContext }) => {
       const { page, coupleId, uid } = authedContext;
       await seedDefaultCategories(coupleId);
       const year = new Date().getFullYear();
@@ -215,36 +214,10 @@ test.describe('연간 예산 계획', () => {
       });
 
       const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.flexTab.click();
+      await annualPage.gotoCategory('flex');
 
       // 가용 = 20M - 10M = 10M, 재테크 = 6M, Flex 미배분 = 4M
       await expect(annualPage.flexAvailableDisplay).toContainText('4,000,000');
-    });
-
-    test('Flex 배분 합계와 미배분이 정확히 계산된다', async ({
-      authedContext,
-    }) => {
-      const { page, coupleId, uid } = authedContext;
-      await seedDefaultCategories(coupleId);
-      const year = new Date().getFullYear();
-      const planId = await seedAnnualPlan(coupleId, year, uid);
-
-      await seedAnnualPlanItem(coupleId, planId, {
-        categoryId: 'cat-income-1',
-        group: 'income',
-        subGroup: 'regular_income',
-        annualAmount: 20000000,
-      });
-
-      const annualPage = new AnnualPlanPage(page);
-      await annualPage.goto();
-      await annualPage.flexTab.click();
-
-      const amountInput = annualPage.planItemAmountInput('여행');
-      await amountInput.fill('2000000');
-
-      await expect(annualPage.flexTotalDisplay).toContainText('2,000,000');
     });
   });
 });

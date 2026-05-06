@@ -41,6 +41,26 @@
   --color-sage-600: hsl(155 45% 27%);
   --color-sage-700: hsl(155 46% 18%);
 
+  /* Amber — 재테크 / 자산 / 차분한 황금 */
+  --color-amber-50: hsl(48 100% 96%);
+  --color-amber-100: hsl(44 96% 88%);
+  --color-amber-200: hsl(42 95% 78%);
+  --color-amber-300: hsl(40 94% 67%);
+  --color-amber-400: hsl(38 92% 55%);
+  --color-amber-500: hsl(32 95% 44%);
+  --color-amber-600: hsl(28 95% 36%);
+  --color-amber-700: hsl(24 92% 28%);
+
+  /* Violet — Flex / 여유 / 활력 */
+  --color-violet-50: hsl(270 100% 97%);
+  --color-violet-100: hsl(270 86% 92%);
+  --color-violet-200: hsl(270 76% 84%);
+  --color-violet-300: hsl(270 70% 75%);
+  --color-violet-400: hsl(270 67% 65%);
+  --color-violet-500: hsl(270 68% 54%);
+  --color-violet-600: hsl(270 70% 44%);
+  --color-violet-700: hsl(270 72% 34%);
+
   /* 엘리베이션 — 그림자 4단계 */
   --shadow-sm: 0 1px 2px 0 hsl(20 6% 10% / 0.05);
   --shadow-md: 0 2px 8px 0 hsl(20 6% 10% / 0.08);
