@@ -1,32 +1,53 @@
 import { type Page, type Locator } from '@playwright/test';
 
+type CategoryKey = 'income' | 'expense' | 'investment' | 'flex';
+
 export class AnnualPlanPage {
   readonly page: Page;
-  readonly summaryCard: Locator;
-  readonly incomeTab: Locator;
-  readonly expenseTab: Locator;
-  readonly investmentTab: Locator;
-  readonly flexTab: Locator;
+  readonly heroCard: Locator;
+  readonly heroNetAmount: Locator;
+  readonly detailView: Locator;
+  readonly backButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.summaryCard = page.getByTestId('annual-summary-card');
-    this.incomeTab = page.getByRole('tab', { name: '수입' });
-    this.expenseTab = page.getByRole('tab', { name: '지출' });
-    this.investmentTab = page.getByRole('tab', { name: '재테크' });
-    this.flexTab = page.getByRole('tab', { name: 'Flex' });
+    this.heroCard = page.getByTestId('goals-hero-card');
+    this.heroNetAmount = page.getByTestId('hero-net-amount');
+    this.detailView = page.getByTestId('goal-detail-view');
+    this.backButton = page.getByTestId('goal-detail-back');
   }
 
   async goto() {
     await this.page.goto('/cashbook/plan/annual');
   }
 
-  summaryRow(label: string) {
-    return this.summaryCard.locator(`[data-testid="summary-row-${label}"]`);
+  async gotoCategory(key: CategoryKey) {
+    await this.page.goto(`/cashbook/plan/annual?category=${key}`);
   }
 
-  summaryAmount(label: string) {
-    return this.summaryRow(label).locator('[data-testid="summary-amount"]');
+  goalCard(key: CategoryKey) {
+    return this.page.getByTestId(`goal-card-${key}`);
+  }
+
+  goalCardAmount(key: CategoryKey) {
+    return this.page.getByTestId(`goal-card-${key}-amount`);
+  }
+
+  goalCardCta(key: CategoryKey) {
+    return this.page.getByTestId(`goal-card-${key}-cta`);
+  }
+
+  goalDetailHeader(key: CategoryKey) {
+    return this.page.getByTestId(`goal-detail-header-${key}`);
+  }
+
+  goalDetailHeaderAmount(key: CategoryKey) {
+    return this.page.getByTestId(`goal-detail-header-${key}-amount`);
+  }
+
+  /** 메인에서 카테고리 카드를 눌러 상세 뷰로 진입. */
+  async drillIntoCategory(key: CategoryKey) {
+    await this.goalCardCta(key).click();
   }
 
   planItemRow(categoryName: string) {
@@ -73,10 +94,6 @@ export class AnnualPlanPage {
     return this.page.getByTestId('flex-available');
   }
 
-  get flexAdditionalInput() {
-    return this.page.getByLabel('추가 배정');
-  }
-
   get flexTotalDisplay() {
     return this.page.getByTestId('flex-total');
   }
@@ -87,13 +104,5 @@ export class AnnualPlanPage {
 
   get applySuggestionButton() {
     return this.page.getByRole('button', { name: '제안 적용' });
-  }
-
-  get rateIncreaseButton() {
-    return this.page.getByTestId('rate-increase');
-  }
-
-  get rateDecreaseButton() {
-    return this.page.getByTestId('rate-decrease');
   }
 }

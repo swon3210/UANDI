@@ -37,6 +37,7 @@ export function limitToLast() { return {}; }
 export function collection() { return {}; }
 export function doc() { return {}; }
 export function query() { return {}; }
+export function documentId() { return '__id__'; }
 
 // CRUD operations
 export function getDocs() {

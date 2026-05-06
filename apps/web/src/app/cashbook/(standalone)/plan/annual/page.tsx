@@ -1,20 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { ChevronLeft } from 'lucide-react';
-import {
-  Header,
-  Button,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  FullScreenSpinner,
-} from '@uandi/ui';
+import { Header, Button, FullScreenSpinner } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import {
@@ -28,17 +20,35 @@ import {
   useAnnualSummary,
   filterItemsByGroup,
 } from '@/hooks/useAnnualPlan';
-import { AnnualSummaryCard } from '@/components/cashbook/AnnualSummaryCard';
+import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
+import { GoalDetailHeader } from '@/components/cashbook/GoalDetailHeader';
 import { IncomePlanTab } from '@/components/cashbook/IncomePlanTab';
 import { ExpensePlanTab } from '@/components/cashbook/ExpensePlanTab';
 import { InvestmentPlanTab } from '@/components/cashbook/InvestmentPlanTab';
 import { FlexPlanTab } from '@/components/cashbook/FlexPlanTab';
 import { BottomNav } from '@/components/BottomNav';
+import {
+  GOAL_CATEGORIES,
+  GOAL_CATEGORY_BY_KEY,
+  type GoalCategoryKey,
+} from '@/constants/goal-categories';
 import { upsertPlanItem } from '@/services/annual-plan';
 import { Timestamp } from 'firebase/firestore';
 
+const VALID_KEYS: GoalCategoryKey[] = GOAL_CATEGORIES.map((c) => c.key);
+
+function isGoalCategoryKey(value: string | null): value is GoalCategoryKey {
+  return value !== null && (VALID_KEYS as string[]).includes(value);
+}
+
 export default function AnnualPlanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  const activeCategory: GoalCategoryKey | null = isGoalCategoryKey(categoryParam)
+    ? categoryParam
+    : null;
+
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
@@ -60,7 +70,6 @@ export default function AnnualPlanPage() {
 
   const isLoading = planPending || catPending;
 
-  // 계획이 없으면 자동 생성
   const planCreatedRef = useRef(false);
   useEffect(() => {
     if (!planPending && !plan && coupleId && !planCreatedRef.current) {
@@ -69,7 +78,6 @@ export default function AnnualPlanPage() {
     }
   }, [planPending, plan, coupleId, year, uid, createPlanMutation]);
 
-  // 카테고리 기반으로 아이템 초기화 (plan과 categories가 준비되면)
   const itemsInitRef = useRef(false);
   useEffect(() => {
     if (!plan || !categories || !items || itemsPending) return;
@@ -83,7 +91,6 @@ export default function AnnualPlanPage() {
     if (missingCategories.length === 0) return;
     itemsInitRef.current = true;
 
-    // 서비스를 직접 호출하여 일괄 생성 후 query를 한 번만 무효화
     Promise.all(
       missingCategories.map((cat) => {
         const itemId = `item-${plan.id}-${cat.id}`;
@@ -106,11 +113,6 @@ export default function AnnualPlanPage() {
   }, [plan, categories, items, itemsPending, coupleId, qc]);
 
   const summary = useAnnualSummary(items);
-
-  const incomeItems = filterItemsByGroup(items, 'income');
-  const expenseItems = filterItemsByGroup(items, 'expense');
-  const investmentItems = filterItemsByGroup(items, 'investment');
-  const flexItems = filterItemsByGroup(items, 'flex');
 
   const handleItemAmountChange = useCallback(
     (itemId: string, annualAmount: number, monthlyAmount: number | null) => {
@@ -160,89 +162,107 @@ export default function AnnualPlanPage() {
   const flexAvailable =
     summary.availableForInvestment - summary.investmentAllocated;
 
+  const goToCategory = useCallback(
+    (key: GoalCategoryKey) => {
+      router.push(`/cashbook/plan/annual?category=${key}`);
+    },
+    [router]
+  );
+
+  const goToMain = useCallback(() => {
+    router.push('/cashbook/plan/annual');
+  }, [router]);
+
   if (isLoading) return <FullScreenSpinner />;
 
+  const inDetail = activeCategory !== null;
+  const detailTheme = activeCategory ? GOAL_CATEGORY_BY_KEY[activeCategory] : null;
+  const detailItems = activeCategory
+    ? filterItemsByGroup(items, GOAL_CATEGORY_BY_KEY[activeCategory].group)
+    : [];
+  const detailItemsTotal = detailItems.reduce((s, it) => s + it.annualAmount, 0);
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header
-        data-testid="annual-plan-header"
-        title={`${year}년 예산 계획`}
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => router.push('/cashbook/history')}
-            aria-label="뒤로"
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
-      />
-
-      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-        <AnnualSummaryCard
-          totalIncome={summary.totalIncome}
-          totalExpense={summary.totalExpense}
-          investmentAllocated={summary.investmentAllocated}
-          flexTotal={summary.flexTotal}
+    <div className="flex min-h-screen flex-col bg-stone-50">
+      {inDetail && detailTheme ? (
+        <Header
+          data-testid="annual-plan-header"
+          title={`${detailTheme.emoji} ${detailTheme.label} 예산`}
+          leftSlot={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-coral-400 hover:text-coral-500"
+              onClick={goToMain}
+              aria-label="목표 메인으로"
+              data-testid="goal-detail-back"
+            >
+              <ChevronLeft size={18} />
+              <span className="text-sm">목표</span>
+            </Button>
+          }
         />
+      ) : (
+        <Header data-testid="annual-plan-header" title={`${year}년 경제 목표`} />
+      )}
 
-        <Tabs defaultValue="income" className="mt-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="income">수입</TabsTrigger>
-            <TabsTrigger value="expense">지출</TabsTrigger>
-            <TabsTrigger value="investment">재테크</TabsTrigger>
-            <TabsTrigger value="flex">Flex</TabsTrigger>
-          </TabsList>
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-20">
+        {!inDetail && items && (
+          <GoalsMainView items={items} onSelectCategory={goToCategory} />
+        )}
 
-          <TabsContent value="income" className="mt-4">
-            <IncomePlanTab
-              items={incomeItems}
-              categories={categories ?? []}
-              previousYearItems={
-                prevYearData
-                  ? filterItemsByGroup(prevYearData.items, 'income')
-                  : undefined
-              }
-              onItemAmountChange={handleItemAmountChange}
-              onApplySuggestion={handleApplySuggestion}
-            />
-          </TabsContent>
+        {inDetail && detailTheme && items && (
+          <div className="space-y-6" data-testid="goal-detail-view">
+            <GoalDetailHeader theme={detailTheme} itemsTotal={detailItemsTotal} />
 
-          <TabsContent value="expense" className="mt-4">
-            <ExpensePlanTab
-              items={expenseItems}
-              categories={categories ?? []}
-              currentUserUid={uid}
-              onItemAmountChange={handleItemAmountChange}
-              onTargetMonthsChange={handleTargetMonthsChange}
-            />
-          </TabsContent>
+            {detailTheme.key === 'income' && (
+              <IncomePlanTab
+                items={detailItems}
+                categories={categories ?? []}
+                previousYearItems={
+                  prevYearData
+                    ? filterItemsByGroup(prevYearData.items, 'income')
+                    : undefined
+                }
+                onItemAmountChange={handleItemAmountChange}
+                onApplySuggestion={handleApplySuggestion}
+              />
+            )}
 
-          <TabsContent value="investment" className="mt-4">
-            <InvestmentPlanTab
-              key={investmentPlan?.id ?? 'init'}
-              items={investmentItems}
-              categories={categories ?? []}
-              totalIncome={summary.totalIncome}
-              totalExpense={summary.totalExpense}
-              targetReturnRate={investmentPlan?.targetReturnRate ?? 0}
-              onTargetReturnRateChange={handleTargetReturnRateChange}
-              onItemAmountChange={handleItemAmountChange}
-            />
-          </TabsContent>
+            {detailTheme.key === 'expense' && (
+              <ExpensePlanTab
+                items={detailItems}
+                categories={categories ?? []}
+                currentUserUid={uid}
+                onItemAmountChange={handleItemAmountChange}
+                onTargetMonthsChange={handleTargetMonthsChange}
+              />
+            )}
 
-          <TabsContent value="flex" className="mt-4">
-            <FlexPlanTab
-              items={flexItems}
-              categories={categories ?? []}
-              flexAvailable={flexAvailable}
-              currentUserUid={uid}
-              onItemAmountChange={handleItemAmountChange}
-            />
-          </TabsContent>
-        </Tabs>
+            {detailTheme.key === 'investment' && (
+              <InvestmentPlanTab
+                key={investmentPlan?.id ?? 'init'}
+                items={detailItems}
+                categories={categories ?? []}
+                totalIncome={summary.totalIncome}
+                totalExpense={summary.totalExpense}
+                targetReturnRate={investmentPlan?.targetReturnRate ?? 0}
+                onTargetReturnRateChange={handleTargetReturnRateChange}
+                onItemAmountChange={handleItemAmountChange}
+              />
+            )}
+
+            {detailTheme.key === 'flex' && (
+              <FlexPlanTab
+                items={detailItems}
+                categories={categories ?? []}
+                flexAvailable={flexAvailable}
+                currentUserUid={uid}
+                onItemAmountChange={handleItemAmountChange}
+              />
+            )}
+          </div>
+        )}
       </main>
 
       <BottomNav activeTab="cashbook" />
