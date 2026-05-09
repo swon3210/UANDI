@@ -5,7 +5,7 @@ import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
 const entrySchema = z.object({
-  type: z.enum(['income', 'expense', 'investment', 'flex']),
+  type: z.enum(['income', 'expense', 'flex']),
   amount: z.number(),
   category: z.string(),
   date: z.string(),

@@ -48,7 +48,7 @@ export const ExpenseTab: Story = {
 export const Empty: Story = {
   args: {
     categories: [],
-    group: 'investment',
+    group: 'flex',
     onEdit: () => {},
     onDelete: () => {},
   },

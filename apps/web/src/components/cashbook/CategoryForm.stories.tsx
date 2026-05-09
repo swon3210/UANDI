@@ -55,14 +55,6 @@ export const EditCategory: Story = {
   },
 };
 
-export const InvestmentGroup: Story = {
-  args: {
-    group: 'investment',
-    onSubmit: (data) => console.log('submit', data),
-    onClose: () => {},
-  },
-};
-
 export const FlexGroup: Story = {
   args: {
     group: 'flex',

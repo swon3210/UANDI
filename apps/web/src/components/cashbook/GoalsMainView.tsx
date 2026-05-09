@@ -35,7 +35,6 @@ export function GoalsMainView({
       <GoalsHeroCard
         totalIncome={totals.income.goal}
         totalExpense={totals.expense.goal}
-        investmentAllocated={totals.investment.goal}
         flexTotal={totals.flex.goal}
       />
 

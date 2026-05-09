@@ -1,6 +1,6 @@
 import type { CategoryGroup } from '@/types';
 
-export type GoalCategoryKey = 'income' | 'expense' | 'investment' | 'flex';
+export type GoalCategoryKey = 'income' | 'expense' | 'flex';
 
 export type GoalCategoryTheme = {
   key: GoalCategoryKey;
@@ -51,20 +51,6 @@ export const GOAL_CATEGORIES: GoalCategoryTheme[] = [
     softBorderClass: 'border-coral-100',
     heroGradientFrom: 'from-coral-400',
     heroGradientTo: 'to-coral-500',
-  },
-  {
-    key: 'investment',
-    group: 'investment',
-    label: '재테크',
-    goalLabel: '연간 투자 목표',
-    emoji: '📈',
-    accentClass: 'text-amber-500',
-    accentBgClass: 'bg-amber-400',
-    accentBorderClass: 'border-amber-400',
-    softBgClass: 'bg-amber-50',
-    softBorderClass: 'border-amber-100',
-    heroGradientFrom: 'from-amber-400',
-    heroGradientTo: 'to-amber-500',
   },
   {
     key: 'flex',

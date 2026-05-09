@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type CashbookEntryType = 'income' | 'expense' | 'investment' | 'flex';
+export type CashbookEntryType = 'income' | 'expense' | 'flex';
 
 export type CashbookEntry = {
   id: string;
@@ -14,7 +14,7 @@ export type CashbookEntry = {
   createdAt: Timestamp;
 };
 
-export type CategoryGroup = 'income' | 'expense' | 'investment' | 'flex';
+export type CategoryGroup = 'income' | 'expense' | 'flex';
 
 export type CategorySubGroup =
   // 수입
@@ -24,9 +24,6 @@ export type CategorySubGroup =
   | 'fixed_expense'
   | 'variable_common'
   | 'variable_personal'
-  // 재테크
-  | 'cash_holding'
-  | 'investment'
   // Flex
   | 'joint_flex'
   | 'personal_flex';

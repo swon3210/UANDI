@@ -26,7 +26,7 @@ function getBudgetThreshold(budget: number, actual: number): Threshold {
 
 type Entry = {
   id?: string;
-  type: 'income' | 'expense' | 'investment' | 'flex';
+  type: 'income' | 'expense' | 'flex';
   amount: number;
   category: string;
 };
@@ -34,20 +34,12 @@ type Entry = {
 type Category = { id: string; name: string };
 type AnnualPlanItem = {
   categoryId: string;
-  group: 'income' | 'expense' | 'investment' | 'flex';
-  annualAmount: number;
-  monthlyAmount: number | null;
-  targetMonths: number[] | null;
+  group: 'income' | 'expense' | 'flex';
+  monthlyAmounts: number[];
 };
 
 function monthlyBudgetForItem(item: AnnualPlanItem, month: number): number {
-  if (item.monthlyAmount != null) return item.monthlyAmount;
-  if (item.targetMonths && item.targetMonths.length > 0) {
-    return item.targetMonths.includes(month)
-      ? Math.round(item.annualAmount / item.targetMonths.length)
-      : 0;
-  }
-  return Math.round(item.annualAmount / 12);
+  return item.monthlyAmounts?.[month - 1] ?? 0;
 }
 
 function computeThresholds(

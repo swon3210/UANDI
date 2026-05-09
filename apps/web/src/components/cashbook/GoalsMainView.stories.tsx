@@ -14,121 +14,75 @@ type Story = StoryObj<typeof GoalsMainView>;
 
 const ts = Timestamp.now();
 
-const sampleItems: AnnualPlanItem[] = [
-  {
-    id: '1',
+function makeItem(
+  partial: Partial<AnnualPlanItem> & {
+    id: string;
+    group: AnnualPlanItem['group'];
+    subGroup: AnnualPlanItem['subGroup'];
+    monthlyAmounts: number[];
+  }
+): AnnualPlanItem {
+  const annualAmount = partial.monthlyAmounts.reduce((s, v) => s + v, 0);
+  return {
     planId: 'p',
     coupleId: 'c',
-    categoryId: 'salary',
+    categoryId: partial.id,
+    inputMode: 'regular',
+    baseMonthlyAmount: partial.monthlyAmounts[0] ?? null,
+    annualAmount,
+    ownerUid: null,
+    updatedAt: ts,
+    ...partial,
+  };
+}
+
+const sampleItems: AnnualPlanItem[] = [
+  makeItem({
+    id: '1',
     group: 'income',
     subGroup: 'regular_income',
-    annualAmount: 60000000,
-    monthlyAmount: 5000000,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
+    monthlyAmounts: Array(12).fill(5_000_000),
+  }),
+  makeItem({
     id: '2',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'bonus',
     group: 'income',
     subGroup: 'irregular_income',
-    annualAmount: 60000000,
-    monthlyAmount: null,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
+    monthlyAmounts: [0, 0, 0, 0, 0, 5_000_000, 0, 0, 0, 0, 0, 5_000_000],
+    inputMode: 'irregular',
+  }),
+  makeItem({
     id: '3',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'rent',
     group: 'expense',
     subGroup: 'fixed_expense',
-    annualAmount: 9600000,
-    monthlyAmount: 800000,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
+    monthlyAmounts: Array(12).fill(800_000),
+  }),
+  makeItem({
     id: '4',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'food',
     group: 'expense',
     subGroup: 'variable_common',
-    annualAmount: 14400000,
-    monthlyAmount: 1200000,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
+    monthlyAmounts: Array(12).fill(1_200_000),
+  }),
+  makeItem({
     id: '5',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'savings',
-    group: 'investment',
-    subGroup: 'cash_holding',
-    annualAmount: 12000000,
-    monthlyAmount: null,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
-    id: '6',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'stocks',
-    group: 'investment',
-    subGroup: 'investment',
-    annualAmount: 18000000,
-    monthlyAmount: null,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
-    id: '7',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'travel',
     group: 'flex',
     subGroup: 'joint_flex',
-    annualAmount: 4000000,
-    monthlyAmount: null,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
-  {
-    id: '8',
-    planId: 'p',
-    coupleId: 'c',
-    categoryId: 'leisure',
+    monthlyAmounts: Array(12).fill(330_000),
+  }),
+  makeItem({
+    id: '6',
     group: 'flex',
     subGroup: 'personal_flex',
-    annualAmount: 2000000,
-    monthlyAmount: null,
-    targetMonths: null,
-    ownerUid: null,
-    updatedAt: ts,
-  },
+    monthlyAmounts: Array(12).fill(170_000),
+  }),
 ];
 
 export const Default: Story = {
   args: {
     items: sampleItems,
     actuals: {
-      income: 50000000,
-      expense: 12000000,
-      investment: 0,
-      flex: 1500000,
+      income: 50_000_000,
+      expense: 12_000_000,
+      flex: 1_500_000,
     },
     onSelectCategory: () => {},
   },

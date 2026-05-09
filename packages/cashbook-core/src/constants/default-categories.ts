@@ -15,8 +15,6 @@ export const SUB_GROUP_LABELS: Record<CategorySubGroup, string> = {
   fixed_expense: '고정 지출',
   variable_common: '변동 지출 (공통)',
   variable_personal: '변동 지출 (각자)',
-  cash_holding: '현금 보유',
-  investment: '투자',
   joint_flex: '공동 Flex',
   personal_flex: '각자 Flex',
 };
@@ -24,14 +22,12 @@ export const SUB_GROUP_LABELS: Record<CategorySubGroup, string> = {
 export const GROUP_LABELS: Record<CategoryGroup, string> = {
   income: '수입',
   expense: '지출',
-  investment: '재테크',
   flex: 'Flex',
 };
 
 export const SUB_GROUPS_BY_GROUP: Record<CategoryGroup, CategorySubGroup[]> = {
   income: ['regular_income', 'irregular_income'],
   expense: ['fixed_expense', 'variable_common', 'variable_personal'],
-  investment: ['cash_holding', 'investment'],
   flex: ['joint_flex', 'personal_flex'],
 };
 
@@ -64,14 +60,6 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   { group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', color: '#D8635A', sortOrder: 4 },
   { group: 'expense', subGroup: 'variable_personal', name: '가족', icon: 'users_three', color: '#D8635A', sortOrder: 5 },
   { group: 'expense', subGroup: 'variable_personal', name: '자기계발', icon: 'book_open', color: '#D8635A', sortOrder: 6 },
-
-  // ── 재테크: 현금 보유 ──
-  { group: 'investment', subGroup: 'cash_holding', name: '예적금', icon: 'piggy_bank', color: '#5B8DEF', sortOrder: 0 },
-  { group: 'investment', subGroup: 'cash_holding', name: '입출금', icon: 'credit_card', color: '#5B8DEF', sortOrder: 1 },
-  // ── 재테크: 투자 ──
-  { group: 'investment', subGroup: 'investment', name: '국내주식', icon: 'chart_line_up', color: '#5B8DEF', sortOrder: 0 },
-  { group: 'investment', subGroup: 'investment', name: '해외주식', icon: 'globe', color: '#5B8DEF', sortOrder: 1 },
-  { group: 'investment', subGroup: 'investment', name: '채권', icon: 'file_text', color: '#5B8DEF', sortOrder: 2 },
 
   // ── Flex: 공동 ──
   { group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', color: '#F0A05E', sortOrder: 0 },

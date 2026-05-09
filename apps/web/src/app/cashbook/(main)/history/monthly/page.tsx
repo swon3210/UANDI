@@ -16,14 +16,10 @@ import { userAtom } from '@/stores/auth.store';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget, useMonthlyOverview, useCategoryBudgetSummaries, useWeeklyExpenses } from '@/hooks/useMonthlyBudget';
-import { useCashBalances, useUpsertCashBalance } from '@/hooks/useCashBalance';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { MonthlyOverview } from '@/components/cashbook/MonthlyOverview';
 import { MonthlyExpenseTab } from '@/components/cashbook/MonthlyExpenseTab';
 import { MonthlyIncomeTab } from '@/components/cashbook/MonthlyIncomeTab';
-import { MonthlyInvestmentTab } from '@/components/cashbook/MonthlyInvestmentTab';
-import { InvestmentEntryForm } from '@/components/cashbook/InvestmentEntryForm';
-import { CashBalanceForm } from '@/components/cashbook/CashBalanceForm';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 
 export default function CashbookMonthlyPage() {
@@ -40,7 +36,6 @@ export default function CashbookMonthlyPage() {
   const { data: entries, isPending: entriesPending } = useCashbookEntries(coupleId, year, month0);
   const { data: categories, isPending: categoriesPending } = useCashbookCategories(coupleId);
   const { data: budget, isPending: budgetPending } = useMonthlyBudget(coupleId, year, month1);
-  const { data: cashBalances } = useCashBalances(coupleId, year, month1);
 
   const isLoading = entriesPending || categoriesPending || budgetPending;
 
@@ -52,7 +47,6 @@ export default function CashbookMonthlyPage() {
 
   // 뮤테이션
   const addMutation = useAddEntry(coupleId);
-  const upsertBalance = useUpsertCashBalance(coupleId);
 
   // 오버레이 핸들러
   const handleAddIrregularIncome = () => {
@@ -63,50 +57,6 @@ export default function CashbookMonthlyPage() {
           coupleId={coupleId}
           createdBy={uid}
           onSubmit={(data) => addMutation.mutate(data)}
-          onClose={() => {
-            close();
-            setTimeout(unmount, 300);
-          }}
-        />
-      </Sheet>
-    ));
-  };
-
-  const handleAddInvestment = () => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <InvestmentEntryForm
-          categories={categories ?? []}
-          createdBy={uid}
-          onSubmit={(data) => addMutation.mutate(data)}
-          onClose={() => {
-            close();
-            setTimeout(unmount, 300);
-          }}
-        />
-      </Sheet>
-    ));
-  };
-
-  const handleUpdateBalance = () => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <CashBalanceForm
-          categories={categories ?? []}
-          currentBalances={cashBalances ?? []}
-          year={year}
-          month={month1}
-          onSubmit={(balances) => {
-            for (const b of balances) {
-              upsertBalance.mutate({
-                coupleId: coupleId ?? '',
-                categoryId: b.categoryId,
-                year,
-                month: month1,
-                balance: b.balance,
-              });
-            }
-          }}
           onClose={() => {
             close();
             setTimeout(unmount, 300);
@@ -138,7 +88,6 @@ export default function CashbookMonthlyPage() {
           <TabsList className="w-full">
             <TabsTrigger value="expense" className="flex-1">지출</TabsTrigger>
             <TabsTrigger value="income" className="flex-1">수입</TabsTrigger>
-            <TabsTrigger value="investment" className="flex-1">재테크</TabsTrigger>
           </TabsList>
 
           <TabsContent value="expense" className="mt-4">
@@ -154,17 +103,6 @@ export default function CashbookMonthlyPage() {
               entries={entries ?? []}
               categories={simplifiedCategories}
               onAddIrregularIncome={handleAddIrregularIncome}
-            />
-          </TabsContent>
-
-          <TabsContent value="investment" className="mt-4">
-            <MonthlyInvestmentTab
-              budgetItems={budgetItems ?? []}
-              entries={entries ?? []}
-              cashBalances={cashBalances ?? []}
-              categories={simplifiedCategories}
-              onAddInvestment={handleAddInvestment}
-              onUpdateBalance={handleUpdateBalance}
             />
           </TabsContent>
         </Tabs>

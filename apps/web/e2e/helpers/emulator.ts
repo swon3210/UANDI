@@ -246,21 +246,6 @@ export async function seedDefaultCategories(coupleId: string): Promise<void> {
       sortOrder: 0,
     },
     { group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', sortOrder: 0 },
-    // 재테크
-    {
-      group: 'investment',
-      subGroup: 'cash_holding',
-      name: '예적금',
-      icon: 'piggy_bank',
-      sortOrder: 0,
-    },
-    {
-      group: 'investment',
-      subGroup: 'investment',
-      name: '국내주식',
-      icon: 'chart_line_up',
-      sortOrder: 0,
-    },
     // Flex
     { group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', sortOrder: 0 },
     { group: 'flex', subGroup: 'personal_flex', name: '소비', icon: 'shopping_bag', sortOrder: 0 },
@@ -302,23 +287,16 @@ export async function seedAnnualPlanItem(
   planId: string,
   options: {
     categoryId: string;
-    group: string;
+    group: 'income' | 'expense' | 'flex';
     subGroup: string;
-    annualAmount: number;
-    monthlyAmount?: number | null;
-    targetMonths?: number[] | null;
+    monthlyAmounts: number[];
+    inputMode?: 'regular' | 'irregular';
+    baseMonthlyAmount?: number | null;
     ownerUid?: string | null;
   }
 ): Promise<string> {
   const itemId = `item-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-
-  const targetMonthsField = options.targetMonths
-    ? {
-        arrayValue: {
-          values: options.targetMonths.map((m) => ({ integerValue: String(m) })),
-        },
-      }
-    : { nullValue: null };
+  const annualAmount = options.monthlyAmounts.reduce((s, v) => s + v, 0);
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/items/${itemId}`,
@@ -333,12 +311,17 @@ export async function seedAnnualPlanItem(
           categoryId: { stringValue: options.categoryId },
           group: { stringValue: options.group },
           subGroup: { stringValue: options.subGroup },
-          annualAmount: { integerValue: String(options.annualAmount) },
-          monthlyAmount:
-            options.monthlyAmount != null
-              ? { integerValue: String(options.monthlyAmount) }
+          monthlyAmounts: {
+            arrayValue: {
+              values: options.monthlyAmounts.map((v) => ({ integerValue: String(v) })),
+            },
+          },
+          inputMode: { stringValue: options.inputMode ?? 'irregular' },
+          baseMonthlyAmount:
+            options.baseMonthlyAmount != null
+              ? { integerValue: String(options.baseMonthlyAmount) }
               : { nullValue: null },
-          targetMonths: targetMonthsField,
+          annualAmount: { integerValue: String(annualAmount) },
           ownerUid: options.ownerUid ? { stringValue: options.ownerUid } : { nullValue: null },
           updatedAt: { timestampValue: new Date().toISOString() },
         },
@@ -349,76 +332,15 @@ export async function seedAnnualPlanItem(
   return itemId;
 }
 
-export async function seedInvestmentPlan(
-  coupleId: string,
-  planId: string,
-  options: {
-    targetReturnRate: number;
-    totalAvailable: number;
-    targetAmount: number;
-  }
-): Promise<void> {
-  await fetch(
-    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/investmentPlan/main`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          id: { stringValue: 'main' },
-          planId: { stringValue: planId },
-          coupleId: { stringValue: coupleId },
-          targetReturnRate: { integerValue: String(options.targetReturnRate) },
-          totalAvailable: { integerValue: String(options.totalAvailable) },
-          targetAmount: { integerValue: String(options.targetAmount) },
-          updatedAt: { timestampValue: new Date().toISOString() },
-        },
-      }),
-    }
-  );
-}
-
-export async function seedCashBalance(
-  coupleId: string,
-  options: {
-    categoryId: string;
-    year: number;
-    month: number; // 1~12
-    balance: number;
-  }
-): Promise<string> {
-  const balanceId = `${options.categoryId}-${options.year}-${options.month}`;
-  await fetch(
-    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashBalances/${balanceId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          id: { stringValue: balanceId },
-          coupleId: { stringValue: coupleId },
-          categoryId: { stringValue: options.categoryId },
-          year: { integerValue: String(options.year) },
-          month: { integerValue: String(options.month) },
-          balance: { integerValue: String(options.balance) },
-          updatedAt: { timestampValue: new Date().toISOString() },
-        },
-      }),
-    }
-  );
-  return balanceId;
-}
-
 export async function seedCashbookEntry(
   coupleId: string,
   createdBy: string,
   options: {
-    type: 'income' | 'expense' | 'investment' | 'flex';
+    type: 'income' | 'expense' | 'flex';
     amount: number;
     category?: string;
     description?: string;
     date?: string;
-    transactionType?: 'buy' | 'sell';
   }
 ): Promise<string> {
   const entryId = `entry-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -435,10 +357,6 @@ export async function seedCashbookEntry(
     date: { timestampValue: date },
     createdAt: { timestampValue: new Date().toISOString() },
   };
-
-  if (options.transactionType) {
-    fields.transactionType = { stringValue: options.transactionType };
-  }
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,

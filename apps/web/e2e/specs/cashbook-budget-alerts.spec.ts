@@ -37,7 +37,7 @@ async function seedFoodBudget(
     categoryId: foodCategoryId,
     group: 'expense',
     subGroup: 'variable_common',
-    annualAmount,
+    monthlyAmounts: Array(12).fill(Math.round(annualAmount / 12)),
   });
 
   return { planId, foodCategoryId };
@@ -188,7 +188,7 @@ test.describe('가계부 예산 초과 알림', () => {
         categoryId: transportCategoryId,
         group: 'expense',
         subGroup: 'variable_personal',
-        annualAmount: 2_400_000, // 월 20만
+        monthlyAmounts: Array(12).fill(200_000), // 월 20만
       });
 
       // 합계 700,000 = 87.5%, 식비 단독은 70% (warn 미진입)
