@@ -4,11 +4,15 @@ import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { RotateCcw } from 'lucide-react';
+import { Pencil, RotateCcw } from 'lucide-react';
 import { Header, FullScreenSpinner } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useAnnualPlan, useAnnualPlanItems } from '@/hooks/useAnnualPlan';
+import {
+  useAnnualPlan,
+  useAnnualPlanItems,
+  useAnnualPlanRevisions,
+} from '@/hooks/useAnnualPlan';
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
 import { BottomNav } from '@/components/BottomNav';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
@@ -28,8 +32,10 @@ export default function AnnualPlanPage() {
     coupleId,
     plan?.id ?? null
   );
+  const { data: revisions } = useAnnualPlanRevisions(coupleId, plan?.id ?? null);
 
   const isLoading = planPending || catPending || (!!plan && itemsPending);
+  const canBulkEdit = (revisions?.length ?? 0) >= 1;
 
   // plan/items 미존재 또는 monthlyAmounts 누락 시 위저드로 redirect
   useEffect(() => {
@@ -62,6 +68,10 @@ export default function AnnualPlanPage() {
     router.push(WIZARD_INTRO);
   }, [router]);
 
+  const handleBulkEdit = useCallback(() => {
+    router.push('/cashbook/plan/annual/bulk-edit');
+  }, [router]);
+
   if (isLoading) return <FullScreenSpinner />;
 
   return (
@@ -70,15 +80,28 @@ export default function AnnualPlanPage() {
         data-testid="annual-plan-header"
         title={`${year}년 경제 목표`}
         rightSlot={
-          <button
-            type="button"
-            onClick={handleRedo}
-            aria-label="처음부터 다시 세우기"
-            data-testid="annual-plan-redo"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
-          >
-            <RotateCcw size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            {canBulkEdit && (
+              <button
+                type="button"
+                onClick={handleBulkEdit}
+                aria-label="월별 일괄 수정"
+                data-testid="annual-plan-bulk-edit"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleRedo}
+              aria-label="처음부터 다시 세우기"
+              data-testid="annual-plan-redo"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
+            >
+              <RotateCcw size={18} />
+            </button>
+          </div>
         }
       />
 
