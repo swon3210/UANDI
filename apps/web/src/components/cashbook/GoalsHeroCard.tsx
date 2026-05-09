@@ -5,24 +5,22 @@ import { formatCurrencyMan } from '@/utils/currency';
 type GoalsHeroCardProps = {
   totalIncome: number;
   totalExpense: number;
-  investmentAllocated: number;
   flexTotal: number;
 };
 
 export function GoalsHeroCard({
   totalIncome,
   totalExpense,
-  investmentAllocated,
   flexTotal,
 }: GoalsHeroCardProps) {
-  const net = totalIncome - totalExpense - investmentAllocated - flexTotal;
+  const net = totalIncome - totalExpense - flexTotal;
 
   return (
     <div
       className="rounded-2xl bg-gradient-to-br from-coral-400 to-coral-500 p-5 text-white shadow-[0_6px_24px_hsl(4_74%_69%/0.3)]"
       data-testid="goals-hero-card"
     >
-      <div className="text-[13px] opacity-85">예상 연간 순수익</div>
+      <div className="text-[13px] opacity-85">예상 연간 잉여</div>
       <div
         className="mt-1 text-[26px] font-extrabold leading-tight tabular-nums"
         data-testid="hero-net-amount"
@@ -36,7 +34,6 @@ export function GoalsHeroCard({
       <div className="flex justify-between">
         <HeroBreakdown label="수입 목표" value={totalIncome} sign="+" />
         <HeroBreakdown label="지출 한도" value={totalExpense} sign="-" />
-        <HeroBreakdown label="투자 목표" value={investmentAllocated} sign="-" />
         <HeroBreakdown label="Flex 한도" value={flexTotal} sign="-" />
       </div>
     </div>

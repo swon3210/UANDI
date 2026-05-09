@@ -13,7 +13,7 @@ import type {
 import { toast } from 'sonner';
 import { CategorySelector } from './CategorySelector';
 
-const TYPE_TABS: CashbookEntryType[] = ['expense', 'income', 'investment', 'flex'];
+const TYPE_TABS: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
 type EditEntryFormProps = {
   entry: CashbookEntry;

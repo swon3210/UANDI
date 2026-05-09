@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { CategorySelector } from './CategorySelector';
 
-const TYPE_TABS: CashbookEntryType[] = ['expense', 'income', 'investment', 'flex'];
+const TYPE_TABS: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
 type ManualEntryFormProps = {
   uid: string;

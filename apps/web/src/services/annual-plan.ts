@@ -3,15 +3,15 @@ import {
   query,
   where,
   getDocs,
-  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
   doc,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
-import type { AnnualPlan, AnnualPlanItem, InvestmentPlan } from '@/types';
+import type { AnnualPlan, AnnualPlanItem, AnnualPlanRevision } from '@/types';
 
 function plansCol(coupleId: string) {
   return collection(getDb(), `couples/${coupleId}/annualPlans`);
@@ -21,8 +21,8 @@ function itemsCol(coupleId: string, planId: string) {
   return collection(getDb(), `couples/${coupleId}/annualPlans/${planId}/items`);
 }
 
-function investmentPlanDoc(coupleId: string, planId: string) {
-  return doc(getDb(), `couples/${coupleId}/annualPlans/${planId}/investmentPlan/main`);
+function revisionsCol(coupleId: string, planId: string) {
+  return collection(getDb(), `couples/${coupleId}/annualPlans/${planId}/revisions`);
 }
 
 // ── AnnualPlan CRUD ──
@@ -81,13 +81,18 @@ export async function updatePlanItemAmount(
   planId: string,
   itemId: string,
   data: {
+    monthlyAmounts?: number[];
+    inputMode?: 'regular' | 'irregular';
+    baseMonthlyAmount?: number | null;
     annualAmount?: number;
-    monthlyAmount?: number | null;
-    targetMonths?: number[] | null;
   }
 ): Promise<void> {
   const ref = doc(itemsCol(coupleId, planId), itemId);
-  await updateDoc(ref, { ...data, updatedAt: Timestamp.now() });
+  const patch: Record<string, unknown> = { ...data, updatedAt: Timestamp.now() };
+  if (data.monthlyAmounts && data.annualAmount === undefined) {
+    patch.annualAmount = data.monthlyAmounts.reduce((s, v) => s + v, 0);
+  }
+  await updateDoc(ref, patch);
 }
 
 export async function deletePlanItem(
@@ -99,27 +104,80 @@ export async function deletePlanItem(
   await deleteDoc(ref);
 }
 
-// ── InvestmentPlan CRUD ──
-
-export async function getInvestmentPlan(
-  coupleId: string,
-  planId: string
-): Promise<InvestmentPlan | null> {
-  const snap = await getDoc(investmentPlanDoc(coupleId, planId));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as InvestmentPlan;
-}
-
-export async function upsertInvestmentPlan(
+export async function bulkUpdatePlanItems(
   coupleId: string,
   planId: string,
-  data: Omit<InvestmentPlan, 'id'>
+  updates: { itemId: string; monthlyAmounts: number[] }[]
 ): Promise<void> {
-  await setDoc(investmentPlanDoc(coupleId, planId), {
-    id: 'main',
+  const batch = writeBatch(getDb());
+  for (const { itemId, monthlyAmounts } of updates) {
+    const ref = doc(itemsCol(coupleId, planId), itemId);
+    const annualAmount = monthlyAmounts.reduce((s, v) => s + v, 0);
+    batch.update(ref, {
+      monthlyAmounts,
+      annualAmount,
+      updatedAt: Timestamp.now(),
+    });
+  }
+  await batch.commit();
+}
+
+// ── AnnualPlanRevision CRUD ──
+
+export async function getPlanRevisions(
+  coupleId: string,
+  planId: string
+): Promise<AnnualPlanRevision[]> {
+  const snap = await getDocs(revisionsCol(coupleId, planId));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as AnnualPlanRevision)
+    .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+}
+
+export async function createPlanRevision(
+  coupleId: string,
+  planId: string,
+  data: Omit<AnnualPlanRevision, 'id' | 'createdAt'>
+): Promise<string> {
+  const revId = `rev-${Date.now()}`;
+  const ref = doc(revisionsCol(coupleId, planId), revId);
+  await setDoc(ref, {
+    id: revId,
     ...data,
-    updatedAt: Timestamp.now(),
-  }, { merge: true });
+    createdAt: Timestamp.now(),
+  });
+  return revId;
+}
+
+// ── Validation ──
+
+export type AnnualPlanTotals = {
+  income: number;
+  expense: number;
+  flex: number;
+};
+
+export function totalsFromItems(items: AnnualPlanItem[]): AnnualPlanTotals {
+  const totals: AnnualPlanTotals = { income: 0, expense: 0, flex: 0 };
+  for (const it of items) {
+    if (it.group in totals) {
+      totals[it.group as keyof AnnualPlanTotals] += it.annualAmount;
+    }
+  }
+  return totals;
+}
+
+export type AnnualPlanValidation = {
+  ok: boolean;
+  /** 부족액. 음수이거나 0이면 ok. */
+  deficit: number;
+  totals: AnnualPlanTotals;
+};
+
+export function validateAnnualPlan(items: AnnualPlanItem[]): AnnualPlanValidation {
+  const totals = totalsFromItems(items);
+  const deficit = totals.expense + totals.flex - totals.income;
+  return { ok: deficit <= 0, deficit, totals };
 }
 
 // ── Previous Year Data ──

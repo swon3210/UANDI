@@ -28,7 +28,6 @@ const TOTAL_LABEL: Record<GroupFilter, string> = {
   expense: '지출 합계',
   income: '수입 합계',
   flex: 'FLEX 합계',
-  investment: '투자 합계',
 };
 
 const TOTAL_COLOR: Record<GroupFilter, string> = {
@@ -36,7 +35,6 @@ const TOTAL_COLOR: Record<GroupFilter, string> = {
   expense: 'text-expense',
   income: 'text-income',
   flex: 'text-foreground',
-  investment: 'text-foreground',
 };
 
 const MAX_TREND_CATEGORIES = 5;

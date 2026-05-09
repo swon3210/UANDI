@@ -38,7 +38,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { CategoryForm } from './CategoryForm';
 import type { CategorySubGroup } from '@/types';
 
-const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'investment', 'flex'];
+const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
 const schema = z.object({
   amount: z.number({ error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),

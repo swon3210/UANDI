@@ -23,7 +23,7 @@ const requestSchema = z
   );
 
 const parsedEntrySchema = z.object({
-  type: z.enum(['income', 'expense', 'investment', 'flex']),
+  type: z.enum(['income', 'expense', 'flex']),
   amount: z.number().positive(),
   category: z.string(),
   description: z.string(),
@@ -110,7 +110,7 @@ ${categories.join(', ')}
 {
   "entries": [
     {
-      "type": "income" | "expense" | "investment" | "flex",
+      "type": "income" | "expense" | "flex",
       "amount": number,
       "category": "카테고리 목록에서 가장 적합한 것",
       "description": "항목 설명 (영수증이면 상호명 + 대표 품목)",

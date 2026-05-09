@@ -35,7 +35,7 @@ import { CategoryForm } from '@/components/cashbook/CategoryForm';
 import { BottomNav } from '@/components/BottomNav';
 import type { CashbookCategory, CategoryGroup } from '@/types';
 
-const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'investment', 'flex'];
+const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'flex'];
 
 export default function CashbookCategoriesPage() {
   const router = useRouter();

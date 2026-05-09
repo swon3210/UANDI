@@ -28,4 +28,3 @@ export const All: Story = { render: () => Interactive('all') };
 export const Expense: Story = { render: () => Interactive('expense') };
 export const Income: Story = { render: () => Interactive('income') };
 export const Flex: Story = { render: () => Interactive('flex') };
-export const Investment: Story = { render: () => Interactive('investment') };

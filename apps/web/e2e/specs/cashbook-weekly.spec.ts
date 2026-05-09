@@ -28,11 +28,12 @@ async function seedWeeklyData(
   const planId = await seedAnnualPlan(coupleId, year, uid);
 
   // 변동 지출 예산 (기본: 연 1,200만 = 월 100만)
+  const annualBudget = options.variableAnnualBudget ?? 12000000;
   await seedAnnualPlanItem(coupleId, planId, {
     categoryId: 'cat-expense-food',
     group: 'expense',
     subGroup: 'variable_common',
-    annualAmount: options.variableAnnualBudget ?? 12000000,
+    monthlyAmounts: Array(12).fill(Math.round(annualBudget / 12)),
   });
 
   // 지출 내역 시드

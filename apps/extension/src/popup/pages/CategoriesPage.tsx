@@ -27,7 +27,7 @@ import {
 import { CategoryList } from '../components/CategoryList';
 import { CategoryForm } from '../components/CategoryForm';
 
-const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'investment', 'flex'];
+const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'flex'];
 
 type CategoriesPageProps = {
   coupleId: string;

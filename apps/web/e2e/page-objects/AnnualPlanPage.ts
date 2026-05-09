@@ -1,6 +1,6 @@
 import { type Page, type Locator } from '@playwright/test';
 
-type CategoryKey = 'income' | 'expense' | 'investment' | 'flex';
+type CategoryKey = 'income' | 'expense' | 'flex';
 
 export class AnnualPlanPage {
   readonly page: Page;

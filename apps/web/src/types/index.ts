@@ -72,30 +72,34 @@ export type AnnualPlanItem = {
   categoryId: string;
   group: import('@uandi/cashbook-core').CategoryGroup;
   subGroup: import('@uandi/cashbook-core').CategorySubGroup;
+  /** 길이 12 (1월=index 0). Source of truth. */
+  monthlyAmounts: number[];
+  inputMode: 'regular' | 'irregular';
+  /** regular 모드의 단일 월 평균 (재진입 시 UI 복원용) */
+  baseMonthlyAmount: number | null;
+  /** = sum(monthlyAmounts), write 시 동기화 */
   annualAmount: number;
-  monthlyAmount: number | null;
-  targetMonths: number[] | null;
   ownerUid: string | null;
   updatedAt: Timestamp;
 };
 
-export type InvestmentPlan = {
+export type AnnualPlanRevision = {
   id: string;
   planId: string;
   coupleId: string;
-  targetReturnRate: number;
-  totalAvailable: number;
-  targetAmount: number;
-  updatedAt: Timestamp;
+  source: 'wizard_initial' | 'wizard_redo' | 'bulk_edit';
+  createdBy: string;
+  createdAt: Timestamp;
+  /** itemId → number[12] 풀 스냅샷 */
+  before: Record<string, number[]>;
+  after: Record<string, number[]>;
+  totals: {
+    before: { income: number; expense: number; flex: number };
+    after: { income: number; expense: number; flex: number };
+  };
 };
 
-// 투자 항목 (CashbookEntry 확장)
-export type InvestmentEntry = import('@uandi/cashbook-core').CashbookEntry & {
-  type: 'investment';
-  transactionType: 'buy' | 'sell';
-};
-
-// 월별 예산 스냅샷 (연간 계획에서 자동 생성)
+// 월별 예산 스냅샷 (연간 계획에서 on-the-fly 산출)
 export type MonthlyBudget = {
   id: string;
   coupleId: string;
@@ -147,13 +151,3 @@ export type CashbookDisplaySettings = {
   updatedAt: Timestamp;
 };
 
-// 현금 보유 잔고 (월말 스냅샷)
-export type CashBalance = {
-  id: string;
-  coupleId: string;
-  categoryId: string;
-  year: number;
-  month: number;
-  balance: number;
-  updatedAt: Timestamp;
-};

@@ -8,15 +8,20 @@ import {
   upsertPlanItem,
   updatePlanItemAmount,
   deletePlanItem,
-  getInvestmentPlan,
-  upsertInvestmentPlan,
+  bulkUpdatePlanItems,
+  getPlanRevisions,
+  createPlanRevision,
   getPreviousYearPlan,
+  validateAnnualPlan,
+  totalsFromItems,
+  type AnnualPlanTotals,
+  type AnnualPlanValidation,
 } from '@/services/annual-plan';
-import type { AnnualPlanItem, InvestmentPlan, CategoryGroup } from '@/types';
+import type { AnnualPlanItem, AnnualPlanRevision, CategoryGroup } from '@/types';
 
 const PLAN_KEY = 'annualPlan';
 const ITEMS_KEY = 'annualPlanItems';
-const INVESTMENT_KEY = 'investmentPlan';
+const REVISIONS_KEY = 'annualPlanRevisions';
 const PREV_YEAR_KEY = 'previousYearPlan';
 
 // ── Queries ──
@@ -37,19 +42,22 @@ export function useAnnualPlanItems(coupleId: string | null, planId: string | nul
   });
 }
 
-export function useInvestmentPlan(coupleId: string | null, planId: string | null) {
-  return useQuery({
-    queryKey: [INVESTMENT_KEY, coupleId, planId],
-    queryFn: () => getInvestmentPlan(coupleId!, planId!),
-    enabled: !!coupleId && !!planId,
-  });
-}
-
 export function usePreviousYearPlan(coupleId: string | null, year: number) {
   return useQuery({
     queryKey: [PREV_YEAR_KEY, coupleId, year],
     queryFn: () => getPreviousYearPlan(coupleId!, year),
     enabled: !!coupleId,
+  });
+}
+
+export function useAnnualPlanRevisions(
+  coupleId: string | null,
+  planId: string | null
+) {
+  return useQuery({
+    queryKey: [REVISIONS_KEY, coupleId, planId],
+    queryFn: () => getPlanRevisions(coupleId!, planId!),
+    enabled: !!coupleId && !!planId,
   });
 }
 
@@ -90,9 +98,10 @@ export function useUpdatePlanItemAmount(coupleId: string | null, planId: string 
     }: {
       itemId: string;
       data: {
+        monthlyAmounts?: number[];
+        inputMode?: 'regular' | 'irregular';
+        baseMonthlyAmount?: number | null;
         annualAmount?: number;
-        monthlyAmount?: number | null;
-        targetMonths?: number[] | null;
       };
     }) => updatePlanItemAmount(coupleId!, planId!, itemId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
@@ -109,73 +118,56 @@ export function useDeletePlanItem(coupleId: string | null, planId: string | null
   });
 }
 
-export function useUpsertInvestmentPlan(coupleId: string | null, planId: string | null) {
+export function useBulkUpdatePlanItems(
+  coupleId: string | null,
+  planId: string | null
+) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<InvestmentPlan, 'id'>) =>
-      upsertInvestmentPlan(coupleId!, planId!, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [INVESTMENT_KEY, coupleId, planId] }),
-    onError: () => toast.error('재테크 계획 저장에 실패했어요.'),
+    mutationFn: async ({
+      updates,
+      revision,
+    }: {
+      updates: { itemId: string; monthlyAmounts: number[] }[];
+      revision?: Omit<AnnualPlanRevision, 'id' | 'createdAt'>;
+    }) => {
+      await bulkUpdatePlanItems(coupleId!, planId!, updates);
+      if (revision) {
+        await createPlanRevision(coupleId!, planId!, revision);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] });
+      qc.invalidateQueries({ queryKey: [REVISIONS_KEY, coupleId, planId] });
+    },
+    onError: () => toast.error('일괄 수정 저장에 실패했어요.'),
   });
 }
 
 // ── Derived Data ──
 
-export type AnnualSummary = {
-  totalIncome: number;
-  totalExpense: number;
-  availableForInvestment: number;
-  investmentAllocated: number;
-  unallocated: number;
-  flexTotal: number;
+export type AnnualSummary = AnnualPlanTotals & {
+  surplus: number;
 };
 
 export function useAnnualSummary(items: AnnualPlanItem[] | undefined): AnnualSummary {
   return useMemo(() => {
     if (!items || items.length === 0) {
-      return {
-        totalIncome: 0,
-        totalExpense: 0,
-        availableForInvestment: 0,
-        investmentAllocated: 0,
-        unallocated: 0,
-        flexTotal: 0,
-      };
+      return { income: 0, expense: 0, flex: 0, surplus: 0 };
     }
+    const totals = totalsFromItems(items);
+    return { ...totals, surplus: totals.income - totals.expense - totals.flex };
+  }, [items]);
+}
 
-    let totalIncome = 0;
-    let totalExpense = 0;
-    let investmentAllocated = 0;
-    let flexTotal = 0;
-
-    for (const item of items) {
-      switch (item.group) {
-        case 'income':
-          totalIncome += item.annualAmount;
-          break;
-        case 'expense':
-          totalExpense += item.annualAmount;
-          break;
-        case 'investment':
-          investmentAllocated += item.annualAmount;
-          break;
-        case 'flex':
-          flexTotal += item.annualAmount;
-          break;
-      }
+export function useValidateAnnualPlan(
+  items: AnnualPlanItem[] | undefined
+): AnnualPlanValidation {
+  return useMemo(() => {
+    if (!items || items.length === 0) {
+      return { ok: true, deficit: 0, totals: { income: 0, expense: 0, flex: 0 } };
     }
-
-    const availableForInvestment = totalIncome - totalExpense;
-    const unallocated = availableForInvestment - investmentAllocated - flexTotal;
-
-    return {
-      totalIncome,
-      totalExpense,
-      availableForInvestment,
-      investmentAllocated,
-      unallocated,
-      flexTotal,
-    };
+    return validateAnnualPlan(items);
   }, [items]);
 }
 
