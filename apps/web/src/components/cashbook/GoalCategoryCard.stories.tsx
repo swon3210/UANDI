@@ -31,16 +31,6 @@ export const Expense: Story = {
   },
 };
 
-export const Investment: Story = {
-  args: {
-    theme: GOAL_CATEGORY_BY_KEY.investment,
-    goal: 30000000,
-    actual: 0,
-    itemCount: 2,
-    onSelect: () => {},
-  },
-};
-
 export const Flex: Story = {
   args: {
     theme: GOAL_CATEGORY_BY_KEY.flex,
