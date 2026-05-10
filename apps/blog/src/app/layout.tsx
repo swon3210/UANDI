@@ -3,7 +3,7 @@ import { BlogHeader } from '@/components/BlogHeader';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'UANDI Dev Blog',
+  title: '독개의 개발블로그',
   description: 'UANDI 서비스를 만들어가는 과정을 기록합니다.',
   alternates: {
     types: {
