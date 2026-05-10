@@ -4,7 +4,6 @@ date: '2026-05-10'
 summary: '면접에서 "AI 도구 쓰시나요?"는 의미 없는 질문이 됐다. 의미 있는 질문은 AI가 같은 품질로 일할 수 있도록 무엇을 미리 깔아두었느냐다. UANDI에서 명세를 코드보다 먼저 쓰는 워크플로우를 만든 기록.'
 category: 'tech-decision'
 tags: ['AI 워크플로우', '문서화']
-featured: true
 draft: false
 ---
 
