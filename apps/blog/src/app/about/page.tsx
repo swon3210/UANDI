@@ -4,7 +4,8 @@ import { CATEGORIES, CATEGORY_SLUGS } from '@/lib/taxonomy';
 
 export const metadata: Metadata = {
   title: '소개 | 독개의 개발블로그',
-  description: 'AI 시대에 프로덕트를 빠르게 검증하고 만드는 프론트엔드 엔지니어',
+  description:
+    '"프론트엔드 개발자"라는 이름표를 버리고 프로덕트 엔지니어로 다시 포지셔닝하는 5년차의 기록',
 };
 
 export default function AboutPage() {
@@ -16,14 +17,18 @@ export default function AboutPage() {
           About
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-snug text-gray-900">
-          AI 시대에 프로덕트를 빠르게 검증하고 만드는,
+          &ldquo;프론트엔드 개발자&rdquo;라는 이름표를 버리고,
           <br />
-          5년차 프론트엔드 엔지니어 <span className="text-[var(--color-primary)]">독개</span>입니다.
+          프로덕트 엔지니어로 다시 포지셔닝하는 5년차{' '}
+          <span className="text-[var(--color-primary)]">독개</span>입니다.
         </h1>
         <p className="mt-4 text-base leading-relaxed text-gray-600">
-          코드를 잘 짜는 것만으로는 충분하지 않은 시대라고 믿습니다. 그래서
-          저는 명세를 먼저 쓰고, AI를 도구화해서 일관된 품질로 빠르게 만드는
-          방법에 대해 매주 한 편씩 기록합니다.
+          코드를 빨리 짜는 능력만으로는 5년차의 단가를 정당화할 수 없는
+          시대라고 믿습니다. 그래서 코드 위에 세 가지를 더 쌓는 중입니다 —
+          <strong className="text-gray-900">AI를 도구화하는 명세 인프라</strong>,{' '}
+          <strong className="text-gray-900">사용자에게 가설을 깨뜨리는 작은 프로덕트</strong>,
+          그리고 <strong className="text-gray-900">의사결정 과정을 남기는 기록</strong>.
+          매주 한 편씩, 그 세 갈래의 흔적을 이 블로그에 모읍니다.
         </p>
       </section>
 
