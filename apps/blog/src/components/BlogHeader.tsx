@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SearchTrigger } from './SearchTrigger';
 
 export function BlogHeader() {
   return (
@@ -10,6 +11,7 @@ export function BlogHeader() {
         독개의 개발블로그
       </Link>
       <nav className="flex items-center gap-4 text-sm text-gray-600">
+        <SearchTrigger />
         <Link
           href="/about"
           className="hover:text-[var(--color-primary)] transition-colors"
