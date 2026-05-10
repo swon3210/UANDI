@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: 'Post Not Found' };
 
   return {
-    title: `${post.title} | UANDI Dev Blog`,
+    title: `${post.title} | 독개의 개발블로그`,
     description: post.summary,
   };
 }

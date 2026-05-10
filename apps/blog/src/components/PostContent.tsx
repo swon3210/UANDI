@@ -26,7 +26,7 @@ export function PostContent({ post }: { post: PostData }) {
       button.textContent = '복사';
       button.className =
         'absolute top-2 right-2 text-xs px-2 py-1 rounded ' +
-        'bg-white/10 hover:bg-white/20 text-white/70 transition-colors ' +
+        'bg-gray-200/70 hover:bg-gray-300/70 text-gray-700 transition-colors ' +
         'font-mono leading-none';
 
       button.addEventListener('click', () => {
@@ -67,7 +67,7 @@ export function PostContent({ post }: { post: PostData }) {
           'prose-headings:font-semibold prose-headings:text-gray-900',
           'prose-a:text-[var(--color-primary)] prose-a:no-underline hover:prose-a:underline',
           'prose-code:text-sm prose-code:before:content-none prose-code:after:content-none',
-          'prose-pre:p-0 prose-pre:bg-transparent prose-pre:rounded-xl prose-pre:overflow-hidden',
+          'prose-pre:rounded-xl prose-pre:overflow-hidden',
           'prose-table:text-sm',
         ].join(' ')}
         dangerouslySetInnerHTML={{ __html: post.content }}

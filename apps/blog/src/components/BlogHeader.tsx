@@ -7,7 +7,7 @@ export function BlogHeader() {
         href="/"
         className="font-semibold text-gray-900 hover:text-[var(--color-primary)] transition-colors"
       >
-        UANDI Dev Blog
+        독개의 개발블로그
       </Link>
     </header>
   );

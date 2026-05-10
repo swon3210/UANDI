@@ -5,3 +5,16 @@
   --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
   --color-primary: #e8837a;
 }
+
+/* 코드 블록 기본 색상 — Shiki가 처리하지 않은 plaintext 블록도 읽을 수 있도록 보장.
+   Shiki가 적용된 pre는 inline style이 우선이므로 영향 없음. */
+.prose pre {
+  background-color: #f6f8fa;
+  color: #1f2328;
+  padding: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.prose pre code {
+  color: inherit;
+}

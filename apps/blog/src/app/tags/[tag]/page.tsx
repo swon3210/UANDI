@@ -14,7 +14,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag } = await params;
   return {
-    title: `#${tag} | UANDI Dev Blog`,
+    title: `#${tag} | 독개의 개발블로그`,
   };
 }
 
