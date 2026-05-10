@@ -1,20 +1,27 @@
 import { getAllPosts } from '@/lib/posts';
+import { CATEGORIES } from '@/lib/taxonomy';
 
 export async function GET() {
   const posts = getAllPosts();
   const siteUrl = process.env.SITE_URL ?? 'https://blog.uandi.app';
 
   const items = posts
-    .map(
-      (post) => `
+    .map((post) => {
+      const categoryLabel = CATEGORIES[post.category].label;
+      const tagCategories = post.tags
+        .map((tag) => `      <category><![CDATA[${tag}]]></category>`)
+        .join('\n');
+      return `
     <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${siteUrl}/posts/${post.slug}</link>
       <description><![CDATA[${post.summary}]]></description>
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       <guid>${siteUrl}/posts/${post.slug}</guid>
-    </item>`,
-    )
+      <category><![CDATA[${categoryLabel}]]></category>
+${tagCategories}
+    </item>`;
+    })
     .join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

@@ -2,7 +2,10 @@
 title: 'UANDI 프로젝트를 시작하며'
 date: '2026-03-19'
 summary: '신혼부부를 위한 사진 + 가계부 앱, UANDI의 첫 발을 내딛다.'
-tags: ['project', 'kickoff']
+category: 'essay'
+tags: ['프로젝트', '회고']
+series: 'building-uandi'
+seriesOrder: 1
 ---
 
 ## 왜 이 서비스를 만들까
