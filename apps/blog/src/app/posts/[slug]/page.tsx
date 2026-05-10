@@ -1,6 +1,11 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getAllSlugs, getPostBySlug, getSeriesBySlug } from '@/lib/posts';
+import {
+  getAllSlugs,
+  getPostBySlug,
+  getRelatedPosts,
+  getSeriesBySlug,
+} from '@/lib/posts';
 import { CATEGORIES } from '@/lib/taxonomy';
 import { PostContent } from '@/components/PostContent';
 
@@ -37,6 +42,7 @@ export default async function PostPage({ params }: Props) {
   if (!post) notFound();
 
   const series = post.series ? getSeriesBySlug(post.series) : null;
+  const relatedPosts = getRelatedPosts(post.slug, 3);
 
-  return <PostContent post={post} series={series} />;
+  return <PostContent post={post} series={series} relatedPosts={relatedPosts} />;
 }

@@ -189,3 +189,110 @@ export function getSeriesBySlug(slug: SeriesSlug): SeriesContext | null {
 export function getFeaturedPost(): PostMeta | null {
   return getAllPosts().find((post) => post.featured) ?? null;
 }
+
+// 관련 글 (같은 시리즈 → 같은 카테고리 → 태그 겹침 순으로 최대 limit개)
+export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
+  const all = getAllPosts();
+  const current = all.find((post) => post.slug === slug);
+  if (!current) return [];
+
+  const candidates = all.filter((post) => post.slug !== slug);
+  const picked: PostMeta[] = [];
+  const pickedSlugs = new Set<string>();
+
+  const take = (post: PostMeta) => {
+    if (picked.length >= limit) return;
+    if (pickedSlugs.has(post.slug)) return;
+    picked.push(post);
+    pickedSlugs.add(post.slug);
+  };
+
+  // 1) 같은 시리즈 (seriesOrder 오름차순, 없으면 날짜 역순)
+  if (current.series) {
+    candidates
+      .filter((post) => post.series === current.series)
+      .sort((a, b) => {
+        const orderDiff = (a.seriesOrder ?? Infinity) - (b.seriesOrder ?? Infinity);
+        if (orderDiff !== 0) return orderDiff;
+        return dayjs(b.date).unix() - dayjs(a.date).unix();
+      })
+      .forEach(take);
+  }
+
+  // 2) 같은 카테고리 (날짜 역순)
+  if (picked.length < limit) {
+    candidates
+      .filter((post) => post.category === current.category)
+      .sort((a, b) => dayjs(b.date).unix() - dayjs(a.date).unix())
+      .forEach(take);
+  }
+
+  // 3) 태그 겹침 (겹치는 태그 수 내림차순, 동률은 날짜 역순)
+  if (picked.length < limit) {
+    const currentTags = new Set(current.tags);
+    candidates
+      .map((post) => ({
+        post,
+        overlap: post.tags.filter((tag) => currentTags.has(tag)).length,
+      }))
+      .filter(({ overlap }) => overlap > 0)
+      .sort((a, b) => {
+        if (b.overlap !== a.overlap) return b.overlap - a.overlap;
+        return dayjs(b.post.date).unix() - dayjs(a.post.date).unix();
+      })
+      .forEach(({ post }) => take(post));
+  }
+
+  return picked;
+}
+
+export type ArchiveMonth = {
+  yearMonth: string; // 'YYYY-MM'
+  year: number;
+  month: number;
+  label: string; // '2026년 3월'
+  posts: PostMeta[];
+};
+
+function toYearMonth(date: string): string {
+  return dayjs(date).format('YYYY-MM');
+}
+
+function buildArchiveMonth(yearMonth: string, posts: PostMeta[]): ArchiveMonth {
+  const m = dayjs(`${yearMonth}-01`);
+  return {
+    yearMonth,
+    year: m.year(),
+    month: m.month() + 1,
+    label: m.format('YYYY년 M월'),
+    posts,
+  };
+}
+
+// 모든 연-월 그룹 (최신 월부터)
+export function getArchiveMonths(): ArchiveMonth[] {
+  const grouped = new Map<string, PostMeta[]>();
+  getAllPosts().forEach((post) => {
+    const ym = toYearMonth(post.date);
+    const list = grouped.get(ym) ?? [];
+    list.push(post);
+    grouped.set(ym, list);
+  });
+
+  return Array.from(grouped.entries())
+    .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
+    .map(([ym, posts]) => buildArchiveMonth(ym, posts));
+}
+
+// 특정 연-월 단건 조회
+export function getArchiveByMonth(yearMonth: string): ArchiveMonth | null {
+  if (!/^\d{4}-\d{2}$/.test(yearMonth)) return null;
+  const posts = getAllPosts().filter((post) => toYearMonth(post.date) === yearMonth);
+  if (posts.length === 0) return null;
+  return buildArchiveMonth(yearMonth, posts);
+}
+
+// /archive/[year-month] generateStaticParams용
+export function getAllArchiveMonths(): string[] {
+  return getArchiveMonths().map((m) => m.yearMonth);
+}
