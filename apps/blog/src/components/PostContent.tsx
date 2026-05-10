@@ -4,9 +4,19 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import dayjs from 'dayjs';
 import { TagBadge } from './TagBadge';
-import type { PostData } from '@/lib/posts';
+import { CategoryLabel } from './CategoryLabel';
+import { ReadingTime } from './ReadingTime';
+import { SeriesBadge } from './SeriesBadge';
+import type { PostData, PostMeta } from '@/lib/posts';
+import type { SeriesContext } from '@/lib/posts';
 
-export function PostContent({ post }: { post: PostData }) {
+export function PostContent({
+  post,
+  series,
+}: {
+  post: PostData;
+  series?: SeriesContext | null;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -44,15 +54,41 @@ export function PostContent({ post }: { post: PostData }) {
     });
   }, [post.content]);
 
+  const seriesTotal = series?.posts.length;
+  const currentIndex = series?.posts.findIndex((p) => p.slug === post.slug);
+  const prevInSeries: PostMeta | undefined =
+    currentIndex !== undefined && currentIndex > 0
+      ? series!.posts[currentIndex - 1]
+      : undefined;
+  const nextInSeries: PostMeta | undefined =
+    currentIndex !== undefined &&
+    series &&
+    currentIndex >= 0 &&
+    currentIndex < series.posts.length - 1
+      ? series.posts[currentIndex + 1]
+      : undefined;
+
   return (
     <div>
       {/* 메타데이터 */}
       <header className="mb-8 border-b border-gray-100 pb-8">
+        <div className="mb-2">
+          <CategoryLabel category={post.category} />
+        </div>
         <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
-        <p className="mt-2 text-sm text-gray-400">
-          {dayjs(post.date).format('YYYY년 M월 D일')}
-        </p>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-400">
+          <span>{dayjs(post.date).format('YYYY년 M월 D일')}</span>
+          <span>·</span>
+          <ReadingTime minutes={post.readingTimeMinutes} />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {post.series ? (
+            <SeriesBadge
+              series={post.series}
+              order={post.seriesOrder}
+              total={seriesTotal}
+            />
+          ) : null}
           {post.tags.map((tag) => (
             <TagBadge key={tag} tag={tag} />
           ))}
@@ -72,6 +108,63 @@ export function PostContent({ post }: { post: PostData }) {
         ].join(' ')}
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
+
+      {/* 시리즈 네비게이션 */}
+      {series ? (
+        <nav className="mt-12 rounded-xl border border-gray-100 p-5">
+          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            시리즈 · {series.title}
+          </div>
+          <ol className="space-y-1">
+            {series.posts.map((p) => {
+              const isCurrent = p.slug === post.slug;
+              return (
+                <li key={p.slug} className="flex items-baseline gap-2 text-sm">
+                  <span className="w-6 shrink-0 text-gray-400">
+                    {p.seriesOrder ?? '-'}.
+                  </span>
+                  {isCurrent ? (
+                    <span className="font-semibold text-gray-900">
+                      {p.title}
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/posts/${p.slug}`}
+                      className="text-gray-700 hover:text-[var(--color-primary)] transition-colors"
+                    >
+                      {p.title}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+          {(prevInSeries || nextInSeries) && (
+            <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+              {prevInSeries ? (
+                <Link
+                  href={`/posts/${prevInSeries.slug}`}
+                  className="hover:text-[var(--color-primary)] transition-colors"
+                >
+                  &larr; 이전 편: {prevInSeries.title}
+                </Link>
+              ) : (
+                <span />
+              )}
+              {nextInSeries ? (
+                <Link
+                  href={`/posts/${nextInSeries.slug}`}
+                  className="hover:text-[var(--color-primary)] transition-colors"
+                >
+                  다음 편: {nextInSeries.title} &rarr;
+                </Link>
+              ) : (
+                <span />
+              )}
+            </div>
+          )}
+        </nav>
+      ) : null}
 
       {/* 목록으로 돌아가기 */}
       <div className="mt-12 border-t border-gray-100 pt-6">

@@ -2,7 +2,10 @@
 title: '사진 갤러리 구현 기록'
 date: '2026-03-21'
 summary: '무한 스크롤과 이미지 프리로딩을 구현한 과정을 정리합니다.'
-tags: ['photos', 'performance']
+category: 'product-how'
+tags: ['갤러리', '성능']
+series: 'building-uandi'
+seriesOrder: 2
 ---
 
 ## 배경
