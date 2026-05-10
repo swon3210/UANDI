@@ -7,15 +7,18 @@ import { TagBadge } from './TagBadge';
 import { CategoryLabel } from './CategoryLabel';
 import { ReadingTime } from './ReadingTime';
 import { SeriesBadge } from './SeriesBadge';
+import { RelatedPosts } from './RelatedPosts';
 import type { PostData, PostMeta } from '@/lib/posts';
 import type { SeriesContext } from '@/lib/posts';
 
 export function PostContent({
   post,
   series,
+  relatedPosts = [],
 }: {
   post: PostData;
   series?: SeriesContext | null;
+  relatedPosts?: PostMeta[];
 }) {
   const ref = useRef<HTMLElement>(null);
 
@@ -165,6 +168,8 @@ export function PostContent({
           )}
         </nav>
       ) : null}
+
+      <RelatedPosts posts={relatedPosts} />
 
       {/* 목록으로 돌아가기 */}
       <div className="mt-12 border-t border-gray-100 pt-6">
