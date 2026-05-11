@@ -87,17 +87,23 @@ function WizardPageInner() {
     }
   }, [planPending, plan, coupleId, year, uid, createPlanMutation]);
 
-  // 2) plan + categories 가 준비되면 누락된 item 자동 생성
+  // 2) plan + categories 가 준비되면 누락된 item 자동 생성 + 깨진 item 치유
   const itemsInitRef = useRef(false);
   useEffect(() => {
     if (!plan || !categories || !items || itemsPending) return;
     if (itemsInitRef.current) return;
+    const categoriesById = new Map(categories.map((c) => [c.id, c]));
     const existing = new Set(items.map((i) => i.categoryId));
     const missing = categories.filter((c) => !existing.has(c.id));
-    if (missing.length === 0) return;
+    const broken = items.filter(
+      (it) =>
+        categoriesById.has(it.categoryId) &&
+        (!Array.isArray(it.monthlyAmounts) || it.monthlyAmounts.length !== 12)
+    );
+    if (missing.length === 0 && broken.length === 0) return;
     itemsInitRef.current = true;
-    Promise.all(
-      missing.map((cat) => {
+    Promise.all([
+      ...missing.map((cat) => {
         const itemId = `item-${plan.id}-${cat.id}`;
         return upsertPlanItem(coupleId!, plan.id, itemId, {
           planId: plan.id,
@@ -112,8 +118,25 @@ function WizardPageInner() {
           ownerUid: null,
           updatedAt: Timestamp.now(),
         });
-      })
-    ).then(() => {
+      }),
+      ...broken.map((it) => {
+        const cat = categoriesById.get(it.categoryId)!;
+        return upsertPlanItem(coupleId!, plan.id, it.id, {
+          planId: plan.id,
+          coupleId: coupleId!,
+          categoryId: it.categoryId,
+          group: it.group ?? cat.group,
+          subGroup: it.subGroup ?? cat.subGroup,
+          monthlyAmounts: Array(12).fill(0),
+          inputMode: it.inputMode ?? 'irregular',
+          baseMonthlyAmount:
+            typeof it.baseMonthlyAmount === 'number' ? it.baseMonthlyAmount : null,
+          annualAmount: 0,
+          ownerUid: it.ownerUid ?? null,
+          updatedAt: Timestamp.now(),
+        });
+      }),
+    ]).then(() => {
       qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId, plan.id] });
     });
   }, [plan, categories, items, itemsPending, coupleId, qc]);
@@ -242,7 +265,10 @@ function WizardPageInner() {
     !categories ||
     !items ||
     itemsPending ||
-    (categories.length > 0 && items.length === 0);
+    (categories.length > 0 && items.length === 0) ||
+    items.some(
+      (it) => !Array.isArray(it.monthlyAmounts) || it.monthlyAmounts.length !== 12
+    );
 
   if (isLoading) return <FullScreenSpinner />;
 
