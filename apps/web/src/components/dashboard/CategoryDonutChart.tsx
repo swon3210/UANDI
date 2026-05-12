@@ -43,11 +43,15 @@ export function CategoryDonutChart({ data }: Props) {
             content={
               <ChartTooltipContent
                 hideLabel
-                formatter={(value, name) => (
-                  <span className="font-mono tabular-nums">
-                    {String(name)} {typeof value === 'number' ? value.toLocaleString() : value}원
-                  </span>
-                )}
+                formatter={(value, name) => {
+                  const amount = typeof value === 'number' ? value : 0;
+                  const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
+                  return (
+                    <span className="font-mono tabular-nums">
+                      {String(name)} {pct}%
+                    </span>
+                  );
+                }}
               />
             }
           />
@@ -67,19 +71,18 @@ export function CategoryDonutChart({ data }: Props) {
       </ChartContainer>
 
       <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-        {data.map((slice) => {
-          const pct = total > 0 ? Math.round((slice.amount / total) * 100) : 0;
-          return (
-            <li key={slice.category} className="flex items-center gap-1.5">
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                style={{ backgroundColor: slice.color }}
-              />
-              <span className="truncate text-muted-foreground">{slice.category}</span>
-              <span className="ml-auto font-mono tabular-nums">{pct}%</span>
-            </li>
-          );
-        })}
+        {data.map((slice) => (
+          <li key={slice.category} className="flex items-center gap-1.5">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+              style={{ backgroundColor: slice.color }}
+            />
+            <span className="truncate text-muted-foreground">{slice.category}</span>
+            <span className="ml-auto font-mono tabular-nums">
+              {slice.amount.toLocaleString()}원
+            </span>
+          </li>
+        ))}
       </ul>
     </div>
   );

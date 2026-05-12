@@ -49,18 +49,18 @@ test.describe('대시보드', () => {
   });
 
   test.describe('가계부 대시보드 — 컨트롤', () => {
-    test('기본값으로 월간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
+    test('기본값으로 주간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await expect(dashboard.periodSelector).toBeVisible();
       await expect(dashboard.groupTabs).toBeVisible();
-      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodTabWeekly).toHaveAttribute('data-state', 'active');
       await expect(dashboard.groupTabAll).toHaveAttribute('data-state', 'active');
     });
 
-    test('기간 네비게이터에 현재 월 라벨이 표시된다', async ({ authedPage }) => {
+    test('기간 네비게이터에 현재 주 라벨이 표시된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
-      const expected = dayjs().format('YYYY년 M월');
-      await expect(dashboard.periodNavLabel).toContainText(expected);
+      // weekly 라벨은 'M월 D일 ~ D일' 패턴
+      await expect(dashboard.periodNavLabel).toContainText(/\d+월 \d+일\s*~\s*\d+일/);
     });
 
     test('우측 화살표는 현재 기간일 때 비활성화된다', async ({ authedPage }) => {
@@ -68,24 +68,24 @@ test.describe('대시보드', () => {
       await expect(dashboard.periodNextButton).toBeDisabled();
     });
 
-    test('좌측 화살표 클릭 시 이전 월로 이동하고 우측 화살표가 활성화된다', async ({
+    test('좌측 화살표 클릭 시 이전 주로 이동하고 우측 화살표가 활성화된다', async ({
       authedPage,
     }) => {
       const dashboard = new DashboardPage(authedPage);
-      const prevMonthLabel = dayjs().subtract(1, 'month').format('YYYY년 M월');
 
       await dashboard.periodPrevButton.click();
 
-      await expect(dashboard.periodNavLabel).toContainText(prevMonthLabel);
+      // 여전히 주 단위 라벨 패턴 유지
+      await expect(dashboard.periodNavLabel).toContainText(/\d+월 \d+일\s*~\s*\d+일/);
       await expect(dashboard.periodNextButton).toBeEnabled();
     });
 
-    test('주간 탭 선택 시 라벨이 주 단위로 바뀐다', async ({ authedPage }) => {
+    test('월간 탭 선택 시 라벨이 월 단위로 바뀐다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
-      await dashboard.periodTabWeekly.click();
+      await dashboard.periodTabMonthly.click();
 
-      // weekly 라벨은 'M월 D일 ~ D일' 패턴
-      await expect(dashboard.periodNavLabel).toContainText(/\d+월 \d+일\s*~\s*\d+일/);
+      const expected = dayjs().format('YYYY년 M월');
+      await expect(dashboard.periodNavLabel).toContainText(expected);
     });
 
     test('연간 탭 선택 시 라벨이 연도로 바뀐다', async ({ authedPage }) => {
