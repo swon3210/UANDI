@@ -58,8 +58,8 @@ export default function AnnualPlanPage() {
   }, [coupleId, plan, planPending, items, itemsPending, catPending, router]);
 
   const goToCategory = useCallback(
-    (_key: GoalCategoryKey) => {
-      router.push('/cashbook/plan/annual');
+    (key: GoalCategoryKey) => {
+      router.push(`/cashbook/plan/annual/items?group=${key}`);
     },
     [router]
   );
