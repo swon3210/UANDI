@@ -56,6 +56,21 @@ export async function createAnnualPlan(
   return planId;
 }
 
+// ── AnnualPlanItem helpers ──
+
+export function spreadAnnualEvenly(annual: number): {
+  monthlyAmounts: number[];
+  baseMonthlyAmount: number;
+  annualAmount: number;
+} {
+  const safe = Math.max(0, Math.round(annual));
+  const base = Math.floor(safe / 12);
+  const remainder = safe - base * 12;
+  const monthly = Array(12).fill(base);
+  if (remainder !== 0) monthly[11] = base + remainder;
+  return { monthlyAmounts: monthly, baseMonthlyAmount: base, annualAmount: safe };
+}
+
 // ── AnnualPlanItem CRUD ──
 
 export async function getPlanItems(
