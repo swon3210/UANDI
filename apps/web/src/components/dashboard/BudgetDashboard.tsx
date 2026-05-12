@@ -41,7 +41,7 @@ const MAX_TREND_CATEGORIES = 5;
 const DEFAULT_TREND_TOP_N = 3;
 
 export function BudgetDashboard({ coupleId }: Props) {
-  const [period, setPeriod] = useState<PeriodKind>('monthly');
+  const [period, setPeriod] = useState<PeriodKind>('weekly');
   const [group, setGroup] = useState<GroupFilter>('all');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
   // null = 자동(상위 N개), 배열 = 사용자가 직접 선택
