@@ -10,6 +10,7 @@ import {
   type ChartConfig,
 } from '@uandi/ui';
 import type { CategorySlice } from '@/hooks/useDashboardData';
+import { formatCurrencyMan } from '@/utils/currency';
 
 type Props = {
   data: CategorySlice[];
@@ -79,7 +80,7 @@ export function CategoryDonutChart({ data }: Props) {
             />
             <span className="truncate text-muted-foreground">{slice.category}</span>
             <span className="ml-auto font-mono tabular-nums">
-              {slice.amount.toLocaleString()}원
+              {formatCurrencyMan(slice.amount, { manDecimals: 1 })}원
             </span>
           </li>
         ))}
