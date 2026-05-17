@@ -30,6 +30,7 @@ export type { DefaultCategory } from './constants/default-categories';
 export {
   DEFAULT_CATEGORIES,
   SUB_GROUP_LABELS,
+  SUB_GROUP_SHORT_LABELS,
   GROUP_LABELS,
   SUB_GROUPS_BY_GROUP,
   COLOR_PRESETS,

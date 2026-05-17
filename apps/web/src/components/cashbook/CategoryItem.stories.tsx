@@ -21,6 +21,9 @@ const mockCategory: CashbookCategory = {
   color: '#4CAF86',
   isDefault: true,
   sortOrder: 0,
+  parentCategoryId: null,
+  description: '',
+  examples: [],
   createdAt: Timestamp.now(),
 };
 
@@ -29,6 +32,23 @@ export const Default: Story = {
     category: mockCategory,
     onEdit: () => {},
     onDelete: () => {},
+  },
+};
+
+export const WithDescription: Story = {
+  args: {
+    category: {
+      ...mockCategory,
+      group: 'expense',
+      subGroup: 'variable_common',
+      name: '식비',
+      icon: 'bowl_food',
+      color: '#D8635A',
+      description: '부부가 함께한 장보기·외식·배달',
+    },
+    onEdit: () => {},
+    onDelete: () => {},
+    onAddChild: () => {},
   },
 };
 
@@ -52,6 +72,7 @@ export const LongName: Story = {
     category: {
       ...mockCategory,
       name: '아주 긴 카테고리 이름 테스트',
+      description: '아주 긴 설명이 들어가서 한 줄로 잘리는지 확인하기 위한 테스트',
     },
     onEdit: () => {},
     onDelete: () => {},

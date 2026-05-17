@@ -12,6 +12,7 @@ import {
   FormMessage,
   Input,
   Button,
+  Badge,
   RadioGroup,
   RadioGroupItem,
   Label,
@@ -19,22 +20,36 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@uandi/ui';
+import { Lock } from 'lucide-react';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
-import { SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS, COLOR_PRESETS } from '@/constants/default-categories';
+import {
+  SUB_GROUPS_BY_GROUP,
+  SUB_GROUP_LABELS,
+  SUB_GROUP_SHORT_LABELS,
+  COLOR_PRESETS,
+} from '@/constants/default-categories';
 import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
+import { CategoryIcon } from './CategoryIcon';
+import { ExampleTagInput, ExampleChipList, EXAMPLES_MAX } from './ExampleTagInput';
 
 const schema = z.object({
   name: z.string().min(1, '카테고리 이름을 입력해주세요'),
   icon: z.string().min(1, '아이콘을 선택해주세요'),
   color: z.string().min(1),
   subGroup: z.string().min(1, '구분을 선택해주세요'),
+  description: z.string().max(140, '설명은 140자 이내로 입력해주세요'),
+  examples: z
+    .array(z.string().min(1).max(20))
+    .max(EXAMPLES_MAX, `예시는 ${EXAMPLES_MAX}개까지 입력할 수 있어요`),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 type CategoryFormProps = {
   group: CategoryGroup;
+  /** 자식 추가 모드. 값이 있으면 부모가 잠긴 상태로 표시되고 subGroup도 부모 값 고정. */
+  parentCategory?: CashbookCategory;
   editingCategory?: CashbookCategory;
   isSubmitting?: boolean;
   onSubmit: (data: FormValues) => Promise<void>;
@@ -43,20 +58,25 @@ type CategoryFormProps = {
 
 export function CategoryForm({
   group,
+  parentCategory,
   editingCategory,
   isSubmitting,
   onSubmit,
   onClose,
 }: CategoryFormProps) {
   const subGroups = SUB_GROUPS_BY_GROUP[group];
+  const isChildMode = !!parentCategory;
+  const lockedSubGroup = parentCategory?.subGroup;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: editingCategory?.name ?? '',
-      icon: editingCategory?.icon ?? '',
-      color: editingCategory?.color ?? COLOR_PRESETS[0],
-      subGroup: editingCategory?.subGroup ?? subGroups[0],
+      icon: editingCategory?.icon ?? parentCategory?.icon ?? '',
+      color: editingCategory?.color ?? parentCategory?.color ?? COLOR_PRESETS[0],
+      subGroup: editingCategory?.subGroup ?? lockedSubGroup ?? subGroups[0],
+      description: editingCategory?.description ?? '',
+      examples: editingCategory?.examples ?? [],
     },
   });
 
@@ -76,7 +96,13 @@ export function CategoryForm({
       data-testid="category-form-sheet"
     >
       <SheetHeader>
-        <SheetTitle>{editingCategory ? '카테고리 편집' : '카테고리 추가'}</SheetTitle>
+        <SheetTitle>
+          {editingCategory
+            ? '카테고리 편집'
+            : isChildMode
+              ? '하위 카테고리 추가'
+              : '카테고리 추가'}
+        </SheetTitle>
       </SheetHeader>
 
       <Form {...form}>
@@ -84,6 +110,31 @@ export function CategoryForm({
           onSubmit={form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-5 overflow-y-auto px-1 pb-6 pt-4"
         >
+          {isChildMode && parentCategory && (
+            <div className="flex flex-col gap-1.5">
+              <Label>부모 카테고리</Label>
+              <div
+                data-testid="locked-parent"
+                className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
+              >
+                <span
+                  className="flex h-6 w-6 items-center justify-center rounded-md"
+                  style={{
+                    backgroundColor: parentCategory.color + '20',
+                    color: parentCategory.color,
+                  }}
+                >
+                  <CategoryIcon name={parentCategory.icon} size={14} />
+                </span>
+                <span className="text-foreground">{parentCategory.name}</span>
+                <Badge variant="secondary" className="font-normal">
+                  {SUB_GROUP_SHORT_LABELS[parentCategory.subGroup]}
+                </Badge>
+                <Lock size={12} className="ml-auto" />
+              </div>
+            </div>
+          )}
+
           <FormField
             control={form.control}
             name="name"
@@ -91,7 +142,51 @@ export function CategoryForm({
               <FormItem>
                 <FormLabel>이름</FormLabel>
                 <FormControl>
-                  <Input placeholder="예: 정기급여" {...field} />
+                  <Input
+                    placeholder={isChildMode ? '예: 외식' : '예: 정기급여'}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>설명 (선택)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="이 카테고리에 어떤 항목이 들어가나요?"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="examples"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>예시 항목 (선택)</FormLabel>
+                <ExampleChipList
+                  value={field.value}
+                  onRemove={(v) =>
+                    field.onChange(field.value.filter((x) => x !== v))
+                  }
+                />
+                <FormControl>
+                  <ExampleTagInput
+                    value={field.value}
+                    onAdd={(v) => field.onChange([...field.value, v])}
+                    onRemoveLast={() => field.onChange(field.value.slice(0, -1))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,7 +207,7 @@ export function CategoryForm({
             )}
           />
 
-          <div className='mx-1'>
+          <div className="mx-1">
             <FormField
               control={form.control}
               name="color"
@@ -128,39 +223,41 @@ export function CategoryForm({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="subGroup"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>구분</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    className="flex flex-wrap gap-2"
-                  >
-                    {subGroups.map((sg) => (
-                      <div key={sg} className="flex items-center">
-                        <RadioGroupItem value={sg} id={sg} className="sr-only" />
-                        <Label
-                          htmlFor={sg}
-                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition-colors ${
-                            field.value === sg
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-secondary border-border hover:bg-accent'
-                          }`}
-                        >
-                          {SUB_GROUP_LABELS[sg as CategorySubGroup]}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isChildMode && (
+            <FormField
+              control={form.control}
+              name="subGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>구분</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="flex flex-wrap gap-2"
+                    >
+                      {subGroups.map((sg) => (
+                        <div key={sg} className="flex items-center">
+                          <RadioGroupItem value={sg} id={sg} className="sr-only" />
+                          <Label
+                            htmlFor={sg}
+                            className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition-colors ${
+                              field.value === sg
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-secondary border-border hover:bg-accent'
+                            }`}
+                          >
+                            {SUB_GROUP_LABELS[sg as CategorySubGroup]}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? '저장 중...' : '저장'}

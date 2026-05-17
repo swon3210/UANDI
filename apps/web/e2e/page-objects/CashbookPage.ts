@@ -57,6 +57,22 @@ export class CashbookPage {
     return this.page.getByTestId(`category-chip-${name}`);
   }
 
+  recommendedChip(name: string) {
+    return this.page.getByTestId(`recommended-chip-${name}`);
+  }
+
+  get categoryBreadcrumb() {
+    return this.page.getByTestId('category-breadcrumb');
+  }
+
+  get categoryHint() {
+    return this.page.getByTestId('category-hint');
+  }
+
+  get categoryRecommendations() {
+    return this.page.getByTestId('category-recommendations');
+  }
+
   typeTab(name: string) {
     return this.sheet.getByRole('tab', { name });
   }

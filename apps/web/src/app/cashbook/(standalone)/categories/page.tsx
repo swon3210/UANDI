@@ -50,20 +50,52 @@ export default function CashbookCategoriesPage() {
   const [activeTab, setActiveTab] = useState<CategoryGroup>('income');
   const groupCategories = filterCategoriesByGroup(categories, activeTab);
 
-  const handleAdd = () => {
+  const openForm = (props: {
+    group: CategoryGroup;
+    parentCategory?: CashbookCategory;
+    editingCategory?: CashbookCategory;
+  }) => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <CategoryForm
-          group={activeTab}
+          group={props.group}
+          parentCategory={props.parentCategory}
+          editingCategory={props.editingCategory}
           onSubmit={async (data) => {
+            if (props.editingCategory) {
+              await updateMutation.mutateAsync({
+                categoryId: props.editingCategory.id,
+                data: {
+                  name: data.name,
+                  icon: data.icon,
+                  color: data.color,
+                  subGroup: data.subGroup as CashbookCategory['subGroup'],
+                  description: data.description,
+                  examples: data.examples,
+                },
+              });
+              return;
+            }
+
+            const parent = props.parentCategory;
+            const siblingCount = parent
+              ? (categories ?? []).filter(
+                  (c) => c.parentCategoryId === parent.id
+                ).length
+              : groupCategories.filter((c) => c.parentCategoryId === null).length;
+
             await addMutation.mutateAsync({
-              group: activeTab,
-              subGroup: data.subGroup as CashbookCategory['subGroup'],
+              group: props.group,
+              subGroup: (parent?.subGroup ??
+                data.subGroup) as CashbookCategory['subGroup'],
               name: data.name,
               icon: data.icon,
               color: data.color,
               isDefault: false,
-              sortOrder: groupCategories.length,
+              sortOrder: siblingCount,
+              parentCategoryId: parent?.id ?? null,
+              description: data.description,
+              examples: data.examples,
             });
           }}
           onClose={() => {
@@ -75,39 +107,39 @@ export default function CashbookCategoriesPage() {
     ));
   };
 
-  const handleEdit = (category: CashbookCategory) => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <CategoryForm
-          group={category.group}
-          editingCategory={category}
-          onSubmit={async (data) => {
-            await updateMutation.mutateAsync({
-              categoryId: category.id,
-              data: {
-                name: data.name,
-                icon: data.icon,
-                color: data.color,
-                subGroup: data.subGroup as CashbookCategory['subGroup'],
-              },
-            });
-          }}
-          onClose={() => {
-            close();
-            setTimeout(unmount, 300);
-          }}
-        />
-      </Sheet>
-    ));
-  };
+  const handleAdd = () => openForm({ group: activeTab });
+  const handleEdit = (category: CashbookCategory) =>
+    openForm({ group: category.group, editingCategory: category });
+  const handleAddChild = (parent: CashbookCategory) =>
+    openForm({ group: parent.group, parentCategory: parent });
 
   const handleDelete = async (category: CashbookCategory) => {
-    // 전체 항목에서 해당 카테고리 사용 여부 확인
-    if (coupleId) {
-      const usedCount = await countEntriesByCategory(coupleId, category.name);
+    const allCategories = categories ?? [];
+    const childCount = allCategories.filter(
+      (c) => c.parentCategoryId === category.id
+    ).length;
 
+    let usedCount = 0;
+    if (coupleId) {
+      usedCount = await countEntriesByCategory(coupleId, category.name);
+    }
+
+    if (childCount > 0 || usedCount > 0) {
+      const messageLines: string[] = [];
+      if (childCount > 0) {
+        messageLines.push(
+          `하위 카테고리 ${childCount}개도 함께 삭제됩니다.`
+        );
+      }
       if (usedCount > 0) {
-        const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
+        messageLines.push(
+          `이 카테고리를 사용 중인 항목이 ${usedCount}건 있습니다. 삭제해도 기존 항목의 카테고리 이름은 그대로 유지됩니다.`
+        );
+      }
+      messageLines.push('삭제하시겠습니까?');
+
+      const confirmed = await overlay.openAsync<boolean>(
+        ({ isOpen, close, unmount }) => (
           <Dialog
             open={isOpen}
             onOpenChange={(open) => {
@@ -120,10 +152,7 @@ export default function CashbookCategoriesPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>카테고리 삭제</DialogTitle>
-                <DialogDescription>
-                  이 카테고리를 사용 중인 항목이 {usedCount}건 있습니다. 삭제해도
-                  기존 항목의 카테고리는 그대로 유지됩니다. 삭제하시겠습니까?
-                </DialogDescription>
+                <DialogDescription>{messageLines.join(' ')}</DialogDescription>
               </DialogHeader>
               <DialogFooter className="gap-2">
                 <Button
@@ -147,10 +176,10 @@ export default function CashbookCategoriesPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        ));
+        )
+      );
 
-        if (!confirmed) return;
-      }
+      if (!confirmed) return;
     }
 
     deleteMutation.mutate(category.id);
@@ -195,6 +224,7 @@ export default function CashbookCategoriesPage() {
                 isLoading={isLoading}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onAddChild={handleAddChild}
               />
             </TabsContent>
           ))}

@@ -1,10 +1,15 @@
 'use client';
 
-import { FolderOpen } from 'lucide-react';
-import { EmptyState, Skeleton } from '@uandi/ui';
+import { FolderOpen, Plus } from 'lucide-react';
+import { EmptyState, Skeleton, Button } from '@uandi/ui';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
-import { SUB_GROUPS_BY_GROUP, SUB_GROUP_LABELS, GROUP_LABELS } from '@/constants/default-categories';
+import {
+  SUB_GROUPS_BY_GROUP,
+  SUB_GROUP_LABELS,
+  GROUP_LABELS,
+} from '@/constants/default-categories';
 import { CategoryItem } from './CategoryItem';
+import { CategoryChildChip } from './CategoryChildChip';
 
 type CategoryListProps = {
   categories: CashbookCategory[];
@@ -12,6 +17,7 @@ type CategoryListProps = {
   isLoading?: boolean;
   onEdit: (category: CashbookCategory) => void;
   onDelete: (category: CashbookCategory) => void;
+  onAddChild: (parent: CashbookCategory) => void;
 };
 
 function CategoryListSkeleton() {
@@ -34,7 +40,14 @@ function CategoryListSkeleton() {
   );
 }
 
-export function CategoryList({ categories, group, isLoading, onEdit, onDelete }: CategoryListProps) {
+export function CategoryList({
+  categories,
+  group,
+  isLoading,
+  onEdit,
+  onDelete,
+  onAddChild,
+}: CategoryListProps) {
   const subGroups = SUB_GROUPS_BY_GROUP[group];
 
   if (isLoading) {
@@ -51,11 +64,21 @@ export function CategoryList({ categories, group, isLoading, onEdit, onDelete }:
     );
   }
 
+  const parents = categories.filter((c) => c.parentCategoryId === null);
+  const childrenByParent = new Map<string, CashbookCategory[]>();
+  for (const c of categories) {
+    if (c.parentCategoryId) {
+      const list = childrenByParent.get(c.parentCategoryId) ?? [];
+      list.push(c);
+      childrenByParent.set(c.parentCategoryId, list);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {subGroups.map((subGroup) => {
-        const items = categories.filter((c) => c.subGroup === subGroup);
-        if (items.length === 0) return null;
+        const parentItems = parents.filter((c) => c.subGroup === subGroup);
+        if (parentItems.length === 0) return null;
 
         return (
           <div key={subGroup}>
@@ -66,14 +89,41 @@ export function CategoryList({ categories, group, isLoading, onEdit, onDelete }:
               {SUB_GROUP_LABELS[subGroup as CategorySubGroup]}
             </div>
             <div className="rounded-xl bg-card border border-border divide-y divide-border">
-              {items.map((cat) => (
-                <CategoryItem
-                  key={cat.id}
-                  category={cat}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
+              {parentItems.map((parent) => {
+                const children = (childrenByParent.get(parent.id) ?? []).sort(
+                  (a, b) => a.sortOrder - b.sortOrder
+                );
+                return (
+                  <CategoryItem
+                    key={parent.id}
+                    category={parent}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onAddChild={onAddChild}
+                  >
+                    <div className="ml-12 flex flex-wrap items-center gap-1.5">
+                      {children.map((child) => (
+                        <CategoryChildChip
+                          key={child.id}
+                          category={child}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                        />
+                      ))}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 rounded-full border border-dashed border-border bg-background px-2.5 text-xs text-muted-foreground"
+                        onClick={() => onAddChild(parent)}
+                      >
+                        <Plus size={12} />
+                        하위 추가
+                      </Button>
+                    </div>
+                  </CategoryItem>
+                );
+              })}
             </div>
           </div>
         );

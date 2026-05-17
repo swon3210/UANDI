@@ -29,12 +29,18 @@ export class CashbookCategoriesPage {
     return this.page.getByTestId(`subgroup-header-${name}`);
   }
 
+  // 부모 카테고리 카드/행 (testid는 부모/자식 공통)
   categoryItem(name: string) {
     return this.page.getByTestId(`category-item-${name}`);
   }
 
+  // 부모 카드 안의 description 텍스트
+  categoryDescription(name: string) {
+    return this.categoryItem(name).getByTestId('category-description');
+  }
+
   categoryMenuButton(name: string) {
-    return this.categoryItem(name).getByRole('button', { name: '더보기' });
+    return this.page.getByTestId(`category-item-${name}-menu`);
   }
 
   async openCategoryMenu(name: string) {
@@ -43,6 +49,22 @@ export class CashbookCategoriesPage {
 
   menuItem(name: string) {
     return this.page.getByRole('menuitem', { name });
+  }
+
+  // 자식 카테고리 chip
+  childChip(name: string) {
+    return this.page.getByTestId(`category-child-${name}`);
+  }
+
+  childMenuButton(name: string) {
+    return this.page.getByTestId(`category-child-${name}-menu`);
+  }
+
+  // 부모 카드 내부 "+ 하위 추가" 인라인 버튼
+  addChildButton(parentName: string) {
+    return this.categoryItem(parentName).getByRole('button', {
+      name: '하위 추가',
+    });
   }
 
   // Bottom Sheet form
@@ -54,15 +76,63 @@ export class CashbookCategoriesPage {
     return this.page.getByLabel('이름');
   }
 
+  get descriptionInput() {
+    return this.page.getByLabel('설명 (선택)');
+  }
+
+  get examplesInput() {
+    return this.page.getByLabel('예시 항목 (선택)');
+  }
+
   get saveButton() {
     return this.page.getByRole('button', { name: '저장' });
   }
 
-  async addCategory(name: string, icon?: string) {
+  // 자식 추가 시트 안의 잠긴 부모 표시
+  get lockedParentLabel() {
+    return this.page.getByTestId('locked-parent');
+  }
+
+  async addCategory(
+    name: string,
+    options?: { icon?: string; description?: string; examples?: string[] }
+  ) {
     await this.addButton.click();
     await this.nameInput.fill(name);
-    if (icon) {
-      await this.page.getByTestId(`icon-option-${icon}`).click();
+    if (options?.icon) {
+      await this.page.getByTestId(`icon-option-${options.icon}`).click();
+    }
+    if (options?.description) {
+      await this.descriptionInput.fill(options.description);
+    }
+    if (options?.examples) {
+      for (const ex of options.examples) {
+        await this.examplesInput.fill(ex);
+        await this.examplesInput.press('Enter');
+      }
+    }
+    await this.saveButton.click();
+  }
+
+  async addChildCategory(
+    parentName: string,
+    childName: string,
+    options?: { icon?: string; description?: string; examples?: string[] }
+  ) {
+    await this.openCategoryMenu(parentName);
+    await this.menuItem('하위 추가').click();
+    await this.nameInput.fill(childName);
+    if (options?.icon) {
+      await this.page.getByTestId(`icon-option-${options.icon}`).click();
+    }
+    if (options?.description) {
+      await this.descriptionInput.fill(options.description);
+    }
+    if (options?.examples) {
+      for (const ex of options.examples) {
+        await this.examplesInput.fill(ex);
+        await this.examplesInput.press('Enter');
+      }
     }
     await this.saveButton.click();
   }
@@ -75,8 +145,21 @@ export class CashbookCategoriesPage {
     await this.saveButton.click();
   }
 
+  async editChildCategory(oldName: string, newName: string) {
+    await this.childMenuButton(oldName).click();
+    await this.menuItem('편집').click();
+    await this.nameInput.clear();
+    await this.nameInput.fill(newName);
+    await this.saveButton.click();
+  }
+
   async deleteCategory(name: string) {
     await this.openCategoryMenu(name);
+    await this.menuItem('삭제').click();
+  }
+
+  async deleteChildCategory(name: string) {
+    await this.childMenuButton(name).click();
     await this.menuItem('삭제').click();
   }
 }

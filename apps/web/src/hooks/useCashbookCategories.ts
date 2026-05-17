@@ -45,7 +45,12 @@ export function useUpdateCategory(coupleId: string | null) {
       data,
     }: {
       categoryId: string;
-      data: Partial<Pick<CashbookCategory, 'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder'>>;
+      data: Partial<
+        Pick<
+          CashbookCategory,
+          'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder' | 'description' | 'examples'
+        >
+      >;
     }) => updateCategory(coupleId!, categoryId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
     onError: () => toast.error('카테고리 수정에 실패했습니다'),

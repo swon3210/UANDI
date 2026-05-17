@@ -181,9 +181,14 @@ export async function seedCashbookCategory(
     color?: string;
     isDefault?: boolean;
     sortOrder?: number;
+    parentCategoryId?: string | null;
+    description?: string;
+    examples?: string[];
   }
 ): Promise<string> {
   const categoryId = `cat-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const parentCategoryId = options.parentCategoryId ?? null;
+  const examples = options.examples ?? [];
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookCategories/${categoryId}`,
@@ -201,6 +206,16 @@ export async function seedCashbookCategory(
           color: { stringValue: options.color ?? '#D8635A' },
           isDefault: { booleanValue: options.isDefault ?? true },
           sortOrder: { integerValue: String(options.sortOrder ?? 0) },
+          parentCategoryId:
+            parentCategoryId === null
+              ? { nullValue: null }
+              : { stringValue: parentCategoryId },
+          description: { stringValue: options.description ?? '' },
+          examples: {
+            arrayValue: {
+              values: examples.map((v) => ({ stringValue: v })),
+            },
+          },
           createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
