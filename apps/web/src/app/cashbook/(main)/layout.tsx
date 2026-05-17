@@ -12,29 +12,44 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { BottomNav } from '@/components/BottomNav';
 
-export default function CashbookLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
+function AddEntrySheet({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
-
   const { data: categories } = useCashbookCategories(coupleId);
   const addMutation = useAddEntry(coupleId);
 
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <EntryForm
+        categories={categories ?? []}
+        coupleId={coupleId}
+        createdBy={uid}
+        onSubmit={(data) => addMutation.mutate(data)}
+        onClose={onClose}
+      />
+    </Sheet>
+  );
+}
+
+export default function CashbookLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
   const handleAdd = () => {
     overlay.open(({ isOpen, close, unmount }) => (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <EntryForm
-          categories={categories ?? []}
-          coupleId={coupleId}
-          createdBy={uid}
-          onSubmit={(data) => addMutation.mutate(data)}
-          onClose={() => {
-            close();
-            setTimeout(unmount, 300);
-          }}
-        />
-      </Sheet>
+      <AddEntrySheet
+        isOpen={isOpen}
+        onClose={() => {
+          close();
+          setTimeout(unmount, 300);
+        }}
+      />
     ));
   };
 

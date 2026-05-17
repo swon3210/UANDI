@@ -1,6 +1,10 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
+import {
+  seedDefaultCategories,
+  seedCashbookEntry,
+  seedCashbookCategory,
+} from '../helpers/emulator';
 import { CashbookCategoriesPage } from '../page-objects/CashbookCategoriesPage';
 
 test.describe('카테고리 설정', () => {
@@ -58,7 +62,7 @@ test.describe('카테고리 설정', () => {
       const categoriesPage = new CashbookCategoriesPage(page);
       await categoriesPage.goto();
 
-      await categoriesPage.addCategory('보너스', 'gift');
+      await categoriesPage.addCategory('보너스', { icon: 'gift' });
 
       await expect(categoriesPage.categoryItem('보너스')).toBeVisible();
     });
@@ -117,6 +121,220 @@ test.describe('카테고리 설정', () => {
       // 확인 클릭 시 삭제됨
       await page.getByRole('button', { name: '삭제' }).click();
       await expect(categoriesPage.categoryItem('정기급여')).not.toBeVisible();
+    });
+  });
+
+  test.describe('카테고리 계층 (부모-자식)', () => {
+    test('부모 카테고리에 자식을 추가하면 부모 카드 아래에 자식 chip이 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.addChildCategory('식비', '외식', {
+        examples: ['외식', '배달'],
+      });
+
+      // 자식 chip이 보임
+      await expect(categoriesPage.childChip('외식')).toBeVisible();
+      // 부모 카드 안에 있음 (자식 chip은 부모 카드 내부 testid 영역)
+      await expect(
+        categoriesPage.categoryItem('식비').getByTestId('category-child-외식')
+      ).toBeVisible();
+    });
+
+    test('자식 카테고리 chip에 부모 subGroup 뱃지가 노출된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '외식',
+        icon: 'fork_knife',
+        parentCategoryId: parentId,
+      });
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      // 자식 chip에 "공통" 뱃지 표시
+      await expect(
+        categoriesPage.childChip('외식').getByText('공통')
+      ).toBeVisible();
+    });
+
+    test('부모 카테고리에 description을 입력하면 부모 카드에 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      // 식비 편집해서 description 추가
+      await categoriesPage.openCategoryMenu('식비');
+      await categoriesPage.menuItem('편집').click();
+      await categoriesPage.descriptionInput.fill('장보기·외식·배달');
+      await categoriesPage.saveButton.click();
+
+      await expect(categoriesPage.categoryDescription('식비')).toContainText(
+        '장보기·외식·배달'
+      );
+    });
+
+    test('examples를 입력 후 다시 편집 시 그대로 복원된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.openCategoryMenu('식비');
+      await categoriesPage.menuItem('편집').click();
+      for (const ex of ['장보기', '외식', '배달']) {
+        await categoriesPage.examplesInput.fill(ex);
+        await categoriesPage.examplesInput.press('Enter');
+      }
+      await categoriesPage.saveButton.click();
+
+      // 재오픈
+      await categoriesPage.openCategoryMenu('식비');
+      await categoriesPage.menuItem('편집').click();
+      for (const ex of ['장보기', '외식', '배달']) {
+        await expect(
+          categoriesPage.sheet.getByText(ex, { exact: true })
+        ).toBeVisible();
+      }
+    });
+
+    test('자식 카테고리를 편집하면 chip 라벨이 변경된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '외식',
+        icon: 'fork_knife',
+        parentCategoryId: parentId,
+      });
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.editChildCategory('외식', '점심 외식');
+
+      await expect(categoriesPage.childChip('점심 외식')).toBeVisible();
+      await expect(categoriesPage.childChip('외식')).not.toBeVisible();
+    });
+
+    test('자식 카테고리를 단독 삭제하면 자식 chip만 사라진다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '외식',
+        icon: 'fork_knife',
+        parentCategoryId: parentId,
+      });
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.deleteChildCategory('외식');
+
+      await expect(categoriesPage.childChip('외식')).not.toBeVisible();
+      // 부모는 유지됨
+      await expect(categoriesPage.categoryItem('식비')).toBeVisible();
+    });
+
+    test('자식이 있는 부모를 삭제하면 자식 개수 경고가 표시되고 확인 시 자식까지 함께 삭제된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '외식',
+        icon: 'fork_knife',
+        parentCategoryId: parentId,
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '장보기',
+        icon: 'shopping_bag',
+        parentCategoryId: parentId,
+      });
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.deleteCategory('식비');
+
+      await expect(page.getByText('하위 카테고리 2개')).toBeVisible();
+      await page.getByRole('button', { name: '삭제' }).click();
+
+      await expect(categoriesPage.categoryItem('식비')).not.toBeVisible();
+      await expect(categoriesPage.childChip('외식')).not.toBeVisible();
+      await expect(categoriesPage.childChip('장보기')).not.toBeVisible();
+    });
+
+    test('자식 추가 시트에는 부모 정보가 잠긴 상태로 subGroup 뱃지와 함께 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.openCategoryMenu('식비');
+      await categoriesPage.menuItem('하위 추가').click();
+
+      await expect(categoriesPage.lockedParentLabel).toContainText('식비');
+      await expect(categoriesPage.lockedParentLabel).toContainText('공통');
     });
   });
 });

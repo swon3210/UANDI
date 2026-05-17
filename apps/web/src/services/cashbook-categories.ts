@@ -22,7 +22,12 @@ export async function addCategory(
 export async function updateCategory(
   coupleId: string,
   categoryId: string,
-  data: Partial<Pick<CashbookCategory, 'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder'>>
+  data: Partial<
+    Pick<
+      CashbookCategory,
+      'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder' | 'description' | 'examples'
+    >
+  >
 ): Promise<void> {
   return _updateCategory(getDb(), coupleId, categoryId, data);
 }

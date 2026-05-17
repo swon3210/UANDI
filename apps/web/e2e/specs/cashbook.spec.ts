@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import {
   seedDefaultCategories,
+  seedCashbookCategory,
   seedCashbookEntry,
 } from '../helpers/emulator';
 import { CashbookPage } from '../page-objects/CashbookPage';
@@ -256,6 +257,109 @@ test.describe('가계부', () => {
       await cashbook.deleteButton.click();
 
       await expect(cashbook.entryCard(entryId)).not.toBeVisible();
+    });
+  });
+
+  test.describe('카테고리 계층 선택 (Phase 3)', () => {
+    test('자식 chip을 선택하면 브레드크럼이 부모와 함께 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      const sikbiId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        description: '부부가 함께한 장보기·외식·배달',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '외식',
+        icon: 'fork_knife',
+        parentCategoryId: sikbiId,
+      });
+
+      const cashbook = new CashbookPage(page);
+      await cashbook.goto();
+      await cashbook.addButton.click();
+      await cashbook.sheet.waitFor({ state: 'visible' });
+
+      // 카테고리 fetch 완료 대기
+      await cashbook.categoryChip('식비').waitFor({ state: 'attached', timeout: 10000 });
+
+      // 부모 chip 클릭 → 자식 chip 펼쳐짐
+      await cashbook.categoryChip('식비').click();
+      await expect(cashbook.categoryChip('외식')).toBeVisible();
+
+      // 자식 chip 선택
+      await cashbook.categoryChip('외식').click();
+
+      // 브레드크럼에 "식비 ... > 외식"
+      await expect(cashbook.categoryBreadcrumb).toContainText('식비');
+      await expect(cashbook.categoryBreadcrumb).toContainText('외식');
+    });
+
+    test('선택된 카테고리의 description과 examples가 hint로 노출된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        description: '부부가 함께한 장보기·외식·배달',
+        examples: ['마트', '코스트코', '배달'],
+      });
+
+      const cashbook = new CashbookPage(page);
+      await cashbook.goto();
+      await cashbook.addButton.click();
+      await cashbook.sheet.waitFor({ state: 'visible' });
+
+      await cashbook.categoryChip('식비').waitFor({ state: 'attached', timeout: 10000 });
+      await cashbook.categoryChip('식비').click();
+
+      await expect(cashbook.categoryHint).toContainText('장보기·외식·배달');
+      await expect(cashbook.categoryHint).toContainText('마트');
+    });
+
+    test('메모와 매칭되는 카테고리가 추천 chip으로 노출되고 탭하면 선택된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        examples: ['마트', '코스트코', '배달'],
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_personal',
+        name: '교통',
+        icon: 'bus',
+        examples: ['지하철', '버스'],
+      });
+
+      const cashbook = new CashbookPage(page);
+      await cashbook.goto();
+      await cashbook.addButton.click();
+      await cashbook.sheet.waitFor({ state: 'visible' });
+
+      // 카테고리 fetch 완료 대기 (추천 계산은 categories에 의존)
+      await cashbook.categoryChip('식비').waitFor({ state: 'attached', timeout: 10000 });
+
+      await cashbook.amountInput.fill('30000');
+      await cashbook.memoInput.fill('코스트코');
+
+      await expect(cashbook.categoryRecommendations).toBeVisible();
+      await expect(cashbook.recommendedChip('식비')).toBeVisible();
+
+      await cashbook.recommendedChip('식비').click();
+      await expect(cashbook.categoryBreadcrumb).toContainText('식비');
     });
   });
 });
