@@ -7,6 +7,7 @@ import { OverlayProvider } from 'overlay-kit';
 import { Toaster, TooltipProvider } from '@uandi/ui';
 import { createQueryClient } from '@/lib/query-client';
 import { AuthInit } from '@/components/AuthInit';
+import { FcmForegroundListener } from '@/components/FcmForegroundListener';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <TooltipProvider delayDuration={150}>
           <OverlayProvider>
             <AuthInit />
+            <FcmForegroundListener />
             {children}
             <Toaster />
           </OverlayProvider>

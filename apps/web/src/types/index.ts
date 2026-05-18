@@ -140,6 +140,8 @@ export type NotificationSettings = {
   };
   budgetWarning: {
     enabled: boolean;
+    // 본인 지출로 인해 발생한 예산 경고를 in-app toast로 띄울지 여부. 미지정 시 true 취급.
+    selfAlertInApp?: boolean;
   };
   updatedAt: Timestamp;
 };

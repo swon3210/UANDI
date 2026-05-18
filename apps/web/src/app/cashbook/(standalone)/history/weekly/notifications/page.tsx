@@ -33,6 +33,7 @@ const DEFAULT_VALUES = {
   },
   budgetWarning: {
     enabled: true,
+    selfAlertInApp: true,
   },
 };
 
@@ -93,7 +94,11 @@ export default function NotificationSettingsPage() {
   const formValues = settings
     ? {
         recordReminder: settings.recordReminder,
-        budgetWarning: settings.budgetWarning,
+        budgetWarning: {
+          enabled: settings.budgetWarning.enabled,
+          // 기존 사용자 문서에는 selfAlertInApp이 없을 수 있어 기본값 true 보정.
+          selfAlertInApp: settings.budgetWarning.selfAlertInApp ?? true,
+        },
       }
     : DEFAULT_VALUES;
 

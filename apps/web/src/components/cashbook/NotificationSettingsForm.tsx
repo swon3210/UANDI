@@ -33,6 +33,7 @@ const notificationSettingsSchema = z.object({
   }),
   budgetWarning: z.object({
     enabled: z.boolean(),
+    selfAlertInApp: z.boolean(),
   }),
 });
 
@@ -56,6 +57,7 @@ export function NotificationSettingsForm({
 
   const reminderEnabled = useWatch({ control: form.control, name: 'recordReminder.enabled' });
   const selectedDays = useWatch({ control: form.control, name: 'recordReminder.days' });
+  const budgetWarningEnabled = useWatch({ control: form.control, name: 'budgetWarning.enabled' });
 
   const toggleDay = (day: number) => {
     const current = form.getValues('recordReminder.days');
@@ -158,6 +160,30 @@ export function NotificationSettingsForm({
               </FormItem>
             )}
           />
+
+          {budgetWarningEnabled && (
+            <FormField
+              control={form.control}
+              name="budgetWarning.selfAlertInApp"
+              render={({ field }) => (
+                <FormItem className="flex items-start justify-between gap-4 pl-1">
+                  <div className="space-y-1">
+                    <FormLabel className="text-sm">내 지출 알림도 화면에 띄우기</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      앱을 켜둔 상태에서 본인 지출로 인한 예산 경고를 토스트로 표시해요.
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="budget-warning-self-in-app-switch"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <Button type="submit" className="w-full" disabled={isSaving}>
