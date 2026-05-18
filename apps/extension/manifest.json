@@ -1,11 +1,10 @@
 {
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuOFFE1heaWnCqplD38GzUbdbJERs7TgVt1BbsmlskzDJ28U0D8ww/YFMDfWWQYj+WzAUsSaD5xgG20zqYtNohaqL5ibRgc/zvA4pDNWI639cpfgcuyBWmHeNNYheD4C/GEadEgV61PKg5JA8vnkzMPOe77akMfuBqf5gXRGL0ljQM4c536B/wIpgM4twRyC1GCSgyaMEyT5rlKZ8pHcQ8rORemLro4aU+u0fpWjw8q5CdJ6WzwMXIS3BXn82jH57xwX4xXQTJD84ejQIAO5qzfyGZY5viu1b2FSozzFrRwy948IyzBGy2zqdvd7Aupu7DMIzBTCFnlSiKEqDvUu4DwIDAQAB",
-  "name": "UANDI 가계부",
+  "name": "UANDI 도구",
   "version": "0.1.0",
-  "description": "UANDI 커플 가계부 빠른 입력",
-  "permissions": ["identity", "storage", "activeTab", "scripting"],
-  "host_permissions": ["http://localhost:3000/*", "https://*.vercel.app/*"],
+  "description": "현재 탭의 웹페이지 투명도를 조절합니다",
+  "permissions": ["activeTab", "scripting"],
   "action": {
     "default_popup": "src/popup/index.html",
     "default_icon": {
@@ -22,9 +21,5 @@
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  },
-  "oauth2": {
-    "client_id": "REPLACE_WITH_GCP_CLIENT_ID.apps.googleusercontent.com",
-    "scopes": ["openid", "email", "profile"]
   }
 }
