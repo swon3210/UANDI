@@ -5,7 +5,9 @@ import {
   type ForexIndicators,
   type SupportedCurrency,
   CURRENCY_META,
+  RECOMMENDATION_LABEL,
   SUPPORTED_CURRENCIES,
+  computeRecommendation,
 } from '@uandi/investment-core';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
@@ -83,11 +85,12 @@ export async function POST(req: NextRequest) {
   }
 
   const { currency, points, indicators } = parsed.data;
+  const recommendation = computeRecommendation(indicators);
+  const recommendationLabel = RECOMMENDATION_LABEL[recommendation];
 
   if (process.env.USE_AI_MOCK === 'true') {
     return NextResponse.json({
-      summary: `${CURRENCY_META[currency].label} 환율은 최근 완만한 흐름이며, 단기 지표는 중립 구간입니다.`,
-      recommendation: 'hold',
+      summary: `${CURRENCY_META[currency].label} 환율은 최근 완만한 흐름이며, 단기 지표는 ${recommendationLabel} 구간입니다.`,
       confidence: 0.6,
     });
   }
@@ -104,18 +107,20 @@ export async function POST(req: NextRequest) {
           role: 'system',
           content: `당신은 외환 시장 분석 어시스턴트입니다.
 한국 개인 투자자가 환테크 의사결정에 참고할 수 있도록 최근 90일 시계열과 기술 지표를 바탕으로
-매수/매도/관망 추천과 근거를 1~3문장 한국어로 제시하세요.
+이미 결정된 추천(매수/매도/관망)을 뒷받침하는 근거를 1~3문장 한국어로 제시하세요.
 
 규칙:
+- 추천(recommendation)은 시스템이 이미 결정했으며 변경할 수 없습니다. summary는 이 추천과 일치하는 방향으로 작성하세요.
 - 단정적 예측("반드시", "100%")은 금지. "가능성", "경향" 같은 표현 사용
-- 출력은 반드시 JSON: { "summary": string, "recommendation": "buy"|"sell"|"hold", "confidence": 0~1 }
-- summary는 한국어 1~3문장
-- recommendation은 시계열·지표를 종합해 판단
-- confidence는 0~1 사이의 숫자`,
+- 출력은 반드시 JSON: { "summary": string, "confidence": 0~1 }
+- summary는 한국어 1~3문장, 추천 근거 중심
+- confidence는 0~1 사이의 숫자 (지표가 추천 방향을 얼마나 뚜렷이 가리키는지)`,
         },
         {
           role: 'user',
           content: `통화: ${currency}/KRW (${CURRENCY_META[currency].label})
+
+기술적 추천(고정): ${recommendation} (${recommendationLabel})
 
 시계열 요약 (KRW per 1 ${currency}):
 ${summarizeSeries(points)}
@@ -123,7 +128,7 @@ ${summarizeSeries(points)}
 기술 지표:
 ${indicatorLines(indicators)}
 
-위 데이터를 종합해 JSON으로 응답하세요.`,
+위 추천을 뒷받침하는 근거를 JSON으로 응답하세요.`,
         },
       ],
     });
@@ -142,8 +147,11 @@ ${indicatorLines(indicators)}
       );
     }
 
-    const outlook = JSON.parse(content);
-    return NextResponse.json(outlook);
+    const parsedContent = JSON.parse(content) as { summary?: unknown; confidence?: unknown };
+    const summary = typeof parsedContent.summary === 'string' ? parsedContent.summary : '';
+    const confidence =
+      typeof parsedContent.confidence === 'number' ? parsedContent.confidence : 0.5;
+    return NextResponse.json({ summary, confidence });
   } catch (error) {
     console.error('[forex-outlook] AI 호출 실패:', error);
     return NextResponse.json(

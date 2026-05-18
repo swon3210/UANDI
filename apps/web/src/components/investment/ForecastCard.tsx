@@ -1,16 +1,17 @@
 import { RefreshCcw, Sparkles } from 'lucide-react';
 import { Button, Skeleton } from '@uandi/ui';
-import type { ForexOutlook } from '@uandi/investment-core';
+import type { ForexOutlook, ForexRecommendation } from '@uandi/investment-core';
 import { BuyRecommendationBadge } from './BuyRecommendationBadge';
 
 type Props = {
   outlook: ForexOutlook | undefined;
+  recommendation: ForexRecommendation;
   isLoading: boolean;
   error: string | null;
   onRefresh: () => void;
 };
 
-export function ForecastCard({ outlook, isLoading, error, onRefresh }: Props) {
+export function ForecastCard({ outlook, recommendation, isLoading, error, onRefresh }: Props) {
   return (
     <div
       data-testid="forecast-card"
@@ -51,7 +52,7 @@ export function ForecastCard({ outlook, isLoading, error, onRefresh }: Props) {
 
       {!isLoading && !error && outlook && (
         <>
-          <BuyRecommendationBadge recommendation={outlook.recommendation} className="self-start" />
+          <BuyRecommendationBadge recommendation={recommendation} className="self-start" />
           <p className="text-sm leading-relaxed text-foreground/90">{outlook.summary}</p>
           <p className="text-xs text-muted-foreground">
             신뢰도 {(outlook.confidence * 100).toFixed(0)}%

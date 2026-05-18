@@ -131,6 +131,7 @@ export default function ForexDetailPage() {
 
         <ForecastCard
           outlook={outlookQuery.data}
+          recommendation={recommendation}
           isLoading={outlookQuery.isFetching}
           error={
             outlookQuery.error instanceof Error

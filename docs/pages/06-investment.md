@@ -280,9 +280,10 @@ export type ForexRecommendation = 'buy' | 'sell' | 'hold';
 
 export type ForexOutlook = {
   summary: string;
-  recommendation: ForexRecommendation;
   confidence: number;
 };
+// 추천(매수/매도/관망)은 클라이언트의 computeRecommendation(indicators)을 단일 출처로 사용.
+// AI는 해당 추천을 뒷받침하는 summary와 confidence만 생성한다.
 
 export const SUPPORTED_CURRENCIES: SupportedCurrency[] = ['USD', 'JPY', 'EUR', 'CNY'];
 

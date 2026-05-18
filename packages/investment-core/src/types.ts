@@ -45,6 +45,5 @@ export type ForexRecommendation = 'buy' | 'sell' | 'hold';
 
 export type ForexOutlook = {
   summary: string;
-  recommendation: ForexRecommendation;
   confidence: number;
 };
