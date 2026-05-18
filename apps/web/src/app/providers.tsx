@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Provider as JotaiProvider } from 'jotai';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { OverlayProvider } from 'overlay-kit';
-import { Toaster } from '@uandi/ui';
+import { Toaster, TooltipProvider } from '@uandi/ui';
 import { createQueryClient } from '@/lib/query-client';
 import { AuthInit } from '@/components/AuthInit';
 
@@ -14,11 +14,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <JotaiProvider>
       <QueryClientProvider client={queryClient}>
-        <OverlayProvider>
-          <AuthInit />
-          {children}
-          <Toaster />
-        </OverlayProvider>
+        <TooltipProvider delayDuration={150}>
+          <OverlayProvider>
+            <AuthInit />
+            {children}
+            <Toaster />
+          </OverlayProvider>
+        </TooltipProvider>
       </QueryClientProvider>
     </JotaiProvider>
   );

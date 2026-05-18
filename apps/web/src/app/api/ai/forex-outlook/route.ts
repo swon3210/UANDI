@@ -1,0 +1,154 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import {
+  type ExchangeRatePoint,
+  type ForexIndicators,
+  type SupportedCurrency,
+  CURRENCY_META,
+  SUPPORTED_CURRENCIES,
+} from '@uandi/investment-core';
+import { getOpenAIClient } from '@/lib/ai/openai';
+import { verifyAuth } from '@/lib/ai/verify-auth';
+import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
+
+const FOREX_MODEL = 'gpt-5-mini';
+
+const requestSchema = z.object({
+  currency: z.enum(SUPPORTED_CURRENCIES as [SupportedCurrency, ...SupportedCurrency[]]),
+  points: z
+    .array(
+      z.object({
+        date: z.string(),
+        rate: z.number(),
+      })
+    )
+    .min(2),
+  indicators: z.object({
+    current: z.number(),
+    ma5: z.number().nullable(),
+    ma20: z.number().nullable(),
+    ma60: z.number().nullable(),
+    rsi14: z.number().nullable(),
+    percentile52w: z.number().nullable(),
+  }),
+});
+
+function summarizeSeries(points: ExchangeRatePoint[]): string {
+  const first = points[0];
+  const last = points[points.length - 1];
+  const mid = points[Math.floor(points.length / 2)];
+  const sorted = [...points].sort((a, b) => a.rate - b.rate);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  const fmt = (p: ExchangeRatePoint) => `${p.date}=${p.rate.toFixed(2)}`;
+  return [
+    `시작: ${fmt(first)}`,
+    `중간: ${fmt(mid)}`,
+    `최근: ${fmt(last)}`,
+    `최저: ${fmt(min)}`,
+    `최고: ${fmt(max)}`,
+  ].join(', ');
+}
+
+function indicatorLines(indicators: ForexIndicators): string {
+  const fmt = (v: number | null) => (v === null ? 'n/a' : v.toFixed(2));
+  return [
+    `현재가: ${indicators.current.toFixed(2)}`,
+    `MA20: ${fmt(indicators.ma20)}`,
+    `MA60: ${fmt(indicators.ma60)}`,
+    `RSI(14): ${fmt(indicators.rsi14)}`,
+    `52주 백분위: ${fmt(indicators.percentile52w)}`,
+  ].join('\n');
+}
+
+export async function POST(req: NextRequest) {
+  const authResult = await verifyAuth(req);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const body = await req.json();
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: '잘못된 요청입니다', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const allowed = await checkAndIncrementUsage(authResult.coupleId);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: '일일 사용 한도를 초과했습니다' },
+      { status: 429 }
+    );
+  }
+
+  const { currency, points, indicators } = parsed.data;
+
+  if (process.env.USE_AI_MOCK === 'true') {
+    return NextResponse.json({
+      summary: `${CURRENCY_META[currency].label} 환율은 최근 완만한 흐름이며, 단기 지표는 중립 구간입니다.`,
+      recommendation: 'hold',
+      confidence: 0.6,
+    });
+  }
+
+  try {
+    const client = getOpenAIClient();
+    const completion = await client.chat.completions.create({
+      model: FOREX_MODEL,
+      response_format: { type: 'json_object' },
+      max_completion_tokens: 2000,
+      reasoning_effort: 'minimal',
+      messages: [
+        {
+          role: 'system',
+          content: `당신은 외환 시장 분석 어시스턴트입니다.
+한국 개인 투자자가 환테크 의사결정에 참고할 수 있도록 최근 90일 시계열과 기술 지표를 바탕으로
+매수/매도/관망 추천과 근거를 1~3문장 한국어로 제시하세요.
+
+규칙:
+- 단정적 예측("반드시", "100%")은 금지. "가능성", "경향" 같은 표현 사용
+- 출력은 반드시 JSON: { "summary": string, "recommendation": "buy"|"sell"|"hold", "confidence": 0~1 }
+- summary는 한국어 1~3문장
+- recommendation은 시계열·지표를 종합해 판단
+- confidence는 0~1 사이의 숫자`,
+        },
+        {
+          role: 'user',
+          content: `통화: ${currency}/KRW (${CURRENCY_META[currency].label})
+
+시계열 요약 (KRW per 1 ${currency}):
+${summarizeSeries(points)}
+
+기술 지표:
+${indicatorLines(indicators)}
+
+위 데이터를 종합해 JSON으로 응답하세요.`,
+        },
+      ],
+    });
+
+    const choice = completion.choices[0];
+    const content = choice?.message?.content;
+    if (!content) {
+      console.error('[forex-outlook] 빈 응답', {
+        model: FOREX_MODEL,
+        finishReason: choice?.finish_reason,
+        usage: completion.usage,
+      });
+      return NextResponse.json(
+        { error: 'AI 응답이 비어 있습니다' },
+        { status: 502 }
+      );
+    }
+
+    const outlook = JSON.parse(content);
+    return NextResponse.json(outlook);
+  } catch (error) {
+    console.error('[forex-outlook] AI 호출 실패:', error);
+    return NextResponse.json(
+      { error: 'AI 서비스에 일시적인 문제가 발생했습니다' },
+      { status: 500 }
+    );
+  }
+}
