@@ -47,6 +47,9 @@
 /photos/tag/[tagName]     → 태그별 사진
 /photos/slideshow   → 슬라이드쇼
 /cashbook           → 가계부
+/investment         → 재테크 (자산 대시보드, 1차 PR은 /investment/forex 리다이렉트)
+/investment/forex   → 환테크 통화 목록
+/investment/forex/[currency] → 통화별 환율 차트 + AI 전망
 ```
 
 ### 페이지 명세 파일
@@ -58,6 +61,7 @@
 | `pages/02-dashboard.md` | `/` (로그인) | 대시보드 (최근 사진 + 가계부 요약) |
 | `pages/03-photo-gallery.md` | `/photos`, `/photos/[id]` | 사진 갤러리 + 상세 |
 | `pages/04-cashbook.md` | `/cashbook` | 가계부 목록 + 수입/지출 추가 |
+| `pages/06-investment.md` | `/investment/forex` | 재테크 — 환테크 차트 + AI 전망 |
 
 ---
 

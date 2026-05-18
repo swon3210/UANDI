@@ -78,6 +78,12 @@ export {
 } from './components/form';
 export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
 export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from './components/tooltip';
+export {
   Command,
   CommandDialog,
   CommandInput,
