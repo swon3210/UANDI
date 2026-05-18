@@ -1,14 +1,33 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 
+const MOCK_BASE_RATES: Record<string, number> = {
+  USD: 1380,
+  EUR: 1480,
+  GBP: 1730,
+  CHF: 1540,
+  AUD: 910,
+  CAD: 1010,
+  NZD: 840,
+  JPY: 9.1,
+  CNY: 190,
+  HKD: 176,
+  SGD: 1020,
+  INR: 16.5,
+  THB: 38,
+  IDR: 8.5,
+  MYR: 290,
+  PHP: 24,
+};
+
 async function mockForexRates(page: Page) {
   await page.route('**/api/forex/rates*', async (route) => {
     const url = new URL(route.request().url());
     const currency = url.searchParams.get('currency') ?? 'USD';
     const range = url.searchParams.get('range') ?? '1m';
     const length = range === '1w' ? 7 : range === '1y' ? 60 : 30;
-    const base = currency === 'JPY' ? 9.1 : currency === 'EUR' ? 1480 : currency === 'CNY' ? 190 : 1380;
-    const amplitude = currency === 'JPY' ? 0.2 : 12;
+    const base = MOCK_BASE_RATES[currency] ?? 1000;
+    const amplitude = base * 0.02;
     const points = Array.from({ length }, (_, i) => {
       const day = String((i % 28) + 1).padStart(2, '0');
       const month = String(Math.floor(i / 28) + 1).padStart(2, '0');
@@ -39,14 +58,21 @@ test.describe('환테크 (investment/forex)', () => {
     await expect(authedPage.getByTestId('forex-list-header')).toBeVisible();
   });
 
-  test('통화 목록 페이지에 USD/JPY/EUR/CNY 카드 4개가 표시된다', async ({ authedPage }) => {
+  test('통화 목록 페이지에 메이저/아시아 카테고리 헤더와 16개 통화 카드가 표시된다', async ({
+    authedPage,
+  }) => {
     await mockForexRates(authedPage);
     await authedPage.goto('/investment/forex');
 
-    await expect(authedPage.getByTestId('currency-card-USD')).toBeVisible({ timeout: 10000 });
-    await expect(authedPage.getByTestId('currency-card-JPY')).toBeVisible();
-    await expect(authedPage.getByTestId('currency-card-EUR')).toBeVisible();
-    await expect(authedPage.getByTestId('currency-card-CNY')).toBeVisible();
+    await expect(authedPage.getByTestId('forex-category-major')).toBeVisible({ timeout: 10000 });
+    await expect(authedPage.getByTestId('forex-category-asia')).toBeVisible();
+
+    const majorCurrencies = ['USD', 'EUR', 'GBP', 'CHF', 'AUD', 'CAD', 'NZD'];
+    const asiaCurrencies = ['JPY', 'CNY', 'HKD', 'SGD', 'INR', 'THB', 'IDR', 'MYR', 'PHP'];
+
+    for (const currency of [...majorCurrencies, ...asiaCurrencies]) {
+      await expect(authedPage.getByTestId(`currency-card-${currency}`)).toBeVisible();
+    }
   });
 
   test('USD 카드 클릭 → 상세 페이지에서 차트, 지표, AI 전망 모두 표시된다', async ({

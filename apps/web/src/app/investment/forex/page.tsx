@@ -5,9 +5,11 @@ import { useQueries } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { Button, Header, Skeleton } from '@uandi/ui';
 import {
+  CATEGORY_LABEL,
   SUPPORTED_CURRENCIES,
   computeIndicators,
   computeRecommendation,
+  getCurrenciesByCategory,
   type ForexRatesPayload,
   type SupportedCurrency,
 } from '@uandi/investment-core';
@@ -25,6 +27,12 @@ export default function ForexListPage() {
     })),
   });
 
+  const queryByCurrency = new Map<SupportedCurrency, Query>(
+    SUPPORTED_CURRENCIES.map((currency, i) => [currency, queries[i]])
+  );
+
+  const groups = getCurrenciesByCategory();
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header
@@ -36,15 +44,30 @@ export default function ForexListPage() {
           </Button>
         }
       />
-      <main className="mx-auto w-full max-w-md flex-1 space-y-3 px-4 pb-16 pt-4">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-16 pt-4">
         <p className="text-sm text-muted-foreground">
           주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.
         </p>
-        <div className="grid gap-3">
-          {SUPPORTED_CURRENCIES.map((currency, i) => (
-            <ForexListCard key={currency} currency={currency} query={queries[i]} />
-          ))}
-        </div>
+        {groups.map(({ category, currencies }) => (
+          <section
+            key={category}
+            data-testid={`forex-category-${category}`}
+            className="space-y-2"
+          >
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {CATEGORY_LABEL[category]}
+            </h2>
+            <div className="grid gap-3">
+              {currencies.map((currency) => (
+                <ForexListCard
+                  key={currency}
+                  currency={currency}
+                  query={queryByCurrency.get(currency)!}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
       </main>
     </div>
   );

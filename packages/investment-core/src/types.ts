@@ -1,4 +1,22 @@
-export type SupportedCurrency = 'USD' | 'JPY' | 'EUR' | 'CNY';
+export type SupportedCurrency =
+  | 'USD'
+  | 'JPY'
+  | 'EUR'
+  | 'CNY'
+  | 'GBP'
+  | 'CHF'
+  | 'AUD'
+  | 'CAD'
+  | 'NZD'
+  | 'HKD'
+  | 'SGD'
+  | 'INR'
+  | 'THB'
+  | 'IDR'
+  | 'MYR'
+  | 'PHP';
+
+export type CurrencyCategory = 'major' | 'asia' | 'europe' | 'emerging';
 
 export type ForexRange = '1w' | '1m' | '3m' | '6m' | '1y' | '5y';
 

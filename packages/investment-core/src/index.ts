@@ -1,6 +1,7 @@
 // Types
 export type {
   SupportedCurrency,
+  CurrencyCategory,
   ForexRange,
   ExchangeRatePoint,
   ForexRatesPayload,
@@ -14,6 +15,10 @@ export {
   SUPPORTED_CURRENCIES,
   FOREX_RANGES,
   CURRENCY_META,
+  CATEGORY_LABEL,
+  CATEGORY_ORDER,
+  CURRENCY_CATEGORY,
+  getCurrenciesByCategory,
   RANGE_DAYS,
   isSupportedCurrency,
   isForexRange,
