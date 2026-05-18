@@ -22,6 +22,7 @@ export const Default: Story = {
       },
       budgetWarning: {
         enabled: true,
+        selfAlertInApp: true,
       },
     },
     onSave: (data) => console.log('save', data),
@@ -39,6 +40,26 @@ export const AllEnabled: Story = {
       },
       budgetWarning: {
         enabled: true,
+        selfAlertInApp: true,
+      },
+    },
+    onSave: (data) => console.log('save', data),
+    isSaving: false,
+  },
+};
+
+export const SelfInAppOff: Story = {
+  name: '본인 in-app 알림 OFF',
+  args: {
+    defaultValues: {
+      recordReminder: {
+        enabled: false,
+        time: '21:00',
+        days: [1, 2, 3, 4, 5],
+      },
+      budgetWarning: {
+        enabled: true,
+        selfAlertInApp: false,
       },
     },
     onSave: (data) => console.log('save', data),
@@ -56,6 +77,7 @@ export const Saving: Story = {
       },
       budgetWarning: {
         enabled: true,
+        selfAlertInApp: true,
       },
     },
     onSave: (data) => console.log('save', data),
