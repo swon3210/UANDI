@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Smartphone } from 'lucide-react';
 import { useAtomValue } from 'jotai';
+import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import { Header, Button, FullScreenSpinner, Separator } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
@@ -13,6 +14,7 @@ import {
 } from '@/hooks/useNotificationSettings';
 import { useFcmToken, type FcmEnableState } from '@/hooks/useFcmToken';
 import { NotificationSettingsForm } from '@/components/cashbook/NotificationSettingsForm';
+import { InstallPwaBanner } from '@/components/InstallPwaBanner';
 import { sendTestPush } from '@/services/test-push';
 
 function reportFcmResult(result: FcmEnableState) {
@@ -46,6 +48,20 @@ export default function NotificationSettingsPage() {
   const updateMutation = useUpdateNotificationSettings(uid);
   const { enable: enableFcm } = useFcmToken();
   const [testPushSending, setTestPushSending] = useState(false);
+
+  const handleOpenInstallGuide = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <InstallPwaBanner
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            close();
+            setTimeout(unmount, 300);
+          }
+        }}
+      />
+    ));
+  };
 
   const handleSendTestPush = async () => {
     setTestPushSending(true);
@@ -137,6 +153,24 @@ export default function NotificationSettingsPage() {
           }
           isSaving={updateMutation.isPending}
         />
+
+        <Separator className="my-6" />
+
+        <section className="space-y-2" data-testid="install-pwa-section">
+          <h3 className="text-base font-semibold">모바일에서 백그라운드 알림 받기</h3>
+          <p className="text-sm text-muted-foreground">
+            홈 화면에 추가해야 브라우저가 꺼져 있어도 푸시 알림이 도달해요.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleOpenInstallGuide}
+            data-testid="open-install-pwa-guide-button"
+          >
+            <Smartphone size={16} className="mr-2" />홈 화면에 추가하는 방법 보기
+          </Button>
+        </section>
 
         <Separator className="my-6" />
 
