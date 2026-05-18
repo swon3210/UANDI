@@ -22,9 +22,9 @@ export const Buy: Story = {
     outlook: {
       summary:
         '최근 한 달간 완만한 하락세가 이어졌고 52주 최저가 근처에 머무르고 있어 매수 진입에 우호적인 구간으로 판단됩니다.',
-      recommendation: 'buy',
       confidence: 0.72,
     },
+    recommendation: 'buy',
     isLoading: false,
     error: null,
     onRefresh: () => {},
@@ -36,9 +36,9 @@ export const Sell: Story = {
     outlook: {
       summary:
         '최근 환율이 52주 최고가에 근접해 단기 과열 신호가 보입니다. 보유 외화가 있다면 일부 분할 매도를 고려할 만한 시점입니다.',
-      recommendation: 'sell',
       confidence: 0.65,
     },
+    recommendation: 'sell',
     isLoading: false,
     error: null,
     onRefresh: () => {},
@@ -48,6 +48,7 @@ export const Sell: Story = {
 export const Loading: Story = {
   args: {
     outlook: undefined,
+    recommendation: 'hold',
     isLoading: true,
     error: null,
     onRefresh: () => {},
@@ -57,6 +58,7 @@ export const Loading: Story = {
 export const Error: Story = {
   args: {
     outlook: undefined,
+    recommendation: 'hold',
     isLoading: false,
     error: '일일 사용 한도를 초과했습니다',
     onRefresh: () => {},
