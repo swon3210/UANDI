@@ -73,14 +73,18 @@ export function ExchangeRateChart({ currency, points }: Props) {
     const ma20 = ma(points, 20);
     const dotInterval = Math.max(1, Math.floor(points.length / TARGET_DOT_COUNT));
     const lastIndex = points.length - 1;
-    return points.map((p, i) => ({
-      date: p.date,
-      label: dayjs(p.date).format('MM/DD'),
-      rate: getDisplayRate(p.rate, currency),
-      ma5: ma5[i] !== null ? getDisplayRate(ma5[i] as number, currency) : null,
-      ma20: ma20[i] !== null ? getDisplayRate(ma20[i] as number, currency) : null,
-      showDot: i === 0 || i === lastIndex || i % dotInterval === 0,
-    }));
+    return points.map((p, i) => {
+      const displayRate = getDisplayRate(p.rate, currency);
+      return {
+        date: p.date,
+        label: dayjs(p.date).format('MM/DD'),
+        rate: displayRate,
+        rateArea: displayRate,
+        ma5: ma5[i] !== null ? getDisplayRate(ma5[i] as number, currency) : null,
+        ma20: ma20[i] !== null ? getDisplayRate(ma20[i] as number, currency) : null,
+        showDot: i === 0 || i === lastIndex || i % dotInterval === 0,
+      };
+    });
   }, [points, currency]);
 
   return (
@@ -130,9 +134,8 @@ export function ExchangeRateChart({ currency, points }: Props) {
           }
         />
         <Area
-          key="rate-area"
           type="monotone"
-          dataKey="rate"
+          dataKey="rateArea"
           stroke="none"
           fill={`url(#${gradientId})`}
           isAnimationActive={false}
