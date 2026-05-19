@@ -30,6 +30,8 @@ export type ForexRatesPayload = {
   points: ExchangeRatePoint[];
   latest: number;
   prevClose: number | null;
+  asOf: string;
+  fetchedAt: string;
 };
 
 export type ForexIndicators = {

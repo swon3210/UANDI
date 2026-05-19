@@ -8,7 +8,7 @@ import {
   parseFrankfurterRange,
 } from '@uandi/investment-core';
 
-const ONE_HOUR = 3600;
+const FIFTEEN_MINUTES = 15 * 60;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const url = buildFrankfurterRangeUrl(currency, startDate, endDate);
 
   try {
-    const res = await fetch(url, { next: { revalidate: ONE_HOUR } });
+    const res = await fetch(url, { next: { revalidate: FIFTEEN_MINUTES } });
     if (!res.ok) {
       return NextResponse.json(
         { error: '환율 데이터를 가져올 수 없습니다' },
@@ -40,11 +40,11 @@ export async function GET(req: NextRequest) {
       );
     }
     const data = await res.json();
-    const payload = parseFrankfurterRange(currency, data);
+    const payload = parseFrankfurterRange(currency, data, new Date().toISOString());
 
     return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': `public, s-maxage=${ONE_HOUR}, stale-while-revalidate=${ONE_HOUR}`,
+        'Cache-Control': `public, s-maxage=${FIFTEEN_MINUTES}, stale-while-revalidate=${FIFTEEN_MINUTES}`,
       },
     });
   } catch (error) {

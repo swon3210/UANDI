@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
 import { ArrowDown, ArrowLeft, ArrowUp } from 'lucide-react';
 import { Button, Header, Skeleton, cn } from '@uandi/ui';
 import {
@@ -52,6 +53,8 @@ export default function ForexDetailPage() {
   const isDown = diff < 0;
 
   const recommendation = indicators ? computeRecommendation(indicators) : 'hold';
+  const asOf = ratesQuery.data?.asOf;
+  const fetchedAt = ratesQuery.data?.fetchedAt;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,6 +115,19 @@ export default function ForexDetailPage() {
               </div>
             )}
           </div>
+          {asOf && (
+            <p
+              data-testid="forex-detail-as-of"
+              className="text-xs text-muted-foreground"
+            >
+              {dayjs(asOf).format('YYYY년 M월 D일')} ECB 종가 기준
+              {fetchedAt && (
+                <span className="ml-1 text-muted-foreground/70">
+                  · {dayjs(fetchedAt).format('HH:mm')} 갱신
+                </span>
+              )}
+            </p>
+          )}
         </section>
 
         <section className="space-y-3">
