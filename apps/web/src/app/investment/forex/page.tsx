@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { ArrowLeft } from 'lucide-react';
 import { Button, Header, Skeleton } from '@uandi/ui';
 import {
@@ -23,7 +24,7 @@ export default function ForexListPage() {
     queries: SUPPORTED_CURRENCIES.map((currency) => ({
       queryKey: ['forexRates', currency, '1y'],
       queryFn: () => fetchForexRates(currency, '1y'),
-      staleTime: 30 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
     })),
   });
 
@@ -32,6 +33,18 @@ export default function ForexListPage() {
   );
 
   const groups = getCurrenciesByCategory();
+
+  const loadedPayloads = queries
+    .map((q) => q.data)
+    .filter((d): d is ForexRatesPayload => !!d);
+  const latestAsOf = loadedPayloads
+    .map((d) => d.asOf)
+    .sort()
+    .at(-1);
+  const latestFetchedAt = loadedPayloads
+    .map((d) => d.fetchedAt)
+    .sort()
+    .at(-1);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,9 +58,24 @@ export default function ForexListPage() {
         }
       />
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-16 pt-4">
-        <p className="text-sm text-muted-foreground">
-          주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.
-        </p>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.
+          </p>
+          {latestAsOf && (
+            <p
+              data-testid="forex-list-as-of"
+              className="text-xs text-muted-foreground"
+            >
+              {dayjs(latestAsOf).format('YYYY년 M월 D일')} ECB 종가 기준
+              {latestFetchedAt && (
+                <span className="ml-1 text-muted-foreground/70">
+                  · {dayjs(latestFetchedAt).format('HH:mm')} 갱신
+                </span>
+              )}
+            </p>
+          )}
+        </div>
         {groups.map(({ category, currencies }) => (
           <section
             key={category}

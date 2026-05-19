@@ -18,7 +18,8 @@ export function buildFrankfurterRangeUrl(
 
 export function parseFrankfurterRange(
   currency: SupportedCurrency,
-  data: FrankfurterRangeResponse
+  data: FrankfurterRangeResponse,
+  fetchedAt: string
 ): ForexRatesPayload {
   const points: ExchangeRatePoint[] = Object.entries(data.rates)
     .map(([date, ratesByCurrency]) => ({
@@ -30,6 +31,7 @@ export function parseFrankfurterRange(
 
   const latest = points[points.length - 1]?.rate ?? 0;
   const prevClose = points.length >= 2 ? points[points.length - 2].rate : null;
+  const asOf = points[points.length - 1]?.date ?? data.end_date;
 
-  return { currency, points, latest, prevClose };
+  return { currency, points, latest, prevClose, asOf, fetchedAt };
 }

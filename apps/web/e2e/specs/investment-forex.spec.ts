@@ -38,10 +38,12 @@ async function mockForexRates(page: Page) {
     });
     const latest = points[points.length - 1].rate;
     const prevClose = points[points.length - 2].rate;
+    const asOf = points[points.length - 1].date;
+    const fetchedAt = new Date().toISOString();
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ currency, points, latest, prevClose }),
+      body: JSON.stringify({ currency, points, latest, prevClose, asOf, fetchedAt }),
     });
   });
 }
