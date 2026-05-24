@@ -1,9 +1,12 @@
 'use client';
 
-import { AlertTriangle, X } from 'lucide-react';
+import dayjs from 'dayjs';
+import { AlertTriangle } from 'lucide-react';
+import { Switch } from '@uandi/ui';
 import { GROUP_LABELS } from '@uandi/cashbook-core';
 import type { CashbookEntryType } from '@/types';
 import { formatAmount } from '@/utils/currency';
+import type { DuplicateMatch } from '@/utils/cashbook-duplicate';
 
 export type ParsedEntryCardData = {
   type: CashbookEntryType;
@@ -12,30 +15,44 @@ export type ParsedEntryCardData = {
   description: string;
   date: string;
   confidence: number;
+  duplicate?: DuplicateMatch | null;
+  selected: boolean;
 };
 
 type ParsedEntryCardProps = {
   entry: ParsedEntryCardData;
   onClick: () => void;
-  onRemove: () => void;
+  onToggleSelected: (selected: boolean) => void;
 };
 
-export function ParsedEntryCard({ entry, onClick, onRemove }: ParsedEntryCardProps) {
+export function ParsedEntryCard({
+  entry,
+  onClick,
+  onToggleSelected,
+}: ParsedEntryCardProps) {
   const lowConfidence = entry.confidence < 0.7;
+  const isDuplicate = !!entry.duplicate;
+  const isUnselected = !entry.selected;
+
+  const borderClass = isDuplicate
+    ? 'border-destructive/60 bg-destructive/5'
+    : lowConfidence
+      ? 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-500/5'
+      : 'border-border bg-card';
 
   return (
     <div
       data-testid="parsed-entry-card"
-      className={`group relative flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-        lowConfidence
-          ? 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-500/5'
-          : 'border-border bg-card'
-      }`}
+      data-duplicate={isDuplicate ? 'true' : 'false'}
+      data-selected={entry.selected ? 'true' : 'false'}
+      className={`group relative flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${borderClass}`}
     >
       <button
         type="button"
         onClick={onClick}
-        className="flex flex-1 items-center gap-3 min-w-0 text-left"
+        className={`flex flex-1 items-center gap-3 min-w-0 text-left transition-opacity ${
+          isUnselected ? 'opacity-50' : ''
+        }`}
       >
         <span className="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
           {GROUP_LABELS[entry.type]}
@@ -43,7 +60,15 @@ export function ParsedEntryCard({ entry, onClick, onRemove }: ParsedEntryCardPro
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-medium truncate">{entry.category}</span>
-            {lowConfidence && (
+            {isDuplicate && (
+              <span
+                data-testid="parsed-entry-duplicate-badge"
+                className="shrink-0 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
+              >
+                중복 의심 · {dayjs(entry.duplicate!.existingDate).format('M/D')}
+              </span>
+            )}
+            {!isDuplicate && lowConfidence && (
               <AlertTriangle
                 size={14}
                 className="shrink-0 text-amber-500"
@@ -58,20 +83,18 @@ export function ParsedEntryCard({ entry, onClick, onRemove }: ParsedEntryCardPro
         <span
           className={`text-sm font-semibold tabular-nums shrink-0 ${
             entry.type === 'income' ? 'text-income' : 'text-expense'
-          }`}
+          } ${isUnselected ? 'line-through' : ''}`}
         >
           {formatAmount(entry.amount, entry.type)}
         </span>
       </button>
-      <button
-        type="button"
-        data-testid="parsed-entry-remove"
-        aria-label="항목 삭제"
-        onClick={onRemove}
-        className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <X size={16} />
-      </button>
+      <Switch
+        data-testid="parsed-entry-toggle"
+        aria-label={entry.selected ? '추가에서 제외' : '추가에 포함'}
+        checked={entry.selected}
+        onCheckedChange={(v) => onToggleSelected(v)}
+        className="shrink-0"
+      />
     </div>
   );
 }
