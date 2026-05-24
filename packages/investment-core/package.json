@@ -10,12 +10,17 @@
     "./constants/*": "./src/constants/*.ts",
     "./utils/*": "./src/utils/*.ts"
   },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "peerDependencies": {
     "dayjs": "^1.11.0"
   },
   "devDependencies": {
     "@uandi/tsconfig": "workspace:*",
     "dayjs": "^1.11.13",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
   }
 }

@@ -34,6 +34,8 @@ export type ForexRatesPayload = {
   fetchedAt: string;
 };
 
+export type ForexTrend = 'up' | 'down' | 'sideways';
+
 export type ForexIndicators = {
   current: number;
   ma5: number | null;
@@ -41,6 +43,8 @@ export type ForexIndicators = {
   ma60: number | null;
   rsi14: number | null;
   percentile52w: number | null;
+  percentile13w: number | null;
+  trend: ForexTrend;
 };
 
 export type ForexRecommendation = 'buy' | 'sell' | 'hold';

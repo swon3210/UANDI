@@ -8,6 +8,7 @@ export type {
   ForexIndicators,
   ForexRecommendation,
   ForexOutlook,
+  ForexTrend,
 } from './types';
 
 // Constants
@@ -30,9 +31,15 @@ export {
   computeMovingAverage,
   computeRsi,
   computePercentile,
+  computeMaSlope,
+  computeTrend,
   computeIndicators,
 } from './utils/indicators';
-export { computeRecommendation, RECOMMENDATION_LABEL } from './utils/recommendation';
+export {
+  computeRecommendation,
+  RECOMMENDATION_LABEL,
+  TREND_LABEL,
+} from './utils/recommendation';
 
 // Services
 export { buildFrankfurterRangeUrl, parseFrankfurterRange } from './services/frankfurter';

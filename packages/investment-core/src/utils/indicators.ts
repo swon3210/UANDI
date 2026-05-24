@@ -1,4 +1,10 @@
-import type { ExchangeRatePoint, ForexIndicators } from '../types';
+import type { ExchangeRatePoint, ForexIndicators, ForexTrend } from '../types';
+
+const TREND_MA_POSITION_BAND = 0.002;
+const TREND_SLOPE_BAND = 0.003;
+const TREND_SLOPE_LOOKBACK = 5;
+const TREND_MA_WINDOW = 20;
+const TREND_REFERENCE_WINDOW = 60;
 
 export function computeMovingAverage(points: ExchangeRatePoint[], window: number): number | null {
   if (points.length < window) return null;
@@ -34,6 +40,40 @@ export function computePercentile(points: ExchangeRatePoint[], window: number): 
   return (below / sorted.length) * 100;
 }
 
+export function computeMaSlope(
+  points: ExchangeRatePoint[],
+  window: number = TREND_MA_WINDOW,
+  lookback: number = TREND_SLOPE_LOOKBACK
+): number | null {
+  if (points.length < window + lookback) return null;
+  const maNow = computeMovingAverage(points, window);
+  const maPast = computeMovingAverage(points.slice(0, points.length - lookback), window);
+  if (maNow === null || maPast === null || maPast === 0) return null;
+  return (maNow - maPast) / maPast;
+}
+
+export function computeTrend(points: ExchangeRatePoint[]): ForexTrend {
+  const ma20 = computeMovingAverage(points, TREND_MA_WINDOW);
+  const ma60 = computeMovingAverage(points, TREND_REFERENCE_WINDOW);
+  const slope = computeMaSlope(points, TREND_MA_WINDOW, TREND_SLOPE_LOOKBACK);
+  if (ma20 === null || ma60 === null) return 'sideways';
+
+  let position = 0;
+  if (ma20 > ma60 * (1 + TREND_MA_POSITION_BAND)) position = 1;
+  else if (ma20 < ma60 * (1 - TREND_MA_POSITION_BAND)) position = -1;
+
+  let slopeScore = 0;
+  if (slope !== null) {
+    if (slope > TREND_SLOPE_BAND) slopeScore = 1;
+    else if (slope < -TREND_SLOPE_BAND) slopeScore = -1;
+  }
+
+  const score = position + slopeScore;
+  if (score >= 2) return 'up';
+  if (score <= -2) return 'down';
+  return 'sideways';
+}
+
 export function computeIndicators(points: ExchangeRatePoint[]): ForexIndicators {
   const current = points[points.length - 1]?.rate ?? 0;
   return {
@@ -43,5 +83,7 @@ export function computeIndicators(points: ExchangeRatePoint[]): ForexIndicators 
     ma60: computeMovingAverage(points, 60),
     rsi14: computeRsi(points, 14),
     percentile52w: computePercentile(points, 252),
+    percentile13w: computePercentile(points, 63),
+    trend: computeTrend(points),
   };
 }
