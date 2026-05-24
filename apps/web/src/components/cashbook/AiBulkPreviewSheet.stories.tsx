@@ -3,8 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 import { OverlayProvider } from 'overlay-kit';
 import { Sheet } from '@uandi/ui';
 import type { CashbookCategory } from '@/types';
-import { AiBulkPreviewSheet } from './AiBulkPreviewSheet';
-import type { ParsedEntryCardData } from './ParsedEntryCard';
+import { AiBulkPreviewSheet, type InitialParsedEntry } from './AiBulkPreviewSheet';
 
 const today = new Date().toISOString().split('T')[0];
 
@@ -47,7 +46,7 @@ const mockCategories: CashbookCategory[] = [
   },
 ];
 
-const threeEntries: ParsedEntryCardData[] = [
+const threeEntries: InitialParsedEntry[] = [
   {
     type: 'expense',
     amount: 9000,
@@ -74,7 +73,7 @@ const threeEntries: ParsedEntryCardData[] = [
   },
 ];
 
-const mixedConfidence: ParsedEntryCardData[] = [
+const mixedConfidence: InitialParsedEntry[] = [
   {
     type: 'expense',
     amount: 9000,
@@ -101,9 +100,9 @@ const mixedConfidence: ParsedEntryCardData[] = [
   },
 ];
 
-const oneEntry: ParsedEntryCardData[] = [threeEntries[0]];
+const oneEntry: InitialParsedEntry[] = [threeEntries[0]];
 
-const tenEntries: ParsedEntryCardData[] = Array.from({ length: 10 }, (_, i) => ({
+const tenEntries: InitialParsedEntry[] = Array.from({ length: 10 }, (_, i) => ({
   type: 'expense',
   amount: (i + 1) * 1000,
   category: i % 2 === 0 ? '식비' : '교통',
@@ -162,12 +161,5 @@ export const TenEntries: Story = {
   args: {
     ...commonArgs,
     initialEntries: tenEntries,
-  },
-};
-
-export const EmptyAfterRemoval: Story = {
-  args: {
-    ...commonArgs,
-    initialEntries: [],
   },
 };

@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import { Timestamp } from 'firebase/firestore';
-import { Sparkles, Inbox } from 'lucide-react';
+import { Sparkles, AlertCircle } from 'lucide-react';
 import {
   Button,
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  EmptyState,
 } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType } from '@/types';
+import { useDuplicateScopeEntries } from '@/hooks/useCashbook';
+import { findDuplicate } from '@/utils/cashbook-duplicate';
 import { EntryForm } from './EntryForm';
 import { ParsedEntryCard, type ParsedEntryCardData } from './ParsedEntryCard';
 
@@ -26,8 +27,11 @@ export type ConfirmedEntry = {
   createdBy: string;
 };
 
+/** 외부에서 받는 entry 타입 (selected/duplicate는 내부에서 계산) */
+export type InitialParsedEntry = Omit<ParsedEntryCardData, 'selected' | 'duplicate'>;
+
 type AiBulkPreviewSheetProps = {
-  initialEntries: ParsedEntryCardData[];
+  initialEntries: InitialParsedEntry[];
   categories: CashbookCategory[];
   coupleId: string | null;
   createdBy: string;
@@ -35,18 +39,63 @@ type AiBulkPreviewSheetProps = {
   onClose: () => void;
 };
 
-export function AiBulkPreviewSheet({
-  initialEntries,
+export function AiBulkPreviewSheet(props: AiBulkPreviewSheetProps) {
+  const parsedDates = useMemo(
+    () => props.initialEntries.map((e) => e.date),
+    [props.initialEntries]
+  );
+  const existing = useDuplicateScopeEntries(props.coupleId, parsedDates);
+
+  const annotated = useMemo<ParsedEntryCardData[]>(
+    () =>
+      props.initialEntries.map((e) => {
+        const duplicate = findDuplicate({ amount: e.amount, date: e.date }, existing);
+        return { ...e, duplicate, selected: !duplicate };
+      }),
+    [props.initialEntries, existing]
+  );
+
+  // existing이 비동기로 채워지므로, annotated의 길이를 key로 사용해
+  // duplicate 결과가 도착했을 때 Body가 새로운 초기 상태로 리마운트되게 한다.
+  const bodyKey = annotated.map((e) => (e.duplicate ? '1' : '0')).join('-');
+
+  return (
+    <AiBulkPreviewSheetBody
+      key={bodyKey}
+      initialAnnotatedEntries={annotated}
+      categories={props.categories}
+      coupleId={props.coupleId}
+      createdBy={props.createdBy}
+      onConfirm={props.onConfirm}
+      onClose={props.onClose}
+    />
+  );
+}
+
+type AiBulkPreviewSheetBodyProps = {
+  initialAnnotatedEntries: ParsedEntryCardData[];
+  categories: CashbookCategory[];
+  coupleId: string | null;
+  createdBy: string;
+  onConfirm: (entries: ConfirmedEntry[]) => void;
+  onClose: () => void;
+};
+
+function AiBulkPreviewSheetBody({
+  initialAnnotatedEntries,
   categories,
   coupleId,
   createdBy,
   onConfirm,
   onClose,
-}: AiBulkPreviewSheetProps) {
-  const [entries, setEntries] = useState<ParsedEntryCardData[]>(initialEntries);
+}: AiBulkPreviewSheetBodyProps) {
+  const [entries, setEntries] = useState<ParsedEntryCardData[]>(initialAnnotatedEntries);
 
-  const handleRemove = (index: number) => {
-    setEntries((prev) => prev.filter((_, i) => i !== index));
+  const duplicateCount = entries.filter((e) => e.duplicate).length;
+  const selectedCount = entries.filter((e) => e.selected).length;
+
+  const handleToggle = (index: number, next: boolean) => {
+    setEntries((prev) => prev.map((e, i) => (i === index ? { ...e, selected: next } : e)));
   };
 
   const handleEdit = (index: number) => {
@@ -75,6 +124,8 @@ export function AiBulkPreviewSheet({
                       description: data.description,
                       date: dayjs(data.date.toDate()).format('YYYY-MM-DD'),
                       confidence: 1,
+                      duplicate: null,
+                      selected: true,
                     }
                   : e
               )
@@ -90,14 +141,16 @@ export function AiBulkPreviewSheet({
   };
 
   const handleConfirm = () => {
-    const confirmed = entries.map<ConfirmedEntry>((e) => ({
-      type: e.type,
-      amount: e.amount,
-      category: e.category,
-      description: e.description,
-      date: Timestamp.fromDate(dayjs(e.date).toDate()),
-      createdBy,
-    }));
+    const confirmed = entries
+      .filter((e) => e.selected)
+      .map<ConfirmedEntry>((e) => ({
+        type: e.type,
+        amount: e.amount,
+        category: e.category,
+        description: e.description,
+        date: Timestamp.fromDate(dayjs(e.date).toDate()),
+        createdBy,
+      }));
     onConfirm(confirmed);
     onClose();
   };
@@ -116,31 +169,31 @@ export function AiBulkPreviewSheet({
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto py-4">
-        {entries.length === 0 ? (
-          <div className="py-10">
-            <EmptyState
-              icon={<Inbox size={48} className="text-muted-foreground" />}
-              title="추가할 내역이 없어요"
-              description="모든 항목을 삭제했어요. 창을 닫고 다시 입력해주세요."
-            />
+        {duplicateCount > 0 && (
+          <div
+            data-testid="ai-bulk-duplicate-banner"
+            className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"
+          >
+            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+            <span>
+              기존 내역과 중복으로 보이는 {duplicateCount}건은 추가에서 제외했어요. 필요하면 우측
+              스위치를 켜서 추가할 수 있어요.
+            </span>
           </div>
-        ) : (
-          <>
-            <p className="mb-3 text-xs text-muted-foreground">
-              항목을 탭하면 상세 편집이 가능하고, ✕로 삭제할 수 있어요.
-            </p>
-            <div className="space-y-2">
-              {entries.map((entry, index) => (
-                <ParsedEntryCard
-                  key={index}
-                  entry={entry}
-                  onClick={() => handleEdit(index)}
-                  onRemove={() => handleRemove(index)}
-                />
-              ))}
-            </div>
-          </>
         )}
+        <p className="mb-3 text-xs text-muted-foreground">
+          항목을 탭하면 상세 편집이 가능하고, 우측 스위치로 추가 여부를 정할 수 있어요.
+        </p>
+        <div className="space-y-2">
+          {entries.map((entry, index) => (
+            <ParsedEntryCard
+              key={index}
+              entry={entry}
+              onClick={() => handleEdit(index)}
+              onToggleSelected={(next) => handleToggle(index, next)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2 border-t border-border pt-3">
@@ -157,9 +210,9 @@ export function AiBulkPreviewSheet({
           data-testid="ai-bulk-confirm"
           className="flex-1"
           onClick={handleConfirm}
-          disabled={entries.length === 0}
+          disabled={selectedCount === 0}
         >
-          {entries.length}건 추가
+          {selectedCount}건 추가
         </Button>
       </div>
     </SheetContent>

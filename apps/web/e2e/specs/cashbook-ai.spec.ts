@@ -31,7 +31,7 @@ test.describe('자연어 가계부 다건 입력', () => {
     await expect(page.getByText('김치찌개').first()).toBeVisible();
   });
 
-  test('다건 입력 → 미리보기에 N개 카드 → 1개 삭제 후 추가하면 N-1건이 반영된다', async ({
+  test('다건 입력 → 미리보기에 N개 카드 → 1개 토글 OFF 후 추가하면 N-1건이 반영된다', async ({
     authedContext,
   }) => {
     const { page, coupleId } = authedContext;
@@ -44,18 +44,19 @@ test.describe('자연어 가계부 다건 입력', () => {
     await aiInput.fill('점심 김치찌개 9000원\n어제 택시 15000원\n월급 350만원');
     await page.getByTestId('ai-parse-submit').click();
 
-    // 카드 3개
+    // 카드 3개 (토글 OFF해도 카드는 화면에 남음)
     const cards = page.getByTestId('parsed-entry-card');
     await expect(cards).toHaveCount(3);
 
-    // 첫 카드 삭제
-    await page.getByTestId('parsed-entry-remove').first().click();
-    await expect(cards).toHaveCount(2);
+    // 첫 카드 토글 OFF (추가에서 제외)
+    await page.getByTestId('parsed-entry-toggle').first().click();
+    await expect(cards).toHaveCount(3);
+    await expect(page.getByTestId('ai-bulk-confirm')).toHaveText('2건 추가');
 
-    // 모두 추가
+    // 추가
     await page.getByTestId('ai-bulk-confirm').click();
 
-    // 미리보기 닫힘 + 월간 리스트에 2건 반영 (삭제한 첫 카드는 미반영)
+    // 미리보기 닫힘
     await expect(page.getByTestId('ai-bulk-preview-sheet')).not.toBeVisible();
   });
 
@@ -125,6 +126,81 @@ test.describe('자연어 가계부 다건 입력', () => {
     const previewSheet = page.getByTestId('ai-bulk-preview-sheet');
     await expect(previewSheet).toBeVisible();
     await expect(page.getByTestId('parsed-entry-card')).toHaveCount(2);
+  });
+
+  test('기존 내역과 중복되는 mock 결과는 중복 배지 + 체크 해제 상태로 표시된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId, uid } = authedContext;
+    await seedDefaultCategories(coupleId);
+    // mock 응답과 동일한 시드 데이터: 오늘 식비 9000원 (김치찌개)
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 9000,
+      category: '식비',
+      description: '김치찌개',
+      date: new Date().toISOString(),
+    });
+
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    await page.getByTestId('ai-parse-input').fill('점심 김치찌개 9000원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    // 미리보기 시트에 중복 안내 배너 + 카드에 중복 배지 표시
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+    await expect(page.getByTestId('ai-bulk-duplicate-banner')).toBeVisible();
+    await expect(page.getByTestId('parsed-entry-duplicate-badge')).toBeVisible();
+
+    // 카드는 selected=false → 추가 버튼 "0건 추가" + 비활성화
+    const card = page.getByTestId('parsed-entry-card').first();
+    await expect(card).toHaveAttribute('data-duplicate', 'true');
+    await expect(card).toHaveAttribute('data-selected', 'false');
+    const confirmBtn = page.getByTestId('ai-bulk-confirm');
+    await expect(confirmBtn).toHaveText('0건 추가');
+    await expect(confirmBtn).toBeDisabled();
+
+    // 사용자가 토글을 다시 켜면 "1건 추가"로 살아난다
+    await page.getByTestId('parsed-entry-toggle').click();
+    await expect(card).toHaveAttribute('data-selected', 'true');
+    await expect(confirmBtn).toHaveText('1건 추가');
+    await expect(confirmBtn).toBeEnabled();
+  });
+
+  test('중복이 아닌 항목은 그대로 체크된 채 유지되어 selectedCount만큼만 추가된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId, uid } = authedContext;
+    await seedDefaultCategories(coupleId);
+    // 3건 중 1건만 중복 (식비 9000원 - 첫 번째 mock 템플릿)
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 9000,
+      category: '식비',
+      description: '김치찌개',
+      date: new Date().toISOString(),
+    });
+
+    await page.goto('/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    // 3줄 입력 → mock이 3개 templates 반환
+    await page
+      .getByTestId('ai-parse-input')
+      .fill('점심 김치찌개 9000원\n어제 택시 15000원\n월급 350만원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    await expect(page.getByTestId('ai-bulk-duplicate-banner')).toBeVisible();
+
+    // 3개 카드 중 1개만 중복 표시
+    const duplicateCards = page.locator(
+      '[data-testid="parsed-entry-card"][data-duplicate="true"]'
+    );
+    await expect(duplicateCards).toHaveCount(1);
+
+    // 버튼은 "2건 추가" (중복 1건 제외)
+    await expect(page.getByTestId('ai-bulk-confirm')).toHaveText('2건 추가');
   });
 
   test('첨부한 썸네일을 X 버튼으로 제거할 수 있다', async ({ authedContext }) => {

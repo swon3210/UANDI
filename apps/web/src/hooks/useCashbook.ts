@@ -43,6 +43,37 @@ export function useCashbookEntriesInRange(
   });
 }
 
+/**
+ * AI 파싱 결과의 (min date - 1) ~ (max date + 1) 범위 내역을 조회한다.
+ * 중복 감지에서 사용. parsed가 비어있으면 쿼리하지 않는다.
+ */
+export function useDuplicateScopeEntries(
+  coupleId: string | null,
+  parsedDates: string[]
+): CashbookEntry[] {
+  const range = useMemo(() => {
+    if (parsedDates.length === 0) return null;
+    const dates = parsedDates.map((d) => dayjs(d));
+    const min = dates.reduce((a, b) => (a.isBefore(b) ? a : b)).subtract(1, 'day');
+    const max = dates.reduce((a, b) => (a.isAfter(b) ? a : b)).add(1, 'day');
+    return { start: min.startOf('day').toDate(), end: max.endOf('day').toDate() };
+  }, [parsedDates]);
+
+  const query = useQuery({
+    queryKey: [
+      QUERY_KEY,
+      coupleId,
+      'duplicate-scope',
+      range?.start.toISOString(),
+      range?.end.toISOString(),
+    ],
+    queryFn: () => getEntriesInRange(coupleId!, range!.start, range!.end),
+    enabled: !!coupleId && !!range,
+  });
+
+  return query.data ?? [];
+}
+
 export type MonthlySummary = {
   income: number;
   expense: number;
