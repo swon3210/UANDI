@@ -208,30 +208,9 @@ importers:
 
   apps/extension:
     dependencies:
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.71.2(react@19.2.4))
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@tanstack/react-query':
-        specifier: ^5.66.0
-        version: 5.90.21(react@19.2.4)
-      '@uandi/cashbook-core':
-        specifier: workspace:*
-        version: link:../../packages/cashbook-core
       '@uandi/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      dayjs:
-        specifier: ^1.11.0
-        version: 1.11.19
-      firebase:
-        specifier: ^11.3.1
-        version: 11.10.0
-      jotai:
-        specifier: ^2.11.0
-        version: 2.18.0(@babel/core@7.29.0)(@babel/template@7.28.6)(@types/react@19.2.14)(react@19.2.4)
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@19.2.4)
@@ -241,15 +220,6 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
-      react-hook-form:
-        specifier: ^7.71.2
-        version: 7.71.2(react@19.2.4)
-      sonner:
-        specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
     devDependencies:
       '@crxjs/vite-plugin':
         specifier: ^2.0.0-beta.28
