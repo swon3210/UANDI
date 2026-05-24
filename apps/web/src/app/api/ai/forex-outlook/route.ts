@@ -7,6 +7,7 @@ import {
   CURRENCY_META,
   RECOMMENDATION_LABEL,
   SUPPORTED_CURRENCIES,
+  TREND_LABEL,
   computeRecommendation,
 } from '@uandi/investment-core';
 import { getOpenAIClient } from '@/lib/ai/openai';
@@ -32,6 +33,8 @@ const requestSchema = z.object({
     ma60: z.number().nullable(),
     rsi14: z.number().nullable(),
     percentile52w: z.number().nullable(),
+    percentile13w: z.number().nullable(),
+    trend: z.enum(['up', 'down', 'sideways']),
   }),
 });
 
@@ -60,6 +63,8 @@ function indicatorLines(indicators: ForexIndicators): string {
     `MA60: ${fmt(indicators.ma60)}`,
     `RSI(14): ${fmt(indicators.rsi14)}`,
     `52주 백분위: ${fmt(indicators.percentile52w)}`,
+    `13주 백분위: ${fmt(indicators.percentile13w)}`,
+    `추세: ${indicators.trend} (${TREND_LABEL[indicators.trend]})`,
   ].join('\n');
 }
 
@@ -114,7 +119,13 @@ export async function POST(req: NextRequest) {
 - 단정적 예측("반드시", "100%")은 금지. "가능성", "경향" 같은 표현 사용
 - 출력은 반드시 JSON: { "summary": string, "confidence": 0~1 }
 - summary는 한국어 1~3문장, 추천 근거 중심
-- confidence는 0~1 사이의 숫자 (지표가 추천 방향을 얼마나 뚜렷이 가리키는지)`,
+- confidence는 0~1 사이의 숫자 (지표가 추천 방향을 얼마나 뚜렷이 가리키는지)
+
+지표 해석 가이드:
+- 추세(trend)는 MA20/MA60의 위치와 MA20의 5일 기울기를 합산해 산출됩니다. 'up'은 원화 약세(환율 상승) 국면, 'down'은 원화 강세(환율 하락) 국면, 'sideways'는 횡보를 의미합니다.
+- 52주 백분위가 높아도(75% 이상) 추세가 'up'이면 평균회귀가 즉시 일어나지 않을 수 있으므로 매도 신호를 신중히 해석하세요(이 경우 추천은 'hold'로 다운그레이드됩니다).
+- 13주 백분위는 최근 분기 내 위치로, 추세가 길게 이어지는 장에서도 단기 진입 타이밍을 보조합니다.
+- summary는 가능하면 "추세가 X이고 단기(13주) 백분위가 Y%이므로 …" 형태로 추세-단기 결합 해석을 권장합니다.`,
         },
         {
           role: 'user',
