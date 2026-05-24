@@ -16,7 +16,7 @@ export function useForexRates(currency: SupportedCurrency, range: ForexRange) {
   return useQuery({
     queryKey: [RATES_KEY, currency, range],
     queryFn: () => fetchForexRates(currency, range),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
