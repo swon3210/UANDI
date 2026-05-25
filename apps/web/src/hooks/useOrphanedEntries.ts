@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { getMonthlyEntries } from '@/services/cashbook';
@@ -55,12 +55,15 @@ export function useOrphanedEntries(
   }, [queries]);
 
   // 첫 등장 시점의 순위를 기억해, 재매칭으로 count가 바뀌어도 카드 순서가 흔들리지 않게 한다.
-  const orderMapRef = useRef<Map<string, number>>(new Map());
-  const nextOrderRef = useRef(0);
+  const [orderMap, setOrderMap] = useState<Map<string, number>>(() => new Map());
 
-  const { groups, totalCount } = useMemo(() => {
+  const { groups, totalCount, nextOrderMap } = useMemo(() => {
     if (!categories) {
-      return { groups: [] as OrphanGroup[], totalCount: 0 };
+      return {
+        groups: [] as OrphanGroup[],
+        totalCount: 0,
+        nextOrderMap: orderMap,
+      };
     }
     const presetNames = new Set(categories.map((c) => c.name));
     const byName = new Map<string, CashbookEntry[]>();
@@ -71,17 +74,19 @@ export function useOrphanedEntries(
       byName.set(e.category, arr);
     }
 
-    const newNames = Array.from(byName.keys()).filter(
-      (n) => !orderMapRef.current.has(n)
-    );
-    newNames.sort((a, b) => {
-      const ca = byName.get(a)!.length;
-      const cb = byName.get(b)!.length;
-      return cb - ca || a.localeCompare(b);
-    });
-    for (const name of newNames) {
-      orderMapRef.current.set(name, nextOrderRef.current);
-      nextOrderRef.current += 1;
+    const newNames = Array.from(byName.keys()).filter((n) => !orderMap.has(n));
+    let effectiveMap = orderMap;
+    if (newNames.length > 0) {
+      newNames.sort((a, b) => {
+        const ca = byName.get(a)!.length;
+        const cb = byName.get(b)!.length;
+        return cb - ca || a.localeCompare(b);
+      });
+      effectiveMap = new Map(orderMap);
+      let i = orderMap.size;
+      for (const name of newNames) {
+        effectiveMap.set(name, i++);
+      }
     }
 
     const groupList: OrphanGroup[] = [];
@@ -91,14 +96,19 @@ export function useOrphanedEntries(
     }
     groupList.sort(
       (a, b) =>
-        (orderMapRef.current.get(a.name) ?? 0) -
-        (orderMapRef.current.get(b.name) ?? 0)
+        (effectiveMap.get(a.name) ?? 0) - (effectiveMap.get(b.name) ?? 0)
     );
     return {
       groups: groupList,
       totalCount: groupList.reduce((sum, g) => sum + g.entries.length, 0),
+      nextOrderMap: effectiveMap,
     };
-  }, [allEntries, categories]);
+  }, [allEntries, categories, orderMap]);
+
+  // 새 카테고리가 등장하면 순서를 보존한다. 다음 렌더부터는 동일한 effectiveMap으로 안정화.
+  if (nextOrderMap !== orderMap) {
+    setOrderMap(nextOrderMap);
+  }
 
   return {
     groups,
