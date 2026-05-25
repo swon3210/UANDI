@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
 import { FullScreenSpinner } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -9,7 +9,8 @@ import {
   useAllPhotosByFolder,
   useAllPhotosByTag,
 } from '@/hooks/usePhotos';
-import { useFolder } from '@/hooks/useFolders';
+import { useFolder, useFolders } from '@/hooks/useFolders';
+import { findNextNonEmptySiblingFolderId } from '@/services/folders';
 import { SlideshowView } from '@/components/photos/SlideshowView';
 
 type Source = 'all' | 'folder' | 'tag';
@@ -23,6 +24,7 @@ function SlideshowContent() {
   const source = searchParams.get('source') as Source | null;
   const id = searchParams.get('id');
   const photoId = searchParams.get('photoId');
+  const cycleNonce = searchParams.get('t');
 
   const isAllSource = source === 'all';
   const isFolderSource = source === 'folder';
@@ -41,6 +43,7 @@ function SlideshowContent() {
     isFolderSource ? coupleId : null,
     isFolderSource ? id : null
   );
+  const { data: folders } = useFolders(isFolderSource ? coupleId : null);
 
   const activeQuery = isAllSource ? allQuery : isFolderSource ? folderQuery : tagQuery;
   const photos = useMemo(() => activeQuery.data ?? [], [activeQuery.data]);
@@ -70,16 +73,30 @@ function SlideshowContent() {
     }
   }, [shouldRedirect, router]);
 
+  const handleLastPhotoNext = useCallback(async () => {
+    if (!isFolderSource || !coupleId || !id || !folders) return;
+    const nextId = await findNextNonEmptySiblingFolderId(coupleId, folders, id);
+    if (nextId) {
+      router.replace(`/photos/slideshow?source=folder&id=${nextId}`);
+    } else {
+      // 갈 곳 없음(자기 1개뿐/모두 빈 폴더) → 같은 폴더 첫 사진으로 순환.
+      // URL이 동일하면 라우터가 무시하므로 nonce(t)를 붙여 강제로 리마운트한다.
+      router.replace(`/photos/slideshow?source=folder&id=${id}&t=${Date.now()}`);
+    }
+  }, [isFolderSource, coupleId, id, folders, router]);
+
   if (invalidParams || authStatus === 'loading' || !isFetched || photos.length === 0) {
     return <FullScreenSpinner />;
   }
 
   return (
     <SlideshowView
+      key={`${source}-${id ?? 'all'}-${cycleNonce ?? ''}`}
       photos={photos}
       initialIndex={initialIndex}
       folder={isFolderSource ? folder : undefined}
       onClose={() => router.back()}
+      onLastPhotoNext={isFolderSource ? handleLastPhotoNext : undefined}
     />
   );
 }

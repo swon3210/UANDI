@@ -146,3 +146,39 @@ export const StartFromMiddle: Story = {
   name: '특정 인덱스부터 시작 (initialIndex=2)',
   render: () => <StartFromMiddleWrapper />,
 };
+
+function NextFolderCallbackWrapper() {
+  const [open, setOpen] = useState(true);
+  const [log, setLog] = useState<string[]>([]);
+  if (!open) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
+        <button
+          className="rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+          onClick={() => setOpen(true)}
+        >
+          슬라이드쇼 다시 열기
+        </button>
+        <pre className="max-h-40 overflow-auto text-xs text-muted-foreground">
+          {log.length === 0 ? '아직 호출 없음' : log.join('\n')}
+        </pre>
+      </div>
+    );
+  }
+  return (
+    <SlideshowView
+      photos={mockPhotos}
+      folder={mockFolder}
+      onClose={() => setOpen(false)}
+      onLastPhotoNext={() => {
+        const at = new Date().toLocaleTimeString();
+        setLog((prev) => [...prev, `${at} — 다음 폴더 요청`]);
+      }}
+    />
+  );
+}
+
+export const WithNextFolderCallback: Story = {
+  name: '다음 폴더 콜백 (마지막 사진에서 → 트리거)',
+  render: () => <NextFolderCallbackWrapper />,
+};

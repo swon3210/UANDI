@@ -27,6 +27,8 @@ type SlideshowViewProps = {
   initialIndex?: number;
   folder?: Folder | null;
   onClose: () => void;
+  /** 마지막 사진에서 "다음" 액션이 일어났을 때 호출. 정의되어 있으면 멈추지 않고 콜백을 실행한다. */
+  onLastPhotoNext?: () => void;
 };
 
 export function SlideshowView({
@@ -34,6 +36,7 @@ export function SlideshowView({
   initialIndex = 0,
   folder,
   onClose,
+  onLastPhotoNext,
 }: SlideshowViewProps) {
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
@@ -74,9 +77,15 @@ export function SlideshowView({
   }, [startIdleTimer]);
 
   const goNext = useCallback(() => {
-    setCurrentIndex((prev) => Math.min(prev + 1, photos.length - 1));
+    setCurrentIndex((prev) => {
+      if (prev >= photos.length - 1) {
+        onLastPhotoNext?.();
+        return prev;
+      }
+      return prev + 1;
+    });
     resetIdleTimer();
-  }, [photos.length, resetIdleTimer]);
+  }, [photos.length, resetIdleTimer, onLastPhotoNext]);
 
   const goPrev = useCallback(() => {
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
