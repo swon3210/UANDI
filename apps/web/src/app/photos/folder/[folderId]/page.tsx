@@ -62,6 +62,15 @@ export default function FolderDetailPage() {
     folderId
   );
   const { data: allFolders } = useFolders(coupleId);
+  const subfolderCountByParent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const f of allFolders ?? []) {
+      if (f.parentFolderId) {
+        map.set(f.parentFolderId, (map.get(f.parentFolderId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [allFolders]);
   const { data: photoStats } = usePhotoStats(coupleId);
   const renameMutation = useRenameFolder(coupleId);
   const deleteMutation = useDeleteFolder(coupleId);
@@ -344,7 +353,11 @@ export default function FolderDetailPage() {
       <div className="flex-1">
         <div className="max-w-5xl mx-auto w-full">
           {folder && !isSelectMode && (
-            <SubFolderSection subFolders={subFolders} isLoading={subFoldersLoading} />
+            <SubFolderSection
+              subFolders={subFolders}
+              isLoading={subFoldersLoading}
+              subfolderCountByParent={subfolderCountByParent}
+            />
           )}
           {isLoading ? (
             <PhotoGrid photos={[]} isLoading />

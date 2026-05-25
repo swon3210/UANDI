@@ -31,6 +31,16 @@ export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
     });
   }, [data, debouncedQuery, sortBy]);
 
+  const subfolderCountByParent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const f of data ?? []) {
+      if (f.parentFolderId) {
+        map.set(f.parentFolderId, (map.get(f.parentFolderId) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [data]);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
@@ -69,7 +79,11 @@ export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4">
           {folders.map((folder) => (
-            <FolderCard key={folder.id} folder={folder} />
+            <FolderCard
+              key={folder.id}
+              folder={folder}
+              subfolderCount={subfolderCountByParent.get(folder.id) ?? 0}
+            />
           ))}
         </div>
       )}
