@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Button, Logo } from '@uandi/ui';
 import { signInWithGoogle } from '@/lib/firebase/auth';
@@ -42,39 +43,60 @@ export function LandingPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <Logo variant="icon" className="h-16 w-16" />
-      <p className="mt-6 text-center text-xl font-semibold leading-snug text-foreground">
-        둘이서 만드는
-        <br />
-        우리만의 일상
-      </p>
-      <p className="mt-3 text-center text-sm text-muted-foreground">
-        사진을 함께 모으고, 돈을 함께 관리하세요.
-      </p>
-      <div className="mt-10 w-full max-w-sm">
-        <Button
-          data-testid="google-login-btn"
-          className="w-full"
-          size="lg"
-          onClick={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="animate-spin" size={16} />
-              로그인 중...
-            </>
-          ) : (
-            '구글로 시작하기'
+    <main className="flex min-h-screen flex-col items-center px-4">
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <Logo variant="icon" className="h-16 w-16" />
+        <p className="mt-6 text-center text-xl font-semibold leading-snug text-foreground">
+          둘이서 만드는
+          <br />
+          우리만의 일상
+        </p>
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          사진을 함께 모으고, 돈을 함께 관리하세요.
+        </p>
+        <div className="mt-10 w-full max-w-sm">
+          <Button
+            data-testid="google-login-btn"
+            className="w-full"
+            size="lg"
+            onClick={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                로그인 중...
+              </>
+            ) : (
+              '구글로 시작하기'
+            )}
+          </Button>
+          {error && (
+            <p role="alert" data-testid="login-error" className="mt-2 text-center text-sm text-destructive">
+              {error}
+            </p>
           )}
-        </Button>
-        {error && (
-          <p role="alert" data-testid="login-error" className="mt-2 text-center text-sm text-destructive">
-            {error}
+          <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
+            로그인 시{' '}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              개인정보처리방침
+            </Link>
+            에 동의하는 것으로 간주됩니다.
           </p>
-        )}
+        </div>
       </div>
+      <footer className="w-full pb-6 pt-4 text-center">
+        <Link
+          href="/privacy"
+          className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          data-testid="footer-privacy-link"
+        >
+          개인정보처리방침
+        </Link>
+      </footer>
     </main>
   );
 }
