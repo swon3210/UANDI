@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { getMonthlyEntries } from '@/services/cashbook';
@@ -54,6 +54,10 @@ export function useOrphanedEntries(
     return list;
   }, [queries]);
 
+  // 첫 등장 시점의 순위를 기억해, 재매칭으로 count가 바뀌어도 카드 순서가 흔들리지 않게 한다.
+  const orderMapRef = useRef<Map<string, number>>(new Map());
+  const nextOrderRef = useRef(0);
+
   const { groups, totalCount } = useMemo(() => {
     if (!categories) {
       return { groups: [] as OrphanGroup[], totalCount: 0 };
@@ -66,13 +70,29 @@ export function useOrphanedEntries(
       arr.push(e);
       byName.set(e.category, arr);
     }
+
+    const newNames = Array.from(byName.keys()).filter(
+      (n) => !orderMapRef.current.has(n)
+    );
+    newNames.sort((a, b) => {
+      const ca = byName.get(a)!.length;
+      const cb = byName.get(b)!.length;
+      return cb - ca || a.localeCompare(b);
+    });
+    for (const name of newNames) {
+      orderMapRef.current.set(name, nextOrderRef.current);
+      nextOrderRef.current += 1;
+    }
+
     const groupList: OrphanGroup[] = [];
     for (const [name, entries] of byName) {
       entries.sort((a, b) => b.date.toMillis() - a.date.toMillis());
       groupList.push({ name, entries });
     }
     groupList.sort(
-      (a, b) => b.entries.length - a.entries.length || a.name.localeCompare(b.name)
+      (a, b) =>
+        (orderMapRef.current.get(a.name) ?? 0) -
+        (orderMapRef.current.get(b.name) ?? 0)
     );
     return {
       groups: groupList,
