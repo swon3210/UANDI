@@ -140,12 +140,14 @@ export async function seedFolder(
     parentFolderId?: string | null;
     depth?: number;
     path?: string[];
+    createdAt?: string;
   } = {}
 ): Promise<string> {
   const folderId = `folder-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const parentFolderId = options.parentFolderId ?? null;
   const depth = options.depth ?? 0;
   const path = options.path ?? [];
+  const createdAt = options.createdAt ?? new Date().toISOString();
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/folders/${folderId}`,
@@ -158,7 +160,7 @@ export async function seedFolder(
           coupleId: { stringValue: coupleId },
           name: { stringValue: options.name ?? '테스트 폴더' },
           createdBy: { stringValue: createdBy },
-          createdAt: { timestampValue: new Date().toISOString() },
+          createdAt: { timestampValue: createdAt },
           parentFolderId:
             parentFolderId != null ? { stringValue: parentFolderId } : { nullValue: null },
           depth: { integerValue: String(depth) },

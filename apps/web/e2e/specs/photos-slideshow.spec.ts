@@ -109,21 +109,121 @@ test.describe('슬라이드쇼', () => {
       await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*3/);
     });
 
-    test('마지막 사진에서 다음 탭 시 변화가 없다', async ({ authedContext }) => {
+    test('source=all 슬라이드쇼는 마지막 사진에서 변화가 없다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       const folderId = await seedFolder(coupleId, uid, { name: '폴더' });
       await seedPhoto(coupleId, uid, { folderId });
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await photos.goto();
+      await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
       await photos.clickPhotoToOpenSlideshow(0);
 
       await clickRight(page);
       await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
 
+      // source=all에서는 다음 폴더로 이동하지 않고 그대로 멈춤
       await clickRight(page);
       await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
+    });
+  });
+
+  test.describe('다음 폴더 자동 이동 (source=folder)', () => {
+    // createdAt DESC 정렬에서 인덱스가 결정되므로 시간을 명시적으로 분리한다.
+    const t = (offsetMs: number) => new Date(Date.now() - offsetMs).toISOString();
+
+    test('마지막 사진에서 다음 액션 시 다음 형제 폴더의 첫 사진으로 이동한다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      // createdAt DESC: A(가장 최근) → B
+      const folderB = await seedFolder(coupleId, uid, { name: 'B 폴더', createdAt: t(2000) });
+      const folderA = await seedFolder(coupleId, uid, { name: 'A 폴더', createdAt: t(1000) });
+      // A 폴더에 사진 2장
+      await seedPhoto(coupleId, uid, { folderId: folderA, caption: 'A의 두번째' });
+      await seedPhoto(coupleId, uid, { folderId: folderA, caption: 'A의 첫번째' });
+      // B 폴더에 사진 1장
+      await seedPhoto(coupleId, uid, { folderId: folderB, caption: 'B의 사진' });
+
+      const photos = new PhotosPage(page);
+      await page.goto(`/photos/folder/${folderA}`);
+      await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
+      await photos.clickPhotoToOpenSlideshow(0);
+
+      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/);
+      await clickRight(page);
+      await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
+
+      // 마지막 사진에서 한 번 더 → B 폴더로 이동
+      await clickRight(page);
+      await expect(page).toHaveURL(new RegExp(`source=folder&id=${folderB}`), { timeout: 10000 });
+      await expect(photos.slideshowFolderLink).toContainText('B 폴더');
+      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*1/);
+    });
+
+    test('빈 폴더는 자동으로 건너뛰고 그 다음 폴더로 이동한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      // createdAt DESC: A → B(빈) → C
+      const folderC = await seedFolder(coupleId, uid, { name: 'C 폴더', createdAt: t(3000) });
+      const folderB = await seedFolder(coupleId, uid, { name: 'B 폴더 (빈)', createdAt: t(2000) });
+      const folderA = await seedFolder(coupleId, uid, { name: 'A 폴더', createdAt: t(1000) });
+
+      await seedPhoto(coupleId, uid, { folderId: folderA, caption: 'A의 사진' });
+      // folderB: 사진 없음
+      await seedPhoto(coupleId, uid, { folderId: folderC, caption: 'C의 사진' });
+
+      const photos = new PhotosPage(page);
+      await page.goto(`/photos/folder/${folderA}`);
+      await photos.clickPhotoToOpenSlideshow(0);
+
+      // A의 다음은 B(빈) → 자동 건너뛰고 C로
+      await clickRight(page);
+      await expect(page).toHaveURL(new RegExp(`source=folder&id=${folderC}`), { timeout: 10000 });
+      await expect(photos.slideshowFolderLink).toContainText('C 폴더');
+      // folderB는 건너뛰어졌어야 함
+      await expect(page).not.toHaveURL(new RegExp(`source=folder&id=${folderB}`));
+    });
+
+    test('마지막 형제 폴더에서 다음 액션 시 첫 폴더로 순환한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      // createdAt DESC: A(첫번째) → B(마지막)
+      const folderB = await seedFolder(coupleId, uid, { name: 'B (마지막)', createdAt: t(2000) });
+      const folderA = await seedFolder(coupleId, uid, { name: 'A (첫번째)', createdAt: t(1000) });
+
+      await seedPhoto(coupleId, uid, { folderId: folderA });
+      await seedPhoto(coupleId, uid, { folderId: folderB });
+
+      const photos = new PhotosPage(page);
+      await page.goto(`/photos/folder/${folderB}`);
+      await photos.clickPhotoToOpenSlideshow(0);
+
+      // B의 다음 → 순환해서 A로
+      await clickRight(page);
+      await expect(page).toHaveURL(new RegExp(`source=folder&id=${folderA}`), { timeout: 10000 });
+      await expect(photos.slideshowFolderLink).toContainText('A (첫번째)');
+    });
+
+    test('형제 폴더가 자기 1개뿐이면 현재 폴더 첫 사진으로 순환한다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      const folder = await seedFolder(coupleId, uid, { name: '유일한 폴더' });
+      await seedPhoto(coupleId, uid, { folderId: folder, caption: '두번째' });
+      await seedPhoto(coupleId, uid, { folderId: folder, caption: '첫번째' });
+
+      const photos = new PhotosPage(page);
+      await page.goto(`/photos/folder/${folder}`);
+      await photos.clickPhotoToOpenSlideshow(0);
+      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/);
+
+      await clickRight(page);
+      await expect(photos.slideshowPosition).toHaveText(/2\s*\/\s*2/);
+
+      // 마지막에서 한 번 더 → 같은 폴더 첫 사진으로 순환
+      await clickRight(page);
+      await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/, { timeout: 10000 });
+      await expect(photos.slideshowFolderLink).toContainText('유일한 폴더');
     });
   });
 

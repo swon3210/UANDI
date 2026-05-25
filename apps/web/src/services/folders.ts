@@ -200,6 +200,28 @@ export async function getFolderPhotoCount(coupleId: string, folderId: string): P
   return snap.data().count;
 }
 
+/** 현재 폴더의 다음 형제(같은 parentFolderId)부터 한 바퀴 순회하며 사진이 있는 첫 폴더 id 반환.
+ *  - folders는 createdAt DESC 정렬된 전체 폴더 (useFolders 결과)
+ *  - 자기 자신만 있거나 모든 형제가 비어있으면 null
+ */
+export async function findNextNonEmptySiblingFolderId(
+  coupleId: string,
+  folders: Folder[],
+  currentFolderId: string
+): Promise<string | null> {
+  const current = folders.find((f) => f.id === currentFolderId);
+  if (!current) return null;
+  const siblings = folders.filter((f) => f.parentFolderId === current.parentFolderId);
+  if (siblings.length <= 1) return null;
+  const startIdx = siblings.findIndex((f) => f.id === currentFolderId);
+  for (let step = 1; step < siblings.length; step++) {
+    const candidate = siblings[(startIdx + step) % siblings.length];
+    const count = await getFolderPhotoCount(coupleId, candidate.id);
+    if (count > 0) return candidate.id;
+  }
+  return null;
+}
+
 /** 삭제 확인용: 하위 폴더 수와 사진(자기+하위 전체) 수 */
 export async function countFolderDescendants(
   coupleId: string,
