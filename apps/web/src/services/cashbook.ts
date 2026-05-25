@@ -6,6 +6,7 @@ import {
   updateEntry as _updateEntry,
   deleteEntry as _deleteEntry,
   countEntriesByCategory as _countEntriesByCategory,
+  bulkUpdateEntriesCategory as _bulkUpdateEntriesCategory,
 } from '@uandi/cashbook-core';
 import type { CashbookEntry } from '@/types';
 import { getDb } from '@/lib/firebase/config';
@@ -58,4 +59,12 @@ export async function countEntriesByCategory(
   categoryName: string
 ): Promise<number> {
   return _countEntriesByCategory(getDb(), coupleId, categoryName);
+}
+
+export async function bulkUpdateEntriesCategory(
+  coupleId: string,
+  entryIds: string[],
+  newCategoryName: string
+): Promise<number> {
+  return _bulkUpdateEntriesCategory(getDb(), coupleId, entryIds, newCategoryName);
 }
