@@ -10,7 +10,9 @@ import {
   updateEntry,
   deleteEntry,
 } from '@/services/cashbook';
-import type { CashbookEntry } from '@/types';
+import type { CashbookEntry, CashbookEntryType } from '@/types';
+
+export type EntryFilterType = CashbookEntryType | 'all';
 
 const QUERY_KEY = 'cashbookEntries';
 
@@ -104,6 +106,23 @@ export type GroupedEntries = {
   date: Date;
   entries: CashbookEntry[];
 };
+
+export function useFilteredEntries(
+  entries: CashbookEntry[] | undefined,
+  typeFilter: EntryFilterType,
+  selectedCategoryNames: string[]
+): CashbookEntry[] {
+  return useMemo(() => {
+    if (!entries) return [];
+    return entries.filter((entry) => {
+      if (typeFilter !== 'all' && entry.type !== typeFilter) return false;
+      if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(entry.category)) {
+        return false;
+      }
+      return true;
+    });
+  }, [entries, typeFilter, selectedCategoryNames]);
+}
 
 export function useGroupedEntries(
   entries: CashbookEntry[] | undefined
