@@ -105,3 +105,25 @@ export async function countEntriesByCategory(
   const snap = await getCountFromServer(q);
   return snap.data().count;
 }
+
+const BULK_WRITE_CHUNK = 500;
+
+export async function bulkUpdateEntriesCategory(
+  db: Firestore,
+  coupleId: string,
+  entryIds: string[],
+  newCategoryName: string
+): Promise<number> {
+  if (entryIds.length === 0) return 0;
+  for (let i = 0; i < entryIds.length; i += BULK_WRITE_CHUNK) {
+    const chunk = entryIds.slice(i, i + BULK_WRITE_CHUNK);
+    const batch = writeBatch(db);
+    for (const id of chunk) {
+      batch.update(doc(db, `couples/${coupleId}/cashbookEntries/${id}`), {
+        category: newCategoryName,
+      });
+    }
+    await batch.commit();
+  }
+  return entryIds.length;
+}

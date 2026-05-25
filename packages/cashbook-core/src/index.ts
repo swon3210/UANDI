@@ -16,6 +16,7 @@ export {
   updateEntry,
   deleteEntry,
   countEntriesByCategory,
+  bulkUpdateEntriesCategory,
 } from './services/cashbook';
 export {
   getCategories,

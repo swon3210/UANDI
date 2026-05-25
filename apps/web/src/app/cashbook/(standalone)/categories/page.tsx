@@ -19,7 +19,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@uandi/ui';
-import { ChevronLeft, Plus } from 'lucide-react';
+import { ChevronLeft, Inbox, Plus } from 'lucide-react';
 import { userAtom } from '@/stores/auth.store';
 import {
   useCashbookCategories,
@@ -199,6 +199,18 @@ export default function CashbookCategoriesPage() {
             onClick={() => router.back()}
           >
             <ChevronLeft size={20} />
+          </Button>
+        }
+        rightSlot={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            data-testid="categories-orphans-link"
+            aria-label="미분류 내역 정리"
+            onClick={() => router.push('/cashbook/categories/orphans')}
+          >
+            <Inbox size={20} />
           </Button>
         }
       />
