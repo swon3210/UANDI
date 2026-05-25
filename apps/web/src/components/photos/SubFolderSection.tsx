@@ -10,9 +10,14 @@ import { FolderToolbar, type SortOption } from './FolderToolbar';
 type SubFolderSectionProps = {
   subFolders: Folder[];
   isLoading?: boolean;
+  subfolderCountByParent?: Map<string, number>;
 };
 
-export function SubFolderSection({ subFolders, isLoading }: SubFolderSectionProps) {
+export function SubFolderSection({
+  subFolders,
+  isLoading,
+  subfolderCountByParent,
+}: SubFolderSectionProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const debouncedQuery = useDebounce(searchQuery, 200);
@@ -73,7 +78,11 @@ export function SubFolderSection({ subFolders, isLoading }: SubFolderSectionProp
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {visibleFolders.map((folder) => (
-            <FolderCard key={folder.id} folder={folder} />
+            <FolderCard
+              key={folder.id}
+              folder={folder}
+              subfolderCount={subfolderCountByParent?.get(folder.id) ?? 0}
+            />
           ))}
         </div>
       )}
