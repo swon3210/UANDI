@@ -11,6 +11,7 @@
 
 ```
 users/{userId}
+  └── fcmTokens/{tokenId}
 couples/{coupleId}
   └── folders/{folderId}
   └── photos/{photoId}
@@ -37,6 +38,8 @@ type User = {
 ```
 
 **Firestore 경로**: `users/{uid}`
+
+> FCM 푸시 토큰은 **`users/{uid}/fcmTokens/{tokenId}` sub-collection**으로 별도 저장한다. 디바이스별 토큰을 다중으로 보관하기 위해서이며, 토큰 자체의 SHA-256 해시를 `tokenId`로 사용한다. 스키마는 `docs/pages/04e-cashbook-notifications.md`의 `FcmToken` 타입 참조.
 
 ---
 
