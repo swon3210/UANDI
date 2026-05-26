@@ -21,15 +21,21 @@ Expo Router 기반 파일 라우팅을 사용한다.
 2. `google-services.json` 다운로드
 3. 파일을 `apps/mobile/google-services.json`에 배치 (git ignore 처리됨)
 
-### 2. EAS Build용 secret 등록 (CI/원격 빌드용)
+### 2. EAS Build용 file environment variable 등록 (CI/원격 빌드용)
+
+`google-services.json`은 git에서 제외돼 있고 EAS Build에도 평문으로 포함하지 않는다. 대신 EAS에 file 타입 env var로 업로드하고, `app.config.js`가 빌드 시 `process.env.GOOGLE_SERVICES_JSON`(staged 파일 경로)을 읽어 native에 주입한다.
 
 ```bash
-eas secret:create \
+cd apps/mobile
+eas env:create development \
   --scope project \
   --name GOOGLE_SERVICES_JSON \
   --type file \
-  --value ./google-services.json
+  --value ./google-services.json \
+  --visibility sensitive
 ```
+
+`preview` / `production` 환경에서도 빌드할 거라면 같은 명령을 환경 이름만 바꿔서 반복.
 
 ### 3. 로컬 실기기 빌드
 
