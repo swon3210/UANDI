@@ -51,9 +51,12 @@ const FONT_DIR = join(ROOT, 'node_modules/pretendard/dist/public/static');
 // A. 앱 아이콘 512×512 마스터 SVG
 // ─────────────────────────────────────────────────────────────────────────────
 // 풀블리드 코랄 배경 + 중앙 크림톤 하트 (캔버스의 ~68%, 세이프존 80% 내부)
-//   - 하트 viewBox 48 → 캔버스 512 로 스케일.
-//   - 68% 크기 = 약 348×348 픽셀. 중앙 정렬: (512-348)/2 ≈ 82 만큼 translate.
-//   - scale = 348/48 ≈ 7.25
+//   - 하트 path bbox: x[3.5, 44.5], y[3.5, 38]. bbox 중심은 (24, 20.75)로 viewBox
+//     중심(24,24)보다 살짝 위쪽에 있어 그대로 두면 세로 중앙정렬이 어긋남.
+//   - scale=7.25 적용 후 bbox 크기 ≈ 297.25×250.13.
+//   - bbox 중심을 캔버스 중심(256,256)에 맞추는 translate:
+//       tx = 256 - 24*7.25 = 82
+//       ty = 256 - 20.75*7.25 = 105.5625
 // 따뜻한 분위기를 위해 배경에도 살짝 그라데이션 (코랄 → 따뜻한 코랄).
 function appIconSvg() {
   return `<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
@@ -75,8 +78,8 @@ function appIconSvg() {
   <rect width="512" height="512" fill="url(#iconBg)"/>
   <!-- 중앙 부드러운 글로우 -->
   <circle cx="256" cy="256" r="220" fill="url(#iconGlow)"/>
-  <!-- 크림톤 하트 (highlight 제거, 부드러운 수직 그라데이션으로 차분한 입체감) -->
-  <g transform="translate(82 82) scale(7.25)">
+  <!-- 크림톤 하트 (path bbox 기준 정중앙 정렬) -->
+  <g transform="translate(82 105.5625) scale(7.25)">
     <path d="${HEART_PATH}" fill="url(#heartFill)"/>
   </g>
 </svg>`;
