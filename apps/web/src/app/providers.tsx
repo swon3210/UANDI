@@ -8,6 +8,7 @@ import { Toaster, TooltipProvider } from '@uandi/ui';
 import { createQueryClient } from '@/lib/query-client';
 import { AuthInit } from '@/components/AuthInit';
 import { FcmForegroundListener } from '@/components/FcmForegroundListener';
+import { NativeFcmBridge } from '@/components/NativeFcmBridge';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <OverlayProvider>
             <AuthInit />
             <FcmForegroundListener />
+            <NativeFcmBridge />
             {children}
             <Toaster />
           </OverlayProvider>

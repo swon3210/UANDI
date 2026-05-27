@@ -1,5 +1,6 @@
 import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
+import type { FcmTokenPlatform } from '@/types';
 
 async function tokenIdFor(token: string): Promise<string> {
   // 동일 토큰은 동일 ID로 매핑하면서, 서로 다른 토큰끼리 충돌하지 않도록 SHA-256 해시를 사용한다.
@@ -13,7 +14,8 @@ async function tokenIdFor(token: string): Promise<string> {
 export async function upsertFcmToken(
   userId: string,
   token: string,
-  userAgent: string
+  userAgent: string,
+  platform?: FcmTokenPlatform
 ): Promise<void> {
   const db = getDb();
   const id = await tokenIdFor(token);
@@ -25,6 +27,7 @@ export async function upsertFcmToken(
       userId,
       token,
       userAgent,
+      ...(platform ? { platform } : {}),
       createdAt: serverTimestamp(),
       lastUsedAt: serverTimestamp(),
     },

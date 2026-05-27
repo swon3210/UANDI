@@ -185,6 +185,7 @@ type FcmToken = {
   userId: string;
   token: string;       // FCM registration token
   userAgent: string;   // 디바이스 식별용
+  platform?: 'web' | 'android' | 'ios'; // 디바이스 플랫폼 (모바일 native에서 발급 시)
   createdAt: Timestamp;
   lastUsedAt: Timestamp;
 };
@@ -194,6 +195,7 @@ type FcmToken = {
 
 > 한 유저가 여러 디바이스/브라우저에서 사용할 수 있으므로 다중 토큰 저장.
 > 만료/실패한 토큰은 Cloud Functions에서 자동 정리.
+> 웹은 `platform` 필드를 생략(undefined)하고, 모바일 native(Expo)는 `'android'` 또는 `'ios'`로 명시.
 
 ---
 

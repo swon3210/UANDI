@@ -21,6 +21,8 @@ export function useFcmForegroundMessages(): void {
   useEffect(() => {
     if (!uid) return;
     if (typeof window === 'undefined') return;
+    // 모바일 WebView에서는 OS 알림이 이미 표시되므로 인앱 토스트 중복을 막는다.
+    if (window.__UANDI_NATIVE__) return;
     if (typeof Notification === 'undefined') return;
     if (Notification.permission !== 'granted') return;
 
