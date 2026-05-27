@@ -44,7 +44,7 @@ apps/web/src/app/api/ai/
 
 ### UI 위치
 
-가계부 메인 페이지(`/cashbook/history`) 상단의 **textarea** (여러 줄 입력 허용).
+가계부 메인 페이지(`/inner/cashbook/history`) 상단의 **textarea** (여러 줄 입력 허용).
 기존 `+` 버튼(수동 입력)과 병행 사용.
 
 ### 입력 → 출력 예시
@@ -181,7 +181,7 @@ Response:
 
 ### UI 위치
 
-가계부 페이지(`/cashbook`) 월간 요약 섹션 하단에 "AI 분석" 버튼 추가.
+가계부 페이지(`/inner/cashbook`) 월간 요약 섹션 하단에 "AI 분석" 버튼 추가.
 
 ### API Route
 

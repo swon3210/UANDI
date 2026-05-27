@@ -91,8 +91,7 @@ export function AnnualPlanItemForm({
         >
           {isEditing ? (
             <div className="rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
-              카테고리:{' '}
-              <span className="font-semibold">{editingCategory?.name ?? '—'}</span>
+              카테고리: <span className="font-semibold">{editingCategory?.name ?? '—'}</span>
             </div>
           ) : (
             <FormField

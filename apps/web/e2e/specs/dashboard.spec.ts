@@ -35,16 +35,16 @@ test.describe('대시보드', () => {
       await expect(dashboard.cashbookEntry).toContainText('가계부');
     });
 
-    test('사진 갤러리 버튼 클릭 시 /photos로 이동한다', async ({ authedPage }) => {
+    test('사진 갤러리 버튼 클릭 시 /inner/photos로 이동한다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await dashboard.photoGalleryEntry.click();
-      await expect(authedPage).toHaveURL(/\/photos/, { timeout: 30000 });
+      await expect(authedPage).toHaveURL(/\/inner\/photos/, { timeout: 30000 });
     });
 
-    test('가계부 버튼 클릭 시 /cashbook으로 이동한다', async ({ authedPage }) => {
+    test('가계부 버튼 클릭 시 /inner/cashbook으로 이동한다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await dashboard.cashbookEntry.click();
-      await expect(authedPage).toHaveURL(/\/cashbook/, { timeout: 30000 });
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook/, { timeout: 30000 });
     });
   });
 
@@ -176,16 +176,28 @@ test.describe('대시보드', () => {
       const today = dayjs().toISOString();
       // 4개 카테고리에 서로 다른 금액 시드 (식비 > 교통 > 쇼핑 > 의료 순)
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 50000, category: '식비', date: today,
+        type: 'expense',
+        amount: 50000,
+        category: '식비',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 30000, category: '교통', date: today,
+        type: 'expense',
+        amount: 30000,
+        category: '교통',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 20000, category: '월세', date: today,
+        type: 'expense',
+        amount: 20000,
+        category: '월세',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 10000, category: '보험', date: today,
+        type: 'expense',
+        amount: 10000,
+        category: '보험',
+        date: today,
       });
 
       const dashboard = new DashboardPage(page);
@@ -206,16 +218,28 @@ test.describe('대시보드', () => {
       const today = dayjs().toISOString();
       // 4개 시드 → 상위 3개(식비/교통/월세)만 자동 선택, 보험은 미선택
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 50000, category: '식비', date: today,
+        type: 'expense',
+        amount: 50000,
+        category: '식비',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 30000, category: '교통', date: today,
+        type: 'expense',
+        amount: 30000,
+        category: '교통',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 20000, category: '월세', date: today,
+        type: 'expense',
+        amount: 20000,
+        category: '월세',
+        date: today,
       });
       await seedCashbookEntry(coupleId, uid, {
-        type: 'expense', amount: 10000, category: '보험', date: today,
+        type: 'expense',
+        amount: 10000,
+        category: '보험',
+        date: today,
       });
 
       const dashboard = new DashboardPage(page);

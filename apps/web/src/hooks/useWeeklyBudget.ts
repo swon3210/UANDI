@@ -58,9 +58,10 @@ export function getWeeksInMonth(year: number, month: number): WeekInfo[] {
 
   while (weekStart.isBefore(lastDay) || weekStart.isSame(lastDay, 'day')) {
     // 이번 주의 끝 = 다음 일요일 or 월말 중 더 빠른 날
-    const nextSunday = weekStart.isoWeekday() === 7
-      ? weekStart // 이미 일요일
-      : weekStart.isoWeekday(7); // 이번 주 일요일
+    const nextSunday =
+      weekStart.isoWeekday() === 7
+        ? weekStart // 이미 일요일
+        : weekStart.isoWeekday(7); // 이번 주 일요일
 
     const weekEnd = nextSunday.isAfter(lastDay) ? lastDay : nextSunday;
     const days = weekEnd.diff(weekStart, 'day') + 1;
@@ -164,9 +165,7 @@ export function useWeeklyBudget(
     const totalDays = weeks.reduce((sum, w) => sum + w.days, 0);
 
     // 각 주의 기본 예산 (일수 비례)
-    const weekBaseBudgets = weeks.map((w) =>
-      Math.floor(variableBudget * (w.days / totalDays))
-    );
+    const weekBaseBudgets = weeks.map((w) => Math.floor(variableBudget * (w.days / totalDays)));
 
     // 이전 주들의 이월 누적 계산
     let carryOver = 0;

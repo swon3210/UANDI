@@ -10,10 +10,7 @@ type MonthlyExpenseTabProps = {
   weeklyExpenses: WeeklyExpense[];
 };
 
-export function MonthlyExpenseTab({
-  categoryBudgets,
-  weeklyExpenses,
-}: MonthlyExpenseTabProps) {
+export function MonthlyExpenseTab({ categoryBudgets, weeklyExpenses }: MonthlyExpenseTabProps) {
   return (
     <div className="space-y-6">
       {/* 카테고리별 지출 */}

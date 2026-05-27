@@ -31,7 +31,10 @@ const mockParseFnSingle = async (text: string, _categories: string[], images?: s
 
 const mockParseFnMulti = async (text: string) => {
   await new Promise((r) => setTimeout(r, 800));
-  const lines = text.split(/\n|,/).map((s) => s.trim()).filter(Boolean);
+  const lines = text
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   return lines.map((line, i) => ({
     type: i === lines.length - 1 ? 'income' : 'expense',
     amount: (i + 1) * 5000,
@@ -118,8 +121,7 @@ export const SubmittingLoading: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          '제출 중 상태. Submit 버튼에 스피너가 뜨고 textarea는 비활성화된다.',
+        story: '제출 중 상태. Submit 버튼에 스피너가 뜨고 textarea는 비활성화된다.',
       },
     },
   },

@@ -3,14 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, User as UserIcon } from 'lucide-react';
 import { overlay } from 'overlay-kit';
-import {
-  Header,
-  Button,
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-  Separator,
-} from '@uandi/ui';
+import { Header, Button, Avatar, AvatarImage, AvatarFallback, Separator } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useDeleteAccount } from '@/hooks/useDeleteAccount';
 import { AccountDeleteConfirmDialog } from '@/components/settings/AccountDeleteConfirmDialog';
@@ -58,9 +51,7 @@ export default function SettingsPage() {
         {/* 프로필 섹션 */}
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16" data-testid="settings-profile-avatar">
-            {user.photoURL ? (
-              <AvatarImage src={user.photoURL} alt={user.displayName} />
-            ) : null}
+            {user.photoURL ? <AvatarImage src={user.photoURL} alt={user.displayName} /> : null}
             <AvatarFallback>
               <UserIcon size={24} />
             </AvatarFallback>

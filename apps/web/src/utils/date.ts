@@ -26,10 +26,7 @@ const UNIT_BY_PERIOD: Record<PeriodKind, 'week' | 'month' | 'year'> = {
   yearly: 'year',
 };
 
-export function getPeriodRange(
-  kind: PeriodKind,
-  cursor: Dayjs
-): { start: Date; end: Date } {
+export function getPeriodRange(kind: PeriodKind, cursor: Dayjs): { start: Date; end: Date } {
   const unit = UNIT_BY_PERIOD[kind];
   return {
     start: cursor.startOf(unit).toDate(),

@@ -48,16 +48,7 @@ export const WithSuggestions: Story = {
 export const ManyTags: Story = {
   render: () => (
     <TagInputWithState
-      initialTags={[
-        '벚꽃',
-        '바다',
-        '카페',
-        '여행',
-        '맛집',
-        '산책',
-        '일상',
-        '데이트',
-      ]}
+      initialTags={['벚꽃', '바다', '카페', '여행', '맛집', '산책', '일상', '데이트']}
     />
   ),
 };

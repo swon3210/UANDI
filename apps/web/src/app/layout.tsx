@@ -12,11 +12,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'UANDI',
-  description: '우리 둘만의 공간',
-  applicationName: 'UANDI 가계부',
+  description: '함께 모으는 우리집, 각자 운영하는 재테크까지 — 둘이서 만드는 살림 공간',
+  applicationName: 'UANDI',
   appleWebApp: {
     capable: true,
-    title: 'UANDI 가계부',
+    title: 'UANDI',
     statusBarStyle: 'default',
   },
   formatDetection: {

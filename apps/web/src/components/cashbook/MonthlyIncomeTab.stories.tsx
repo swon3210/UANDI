@@ -6,7 +6,13 @@ const meta: Meta<typeof MonthlyIncomeTab> = {
   title: 'Cashbook/MonthlyIncomeTab',
   component: MonthlyIncomeTab,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
@@ -24,14 +30,58 @@ const categories = [
 export const WithReflectedIncome: Story = {
   args: {
     budgetItems: [
-      { categoryId: 'cat-salary', group: 'income', subGroup: 'regular_income', budgetAmount: 3500000, ownerUid: null },
-      { categoryId: 'cat-bonus', group: 'income', subGroup: 'regular_income', budgetAmount: 1000000, ownerUid: null },
-      { categoryId: 'cat-incentive', group: 'income', subGroup: 'irregular_income', budgetAmount: 500000, ownerUid: null },
-      { categoryId: 'cat-side', group: 'income', subGroup: 'irregular_income', budgetAmount: 250000, ownerUid: null },
+      {
+        categoryId: 'cat-salary',
+        group: 'income',
+        subGroup: 'regular_income',
+        budgetAmount: 3500000,
+        ownerUid: null,
+      },
+      {
+        categoryId: 'cat-bonus',
+        group: 'income',
+        subGroup: 'regular_income',
+        budgetAmount: 1000000,
+        ownerUid: null,
+      },
+      {
+        categoryId: 'cat-incentive',
+        group: 'income',
+        subGroup: 'irregular_income',
+        budgetAmount: 500000,
+        ownerUid: null,
+      },
+      {
+        categoryId: 'cat-side',
+        group: 'income',
+        subGroup: 'irregular_income',
+        budgetAmount: 250000,
+        ownerUid: null,
+      },
     ],
     entries: [
-      { id: '1', coupleId: 'c1', createdBy: 'u1', type: 'income', amount: 3500000, category: '정기급여', description: '', date: now, createdAt: now },
-      { id: '2', coupleId: 'c1', createdBy: 'u1', type: 'income', amount: 250000, category: '부업', description: '', date: now, createdAt: now },
+      {
+        id: '1',
+        coupleId: 'c1',
+        createdBy: 'u1',
+        type: 'income',
+        amount: 3500000,
+        category: '정기급여',
+        description: '',
+        date: now,
+        createdAt: now,
+      },
+      {
+        id: '2',
+        coupleId: 'c1',
+        createdBy: 'u1',
+        type: 'income',
+        amount: 250000,
+        category: '부업',
+        description: '',
+        date: now,
+        createdAt: now,
+      },
     ],
     categories,
     onAddIrregularIncome: () => {},

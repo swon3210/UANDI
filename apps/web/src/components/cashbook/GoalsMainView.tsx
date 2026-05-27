@@ -13,11 +13,7 @@ type GoalsMainViewProps = {
   onSelectCategory: (key: GoalCategoryKey) => void;
 };
 
-export function GoalsMainView({
-  items,
-  actuals,
-  onSelectCategory,
-}: GoalsMainViewProps) {
+export function GoalsMainView({ items, actuals, onSelectCategory }: GoalsMainViewProps) {
   const totals = GOAL_CATEGORIES.reduce(
     (acc, cat) => {
       const catItems = filterItemsByGroup(items, cat.group);
@@ -38,9 +34,7 @@ export function GoalsMainView({
         flexTotal={totals.flex.goal}
       />
 
-      <div className="pt-2 text-[13px] font-semibold tracking-wide text-stone-500">
-        목표 설정
-      </div>
+      <div className="pt-2 text-[13px] font-semibold tracking-wide text-stone-500">목표 설정</div>
 
       <div className="space-y-3">
         {GOAL_CATEGORIES.map((theme) => (

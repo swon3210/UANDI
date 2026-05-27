@@ -94,10 +94,7 @@ export function useOrphanedEntries(
       entries.sort((a, b) => b.date.toMillis() - a.date.toMillis());
       groupList.push({ name, entries });
     }
-    groupList.sort(
-      (a, b) =>
-        (effectiveMap.get(a.name) ?? 0) - (effectiveMap.get(b.name) ?? 0)
-    );
+    groupList.sort((a, b) => (effectiveMap.get(a.name) ?? 0) - (effectiveMap.get(b.name) ?? 0));
     return {
       groups: groupList,
       totalCount: groupList.reduce((sum, g) => sum + g.entries.length, 0),

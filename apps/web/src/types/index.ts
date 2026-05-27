@@ -152,4 +152,3 @@ export type CashbookDisplaySettings = {
   backgroundImageUrl: string | null;
   updatedAt: Timestamp;
 };
-

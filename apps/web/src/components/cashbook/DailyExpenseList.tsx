@@ -58,9 +58,7 @@ export function DailyExpenseList({ days, categories }: DailyExpenseListProps) {
                   <span className={`font-medium ${day.isToday ? 'text-primary' : ''}`}>
                     {day.dayOfWeek} {day.date.format('M/D')}
                   </span>
-                  {day.isToday && (
-                    <span className="text-xs text-primary font-medium">오늘</span>
-                  )}
+                  {day.isToday && <span className="text-xs text-primary font-medium">오늘</span>}
                 </div>
                 <span className="tabular-nums font-medium">
                   {day.isFuture ? '-' : formatCurrency(day.total)}
@@ -70,20 +68,12 @@ export function DailyExpenseList({ days, categories }: DailyExpenseListProps) {
               <CollapsibleContent>
                 <div className="bg-secondary/50 px-3 py-2 space-y-1.5 border-b border-border">
                   {day.entries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="flex items-center justify-between text-sm pl-6"
-                    >
+                    <div key={entry.id} className="flex items-center justify-between text-sm pl-6">
                       <div className="flex items-center gap-2">
-                        <CategoryIcon
-                          name={catIconMap.get(entry.category) ?? 'circle'}
-                          size={16}
-                        />
+                        <CategoryIcon name={catIconMap.get(entry.category) ?? 'circle'} size={16} />
                         <span className="text-muted-foreground">
                           {entry.category}
-                          {entry.description && (
-                            <span className="ml-1">· {entry.description}</span>
-                          )}
+                          {entry.description && <span className="ml-1">· {entry.description}</span>}
                         </span>
                       </div>
                       <span className="tabular-nums">{formatCurrency(entry.amount)}</span>

@@ -5,7 +5,13 @@ const meta: Meta<typeof WeeklyCategoryBreakdown> = {
   title: 'Cashbook/WeeklyCategoryBreakdown',
   component: WeeklyCategoryBreakdown,
   parameters: { layout: 'centered' },
-  decorators: [(Story) => <div className="w-[400px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="w-[400px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
@@ -24,9 +30,7 @@ export const Default: Story = {
 
 export const SingleCategory: Story = {
   args: {
-    categories: [
-      { categoryName: '식비', icon: 'bowl_food', total: 150000 },
-    ],
+    categories: [{ categoryName: '식비', icon: 'bowl_food', total: 150000 }],
   },
 };
 

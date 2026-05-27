@@ -9,10 +9,7 @@ type AiTagSuggestionsProps = {
   disabled: boolean;
   existingTags: string[];
   imageFile: File | null;
-  suggestFn: (
-    imageBase64: string,
-    existingTags: string[]
-  ) => Promise<{ suggestedTags: string[] }>;
+  suggestFn: (imageBase64: string, existingTags: string[]) => Promise<{ suggestedTags: string[] }>;
   onTagsSelected: (tags: string[]) => void;
 };
 

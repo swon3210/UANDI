@@ -20,7 +20,9 @@ export function useForexRates(currency: SupportedCurrency, range: ForexRange) {
   });
 }
 
-export function useForexIndicators(points: ExchangeRatePoint[] | undefined): ForexIndicators | null {
+export function useForexIndicators(
+  points: ExchangeRatePoint[] | undefined
+): ForexIndicators | null {
   return useMemo(() => {
     if (!points || points.length === 0) return null;
     return computeIndicators(points);

@@ -93,9 +93,7 @@ export function CategoryHeader({
       </div>
       <div className="min-w-0">
         <div className="text-[12px] text-stone-500">{caption}</div>
-        <div className="truncate text-[16px] font-semibold text-stone-900">
-          {category.name}
-        </div>
+        <div className="truncate text-[16px] font-semibold text-stone-900">{category.name}</div>
       </div>
     </div>
   );

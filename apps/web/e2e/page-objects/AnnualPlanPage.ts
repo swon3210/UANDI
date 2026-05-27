@@ -18,11 +18,11 @@ export class AnnualPlanPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/plan/annual');
+    await this.page.goto('/inner/cashbook/plan/annual');
   }
 
   async gotoCategory(key: CategoryKey) {
-    await this.page.goto(`/cashbook/plan/annual?category=${key}`);
+    await this.page.goto(`/inner/cashbook/plan/annual?category=${key}`);
   }
 
   goalCard(key: CategoryKey) {

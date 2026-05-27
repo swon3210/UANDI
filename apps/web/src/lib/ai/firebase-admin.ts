@@ -16,9 +16,7 @@ function getAdminApp(): App {
         });
       } else {
         // 프로덕션: 서비스 계정 키 사용
-        const serviceAccount = JSON.parse(
-          process.env.FIREBASE_SERVICE_ACCOUNT_KEY ?? '{}'
-        );
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY ?? '{}');
         _adminApp = initializeApp({
           credential: cert(serviceAccount),
           projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,

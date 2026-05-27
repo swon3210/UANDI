@@ -8,7 +8,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const aiInput = page.getByTestId('ai-parse-input');
@@ -36,7 +36,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 3줄 입력 → mock은 3건 배열 반환
@@ -65,7 +65,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const aiInput = page.getByTestId('ai-parse-input');
@@ -89,7 +89,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   test('빈 텍스트로는 전송 버튼이 비활성화된다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const submitBtn = page.getByTestId('ai-parse-submit');
@@ -101,7 +101,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 영수증 이미지 2장 첨부 (buffer로 임시 이미지 생성)
@@ -142,7 +142,7 @@ test.describe('자연어 가계부 다건 입력', () => {
       date: new Date().toISOString(),
     });
 
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('ai-parse-input').fill('점심 김치찌개 9000원');
@@ -182,7 +182,7 @@ test.describe('자연어 가계부 다건 입력', () => {
       date: new Date().toISOString(),
     });
 
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 3줄 입력 → mock이 3개 templates 반환
@@ -194,9 +194,7 @@ test.describe('자연어 가계부 다건 입력', () => {
     await expect(page.getByTestId('ai-bulk-duplicate-banner')).toBeVisible();
 
     // 3개 카드 중 1개만 중복 표시
-    const duplicateCards = page.locator(
-      '[data-testid="parsed-entry-card"][data-duplicate="true"]'
-    );
+    const duplicateCards = page.locator('[data-testid="parsed-entry-card"][data-duplicate="true"]');
     await expect(duplicateCards).toHaveCount(1);
 
     // 버튼은 "2건 추가" (중복 1건 제외)
@@ -206,7 +204,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   test('첨부한 썸네일을 X 버튼으로 제거할 수 있다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
@@ -245,7 +243,7 @@ test.describe('지출 패턴 AI 분석', () => {
       description: '월급',
     });
 
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // AI 분석 버튼 클릭
@@ -268,7 +266,7 @@ test.describe('지출 패턴 AI 분석', () => {
       category: '식비',
     });
 
-    await page.goto('/cashbook/history');
+    await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('ai-analyze-btn').click();

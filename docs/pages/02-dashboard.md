@@ -94,8 +94,8 @@ query(
 ### 상단 진입 버튼 (`EntryButtons`)
 
 - 2-column grid의 outline 버튼 2개
-- 사진 갤러리 (`data-testid="photo-gallery-entry"`) — `ImageIcon` + "사진 갤러리" → `/photos`
-- 가계부 (`data-testid="cashbook-entry"`) — `BookOpen` + "가계부" → `/cashbook/history`
+- 사진 갤러리 (`data-testid="photo-gallery-entry"`) — `ImageIcon` + "사진 갤러리" → `/inner/photos`
+- 가계부 (`data-testid="cashbook-entry"`) — `BookOpen` + "가계부" → `/inner/cashbook/history`
 - 썸네일 미사용
 
 ### 기간 선택기 (`PeriodSelector`)
@@ -158,7 +158,7 @@ query(
 
 - `data-testid="dashboard-total"`
 - 선택 그룹의 기간 총합:
-  - `all`: 수입(`type==='income'`) 합 − 지출(`type==='expense'`) 합. flex/investment는 제외.
+  - `all`: 수입(`type==='income'`) 합 − 지출(`type==='expense'`) 합. flex/outer는 제외.
   - 그 외: 해당 그룹의 `amount` 합계
 - 색상: 지출=expense, 수입=income, 그 외=foreground
 
@@ -175,6 +175,6 @@ query(
 ## 관련 문서
 
 - 가계부 도메인: `03-domain-models.md` → CashbookEntry, CashbookCategory
-- 카테고리 분류: `pages/04a-cashbook-categories.md`
-- 사진 갤러리: `pages/03-photo-gallery.md`
-- 가계부 상세: `pages/04-cashbook.md`
+- 카테고리 분류: `pages/inner/cashbook-categories.md`
+- 사진 갤러리: `pages/inner/photo-gallery.md`
+- 가계부 상세: `pages/inner/cashbook.md`

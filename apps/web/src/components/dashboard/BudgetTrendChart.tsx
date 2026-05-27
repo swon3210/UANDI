@@ -46,11 +46,7 @@ export function BudgetTrendChart({ data, selectedCategories }: Props) {
   }, {});
 
   return (
-    <ChartContainer
-      config={config}
-      data-testid="trend-chart"
-      className="aspect-[16/9] w-full"
-    >
+    <ChartContainer config={config} data-testid="trend-chart" className="aspect-[16/9] w-full">
       <LineChart data={data} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis
@@ -74,8 +70,7 @@ export function BudgetTrendChart({ data, selectedCategories }: Props) {
               indicator="dot"
               formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
-                  {String(name)}{' '}
-                  {typeof value === 'number' ? value.toLocaleString() : value}원
+                  {String(name)} {typeof value === 'number' ? value.toLocaleString() : value}원
                 </span>
               )}
             />

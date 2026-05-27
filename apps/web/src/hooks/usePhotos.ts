@@ -32,8 +32,7 @@ export function useInfinitePhotos(coupleId: string | null) {
     queryKey: ['photos', coupleId],
     queryFn: ({ pageParam }) => getPhotos(coupleId!, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.photos.length > 0 ? lastPage.lastDoc : undefined,
+    getNextPageParam: (lastPage) => (lastPage.photos.length > 0 ? lastPage.lastDoc : undefined),
     enabled: !!coupleId,
   });
 }
@@ -43,8 +42,7 @@ export function usePhotosByFolder(coupleId: string | null, folderId: string | nu
     queryKey: ['photos', coupleId, 'folder', folderId],
     queryFn: ({ pageParam }) => getPhotosByFolder(coupleId!, folderId!, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.photos.length > 0 ? lastPage.lastDoc : undefined,
+    getNextPageParam: (lastPage) => (lastPage.photos.length > 0 ? lastPage.lastDoc : undefined),
     enabled: !!coupleId && !!folderId,
   });
 }
@@ -54,8 +52,7 @@ export function usePhotosByTag(coupleId: string | null, tagName: string | null) 
     queryKey: ['photos', coupleId, 'tag', tagName],
     queryFn: ({ pageParam }) => getPhotosByTag(coupleId!, tagName!, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.photos.length > 0 ? lastPage.lastDoc : undefined,
+    getNextPageParam: (lastPage) => (lastPage.photos.length > 0 ? lastPage.lastDoc : undefined),
     enabled: !!coupleId && !!tagName,
   });
 }

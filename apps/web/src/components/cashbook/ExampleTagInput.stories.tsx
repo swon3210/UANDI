@@ -14,10 +14,7 @@ function Demo({ initial = [] as string[] }) {
   const [items, setItems] = useState<string[]>(initial);
   return (
     <div className="flex w-80 flex-col gap-2">
-      <ExampleChipList
-        value={items}
-        onRemove={(v) => setItems(items.filter((x) => x !== v))}
-      />
+      <ExampleChipList value={items} onRemove={(v) => setItems(items.filter((x) => x !== v))} />
       <ExampleTagInput
         value={items}
         onAdd={(v) => setItems([...items, v])}
@@ -39,7 +36,5 @@ export const WithItems: Story = {
 };
 
 export const ReachedMax: Story = {
-  render: () => (
-    <Demo initial={['1', '2', '3', '4', '5', '6', '7', '8']} />
-  ),
+  render: () => <Demo initial={['1', '2', '3', '4', '5', '6', '7', '8']} />,
 };

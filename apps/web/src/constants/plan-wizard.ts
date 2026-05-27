@@ -5,10 +5,7 @@ import type { CategorySubGroup } from '@uandi/cashbook-core';
  * 그 외(irregular_income / variable_common / variable_personal / joint_flex / personal_flex)는
  * 1화면 그리드 + 균등채우기 토글 흐름.
  */
-export const REGULAR_SUBGROUPS = new Set<CategorySubGroup>([
-  'regular_income',
-  'fixed_expense',
-]);
+export const REGULAR_SUBGROUPS = new Set<CategorySubGroup>(['regular_income', 'fixed_expense']);
 
 export function isRegularSubGroup(subGroup: CategorySubGroup): boolean {
   return REGULAR_SUBGROUPS.has(subGroup);

@@ -44,19 +44,12 @@ export function GoalCategoryCard({
             {theme.emoji}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[15px] font-semibold text-stone-900">
-              {theme.label}
-            </div>
-            <div className="mt-0.5 truncate text-xs text-stone-400">
-              {theme.goalLabel}
-            </div>
+            <div className="text-[15px] font-semibold text-stone-900">{theme.label}</div>
+            <div className="mt-0.5 truncate text-xs text-stone-400">{theme.goalLabel}</div>
           </div>
           <div className="text-right">
             <div
-              className={cn(
-                'text-[18px] font-bold tabular-nums',
-                theme.accentClass
-              )}
+              className={cn('text-[18px] font-bold tabular-nums', theme.accentClass)}
               data-testid={`goal-card-${theme.key}-amount`}
             >
               {formatCurrencyMan(goal)}원
@@ -95,9 +88,7 @@ export function GoalCategoryCard({
         )}
         data-testid={`goal-card-${theme.key}-cta`}
       >
-        <span className={cn('text-[13px] font-semibold', theme.accentClass)}>
-          예산 항목 설정
-        </span>
+        <span className={cn('text-[13px] font-semibold', theme.accentClass)}>예산 항목 설정</span>
         <span className={cn('flex items-center gap-1 text-xs', theme.accentClass)}>
           <span className="opacity-70">{itemCount}개 항목</span>
           <ChevronRight size={15} />

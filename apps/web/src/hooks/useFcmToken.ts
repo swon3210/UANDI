@@ -9,21 +9,15 @@ import { upsertFcmToken } from '@/services/fcm-token';
 
 const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
-export type FcmEnableState =
-  | 'idle'
-  | 'requesting'
-  | 'granted'
-  | 'denied'
-  | 'unsupported'
-  | 'error';
+export type FcmEnableState = 'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported' | 'error';
 
 function hasAllConfig(): boolean {
   return Boolean(
     firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId &&
-      firebaseConfig.messagingSenderId &&
-      firebaseConfig.appId
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId
   );
 }
 

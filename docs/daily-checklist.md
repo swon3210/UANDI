@@ -41,7 +41,7 @@
 - [ ] **4/14 (화)** — SSE 스트리밍 수신 훅 작성 (`useSpendingAnalysis`), 마크다운 렌더링 라이브러리 확인
 - [ ] **4/15 (수)** — `SpendingAnalysis` 컴포넌트 구현 (스트리밍 텍스트 표시 + 로딩 애니메이션)
 - [ ] **4/16 (목)** — `SpendingAnalysis` Storybook 스토리 작성 → `/storybook-review`
-- [ ] **4/17 (금)** — 월간 대시보드(`/cashbook/monthly`)에 "AI 분석" 섹션 통합
+- [ ] **4/17 (금)** — 월간 대시보드(`/inner/cashbook/monthly`)에 "AI 분석" 섹션 통합
 - [ ] **4/18 (토)** — E2E Green 확인, 실제 데이터로 분석 품질 테스트, PR 생성
 
 ### Week 5: 통합 테스트 + 마무리 (4/20 ~ 4/25)

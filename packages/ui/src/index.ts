@@ -9,6 +9,10 @@ export type { LogoProps, LogoVariant } from './Logo';
 export { Header } from './custom/Header';
 export { EmptyState } from './custom/EmptyState';
 export { FullScreenSpinner } from './custom/FullScreenSpinner';
+export { SpaceSwitcher } from './custom/SpaceSwitcher';
+export type { Space, SpaceSwitcherProps } from './custom/SpaceSwitcher';
+export { BottomNav } from './custom/BottomNav';
+export type { BottomNavItem, BottomNavProps, BottomNavLinkProps } from './custom/BottomNav';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';
@@ -77,12 +81,7 @@ export {
   useFormField,
 } from './components/form';
 export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
-export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from './components/tooltip';
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './components/tooltip';
 export {
   Command,
   CommandDialog,

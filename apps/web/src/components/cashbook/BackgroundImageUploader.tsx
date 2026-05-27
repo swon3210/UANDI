@@ -3,10 +3,7 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { Button, Progress } from '@uandi/ui';
-import {
-  uploadCashbookBackground,
-  deleteCashbookBackground,
-} from '@/lib/firebase/storage';
+import { uploadCashbookBackground, deleteCashbookBackground } from '@/lib/firebase/storage';
 
 type BackgroundImageUploaderProps = {
   userId: string;

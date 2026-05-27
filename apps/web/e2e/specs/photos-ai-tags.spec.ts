@@ -7,7 +7,7 @@ test.describe('사진 AI 태그 제안', () => {
     const { page, coupleId, uid } = authedContext;
     await seedFolder(coupleId, uid, { name: '여행' });
 
-    await page.goto('/photos');
+    await page.goto('/inner/photos');
     await page.waitForSelector('[data-testid="photos-header"]');
 
     // 업로드 Sheet 열기
@@ -24,7 +24,7 @@ test.describe('사진 AI 태그 제안', () => {
     const { page, coupleId, uid } = authedContext;
     await seedFolder(coupleId, uid, { name: '여행' });
 
-    await page.goto('/photos');
+    await page.goto('/inner/photos');
     await page.waitForSelector('[data-testid="photos-header"]');
 
     await page.getByTestId('upload-btn').click();
@@ -53,7 +53,7 @@ test.describe('사진 AI 태그 제안', () => {
     const { page, coupleId, uid } = authedContext;
     await seedFolder(coupleId, uid, { name: '여행' });
 
-    await page.goto('/photos');
+    await page.goto('/inner/photos');
     await page.waitForSelector('[data-testid="photos-header"]');
 
     await page.getByTestId('upload-btn').click();

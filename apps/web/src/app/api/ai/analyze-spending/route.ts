@@ -42,10 +42,7 @@ export async function POST(req: NextRequest) {
 
   const allowed = await checkAndIncrementUsage(authResult.coupleId);
   if (!allowed) {
-    return NextResponse.json(
-      { error: '일일 사용 한도를 초과했습니다' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
   if (process.env.USE_AI_MOCK === 'true') {
@@ -78,14 +75,15 @@ export async function POST(req: NextRequest) {
   const totalIncome = incomeEntries.reduce((sum, e) => sum + e.amount, 0);
 
   const budgetInfo = budget
-    ? budget
-        .map((b) => `  - ${b.category}: 예산 ${b.budgetAmount.toLocaleString()}원`)
-        .join('\n')
+    ? budget.map((b) => `  - ${b.category}: 예산 ${b.budgetAmount.toLocaleString()}원`).join('\n')
     : '설정된 예산 없음';
 
   const categoryBreakdown = Object.entries(categoryTotals)
     .sort(([, a], [, b]) => b - a)
-    .map(([cat, amount]) => `  - ${cat}: ${amount.toLocaleString()}원 (${Math.round((amount / totalExpense) * 100)}%)`)
+    .map(
+      ([cat, amount]) =>
+        `  - ${cat}: ${amount.toLocaleString()}원 (${Math.round((amount / totalExpense) * 100)}%)`
+    )
     .join('\n');
 
   try {
@@ -153,11 +151,7 @@ ${budgetInfo}
           for await (const chunk of stream) {
             const text = chunk.choices[0]?.delta?.content;
             if (text) {
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ text })}\n\n`
-                )
-              );
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
             }
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));

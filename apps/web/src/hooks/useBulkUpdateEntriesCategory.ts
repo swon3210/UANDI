@@ -9,13 +9,8 @@ const QUERY_KEY = 'cashbookEntries';
 export function useBulkUpdateEntriesCategory(coupleId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      entryIds,
-      newCategoryName,
-    }: {
-      entryIds: string[];
-      newCategoryName: string;
-    }) => bulkUpdateEntriesCategory(coupleId!, entryIds, newCategoryName),
+    mutationFn: ({ entryIds, newCategoryName }: { entryIds: string[]; newCategoryName: string }) =>
+      bulkUpdateEntriesCategory(coupleId!, entryIds, newCategoryName),
     onSuccess: (count) => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
       toast.success(`${count}건 재매칭했어요`);

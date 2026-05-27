@@ -40,21 +40,15 @@ export const FilledEvenly: Story = {
 };
 
 export const Mixed: Story = {
-  render: () => (
-    <GridDemo
-      initial={[
-        1_000_000, 0, 0, 0, 1_500_000, 0, 0, 0, 0, 0, 2_000_000, 0,
-      ]}
-    />
-  ),
+  render: () => <GridDemo initial={[1_000_000, 0, 0, 0, 1_500_000, 0, 0, 0, 0, 0, 2_000_000, 0]} />,
 };
 
 export const HighlightChanged: Story = {
   render: () => (
     <GridDemo
       initial={[
-        500_000, 500_000, 700_000, 500_000, 500_000, 500_000,
-        500_000, 500_000, 500_000, 1_200_000, 500_000, 500_000,
+        500_000, 500_000, 700_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 1_200_000,
+        500_000, 500_000,
       ]}
       highlightChanged
       baseline={Array(12).fill(500_000)}

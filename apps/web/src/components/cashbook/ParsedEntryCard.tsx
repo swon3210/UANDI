@@ -25,11 +25,7 @@ type ParsedEntryCardProps = {
   onToggleSelected: (selected: boolean) => void;
 };
 
-export function ParsedEntryCard({
-  entry,
-  onClick,
-  onToggleSelected,
-}: ParsedEntryCardProps) {
+export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntryCardProps) {
   const lowConfidence = entry.confidence < 0.7;
   const isDuplicate = !!entry.duplicate;
   const isUnselected = !entry.selected;

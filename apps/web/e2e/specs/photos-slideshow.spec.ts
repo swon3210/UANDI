@@ -43,7 +43,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
 
       await photos.clickPhotoToOpenSlideshow(0);
@@ -56,7 +56,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { tags: ['벚꽃'] });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/tag/${encodeURIComponent('벚꽃')}`);
+      await page.goto(`/inner/photos/tag/${encodeURIComponent('벚꽃')}`);
       await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
 
       await photos.clickPhotoToOpenSlideshow(1);
@@ -74,7 +74,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, caption: '첫번째 (인덱스 0)' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await expect(photos.getPhotoThumbnails()).toHaveCount(3, { timeout: 10000 });
 
       await photos.clickPhotoToOpenSlideshow(2);
@@ -93,7 +93,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*3/);
@@ -147,7 +147,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId: folderB, caption: 'B의 사진' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderA}`);
+      await page.goto(`/inner/photos/folder/${folderA}`);
       await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
       await photos.clickPhotoToOpenSlideshow(0);
 
@@ -174,7 +174,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId: folderC, caption: 'C의 사진' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderA}`);
+      await page.goto(`/inner/photos/folder/${folderA}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       // A의 다음은 B(빈) → 자동 건너뛰고 C로
@@ -195,7 +195,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId: folderB });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderB}`);
+      await page.goto(`/inner/photos/folder/${folderB}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       // B의 다음 → 순환해서 A로
@@ -204,16 +204,14 @@ test.describe('슬라이드쇼', () => {
       await expect(photos.slideshowFolderLink).toContainText('A (첫번째)');
     });
 
-    test('형제 폴더가 자기 1개뿐이면 현재 폴더 첫 사진으로 순환한다', async ({
-      authedContext,
-    }) => {
+    test('형제 폴더가 자기 1개뿐이면 현재 폴더 첫 사진으로 순환한다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       const folder = await seedFolder(coupleId, uid, { name: '유일한 폴더' });
       await seedPhoto(coupleId, uid, { folderId: folder, caption: '두번째' });
       await seedPhoto(coupleId, uid, { folderId: folder, caption: '첫번째' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folder}`);
+      await page.goto(`/inner/photos/folder/${folder}`);
       await photos.clickPhotoToOpenSlideshow(0);
       await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/);
 
@@ -234,7 +232,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, caption: '행복한 날' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(photos.slideshowCaption).not.toBeVisible();
@@ -248,15 +246,13 @@ test.describe('슬라이드쇼', () => {
       await expect(photos.slideshowContainer).not.toBeVisible();
     });
 
-    test('5초 무조작 시 오버레이가 숨겨졌다가 인터랙션 시 복원된다', async ({
-      authedContext,
-    }) => {
+    test('5초 무조작 시 오버레이가 숨겨졌다가 인터랙션 시 복원된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       const folderId = await seedFolder(coupleId, uid, { name: '여행' });
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(page.getByTestId('slideshow-overlay')).toBeVisible();
@@ -284,11 +280,11 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowFolderLink.click();
-      await expect(page).toHaveURL(new RegExp(`/photos/folder/${folderId}`));
+      await expect(page).toHaveURL(new RegExp(`/inner/photos/folder/${folderId}`));
     });
 
     test('태그 클릭 시 태그 상세 페이지로 이동한다', async ({ authedContext }) => {
@@ -297,11 +293,11 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, tags: ['벚꽃'] });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowTags.getByText('#벚꽃').click();
-      await expect(page).toHaveURL(/\/photos\/tag\//);
+      await expect(page).toHaveURL(/\/inner\/photos\/tag\//);
     });
   });
 
@@ -312,7 +308,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, caption: '원래 캡션' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       // 캡션 토글로 표시
@@ -335,7 +331,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, tags: ['기존태그'] });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowEditBtn.click();
@@ -356,7 +352,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, caption: '첫번째' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await expect(photos.slideshowPosition).toHaveText(/1\s*\/\s*2/);
@@ -375,7 +371,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowDeleteBtn.click();
@@ -390,7 +386,7 @@ test.describe('슬라이드쇼', () => {
       await seedPhoto(coupleId, uid, { folderId, caption: '유지될 사진' });
 
       const photos = new PhotosPage(page);
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
       await photos.clickPhotoToOpenSlideshow(0);
 
       await photos.slideshowDeleteBtn.click();

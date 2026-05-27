@@ -34,8 +34,7 @@ export function MonthlyGrid({
   return (
     <div className={cn('grid gap-2', columnsClassName, className)}>
       {values.map((value, idx) => {
-        const changed =
-          highlightChanged && baseline ? baseline[idx] !== value : false;
+        const changed = highlightChanged && baseline ? baseline[idx] !== value : false;
         return (
           <MonthCell
             key={idx}
@@ -75,15 +74,11 @@ function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthC
     <label
       className={cn(
         'flex min-w-0 flex-col gap-1 rounded-xl border px-2.5 py-2 transition-colors',
-        changed
-          ? 'border-coral-300 bg-coral-50/60'
-          : 'border-stone-200 bg-white',
+        changed ? 'border-coral-300 bg-coral-50/60' : 'border-stone-200 bg-white',
         disabled && 'opacity-60'
       )}
     >
-      <span className="text-[11px] font-medium text-stone-500">
-        {MONTH_LABELS[month - 1]}
-      </span>
+      <span className="text-[11px] font-medium text-stone-500">{MONTH_LABELS[month - 1]}</span>
       <input
         type="text"
         inputMode="numeric"
@@ -105,9 +100,7 @@ function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthC
         placeholder="0"
       />
       {value > 0 && !focused && (
-        <span className="text-right text-[10px] text-stone-400">
-          {formatCurrencyMan(value)}원
-        </span>
+        <span className="text-right text-[10px] text-stone-400">{formatCurrencyMan(value)}원</span>
       )}
     </label>
   );

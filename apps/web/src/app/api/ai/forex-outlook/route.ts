@@ -83,10 +83,7 @@ export async function POST(req: NextRequest) {
 
   const allowed = await checkAndIncrementUsage(authResult.coupleId);
   if (!allowed) {
-    return NextResponse.json(
-      { error: '일일 사용 한도를 초과했습니다' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
   const { currency, points, indicators } = parsed.data;
@@ -152,10 +149,7 @@ ${indicatorLines(indicators)}
         finishReason: choice?.finish_reason,
         usage: completion.usage,
       });
-      return NextResponse.json(
-        { error: 'AI 응답이 비어 있습니다' },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: 'AI 응답이 비어 있습니다' }, { status: 502 });
     }
 
     const parsedContent = JSON.parse(content) as { summary?: unknown; confidence?: unknown };

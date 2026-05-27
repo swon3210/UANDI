@@ -16,11 +16,7 @@ export type EntryFilterType = CashbookEntryType | 'all';
 
 const QUERY_KEY = 'cashbookEntries';
 
-export function useCashbookEntries(
-  coupleId: string | null,
-  year: number,
-  month: number
-) {
+export function useCashbookEntries(coupleId: string | null, year: number, month: number) {
   return useQuery({
     queryKey: [QUERY_KEY, coupleId, year, month],
     queryFn: () => getMonthlyEntries(coupleId!, year, month),
@@ -33,11 +29,7 @@ export function useMonthlyEntries(coupleId: string | null) {
   return useCashbookEntries(coupleId, now.year(), now.month());
 }
 
-export function useCashbookEntriesInRange(
-  coupleId: string | null,
-  start: Date,
-  end: Date
-) {
+export function useCashbookEntriesInRange(coupleId: string | null, start: Date, end: Date) {
   return useQuery({
     queryKey: [QUERY_KEY, coupleId, 'range', start.toISOString(), end.toISOString()],
     queryFn: () => getEntriesInRange(coupleId!, start, end),
@@ -124,9 +116,7 @@ export function useFilteredEntries(
   }, [entries, typeFilter, selectedCategoryNames]);
 }
 
-export function useGroupedEntries(
-  entries: CashbookEntry[] | undefined
-): GroupedEntries[] {
+export function useGroupedEntries(entries: CashbookEntry[] | undefined): GroupedEntries[] {
   return useMemo(() => {
     if (!entries || entries.length === 0) return [];
 
@@ -178,9 +168,7 @@ export function useUpdateEntry(coupleId: string | null) {
       data,
     }: {
       entryId: string;
-      data: Partial<
-        Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>
-      >;
+      data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>;
     }) => updateEntry(coupleId!, entryId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
     onError: () => toast.error('내역 수정에 실패했어요. 다시 시도해주세요.'),

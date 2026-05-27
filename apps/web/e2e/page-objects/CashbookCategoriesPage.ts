@@ -14,7 +14,7 @@ export class CashbookCategoriesPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/categories');
+    await this.page.goto('/inner/cashbook/categories');
   }
 
   tab(name: string) {

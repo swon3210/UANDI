@@ -40,9 +40,7 @@ export function RemapCategorySheet({
   const [activeType, setActiveType] = useState<CashbookEntryType>(initialType);
   const [selected, setSelected] = useState<string>('');
 
-  const typeCategories = categories.filter(
-    (c) => c.group === (activeType as CategoryGroup)
-  );
+  const typeCategories = categories.filter((c) => c.group === (activeType as CategoryGroup));
 
   const targetText =
     selectedEntryCount < totalEntryCount

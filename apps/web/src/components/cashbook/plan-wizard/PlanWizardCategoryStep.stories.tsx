@@ -107,9 +107,7 @@ const baseIrregularItem: AnnualPlanItem = {
 };
 
 export const RegularAvgPhase: Story = {
-  render: () => (
-    <Demo category={regularCategory} initialItem={baseRegularItem} phase="avg" />
-  ),
+  render: () => <Demo category={regularCategory} initialItem={baseRegularItem} phase="avg" />,
 };
 
 export const RegularGridPhase: Story = {
@@ -128,7 +126,5 @@ export const RegularGridPhase: Story = {
 };
 
 export const Irregular: Story = {
-  render: () => (
-    <Demo category={irregularCategory} initialItem={baseIrregularItem} phase="grid" />
-  ),
+  render: () => <Demo category={irregularCategory} initialItem={baseIrregularItem} phase="grid" />,
 };

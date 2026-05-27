@@ -50,7 +50,7 @@ export async function uploadCashbookBackground({
   onProgress,
 }: BackgroundUploadOptions): Promise<string> {
   const ext = file.name.split('.').pop() ?? 'jpg';
-  const storagePath = `users/${userId}/cashbook/background.${ext}`;
+  const storagePath = `users/${userId}/inner/cashbook/background.${ext}`;
   const storageRef = ref(getStorage(), storagePath);
 
   return new Promise((resolve, reject) => {
@@ -77,18 +77,14 @@ export async function deleteCashbookBackground(userId: string, storageUrl?: stri
     const match = storageUrl.match(/background\.(\w+)/);
     if (match) ext = match[1];
   }
-  const storagePath = `users/${userId}/cashbook/background.${ext}`;
+  const storagePath = `users/${userId}/inner/cashbook/background.${ext}`;
   const storageRef = ref(getStorage(), storagePath);
   await deleteObject(storageRef);
 }
 
 // ── 사진 ──
 
-export async function deletePhotoFile(
-  coupleId: string,
-  photoId: string,
-  storageUrl?: string
-) {
+export async function deletePhotoFile(coupleId: string, photoId: string, storageUrl?: string) {
   // storageUrl에서 확장자 파싱 (예: original.png → png)
   let ext = 'jpg';
   if (storageUrl) {

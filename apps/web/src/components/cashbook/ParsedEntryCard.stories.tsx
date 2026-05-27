@@ -91,7 +91,8 @@ export const LongCategoryAndDescription: Story = {
       type: 'expense',
       amount: 250000,
       category: '아주 긴 카테고리 이름 예시',
-      description: '아주아주 긴 설명 텍스트가 한 줄에 다 들어가지 않는 경우를 확인하기 위한 예시입니다',
+      description:
+        '아주아주 긴 설명 텍스트가 한 줄에 다 들어가지 않는 경우를 확인하기 위한 예시입니다',
       date: today,
       confidence: 0.9,
       selected: true,

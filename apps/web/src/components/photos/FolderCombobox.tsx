@@ -183,9 +183,7 @@ export function FolderCombobox({
                       <div className="flex min-w-0 flex-col">
                         <span className="truncate">{folder.name}</span>
                         {pathHint && (
-                          <span className="truncate text-xs text-muted-foreground">
-                            {pathHint}
-                          </span>
+                          <span className="truncate text-xs text-muted-foreground">{pathHint}</span>
                         )}
                       </div>
                     </CommandItem>

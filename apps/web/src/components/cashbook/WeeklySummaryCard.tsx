@@ -71,11 +71,7 @@ export function WeeklySummaryCard({
         <Progress value={percentage} className={PROGRESS_CLASS[status]} />
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{percentage}%</span>
-          <Badge
-            variant="outline"
-            className={getStatusColor(status)}
-            data-testid="weekly-status"
-          >
+          <Badge variant="outline" className={getStatusColor(status)} data-testid="weekly-status">
             {getStatusEmoji(status)} {getStatusLabel(status)}
           </Badge>
         </div>

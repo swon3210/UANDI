@@ -9,10 +9,7 @@ import type { AnalyzeSpendingParams } from '@/services/ai';
 
 type AiSpendingAnalysisProps = {
   params: AnalyzeSpendingParams;
-  analyzeFn: (
-    params: AnalyzeSpendingParams,
-    onChunk: (text: string) => void
-  ) => Promise<void>;
+  analyzeFn: (params: AnalyzeSpendingParams, onChunk: (text: string) => void) => Promise<void>;
 };
 
 export function AiSpendingAnalysis({ params, analyzeFn }: AiSpendingAnalysisProps) {
@@ -47,7 +44,10 @@ export function AiSpendingAnalysis({ params, analyzeFn }: AiSpendingAnalysisProp
 
   if (mutation.isPending && !isStreaming) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="ai-analysis-loading">
+      <div
+        className="flex items-center gap-2 text-sm text-muted-foreground"
+        data-testid="ai-analysis-loading"
+      >
         <Loader2 size={14} className="animate-spin" />
         분석 중...
       </div>

@@ -6,7 +6,7 @@ export type ForegroundToastOptions = {
   selfAlertEnabled: boolean;
 };
 
-const DEFAULT_CLICK_ACTION = '/cashbook/history/monthly';
+const DEFAULT_CLICK_ACTION = '/inner/cashbook/history/monthly';
 
 // 백그라운드 SW(firebase-messaging-sw.js)와 동일한 payload shape을 가정.
 // 자세한 정의는 functions/src/notifications/budgetAlert.ts 참고.

@@ -5,10 +5,7 @@ export { formatCurrency, formatAmount } from '@uandi/cashbook-core';
  * 1만 미만은 그대로 표시.
  * `manDecimals` 옵션으로 만 단위 자릿수 지정 가능 (예: 1 → "324.4만").
  */
-export function formatCurrencyMan(
-  n: number,
-  options: { manDecimals?: number } = {}
-): string {
+export function formatCurrencyMan(n: number, options: { manDecimals?: number } = {}): string {
   if (n === 0) return '0';
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
