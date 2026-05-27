@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  forwardRef,
-  useState,
-  type ComponentProps,
-  type KeyboardEvent,
-} from 'react';
+import { forwardRef, useState, type ComponentProps, type KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 import { Input } from '@uandi/ui';
 
@@ -45,21 +40,11 @@ type ExampleTagInputProps = {
   value: string[];
   onAdd: (item: string) => void;
   onRemoveLast: () => void;
-} & Omit<
-  ComponentProps<'input'>,
-  'value' | 'onChange' | 'onKeyDown' | 'onBlur' | 'ref'
->;
+} & Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'onKeyDown' | 'onBlur' | 'ref'>;
 
 export const ExampleTagInput = forwardRef<HTMLInputElement, ExampleTagInputProps>(
   function ExampleTagInput(
-    {
-      value,
-      onAdd,
-      onRemoveLast,
-      placeholder = '예시 추가 후 Enter',
-      disabled,
-      ...rest
-    },
+    { value, onAdd, onRemoveLast, placeholder = '예시 추가 후 Enter', disabled, ...rest },
     ref
   ) {
     const [draft, setDraft] = useState('');

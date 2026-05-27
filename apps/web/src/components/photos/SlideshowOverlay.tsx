@@ -91,7 +91,7 @@ export function SlideshowOverlay({
       <div className="pointer-events-auto absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 pt-12 pb-6 text-white">
         {folder && (
           <Link
-            href={`/photos/folder/${folder.id}`}
+            href={`/inner/photos/folder/${folder.id}`}
             className="mb-1 flex items-center gap-1 text-sm font-medium hover:underline"
             data-testid="slideshow-folder-name"
           >
@@ -103,7 +103,7 @@ export function SlideshowOverlay({
             {photo.tags.map((tag) => (
               <Link
                 key={tag}
-                href={`/photos/tag/${encodeURIComponent(tag)}`}
+                href={`/inner/photos/tag/${encodeURIComponent(tag)}`}
                 className="text-sm text-white/80 hover:text-white hover:underline"
               >
                 #{tag}

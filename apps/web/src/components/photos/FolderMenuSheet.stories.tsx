@@ -12,8 +12,7 @@ const meta: Meta<typeof FolderMenuSheet> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component:
-          '폴더 관리 바텀시트. 이름 변경과 삭제 옵션을 제공합니다.',
+        component: '폴더 관리 바텀시트. 이름 변경과 삭제 옵션을 제공합니다.',
       },
     },
   },

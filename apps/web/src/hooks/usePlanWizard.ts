@@ -1,9 +1,5 @@
 import { useMemo } from 'react';
-import {
-  REGULAR_SUBGROUPS,
-  WIZARD_GROUP_ORDER,
-  type WizardGroup,
-} from '@/constants/plan-wizard';
+import { REGULAR_SUBGROUPS, WIZARD_GROUP_ORDER, type WizardGroup } from '@/constants/plan-wizard';
 import { SUB_GROUPS_BY_GROUP } from '@uandi/cashbook-core';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
 
@@ -79,9 +75,7 @@ export function usePlanWizard(
     };
     for (const group of WIZARD_GROUP_ORDER) {
       itemsByGroup[group] = sortItemsForWizard(
-        safeItems.filter(
-          (it) => it.group === group && categoriesById.has(it.categoryId)
-        ),
+        safeItems.filter((it) => it.group === group && categoriesById.has(it.categoryId)),
         categoriesById
       );
     }
@@ -137,11 +131,7 @@ function findStepIndex(steps: WizardStep[], params: WizardParams): number {
   const phase: WizardPhase = params.phase === 'avg' ? 'avg' : 'grid';
   // exact match
   const exact = steps.findIndex(
-    (s) =>
-      s.kind === 'category' &&
-      s.group === step &&
-      s.catIdx === catIdx &&
-      s.phase === phase
+    (s) => s.kind === 'category' && s.group === step && s.catIdx === catIdx && s.phase === phase
   );
   if (exact >= 0) return exact;
   // 비정기 카테고리에 phase=avg 가 들어와도 grid 로 매칭

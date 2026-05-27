@@ -60,13 +60,13 @@ export function useCashbookOpacity(): [number, (v: number) => void] {
   const opacity = useSyncExternalStore(
     subscribeOpacity,
     getOpacitySnapshot,
-    getOpacityServerSnapshot,
+    getOpacityServerSnapshot
   );
 
   const setOpacity = useCallback((value: number) => {
     localStorage.setItem(OPACITY_KEY, String(value));
     window.dispatchEvent(
-      new StorageEvent('storage', { key: OPACITY_KEY, newValue: String(value) }),
+      new StorageEvent('storage', { key: OPACITY_KEY, newValue: String(value) })
     );
   }, []);
 

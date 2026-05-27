@@ -51,8 +51,7 @@ export function TagInput({
   };
 
   const filteredSuggestions = suggestions.filter(
-    (s) =>
-      s.toLowerCase().includes(input.toLowerCase()) && !value.includes(s)
+    (s) => s.toLowerCase().includes(input.toLowerCase()) && !value.includes(s)
   );
 
   return (

@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@uandi/ui';
 
 const TABS = [
-  { label: '내역', href: '/cashbook/history', exact: true },
-  { label: '주간', href: '/cashbook/history/weekly', exact: false },
-  { label: '월간', href: '/cashbook/history/monthly', exact: false },
+  { label: '내역', href: '/inner/cashbook/history', exact: true },
+  { label: '주간', href: '/inner/cashbook/history/weekly', exact: false },
+  { label: '월간', href: '/inner/cashbook/history/monthly', exact: false },
 ] as const;
 
 export function CashbookSubNav() {

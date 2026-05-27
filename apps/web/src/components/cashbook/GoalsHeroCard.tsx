@@ -8,11 +8,7 @@ type GoalsHeroCardProps = {
   flexTotal: number;
 };
 
-export function GoalsHeroCard({
-  totalIncome,
-  totalExpense,
-  flexTotal,
-}: GoalsHeroCardProps) {
+export function GoalsHeroCard({ totalIncome, totalExpense, flexTotal }: GoalsHeroCardProps) {
   const net = totalIncome - totalExpense - flexTotal;
 
   return (
@@ -40,15 +36,7 @@ export function GoalsHeroCard({
   );
 }
 
-function HeroBreakdown({
-  label,
-  value,
-  sign,
-}: {
-  label: string;
-  value: number;
-  sign: '+' | '-';
-}) {
+function HeroBreakdown({ label, value, sign }: { label: string; value: number; sign: '+' | '-' }) {
   return (
     <div className="text-center">
       <div className="text-[11px] opacity-70">{label}</div>

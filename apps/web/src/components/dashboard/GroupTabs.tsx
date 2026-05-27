@@ -15,11 +15,7 @@ const OPTIONS: Array<{ value: GroupFilter; label: string }> = [
 
 export function GroupTabs({ value, onChange }: Props) {
   return (
-    <Tabs
-      value={value}
-      onValueChange={(v) => onChange(v as GroupFilter)}
-      data-testid="group-tabs"
-    >
+    <Tabs value={value} onValueChange={(v) => onChange(v as GroupFilter)} data-testid="group-tabs">
       <TabsList className="grid w-full grid-cols-4">
         {OPTIONS.map((opt) => (
           <TabsTrigger key={opt.value} value={opt.value} className="text-xs">

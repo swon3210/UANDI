@@ -23,10 +23,7 @@ export function PeriodNavigator({ label, canGoNext, onPrev, onNext }: Props) {
       >
         <ChevronLeft size={18} />
       </Button>
-      <span
-        data-testid="period-nav-label"
-        className="flex-1 text-center text-sm font-medium"
-      >
+      <span data-testid="period-nav-label" className="flex-1 text-center text-sm font-medium">
         {label}
       </span>
       <Button

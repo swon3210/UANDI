@@ -21,7 +21,7 @@ test.describe('사진 폴더 중첩', () => {
         path: [rootId],
       });
 
-      await page.goto(`/photos/folder/${rootId}`);
+      await page.goto(`/inner/photos/folder/${rootId}`);
 
       const section = page.getByTestId('subfolder-section');
       await expect(section).toBeVisible({ timeout: 10000 });
@@ -39,7 +39,7 @@ test.describe('사진 폴더 중첩', () => {
         path: [rootId],
       });
 
-      await page.goto('/photos');
+      await page.goto('/inner/photos');
       await page.getByTestId('tab-folders').click();
 
       // 루트 폴더 1개만 표시 (하위 "일본"은 제외)
@@ -59,14 +59,14 @@ test.describe('사진 폴더 중첩', () => {
         path: [rootId],
       });
 
-      await page.goto(`/photos/folder/${childId}`);
+      await page.goto(`/inner/photos/folder/${childId}`);
 
       const breadcrumb = page.getByTestId('folder-breadcrumb');
       await expect(breadcrumb).toBeVisible({ timeout: 10000 });
       await expect(breadcrumb).toContainText('여행');
 
       await breadcrumb.getByRole('link', { name: '여행' }).click();
-      await page.waitForURL(`**/photos/folder/${rootId}`);
+      await page.waitForURL(`**/inner/photos/folder/${rootId}`);
     });
   });
 
@@ -76,7 +76,7 @@ test.describe('사진 폴더 중첩', () => {
 
       const rootId = await seedFolder(coupleId, uid, { name: '여행' });
 
-      await page.goto(`/photos/folder/${rootId}`);
+      await page.goto(`/inner/photos/folder/${rootId}`);
 
       await page.getByTestId('create-subfolder-btn').click();
       await page.getByLabel('폴더 이름').fill('일본');
@@ -117,7 +117,7 @@ test.describe('사진 폴더 중첩', () => {
         path: [f0, f1, f2, f3],
       });
 
-      await page.goto(`/photos/folder/${f4}`);
+      await page.goto(`/inner/photos/folder/${f4}`);
 
       const btn = page.getByTestId('create-subfolder-btn');
       await expect(btn).toBeVisible({ timeout: 10000 });
@@ -146,7 +146,7 @@ test.describe('사진 폴더 중첩', () => {
       await seedPhoto(coupleId, uid, { folderId: childId });
       await seedPhoto(coupleId, uid, { folderId: childId });
 
-      await page.goto(`/photos/folder/${rootId}`);
+      await page.goto(`/inner/photos/folder/${rootId}`);
 
       await page.getByTestId('folder-menu-btn').click();
       await page.getByRole('button', { name: '폴더 삭제' }).click();
@@ -159,7 +159,7 @@ test.describe('사진 폴더 중첩', () => {
       await confirm.getByRole('button', { name: '삭제' }).click();
 
       // 갤러리 메인으로 돌아오고 폴더가 사라짐
-      await page.waitForURL('**/photos**');
+      await page.waitForURL('**/inner/photos**');
       await page.getByTestId('tab-folders').click();
       await expect(page.getByText('폴더를 만들어 사진을 정리해보세요')).toBeVisible({
         timeout: 10000,

@@ -5,15 +5,15 @@ import type { NextRequest } from 'next/server';
 // 값: 'with_couple' | 'no_couple' | (없음 = 미인증 또는 첫 방문)
 const AUTH_COOKIE = 'uandi-auth';
 
-const PROTECTED_ROUTES = ['/photos', '/cashbook', '/settings'];
-const COUPLE_REQUIRED_ROUTES = ['/photos', '/cashbook', '/settings'];
+const PROTECTED_ROUTES = ['/inner', '/outer', '/settings'];
+const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/settings'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authCookie = request.cookies.get(AUTH_COOKIE)?.value;
 
   // 쿠키 없음 = 미인증 또는 첫 방문
-  // 보호된 경로(/photos, /cashbook, /onboarding)는 홈으로 리다이렉트
+  // 보호된 경로(/inner, /outer, /settings, /onboarding)는 홈으로 리다이렉트
   if (!authCookie) {
     if (PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
       return NextResponse.redirect(new URL('/', request.url));

@@ -145,7 +145,7 @@ export class CashbookPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook');
+    await this.page.goto('/inner/cashbook');
   }
 
   async addEntry(amount: number, category: string, description?: string) {
@@ -412,7 +412,7 @@ pnpm emulators
 pnpm test:e2e
 
 # 특정 스펙만 실행
-pnpm --filter web test:e2e -- e2e/specs/cashbook.spec.ts
+pnpm --filter web test:e2e -- e2e/specs/inner/cashbook.spec.ts
 
 # Playwright UI 모드 (디버깅)
 pnpm --filter web test:e2e:ui

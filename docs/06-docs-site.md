@@ -38,10 +38,12 @@
 | `docs/05-testing-strategy.md`    | `/testing-strategy`    |
 | `docs/06-docs-site.md`           | `/docs-site`           |
 | `docs/ai-workflow.md`            | `/ai-workflow`         |
-| `docs/pages/01-onboarding.md`    | `/pages/onboarding`    |
-| `docs/pages/02-dashboard.md`     | `/pages/dashboard`     |
-| `docs/pages/03-photo-gallery.md` | `/pages/photo-gallery` |
-| `docs/pages/04-cashbook.md`      | `/pages/cashbook`      |
+| `docs/pages/01-onboarding.md`        | `/pages/onboarding`            |
+| `docs/pages/02-dashboard.md`         | `/pages/dashboard`             |
+| `docs/pages/inner/photo-gallery.md`  | `/pages/inner/photo-gallery`   |
+| `docs/pages/inner/cashbook.md`       | `/pages/inner/cashbook`        |
+| `docs/pages/outer/forex.md`          | `/pages/outer/forex`           |
+| `docs/pages/outer/dashboard.md`      | `/pages/outer/dashboard`       |
 
 `/` 접근 시 `/overview`로 리다이렉트합니다.
 
@@ -123,7 +125,7 @@ export const NAV_ITEMS = [
       { title: '온보딩', slug: 'pages/onboarding' },
       { title: '대시보드', slug: 'pages/dashboard' },
       { title: '사진 갤러리', slug: 'pages/photo-gallery' },
-      { title: '가계부', slug: 'pages/cashbook' },
+      { title: '가계부', slug: 'pages/inner/cashbook' },
     ],
   },
 ] as const;

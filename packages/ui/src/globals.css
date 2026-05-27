@@ -7,17 +7,29 @@
    컬러 스케일 — bg-coral-400, text-stone-600 등 Tailwind 유틸리티 생성
    ───────────────────────────────────────────────────────────────── */
 @theme {
-  /* Coral — 브랜드 / 포근함 */
+  /* Coral — 우리집 Primary / 브랜드 / 포근함 */
   --color-coral-50: hsl(4 100% 97%);
   --color-coral-100: hsl(4 90% 93%);
   --color-coral-200: hsl(4 82% 85%);
   --color-coral-300: hsl(4 77% 77%);
-  --color-coral-400: hsl(4 74% 69%); /* = --primary (#E8837A) */
+  --color-coral-400: hsl(4 74% 69%); /* = --primary 우리집 (#E8837A) */
   --color-coral-500: hsl(4 65% 58%);
   --color-coral-600: hsl(4 60% 46%);
   --color-coral-700: hsl(4 56% 35%);
   --color-coral-800: hsl(4 52% 22%);
   --color-coral-900: hsl(4 48% 13%);
+
+  /* Indigo — 재테크 Primary / 차분 / 신뢰 */
+  --color-indigo-50: hsl(231 100% 96%);
+  --color-indigo-100: hsl(232 89% 91%);
+  --color-indigo-200: hsl(231 64% 77%);
+  --color-indigo-300: hsl(231 56% 65%);
+  --color-indigo-400: hsl(231 48% 56%);
+  --color-indigo-500: hsl(231 48% 48%); /* = --primary 재테크 (#3F51B5) */
+  --color-indigo-600: hsl(232 50% 45%);
+  --color-indigo-700: hsl(232 54% 41%);
+  --color-indigo-800: hsl(233 57% 36%);
+  --color-indigo-900: hsl(235 67% 30%);
 
   /* Stone — 워밍 뉴트럴 / 깔끔함 (순수 회색 대신 온기 있는 베이지 계열) */
   --color-stone-50: hsl(30 20% 98%);
@@ -181,6 +193,23 @@
   --bottom-nav-h: 4rem; /* 64px */
   --page-max-w: 28rem; /* 448px ≈ max-w-md */
   --page-px: 1rem; /* 16px */
+
+  /* 재테크 공간 토큰 — [data-space='outer']에서 사용 */
+  --outer-primary: 231 48% 48%; /* indigo-500 = #3F51B5 */
+  --outer-primary-foreground: 0 0% 100%;
+  --outer-accent: 231 100% 96%; /* indigo-50 */
+  --outer-accent-foreground: 232 54% 41%; /* indigo-700 */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   재테크 공간 톤 — AppShell이 root에 data-space="outer" 적용 시 자동 전환
+   ───────────────────────────────────────────────────────────────── */
+[data-space='outer'] {
+  --primary: var(--outer-primary);
+  --primary-foreground: var(--outer-primary-foreground);
+  --accent: var(--outer-accent);
+  --accent-foreground: var(--outer-accent-foreground);
+  --ring: var(--outer-primary);
 }
 
 .dark {

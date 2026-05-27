@@ -169,9 +169,7 @@ export function SlideshowView({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>사진 삭제</DialogTitle>
-            <DialogDescription>
-              이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?
-            </DialogDescription>
+            <DialogDescription>이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
@@ -241,22 +239,11 @@ export function SlideshowView({
         {/* 인접 이미지 프리로드 — 숨겨진 img로 브라우저 캐시 워밍 */}
         {currentIndex > 0 && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photos[currentIndex - 1].storageUrl}
-            alt=""
-            className="hidden"
-            aria-hidden
-          />
+          <img src={photos[currentIndex - 1].storageUrl} alt="" className="hidden" aria-hidden />
         )}
         {photos.slice(currentIndex + 1, currentIndex + 6).map((photo) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={photo.id}
-            src={photo.storageUrl}
-            alt=""
-            className="hidden"
-            aria-hidden
-          />
+          <img key={photo.id} src={photo.storageUrl} alt="" className="hidden" aria-hidden />
         ))}
       </div>
 

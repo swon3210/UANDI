@@ -21,20 +21,13 @@ function subscribeToStorage(onStoreChange: () => void): () => void {
   return () => window.removeEventListener('storage', onStoreChange);
 }
 
-function useSsrSafeLocalStorage<T>(
-  key: string,
-  initialValue: T
-): [T, (next: T) => void] {
+function useSsrSafeLocalStorage<T>(key: string, initialValue: T): [T, (next: T) => void] {
   const getSnapshot = useCallback(() => {
     if (typeof window === 'undefined') return null;
     return window.localStorage.getItem(key);
   }, [key]);
 
-  const stored = useSyncExternalStore(
-    subscribeToStorage,
-    getSnapshot,
-    () => null
-  );
+  const stored = useSyncExternalStore(subscribeToStorage, getSnapshot, () => null);
 
   const value = useMemo<T>(() => {
     if (stored === null) return initialValue;

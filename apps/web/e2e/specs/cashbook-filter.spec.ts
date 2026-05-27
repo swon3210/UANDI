@@ -113,9 +113,7 @@ test.describe('가계부 내역 필터', () => {
     await expect(page.getByTestId(`entry-card-${trafficId}`)).toBeVisible();
   });
 
-  test('월 이동 시 카테고리 선택은 초기화되되 타입 탭은 유지된다', async ({
-    authedContext,
-  }) => {
+  test('월 이동 시 카테고리 선택은 초기화되되 타입 탭은 유지된다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 

@@ -30,9 +30,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
       <section
         className={cn(
           'rounded-2xl border p-5',
-          ok
-            ? 'border-sage-200 bg-sage-50'
-            : 'border-coral-200 bg-coral-50'
+          ok ? 'border-sage-200 bg-sage-50' : 'border-coral-200 bg-coral-50'
         )}
         data-testid="wizard-validate-status"
       >
@@ -43,12 +41,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
             <AlertTriangle size={28} className="shrink-0 text-coral-500" />
           )}
           <div className="min-w-0">
-            <div
-              className={cn(
-                'text-[15px] font-bold',
-                ok ? 'text-sage-700' : 'text-coral-700'
-              )}
-            >
+            <div className={cn('text-[15px] font-bold', ok ? 'text-sage-700' : 'text-coral-700')}>
               {ok ? '검증 통과' : '예산이 부족해요'}
             </div>
             <div
@@ -122,10 +115,7 @@ function TotalRow({
       data-testid={`validate-row-${tone}`}
     >
       <span
-        className={cn(
-          'text-[13px] text-stone-700',
-          emphasized && 'font-semibold text-stone-900'
-        )}
+        className={cn('text-[13px] text-stone-700', emphasized && 'font-semibold text-stone-900')}
       >
         {label}
       </span>

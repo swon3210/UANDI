@@ -1,11 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
-import type {
-  CashbookCategory,
-  CategoryGroup,
-  CategorySubGroup,
-} from '@uandi/cashbook-core';
+import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@uandi/cashbook-core';
 import { BulkEditGrid, type BulkEditRow } from './BulkEditGrid';
 
 const meta: Meta<typeof BulkEditGrid> = {
@@ -51,76 +47,37 @@ function category(
 const baseRows: BulkEditRow[] = [
   {
     itemId: 'item-salary',
-    category: category(
-      'cat-salary',
-      '정기급여',
-      'income',
-      'regular_income',
-      '#4CAF86',
-      'wallet'
-    ),
+    category: category('cat-salary', '정기급여', 'income', 'regular_income', '#4CAF86', 'wallet'),
     monthlyAmounts: Array(12).fill(4_000_000),
     baseline: Array(12).fill(4_000_000),
   },
   {
     itemId: 'item-bonus',
-    category: category(
-      'cat-bonus',
-      '상여',
-      'income',
-      'regular_income',
-      '#4CAF86',
-      'gift'
-    ),
-    monthlyAmounts: [
-      0, 0, 3_000_000, 0, 0, 6_000_000, 0, 0, 3_000_000, 0, 0, 6_000_000,
-    ],
-    baseline: [
-      0, 0, 3_000_000, 0, 0, 6_000_000, 0, 0, 3_000_000, 0, 0, 6_000_000,
-    ],
+    category: category('cat-bonus', '상여', 'income', 'regular_income', '#4CAF86', 'gift'),
+    monthlyAmounts: [0, 0, 3_000_000, 0, 0, 6_000_000, 0, 0, 3_000_000, 0, 0, 6_000_000],
+    baseline: [0, 0, 3_000_000, 0, 0, 6_000_000, 0, 0, 3_000_000, 0, 0, 6_000_000],
   },
   {
     itemId: 'item-rent',
-    category: category(
-      'cat-rent',
-      '월세',
-      'expense',
-      'fixed_expense',
-      '#D8635A',
-      'house'
-    ),
+    category: category('cat-rent', '월세', 'expense', 'fixed_expense', '#D8635A', 'house'),
     monthlyAmounts: Array(12).fill(900_000),
     baseline: Array(12).fill(900_000),
   },
   {
     itemId: 'item-food',
-    category: category(
-      'cat-food',
-      '식비',
-      'expense',
-      'variable_common',
-      '#E8837A',
-      'bowl_food'
-    ),
+    category: category('cat-food', '식비', 'expense', 'variable_common', '#E8837A', 'bowl_food'),
     monthlyAmounts: [
-      600_000, 600_000, 600_000, 700_000, 600_000, 600_000, 600_000, 700_000,
-      600_000, 600_000, 700_000, 800_000,
+      600_000, 600_000, 600_000, 700_000, 600_000, 600_000, 600_000, 700_000, 600_000, 600_000,
+      700_000, 800_000,
     ],
     baseline: [
-      600_000, 600_000, 600_000, 700_000, 600_000, 600_000, 600_000, 700_000,
-      600_000, 600_000, 700_000, 800_000,
+      600_000, 600_000, 600_000, 700_000, 600_000, 600_000, 600_000, 700_000, 600_000, 600_000,
+      700_000, 800_000,
     ],
   },
   {
     itemId: 'item-personal',
-    category: category(
-      'cat-personal',
-      '취미',
-      'flex',
-      'personal_flex',
-      '#9C7AE8',
-      'sparkle'
-    ),
+    category: category('cat-personal', '취미', 'flex', 'personal_flex', '#9C7AE8', 'sparkle'),
     monthlyAmounts: Array(12).fill(150_000),
     baseline: Array(12).fill(150_000),
   },
@@ -179,9 +136,7 @@ export const WithChanges: Story = {
 };
 
 export const Empty: Story = {
-  render: () => (
-    <BulkEditGrid rows={[]} onChangeRow={() => {}} onResetRow={() => {}} />
-  ),
+  render: () => <BulkEditGrid rows={[]} onChangeRow={() => {}} onResetRow={() => {}} />,
 };
 
 export const ManyCategories: Story = {
@@ -199,12 +154,12 @@ export const ManyCategories: Story = {
           'lightbulb'
         ),
         monthlyAmounts: [
-          250_000, 240_000, 200_000, 180_000, 160_000, 150_000, 200_000,
-          230_000, 200_000, 180_000, 200_000, 250_000,
+          250_000, 240_000, 200_000, 180_000, 160_000, 150_000, 200_000, 230_000, 200_000, 180_000,
+          200_000, 250_000,
         ],
         baseline: [
-          250_000, 240_000, 200_000, 180_000, 160_000, 150_000, 200_000,
-          230_000, 200_000, 180_000, 200_000, 250_000,
+          250_000, 240_000, 200_000, 180_000, 160_000, 150_000, 200_000, 230_000, 200_000, 180_000,
+          200_000, 250_000,
         ],
       },
       {
@@ -222,14 +177,7 @@ export const ManyCategories: Story = {
       },
       {
         itemId: 'item-joint-flex',
-        category: category(
-          'cat-joint-flex',
-          '데이트',
-          'flex',
-          'joint_flex',
-          '#9C7AE8',
-          'heart'
-        ),
+        category: category('cat-joint-flex', '데이트', 'flex', 'joint_flex', '#9C7AE8', 'heart'),
         monthlyAmounts: Array(12).fill(300_000),
         baseline: Array(12).fill(300_000),
       },

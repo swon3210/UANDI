@@ -3,12 +3,7 @@
 import { useId, useMemo } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from 'recharts';
 import dayjs from 'dayjs';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@uandi/ui';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@uandi/ui';
 import {
   type ExchangeRatePoint,
   type SupportedCurrency,
@@ -120,14 +115,17 @@ export function ExchangeRateChart({ currency, points }: Props) {
           tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
         />
         <ChartTooltip
-          cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
+          cursor={{
+            stroke: 'hsl(var(--muted-foreground))',
+            strokeWidth: 1,
+            strokeDasharray: '3 3',
+          }}
           content={
             <ChartTooltipContent
               indicator="dot"
               formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
-                  {String(name)}{' '}
-                  {typeof value === 'number' ? value.toFixed(2) : value}원
+                  {String(name)} {typeof value === 'number' ? value.toFixed(2) : value}원
                 </span>
               )}
             />

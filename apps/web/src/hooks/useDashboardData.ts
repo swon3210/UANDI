@@ -58,10 +58,7 @@ function bucketKeyFor(period: PeriodKind, date: dayjs.Dayjs): string {
   return date.format('YYYY-MM-DD');
 }
 
-function buildBuckets(
-  period: PeriodKind,
-  cursor: Dayjs
-): { bucketKey: string; label: string }[] {
+function buildBuckets(period: PeriodKind, cursor: Dayjs): { bucketKey: string; label: string }[] {
   if (period === 'weekly') {
     const start = cursor.startOf('week');
     return Array.from({ length: 7 }, (_, i) => {
@@ -155,8 +152,7 @@ export function useDashboardData(args: {
 
   return useMemo(() => {
     const allEntries = entriesQuery.data ?? [];
-    const filtered =
-      group === 'all' ? allEntries : allEntries.filter((e) => e.type === group);
+    const filtered = group === 'all' ? allEntries : allEntries.filter((e) => e.type === group);
 
     return {
       trendByCategory: buildTrendByCategory(filtered, period, cursor),

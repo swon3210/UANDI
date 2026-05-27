@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'UANDI 가계부',
+    name: 'UANDI',
     short_name: 'UANDI',
-    description: '우리 둘만의 공간',
+    description: '함께 모으는 우리집, 각자 운영하는 재테크까지',
     start_url: '/',
     scope: '/',
     display: 'standalone',

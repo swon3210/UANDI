@@ -23,17 +23,27 @@ function buildSlugMap(): Map<string, string> {
     map.set(slug, path.join(DOCS_ROOT, file));
   }
 
-  // pages/ 서브디렉토리
+  // pages/ 서브디렉토리 (inner/, outer/ 등 1단계 nested 지원)
   const pagesDir = path.join(DOCS_ROOT, 'pages');
   if (fs.existsSync(pagesDir)) {
-    const pageFiles = fs.readdirSync(pagesDir).filter((f) => f.endsWith('.md'));
-    for (const file of pageFiles) {
-      const slug = stripNumberPrefix(path.basename(file, '.md'));
-      map.set(`pages/${slug}`, path.join(pagesDir, file));
-    }
+    walkPagesDir(pagesDir, [], map);
   }
 
   return map;
+}
+
+function walkPagesDir(dir: string, prefix: string[], map: Map<string, string>) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const absPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkPagesDir(absPath, [...prefix, entry.name], map);
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      const slug = stripNumberPrefix(path.basename(entry.name, '.md'));
+      const key = ['pages', ...prefix, slug].join('/');
+      map.set(key, absPath);
+    }
+  }
 }
 
 // generateStaticParams용 — 모든 slug 배열 반환

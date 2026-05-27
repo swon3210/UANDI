@@ -40,7 +40,7 @@ test.describe('사진 업로드', () => {
 
       const folderId = await seedFolder(coupleId, uid, { name: '제주도 여행' });
 
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
 
       const uploadBtn = page.getByRole('button', { name: '사진 업로드' });
       await expect(uploadBtn).toBeVisible({ timeout: 10000 });
@@ -54,7 +54,7 @@ test.describe('사진 업로드', () => {
 
       const folderId = await seedFolder(coupleId, uid, { name: '제주도 여행' });
 
-      await page.goto(`/photos/folder/${folderId}`);
+      await page.goto(`/inner/photos/folder/${folderId}`);
 
       const uploadBtn = page.getByRole('button', { name: '사진 업로드' });
       await expect(uploadBtn).toHaveAttribute('data-auth-ready', 'true', { timeout: 10000 });

@@ -83,10 +83,7 @@ export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProp
           ))}
           {rows.length === 0 && (
             <tr>
-              <td
-                colSpan={14}
-                className="px-4 py-10 text-center text-[12px] text-stone-400"
-              >
+              <td colSpan={14} className="px-4 py-10 text-center text-[12px] text-stone-400">
                 수정할 카테고리가 없어요.
               </td>
             </tr>

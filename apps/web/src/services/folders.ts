@@ -70,10 +70,7 @@ export async function getFolder(coupleId: string, folderId: string): Promise<Fol
 }
 
 /** 폴더의 조상(루트→부모 순서)을 반환 */
-export async function getFolderAncestors(
-  coupleId: string,
-  folder: Folder
-): Promise<Folder[]> {
+export async function getFolderAncestors(coupleId: string, folder: Folder): Promise<Folder[]> {
   if (folder.path.length === 0) return [];
   // path는 최대 4개 → in 쿼리 한 번으로 처리 가능
   const q = query(foldersCol(coupleId), where(documentId(), 'in', folder.path));
@@ -82,9 +79,7 @@ export async function getFolderAncestors(
   snap.docs.forEach((d) => {
     byId.set(d.id, { id: d.id, ...d.data() } as Folder);
   });
-  return folder.path
-    .map((id) => byId.get(id))
-    .filter((f): f is Folder => f != null);
+  return folder.path.map((id) => byId.get(id)).filter((f): f is Folder => f != null);
 }
 
 export async function createFolder(

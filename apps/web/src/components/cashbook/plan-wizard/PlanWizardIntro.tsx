@@ -63,25 +63,14 @@ export function PlanWizardIntro({
         </ul>
       </section>
 
-      <p
-        className="text-center text-[12px] text-stone-400"
-        data-testid="wizard-intro-total"
-      >
+      <p className="text-center text-[12px] text-stone-400" data-testid="wizard-intro-total">
         총 {total}개 카테고리
       </p>
     </div>
   );
 }
 
-function FlowItem({
-  num,
-  label,
-  hint,
-}: {
-  num: number;
-  label: string;
-  hint: string;
-}) {
+function FlowItem({ num, label, hint }: { num: number; label: string; hint: string }) {
   return (
     <li className="flex gap-3">
       <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-coral-100 text-[12px] font-bold text-coral-600">

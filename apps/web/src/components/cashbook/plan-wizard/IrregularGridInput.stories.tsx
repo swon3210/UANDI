@@ -34,13 +34,7 @@ function Demo({
   initial: number[];
 }) {
   const [values, setValues] = useState(initial);
-  return (
-    <IrregularGridInput
-      category={category}
-      monthlyAmounts={values}
-      onChange={setValues}
-    />
-  );
+  return <IrregularGridInput category={category} monthlyAmounts={values} onChange={setValues} />;
 }
 
 export const Empty: Story = {
@@ -48,11 +42,7 @@ export const Empty: Story = {
 };
 
 export const TwoMonths: Story = {
-  render: () => (
-    <Demo
-      initial={[500_000, 0, 0, 0, 0, 0, 0, 0, 500_000, 0, 0, 0]}
-    />
-  ),
+  render: () => <Demo initial={[500_000, 0, 0, 0, 0, 0, 0, 0, 500_000, 0, 0, 0]} />,
 };
 
 export const VariableCommon: Story = {

@@ -106,8 +106,14 @@ export const test = base.extend<Fixtures>({
     const uid1 = await createTestUser(EMAIL_1, PASSWORD);
     const uid2 = await createTestUser(EMAIL_2, PASSWORD);
     const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
-    await seedUserDocument(uid1, EMAIL_1, coupleId, { displayName: 'User 1', photoURL: 'https://example.com/user1.jpg' });
-    await seedUserDocument(uid2, EMAIL_2, coupleId, { displayName: 'User 2', photoURL: 'https://example.com/user2.jpg' });
+    await seedUserDocument(uid1, EMAIL_1, coupleId, {
+      displayName: 'User 1',
+      photoURL: 'https://example.com/user1.jpg',
+    });
+    await seedUserDocument(uid2, EMAIL_2, coupleId, {
+      displayName: 'User 2',
+      photoURL: 'https://example.com/user2.jpg',
+    });
 
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);

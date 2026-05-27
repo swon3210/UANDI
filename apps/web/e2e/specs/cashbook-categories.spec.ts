@@ -98,9 +98,7 @@ test.describe('카테고리 설정', () => {
       await expect(categoriesPage.categoryItem('인센티브')).not.toBeVisible();
     });
 
-    test('사용 중인 카테고리 삭제 시 확인 다이얼로그가 표시된다', async ({
-      authedContext,
-    }) => {
+    test('사용 중인 카테고리 삭제 시 확인 다이얼로그가 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       // 정기급여 카테고리를 사용하는 항목 생성
@@ -147,9 +145,7 @@ test.describe('카테고리 설정', () => {
       ).toBeVisible();
     });
 
-    test('자식 카테고리 chip에 부모 subGroup 뱃지가 노출된다', async ({
-      authedContext,
-    }) => {
+    test('자식 카테고리 chip에 부모 subGroup 뱃지가 노출된다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       const parentId = await seedCashbookCategory(coupleId, {
         group: 'expense',
@@ -170,9 +166,7 @@ test.describe('카테고리 설정', () => {
       await categoriesPage.selectTab('지출');
 
       // 자식 chip에 "공통" 뱃지 표시
-      await expect(
-        categoriesPage.childChip('외식').getByText('공통')
-      ).toBeVisible();
+      await expect(categoriesPage.childChip('외식').getByText('공통')).toBeVisible();
     });
 
     test('부모 카테고리에 description을 입력하면 부모 카드에 표시된다', async ({
@@ -191,14 +185,10 @@ test.describe('카테고리 설정', () => {
       await categoriesPage.descriptionInput.fill('장보기·외식·배달');
       await categoriesPage.saveButton.click();
 
-      await expect(categoriesPage.categoryDescription('식비')).toContainText(
-        '장보기·외식·배달'
-      );
+      await expect(categoriesPage.categoryDescription('식비')).toContainText('장보기·외식·배달');
     });
 
-    test('examples를 입력 후 다시 편집 시 그대로 복원된다', async ({
-      authedContext,
-    }) => {
+    test('examples를 입력 후 다시 편집 시 그대로 복원된다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
 
@@ -218,15 +208,11 @@ test.describe('카테고리 설정', () => {
       await categoriesPage.openCategoryMenu('식비');
       await categoriesPage.menuItem('편집').click();
       for (const ex of ['장보기', '외식', '배달']) {
-        await expect(
-          categoriesPage.sheet.getByText(ex, { exact: true })
-        ).toBeVisible();
+        await expect(categoriesPage.sheet.getByText(ex, { exact: true })).toBeVisible();
       }
     });
 
-    test('자식 카테고리를 편집하면 chip 라벨이 변경된다', async ({
-      authedContext,
-    }) => {
+    test('자식 카테고리를 편집하면 chip 라벨이 변경된다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       const parentId = await seedCashbookCategory(coupleId, {
         group: 'expense',
@@ -252,9 +238,7 @@ test.describe('카테고리 설정', () => {
       await expect(categoriesPage.childChip('외식')).not.toBeVisible();
     });
 
-    test('자식 카테고리를 단독 삭제하면 자식 chip만 사라진다', async ({
-      authedContext,
-    }) => {
+    test('자식 카테고리를 단독 삭제하면 자식 chip만 사라진다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       const parentId = await seedCashbookCategory(coupleId, {
         group: 'expense',

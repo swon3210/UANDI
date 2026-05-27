@@ -29,13 +29,15 @@ shadcn은 컴포넌트 소스를 직접 소유하므로, 브랜드에 맞게 자
 
 ### 팔레트 구조
 
-| 팔레트    | 역할                 | 핵심 키워드      |
-| --------- | -------------------- | ---------------- |
-| **Coral** | 브랜드 / Primary     | 포근함, 감성     |
-| **Stone** | 뉴트럴 (워밍 그레이) | 깔끔함, 프라이빗 |
-| **Sage**  | 수입 / 긍정          | 신뢰, 안정       |
+| 팔레트     | 역할                              | 핵심 키워드      |
+| ---------- | --------------------------------- | ---------------- |
+| **Coral**  | 우리집 Primary / 브랜드           | 포근함, 감성     |
+| **Indigo** | 재테크 Primary                      | 차분, 신뢰, 금융 |
+| **Stone**  | 뉴트럴 (워밍 그레이)              | 깔끔함, 프라이빗 |
+| **Sage**  | 수입 / 긍정                       | 신뢰, 안정       |
 
 > 순수 회색(Gray) 대신 온기가 도는 **Stone**을 사용해 차갑지 않은 깔끔함을 표현합니다.
+> 우리집(coral) ↔ 재테크(indigo)은 시맨틱 토큰을 통해 자동 전환됩니다 — `docs/08-spaces.md` 참고.
 
 ---
 
@@ -53,6 +55,25 @@ shadcn은 컴포넌트 소스를 직접 소유하므로, 브랜드에 맞게 자
 | `coral-700` | `hsl(4 56% 35%)`  | `#923832` | 강한 강조                     |
 | `coral-800` | `hsl(4 52% 22%)`  | `#5E2320` | 다크 강조                     |
 | `coral-900` | `hsl(4 48% 13%)`  | `#381413` | 극강 다크                     |
+
+---
+
+### Indigo — 재테크 / 차분 / 신뢰
+
+재테크 공간(`/outer/*`)에서 우리집의 coral을 대체하는 Primary 팔레트입니다. 금융·투자 도메인 정석 톤으로, 신혼부부의 따뜻한 우리집과 시각적으로 명확히 구분됩니다.
+
+| 스케일       | HSL                | Hex       | 용도                                |
+| ------------ | ------------------ | --------- | ----------------------------------- |
+| `indigo-50`  | `hsl(231 100% 96%)` | `#E8EAF6` | 재테크 배경 틴트, hover 배경          |
+| `indigo-100` | `hsl(232 89% 91%)`  | `#C5CAE9` | 서브 강조 배경                      |
+| `indigo-200` | `hsl(231 64% 77%)`  | `#9FA8DA` | 라이트 강조                         |
+| `indigo-300` | `hsl(231 56% 65%)`  | `#7986CB` | 미디엄 강조                         |
+| `indigo-400` | `hsl(231 48% 56%)`  | `#5C6BC0` | 보조                                |
+| `indigo-500` | `hsl(231 48% 48%)`  | `#3F51B5` | **Outer Primary** — 재테크 CTA, 링크 |
+| `indigo-600` | `hsl(232 50% 45%)`  | `#3949AB` | Pressed 상태                        |
+| `indigo-700` | `hsl(232 54% 41%)`  | `#303F9F` | 강한 강조                           |
+| `indigo-800` | `hsl(233 57% 36%)`  | `#283593` | 다크 강조                           |
+| `indigo-900` | `hsl(235 67% 30%)`  | `#1A237E` | 극강 다크                           |
 
 ---
 
@@ -94,21 +115,26 @@ shadcn은 컴포넌트 소스를 직접 소유하므로, 브랜드에 맞게 자
 
 실제 컴포넌트에서는 스케일 값 직접 참조보다 **시맨틱 토큰**을 우선 사용합니다.
 
-| CSS 변수               | 값 (스케일 참조) | Tailwind 클래스               | 용도                  |
-| ---------------------- | ---------------- | ----------------------------- | --------------------- |
-| `--background`         | stone-50         | `bg-background`               | 페이지 배경           |
-| `--foreground`         | stone-900        | `text-foreground`             | 기본 텍스트           |
-| `--card`               | white            | `bg-card`                     | 카드/컨테이너 배경    |
-| `--primary`            | coral-400        | `bg-primary` / `text-primary` | CTA 버튼, 강조        |
-| `--primary-foreground` | white            | `text-primary-foreground`     | Primary 위 텍스트     |
-| `--secondary`          | stone-100        | `bg-secondary`                | 보조 버튼, 서브 배경  |
-| `--muted`              | stone-100        | `bg-muted`                    | 비활성 배경           |
-| `--muted-foreground`   | stone-600        | `text-muted-foreground`       | 날짜, 보조 정보       |
-| `--accent`             | coral-50         | `bg-accent`                   | hover, 선택 상태 배경 |
-| `--border`             | stone-200        | `border-border`               | 구분선, 테두리        |
-| `--destructive`        | red-600          | `text-destructive`            | 삭제, 에러            |
-| `--income`             | sage-400         | `text-income`                 | 수입 금액             |
-| `--expense`            | coral-500        | `text-expense`                | 지출 금액             |
+| CSS 변수               | 값 (우리집)      | 값 (재테크)        | Tailwind 클래스               | 용도                  |
+| ---------------------- | ---------------- | ---------------- | ----------------------------- | --------------------- |
+| `--background`         | stone-50         | stone-50         | `bg-background`               | 페이지 배경           |
+| `--foreground`         | stone-900        | stone-900        | `text-foreground`             | 기본 텍스트           |
+| `--card`               | white            | white            | `bg-card`                     | 카드/컨테이너 배경    |
+| `--primary`            | coral-400        | indigo-500       | `bg-primary` / `text-primary` | CTA 버튼, 강조        |
+| `--primary-foreground` | white            | white            | `text-primary-foreground`     | Primary 위 텍스트     |
+| `--secondary`          | stone-100        | stone-100        | `bg-secondary`                | 보조 버튼, 서브 배경  |
+| `--muted`              | stone-100        | stone-100        | `bg-muted`                    | 비활성 배경           |
+| `--muted-foreground`   | stone-600        | stone-600        | `text-muted-foreground`       | 날짜, 보조 정보       |
+| `--accent`             | coral-50         | indigo-50        | `bg-accent`                   | hover, 선택 상태 배경 |
+| `--ring`               | coral-400        | indigo-500       | `ring-ring`                   | focus ring            |
+| `--border`             | stone-200        | stone-200        | `border-border`               | 구분선, 테두리        |
+| `--destructive`        | red-600          | red-600          | `text-destructive`            | 삭제, 에러            |
+| `--income`             | sage-400         | sage-400         | `text-income`                 | 수입 금액             |
+| `--expense`            | coral-500        | coral-500        | `text-expense`                | 지출 금액             |
+
+### 공간별 톤 전환
+
+AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"` 속성을 적용합니다. CSS는 `[data-space='outer']` 셀렉터로 `--primary` / `--accent` / `--ring` 등을 재테크 톤으로 일괄 오버라이드합니다. 컴포넌트는 별도 prop 없이 시맨틱 토큰만 따르면 자동으로 해당 공간 톤이 적용됩니다.
 
 ```tsx
 /* 컴포넌트 사용 예 */
@@ -360,11 +386,12 @@ shadcn은 컴포넌트 소스를 직접 소유하므로, 브랜드에 맞게 자
 
 ### 커스텀 컴포넌트 (`packages/ui/src/custom/`)
 
-| 컴포넌트     | Props                                     | 용도            |
-| ------------ | ----------------------------------------- | --------------- |
-| `Header`     | `title`, `leftSlot?`, `rightSlot?`        | 페이지 헤더     |
-| `BottomNav`  | `activeTab`                               | 하단 네비게이션 |
-| `EmptyState` | `icon`, `title`, `description`, `action?` | 빈 상태 화면    |
+| 컴포넌트         | Props                                          | 용도                              |
+| ---------------- | ---------------------------------------------- | --------------------------------- |
+| `Header`         | `title`, `leftSlot?`, `rightSlot?`             | 페이지 헤더                       |
+| `BottomNav`      | `activeTab`                                    | 하단 네비게이션                   |
+| `EmptyState`     | `icon`, `title`, `description`, `action?`      | 빈 상태 화면                      |
+| `SpaceSwitcher`  | `currentSpace`, `onSpaceChange`                | 우리집/재테크 공간 전환 (DropdownMenu) |
 
 ---
 

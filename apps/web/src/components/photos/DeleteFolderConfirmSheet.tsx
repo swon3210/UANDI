@@ -51,8 +51,10 @@ export function DeleteFolderConfirmSheet({
           <Skeleton className="h-5 w-40" />
         ) : showCounts ? (
           <p>
-            이 폴더와 <span className="font-medium text-foreground">하위 폴더 {count!.folders}개</span>
-            , <span className="font-medium text-foreground">사진 {count!.photos}장</span>이 모두 삭제됩니다. 되돌릴 수 없어요.
+            이 폴더와{' '}
+            <span className="font-medium text-foreground">하위 폴더 {count!.folders}개</span>,{' '}
+            <span className="font-medium text-foreground">사진 {count!.photos}장</span>이 모두
+            삭제됩니다. 되돌릴 수 없어요.
           </p>
         ) : (
           <p>이 폴더를 삭제합니다. 되돌릴 수 없어요.</p>

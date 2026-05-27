@@ -45,9 +45,7 @@ async function seedFoodBudget(
 
 test.describe('가계부 예산 초과 알림', () => {
   test.describe('인앱 배너', () => {
-    test('카테고리 예산의 80%를 넘으면 배너에 노란 경고가 표시된다', async ({
-      authedContext,
-    }) => {
+    test('카테고리 예산의 80%를 넘으면 배너에 노란 경고가 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid); // 식비 월 60만
       // 480,000 = 80% 도달
@@ -66,9 +64,7 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(alert.banner()).toContainText('80%');
     });
 
-    test('카테고리 예산을 100% 초과하면 배너에 빨간 경고가 표시된다', async ({
-      authedContext,
-    }) => {
+    test('카테고리 예산을 100% 초과하면 배너에 빨간 경고가 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
       await seedCashbookEntry(coupleId, uid, {
@@ -141,9 +137,7 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(item).not.toBeVisible();
     });
 
-    test('dismiss 후에도 다음 임계값(over120) 진입 시 다시 표시된다', async ({
-      authedContext,
-    }) => {
+    test('dismiss 후에도 다음 임계값(over120) 진입 시 다시 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       const { foodCategoryId } = await seedFoodBudget(coupleId, uid);
       await seedCashbookEntry(coupleId, uid, {
@@ -234,9 +228,7 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(page.getByText(/식비.*80%/)).toBeVisible({ timeout: 5000 });
     });
 
-    test('같은 임계값 내 추가 거래에는 토스트가 다시 뜨지 않는다', async ({
-      authedContext,
-    }) => {
+    test('같은 임계값 내 추가 거래에는 토스트가 다시 뜨지 않는다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
       // 이미 80% 진입한 상태로 시작
@@ -266,9 +258,7 @@ test.describe('가계부 예산 초과 알림', () => {
   });
 
   test.describe('알림 설정 연동', () => {
-    test('budgetWarning.enabled = false 이면 배너가 표시되지 않는다', async ({
-      authedContext,
-    }) => {
+    test('budgetWarning.enabled = false 이면 배너가 표시되지 않는다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
       await seedNotificationSettings(uid, { coupleId, budgetWarningEnabled: false });
@@ -287,7 +277,7 @@ test.describe('가계부 예산 초과 알림', () => {
   });
 
   test.describe('페이지별 노출', () => {
-    test('가계부 메인 페이지(/cashbook/history)에도 배너가 노출된다', async ({
+    test('가계부 메인 페이지(/inner/cashbook/history)에도 배너가 노출된다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
@@ -304,7 +294,7 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(alert.banner()).toBeVisible();
     });
 
-    test('주간 페이지(/cashbook/history/weekly)에도 배너가 노출된다', async ({
+    test('주간 페이지(/inner/cashbook/history/weekly)에도 배너가 노출된다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;

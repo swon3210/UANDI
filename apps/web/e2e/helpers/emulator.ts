@@ -209,9 +209,7 @@ export async function seedCashbookCategory(
           isDefault: { booleanValue: options.isDefault ?? true },
           sortOrder: { integerValue: String(options.sortOrder ?? 0) },
           parentCategoryId:
-            parentCategoryId === null
-              ? { nullValue: null }
-              : { stringValue: parentCategoryId },
+            parentCategoryId === null ? { nullValue: null } : { stringValue: parentCategoryId },
           description: { stringValue: options.description ?? '' },
           examples: {
             arrayValue: {

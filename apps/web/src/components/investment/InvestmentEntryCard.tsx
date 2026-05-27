@@ -15,7 +15,7 @@ export function InvestmentEntryCard({ currencyLabel, rate, diffPercent, isLoadin
 
   return (
     <Link
-      href="/investment/forex"
+      href="/outer/forex"
       data-testid="investment-entry-card"
       className="block rounded-xl border border-border bg-card p-4 text-card-foreground transition-colors hover:bg-accent/40"
     >

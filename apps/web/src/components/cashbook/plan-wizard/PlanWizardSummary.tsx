@@ -34,8 +34,9 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
           {saving ? '저장 중...' : '예산 계획이 준비됐어요'}
         </h1>
         <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
-          연간 잉여 <strong className="font-semibold text-stone-700">{formatCurrencyMan(surplus)}원</strong>으로
-          한 해를 시작합니다.
+          연간 잉여{' '}
+          <strong className="font-semibold text-stone-700">{formatCurrencyMan(surplus)}원</strong>
+          으로 한 해를 시작합니다.
         </p>
       </header>
 
@@ -88,9 +89,7 @@ function SummaryStat({
   return (
     <div className={cn('rounded-xl border px-3 py-3 text-center', cls)}>
       <div className="text-[10px] font-medium opacity-80">{label}</div>
-      <div className="mt-0.5 text-[15px] font-bold tabular-nums">
-        {formatCurrencyMan(amount)}
-      </div>
+      <div className="mt-0.5 text-[15px] font-bold tabular-nums">{formatCurrencyMan(amount)}</div>
     </div>
   );
 }
@@ -116,9 +115,7 @@ function MonthRow({
         isPeak ? 'bg-coral-50' : 'bg-stone-50'
       )}
     >
-      <span className="w-9 shrink-0 font-semibold text-stone-700">
-        {MONTH_LABELS[monthIdx]}
-      </span>
+      <span className="w-9 shrink-0 font-semibold text-stone-700">{MONTH_LABELS[monthIdx]}</span>
       <span className="flex-1 text-right text-sage-600">+{formatCurrencyMan(income)}</span>
       <span className="flex-1 text-right text-coral-600">-{formatCurrencyMan(expense)}</span>
       <span className="flex-1 text-right text-violet-500">-{formatCurrencyMan(flex)}</span>

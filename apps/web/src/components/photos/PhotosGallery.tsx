@@ -7,7 +7,6 @@ import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import {
-  Header,
   EmptyState,
   Button,
   Tabs,
@@ -18,23 +17,25 @@ import {
   Skeleton,
   Sheet,
 } from '@uandi/ui';
+import { PageHeader } from '@/components/shell/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useInfinitePhotos,
-  usePhotoStats,
-  useUploadPhotos,
-} from '@/hooks/usePhotos';
+import { useInfinitePhotos, usePhotoStats, useUploadPhotos } from '@/hooks/usePhotos';
 import { useFolders, useCreateFolder } from '@/hooks/useFolders';
 import { CreateFolderSheet } from '@/components/photos/CreateFolderSheet';
 import { useUploaderAvatars } from '@/hooks/useCoupleMembers';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { BottomNav } from '@/components/BottomNav';
 import { PhotoGrid } from '@/components/photos/PhotoGrid';
 import { FoldersTab } from '@/components/photos/FoldersTab';
 import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import Link from 'next/link';
 
-function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploaderAvatars?: Record<string, string | null> }) {
+function AllPhotosTab({
+  coupleId,
+  uploaderAvatars,
+}: {
+  coupleId: string;
+  uploaderAvatars?: Record<string, string | null>;
+}) {
   const router = useRouter();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
@@ -57,11 +58,7 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
         icon="📷"
         title="아직 사진이 없어요"
         description="소중한 순간을 함께 기록해보세요"
-        action={
-          <Button disabled>
-            첫 사진 올리기
-          </Button>
-        }
+        action={<Button disabled>첫 사진 올리기</Button>}
       />
     );
   }
@@ -72,7 +69,7 @@ function AllPhotosTab({ coupleId, uploaderAvatars }: { coupleId: string; uploade
         photos={photos}
         uploaderAvatars={uploaderAvatars}
         onPhotoClick={(index) =>
-          router.push(`/photos/slideshow?source=all&photoId=${photos[index].id}`)
+          router.push(`/inner/photos/slideshow?source=all&photoId=${photos[index].id}`)
         }
       />
       {isFetchingNextPage && (
@@ -104,9 +101,7 @@ function TagsTab({ coupleId }: { coupleId: string }) {
   if (error) {
     return (
       <div className="p-4">
-        <p className="text-sm text-destructive">
-          태그를 불러오지 못했어요: {error.message}
-        </p>
+        <p className="text-sm text-destructive">태그를 불러오지 못했어요: {error.message}</p>
       </div>
     );
   }
@@ -124,7 +119,7 @@ function TagsTab({ coupleId }: { coupleId: string }) {
   return (
     <div className="flex flex-wrap gap-2 p-4">
       {tags.map((tag) => (
-        <Link key={tag.name} href={`/photos/tag/${encodeURIComponent(tag.name)}`}>
+        <Link key={tag.name} href={`/inner/photos/tag/${encodeURIComponent(tag.name)}`}>
           <Badge variant="secondary" className="cursor-pointer text-sm py-1.5 px-3">
             #{tag.name} ({tag.count})
           </Badge>
@@ -149,7 +144,7 @@ export function PhotosGallery() {
         params.set('tab', value);
       }
       const qs = params.toString();
-      router.replace(qs ? `?${qs}` : '/photos');
+      router.replace(qs ? `?${qs}` : '/inner/photos');
     },
     [searchParams, router]
   );
@@ -214,8 +209,7 @@ export function PhotosGallery() {
 
   return (
     <div className="flex min-h-screen flex-col pb-16 md:pb-0">
-      <Header
-        title="사진"
+      <PageHeader
         rightSlot={
           <div className="flex items-center">
             <Button
@@ -266,7 +260,6 @@ export function PhotosGallery() {
           </TabsContent>
         </Tabs>
       </div>
-      <BottomNav activeTab="photos" />
     </div>
   );
 }
