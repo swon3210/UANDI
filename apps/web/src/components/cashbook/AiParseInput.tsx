@@ -24,11 +24,7 @@ type AttachedImage = {
 type AiParseInputProps = {
   onParsed: (results: ParseResult[]) => void;
   categories: string[];
-  parseFn: (
-    text: string,
-    categories: string[],
-    images?: string[]
-  ) => Promise<ParseResult[]>;
+  parseFn: (text: string, categories: string[], images?: string[]) => Promise<ParseResult[]>;
 };
 
 const MAX_IMAGES = 10;
@@ -100,7 +96,9 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
 
     const accepted = selected.slice(0, remainingSlots);
     if (selected.length > remainingSlots) {
-      toast.warning(`이미지는 최대 ${MAX_IMAGES}장까지 첨부할 수 있어요. 앞 ${remainingSlots}장만 추가했어요`);
+      toast.warning(
+        `이미지는 최대 ${MAX_IMAGES}장까지 첨부할 수 있어요. 앞 ${remainingSlots}장만 추가했어요`
+      );
     }
 
     const oversized = accepted.filter((f) => f.size > MAX_FILE_SIZE);
@@ -137,9 +135,7 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
   };
 
   const canSubmit =
-    !mutation.isPending &&
-    !isProcessingFiles &&
-    (text.trim().length > 0 || images.length > 0);
+    !mutation.isPending && !isProcessingFiles && (text.trim().length > 0 || images.length > 0);
 
   return (
     <div className="space-y-2">
@@ -152,11 +148,7 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
               className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={img.dataUrl}
-                alt={img.name}
-                className="h-full w-full object-cover"
-              />
+              <img src={img.dataUrl} alt={img.name} className="h-full w-full object-cover" />
               <button
                 type="button"
                 data-testid={`ai-parse-thumbnail-remove-${index}`}
@@ -173,18 +165,13 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
 
       <div className="flex items-end gap-2">
         <div className="relative flex-1">
-          <Sparkles
-            size={16}
-            className="absolute left-3 top-3 text-muted-foreground"
-          />
+          <Sparkles size={16} className="absolute left-3 top-3 text-muted-foreground" />
           <Textarea
             data-testid="ai-parse-input"
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              '예: 점심 김밥 5천원\n어제 택시 15000원'
-            }
+            placeholder={'예: 점심 김밥 5천원\n어제 택시 15000원'}
             className="pl-9 pr-10 min-h-[100px] max-h-40"
             rows={1}
             disabled={mutation.isPending}

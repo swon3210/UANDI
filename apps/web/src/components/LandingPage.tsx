@@ -51,8 +51,10 @@ export function LandingPage() {
           <br />
           우리만의 일상
         </p>
-        <p className="mt-3 text-center text-sm text-muted-foreground">
-          사진을 함께 모으고, 돈을 함께 관리하세요.
+        <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
+          함께 모으는 <span className="font-semibold text-foreground">우리집</span>,
+          <br />
+          각자 운영하는 <span className="font-semibold text-foreground">재테크</span>까지.
         </p>
         <div className="mt-10 w-full max-w-sm">
           <Button
@@ -72,16 +74,17 @@ export function LandingPage() {
             )}
           </Button>
           {error && (
-            <p role="alert" data-testid="login-error" className="mt-2 text-center text-sm text-destructive">
+            <p
+              role="alert"
+              data-testid="login-error"
+              className="mt-2 text-center text-sm text-destructive"
+            >
               {error}
             </p>
           )}
           <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
             로그인 시{' '}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-2 hover:text-foreground"
-            >
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
               개인정보처리방침
             </Link>
             에 동의하는 것으로 간주됩니다.

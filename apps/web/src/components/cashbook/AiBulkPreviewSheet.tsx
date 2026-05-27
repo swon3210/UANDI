@@ -5,13 +5,7 @@ import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import { Timestamp } from 'firebase/firestore';
 import { Sparkles, AlertCircle } from 'lucide-react';
-import {
-  Button,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@uandi/ui';
+import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType } from '@/types';
 import { useDuplicateScopeEntries } from '@/hooks/useCashbook';
 import { findDuplicate } from '@/utils/cashbook-duplicate';
@@ -197,12 +191,7 @@ function AiBulkPreviewSheetBody({
       </div>
 
       <div className="flex gap-2 border-t border-border pt-3">
-        <Button
-          type="button"
-          variant="secondary"
-          className="flex-1"
-          onClick={onClose}
-        >
+        <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
           취소
         </Button>
         <Button

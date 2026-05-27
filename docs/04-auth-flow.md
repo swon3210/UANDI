@@ -121,7 +121,7 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 | ---------------------- | ------------------------ | ---------------------------- |
 | `/`                    | `/`으로 유지 (랜딩 표시) | `/onboarding`으로 리다이렉트 |
 | `/onboarding`          | `/`으로 리다이렉트       | 허용                         |
-| `/photos`, `/cashbook` | `/`으로 리다이렉트       | `/onboarding`으로 리다이렉트 |
+| `/inner/photos`, `/inner/cashbook` | `/`으로 리다이렉트       | `/onboarding`으로 리다이렉트 |
 
 ---
 

@@ -261,9 +261,7 @@ test.describe('가계부', () => {
   });
 
   test.describe('카테고리 계층 선택 (Phase 3)', () => {
-    test('자식 chip을 선택하면 브레드크럼이 부모와 함께 표시된다', async ({
-      authedContext,
-    }) => {
+    test('자식 chip을 선택하면 브레드크럼이 부모와 함께 표시된다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       const sikbiId = await seedCashbookCategory(coupleId, {
         group: 'expense',

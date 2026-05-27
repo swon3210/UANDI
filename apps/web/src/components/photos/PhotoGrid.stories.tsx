@@ -79,9 +79,7 @@ function SelectableWrapper() {
 
   return (
     <div>
-      <p className="p-4 text-sm text-muted-foreground">
-        선택된 사진: {selected.size}장
-      </p>
+      <p className="p-4 text-sm text-muted-foreground">선택된 사진: {selected.size}장</p>
       <PhotoGrid
         photos={mockPhotos}
         uploaderAvatars={uploaderAvatars}
@@ -105,11 +103,7 @@ function ClickableWrapper() {
       <p className="p-4 text-sm text-muted-foreground">
         {clicked === null ? '썸네일을 클릭하면 인덱스가 표시됩니다' : `클릭한 인덱스: ${clicked}`}
       </p>
-      <PhotoGrid
-        photos={mockPhotos}
-        uploaderAvatars={uploaderAvatars}
-        onPhotoClick={setClicked}
-      />
+      <PhotoGrid photos={mockPhotos} uploaderAvatars={uploaderAvatars} onPhotoClick={setClicked} />
     </div>
   );
 }

@@ -51,12 +51,7 @@ export function BudgetAlertBanner({ alerts, onDismiss }: BudgetAlertBannerProps)
   );
 
   return (
-    <div
-      data-testid="budget-alert-banner"
-      className="space-y-2"
-      role="alert"
-      aria-live="polite"
-    >
+    <div data-testid="budget-alert-banner" className="space-y-2" role="alert" aria-live="polite">
       {sorted.map((alert) => {
         const style = THRESHOLD_STYLES[alert.threshold];
         return (

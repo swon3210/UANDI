@@ -62,7 +62,7 @@ export class PhotosPage {
   }
 
   async goto() {
-    await this.page.goto('/photos');
+    await this.page.goto('/inner/photos');
   }
 
   async switchToTab(tab: 'all' | 'folders' | 'tags') {
@@ -89,7 +89,7 @@ export class PhotosPage {
   }
 
   getTagBadges() {
-    return this.page.locator('a[href^="/photos/tag/"]');
+    return this.page.locator('a[href^="/inner/photos/tag/"]');
   }
 
   getEmptyStateTitle() {

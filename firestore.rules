@@ -1,36 +1,75 @@
-// TODO: 보안 규칙 구현
-// 구현 명세: docs/03-domain-models.md (Firestore 보안 규칙 명세 섹션)
+// 명세: docs/03-domain-models.md (Firestore 보안 규칙 명세) + docs/08-spaces.md (두 공간)
+// - 우리집 영역: couples/{coupleId}/<영역> — 커플 멤버 공동
+// - 재테크 원본: couples/{coupleId}/sideHustles/{uid}/<영역> — 본인만
+// - 재테크 합산: couples/{coupleId}/meta/outerSummary — 커플 멤버 read, v1.1에서 byUser[uid] write 검증 추가 예정
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 에뮬레이터 테스트용: 모든 접근 허용
-    // 프로덕션 배포 전 반드시 아래 규칙으로 교체할 것
-    match /{document=**} {
-      allow read, write: if true;
+    function isAuthed() {
+      return request.auth != null;
     }
 
-    // TODO: 프로덕션 규칙 (위 임시 규칙 삭제 후 활성화)
-    // function isCoupleM ember(coupleId) {
-    //   return request.auth != null &&
-    //     request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.memberUids;
-    // }
-    //
-    // match /users/{uid} {
-    //   allow read, write: if request.auth != null && request.auth.uid == uid;
-    // }
-    //
-    // match /couples/{coupleId} {
-    //   allow read, write: if isCoupleM ember(coupleId);
-    // }
-    //
-    // match /couples/{coupleId}/photos/{photoId} {
-    //   allow read, write: if isCoupleM ember(coupleId);
-    // }
-    //
-    // match /couples/{coupleId}/cashbookEntries/{entryId} {
-    //   allow read, write: if isCoupleM ember(coupleId);
-    // }
+    function isCoupleMember(coupleId) {
+      return isAuthed() &&
+        request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.memberUids;
+    }
+
+    // ── 사용자 본인 데이터 ───────────────────────────────────────
+    match /users/{uid} {
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+
+      // users/{uid}/fcmTokens 등 본인 하위
+      match /{document=**} {
+        allow read, write: if isAuthed() && request.auth.uid == uid;
+      }
+    }
+
+    // ── 커플 ──────────────────────────────────────────────────────
+    match /couples/{coupleId} {
+      // 커플 문서 자체
+      // 생성: 인증된 본인이 초대 코드로 만들거나 합류할 때 클라이언트가 직접 쓸 수 있어야 함
+      // 단순화를 위해 인증된 사용자는 create 가능, 그 외는 멤버만
+      allow create: if isAuthed();
+      allow read, update, delete: if isCoupleMember(coupleId);
+
+      // 🏠 우리집 — 커플 공동 (멤버 누구나 읽기/쓰기)
+      match /folders/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+      match /photos/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+      match /cashbookEntries/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+      match /cashbookCategories/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+      match /annualPlans/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+
+      // 재테크 합산 요약 (couples/{id}/meta/outerSummary 등)
+      // v1: 커플 멤버 read/write 허용 (단순화)
+      // v1.1 TODO: outerSummary write 시 request.auth.uid == byUser 변경 키로 제한
+      match /meta/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
+
+      // 💼 재테크 원본 (v1.1 컬렉션) — sideHustles/{uid}/<영역>
+      // 위치는 couples/ 하위지만 접근은 본인만. 다른 멤버가 본 영역 접근 시도해도 deny.
+      match /sideHustles/{uid} {
+        allow read, write:
+          if isCoupleMember(coupleId) && request.auth.uid == uid;
+
+        match /{document=**} {
+          allow read, write:
+            if isCoupleMember(coupleId) && request.auth.uid == uid;
+        }
+      }
+    }
   }
 }

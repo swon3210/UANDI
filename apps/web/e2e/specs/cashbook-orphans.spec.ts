@@ -136,9 +136,7 @@ test.describe('미분류 내역 정리', () => {
     await expect(orphans.groupCard('옛카테고리C')).toContainText('2건');
   });
 
-  test('"더 이전 달도 보기"로 기본 기간 밖의 내역까지 확장한다', async ({
-    authedContext,
-  }) => {
+  test('"더 이전 달도 보기"로 기본 기간 밖의 내역까지 확장한다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
@@ -174,10 +172,10 @@ test.describe('미분류 내역 정리', () => {
       category: '깨진이름',
     });
 
-    await page.goto('/cashbook/categories');
+    await page.goto('/inner/cashbook/categories');
     await page.getByTestId('categories-orphans-link').click();
 
-    await expect(page).toHaveURL(/\/cashbook\/categories\/orphans/);
+    await expect(page).toHaveURL(/\/inner\/cashbook\/categories\/orphans/);
     const orphans = new CashbookOrphansPage(page);
     await expect(orphans.groupCard('깨진이름')).toBeVisible();
   });

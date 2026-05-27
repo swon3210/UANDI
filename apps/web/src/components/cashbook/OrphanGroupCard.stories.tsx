@@ -6,10 +6,7 @@ import { OrphanGroupCard } from './OrphanGroupCard';
 const today = new Date();
 const dayAgo = (n: number) => Timestamp.fromDate(new Date(today.getTime() - n * 86400000));
 
-function makeEntry(
-  id: string,
-  overrides: Partial<CashbookEntry> = {}
-): CashbookEntry {
+function makeEntry(id: string, overrides: Partial<CashbookEntry> = {}): CashbookEntry {
   return {
     id,
     coupleId: 'c1',
@@ -45,9 +42,7 @@ type Story = StoryObj<typeof OrphanGroupCard>;
 export const Single: Story = {
   args: {
     name: '옛 식비',
-    entries: [
-      makeEntry('e1', { amount: 9000, description: '김치찌개', date: dayAgo(0) }),
-    ],
+    entries: [makeEntry('e1', { amount: 9000, description: '김치찌개', date: dayAgo(0) })],
   },
 };
 

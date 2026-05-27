@@ -1,10 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import {
-  seedCashbookCategory,
-  seedAnnualPlan,
-  seedAnnualPlanItem,
-} from '../helpers/emulator';
+import { seedCashbookCategory, seedAnnualPlan, seedAnnualPlanItem } from '../helpers/emulator';
 import { AnnualPlanPage } from '../page-objects/AnnualPlanPage';
 import { AnnualPlanItemsPage } from '../page-objects/AnnualPlanItemsPage';
 
@@ -17,10 +13,7 @@ type SeedHandles = {
   catFlex: string;
 };
 
-async function seedAnnualPlanWithItems(
-  coupleId: string,
-  uid: string
-): Promise<SeedHandles> {
+async function seedAnnualPlanWithItems(coupleId: string, uid: string): Promise<SeedHandles> {
   const year = new Date().getFullYear();
   const planId = await seedAnnualPlan(coupleId, year, uid);
 
@@ -87,7 +80,9 @@ async function seedAnnualPlanWithItems(
     categoryId: catFlex,
     group: 'flex',
     subGroup: 'joint_flex',
-    monthlyAmounts: Array(12).fill(0).map((_, i) => (i === 5 ? 2_000_000 : 0)),
+    monthlyAmounts: Array(12)
+      .fill(0)
+      .map((_, i) => (i === 5 ? 2_000_000 : 0)),
     inputMode: 'irregular',
   });
 
@@ -117,7 +112,7 @@ test.describe('연간 예산 항목 (그룹별 drill-down)', () => {
     const itemsPage = new AnnualPlanItemsPage(page);
     // Next.js dev mode가 새 라우트를 처음 compile할 때 5초 이상 걸릴 수 있어 timeout 여유 확보
     await expect(itemsPage.header).toBeVisible({ timeout: 30000 });
-    await expect(page).toHaveURL(/\/cashbook\/plan\/annual\/items\?group=income/);
+    await expect(page).toHaveURL(/\/inner\/cashbook\/plan\/annual\/items\?group=income/);
     await expect(itemsPage.itemRow('정기급여')).toBeVisible();
     await expect(itemsPage.itemRow('상여')).toBeVisible();
 
@@ -150,9 +145,7 @@ test.describe('연간 예산 항목 (그룹별 drill-down)', () => {
     await expect(annualPage.goalCard('income')).toContainText('3개 항목');
   });
 
-  test('항목 금액을 편집하면 리스트와 메인 카드 합계에 반영된다', async ({
-    authedContext,
-  }) => {
+  test('항목 금액을 편집하면 리스트와 메인 카드 합계에 반영된다', async ({ authedContext }) => {
     const { page, coupleId, uid } = authedContext;
     await seedAnnualPlanWithItems(coupleId, uid);
 

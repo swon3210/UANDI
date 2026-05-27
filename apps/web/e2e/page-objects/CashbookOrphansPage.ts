@@ -16,7 +16,7 @@ export class CashbookOrphansPage {
   }
 
   async goto() {
-    await this.page.goto('/cashbook/categories/orphans');
+    await this.page.goto('/inner/cashbook/categories/orphans');
   }
 
   groupCard(name: string) {

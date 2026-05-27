@@ -97,11 +97,7 @@ export function CategoryForm({
     >
       <SheetHeader>
         <SheetTitle>
-          {editingCategory
-            ? '카테고리 편집'
-            : isChildMode
-              ? '하위 카테고리 추가'
-              : '카테고리 추가'}
+          {editingCategory ? '카테고리 편집' : isChildMode ? '하위 카테고리 추가' : '카테고리 추가'}
         </SheetTitle>
       </SheetHeader>
 
@@ -142,10 +138,7 @@ export function CategoryForm({
               <FormItem>
                 <FormLabel>이름</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder={isChildMode ? '예: 외식' : '예: 정기급여'}
-                    {...field}
-                  />
+                  <Input placeholder={isChildMode ? '예: 외식' : '예: 정기급여'} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,10 +152,7 @@ export function CategoryForm({
               <FormItem>
                 <FormLabel>설명 (선택)</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="이 카테고리에 어떤 항목이 들어가나요?"
-                    {...field}
-                  />
+                  <Input placeholder="이 카테고리에 어떤 항목이 들어가나요?" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,9 +167,7 @@ export function CategoryForm({
                 <FormLabel>예시 항목 (선택)</FormLabel>
                 <ExampleChipList
                   value={field.value}
-                  onRemove={(v) =>
-                    field.onChange(field.value.filter((x) => x !== v))
-                  }
+                  onRemove={(v) => field.onChange(field.value.filter((x) => x !== v))}
                 />
                 <FormControl>
                   <ExampleTagInput

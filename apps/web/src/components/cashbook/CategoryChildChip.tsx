@@ -19,11 +19,7 @@ type CategoryChildChipProps = {
   onDelete: (category: CashbookCategory) => void;
 };
 
-export function CategoryChildChip({
-  category,
-  onEdit,
-  onDelete,
-}: CategoryChildChipProps) {
+export function CategoryChildChip({ category, onEdit, onDelete }: CategoryChildChipProps) {
   return (
     <div
       data-testid={`category-child-${category.name}`}
@@ -53,10 +49,7 @@ export function CategoryChildChip({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => onEdit(category)}>편집</DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-destructive"
-            onClick={() => onDelete(category)}
-          >
+          <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
             삭제
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -50,10 +50,7 @@ export function usePreviousYearPlan(coupleId: string | null, year: number) {
   });
 }
 
-export function useAnnualPlanRevisions(
-  coupleId: string | null,
-  planId: string | null
-) {
+export function useAnnualPlanRevisions(coupleId: string | null, planId: string | null) {
   return useQuery({
     queryKey: [REVISIONS_KEY, coupleId, planId],
     queryFn: () => getPlanRevisions(coupleId!, planId!),
@@ -77,13 +74,8 @@ export function useCreateAnnualPlan(coupleId: string | null) {
 export function useUpsertPlanItem(coupleId: string | null, planId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      itemId,
-      data,
-    }: {
-      itemId: string;
-      data: Omit<AnnualPlanItem, 'id'>;
-    }) => upsertPlanItem(coupleId!, planId!, itemId, data),
+    mutationFn: ({ itemId, data }: { itemId: string; data: Omit<AnnualPlanItem, 'id'> }) =>
+      upsertPlanItem(coupleId!, planId!, itemId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
     onError: () => toast.error('항목 저장에 실패했어요.'),
   });
@@ -118,10 +110,7 @@ export function useDeletePlanItem(coupleId: string | null, planId: string | null
   });
 }
 
-export function useBulkUpdatePlanItems(
-  coupleId: string | null,
-  planId: string | null
-) {
+export function useBulkUpdatePlanItems(coupleId: string | null, planId: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -160,9 +149,7 @@ export function useAnnualSummary(items: AnnualPlanItem[] | undefined): AnnualSum
   }, [items]);
 }
 
-export function useValidateAnnualPlan(
-  items: AnnualPlanItem[] | undefined
-): AnnualPlanValidation {
+export function useValidateAnnualPlan(items: AnnualPlanItem[] | undefined): AnnualPlanValidation {
   return useMemo(() => {
     if (!items || items.length === 0) {
       return { ok: true, deficit: 0, totals: { income: 0, expense: 0, flex: 0 } };

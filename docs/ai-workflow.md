@@ -166,7 +166,7 @@
 - apps/web/e2e/specs/onboarding.spec.ts
 
 테스트 케이스:
-- 비로그인 상태로 /photos 진입 시 /으로 리다이렉트된다
+- 비로그인 상태로 /inner/photos 진입 시 /으로 리다이렉트된다
 - 로그인하고 coupleId가 없으면 /onboarding으로 리다이렉트된다
 - '새 커플 공간 만들기'를 누르면 6자리 초대 코드가 표시된다
 - 유효한 초대 코드를 입력하면 커플이 연결되고 /으로 이동한다
@@ -205,11 +205,11 @@
 아래 문서를 기반으로 가계부 E2E 테스트를 작성해줘.
 
 [docs/05-testing-strategy.md 내용]
-[docs/pages/04-cashbook.md 내용]
+[docs/pages/inner/cashbook.md 내용]
 
 작성 대상:
 - apps/web/e2e/page-objects/CashbookPage.ts
-- apps/web/e2e/specs/cashbook.spec.ts
+- apps/web/e2e/specs/inner/cashbook.spec.ts
 
 테스트 케이스:
 - 가계부 페이지 진입 시 이번 달 요약 카드가 표시된다
@@ -234,7 +234,7 @@ auth.fixture.ts의 authedPage 픽스처를 사용해줘.
 
 [docs/02-design-system.md 내용]
 [docs/03-domain-models.md 내용]
-[docs/pages/04-cashbook.md 내용]
+[docs/pages/inner/cashbook.md 내용]
 
 이미 구현된 것:
 - apps/web/src/types/index.ts (CashbookEntry 타입)
@@ -242,15 +242,15 @@ auth.fixture.ts의 authedPage 픽스처를 사용해줘.
 - apps/web/src/hooks/useAuth.ts
 
 구현할 파일 (apps/web/src/ 하위):
-1. lib/firebase/cashbook.ts
+1. lib/firebase/inner/cashbook.ts
 2. hooks/useCashbook.ts (TanStack Query)
 3. utils/currency.ts
-4. components/cashbook/CashbookSummaryCard.tsx
-5. components/cashbook/CashbookEntryItem.tsx
-6. components/cashbook/CashbookEntryForm.tsx (Sheet + Form + Zod)
-7. app/cashbook/page.tsx
+4. components/inner/cashbook/CashbookSummaryCard.tsx
+5. components/inner/cashbook/CashbookEntryItem.tsx
+6. components/inner/cashbook/CashbookEntryForm.tsx (Sheet + Form + Zod)
+7. app/inner/cashbook/page.tsx
 
-목표: e2e/specs/cashbook.spec.ts의 모든 테스트가 통과해야 함.
+목표: e2e/specs/inner/cashbook.spec.ts의 모든 테스트가 통과해야 함.
 폼은 02-design-system.md의 React Hook Form + shadcn Form 패턴을 따라줘.
 ```
 
@@ -264,11 +264,11 @@ auth.fixture.ts의 authedPage 픽스처를 사용해줘.
 아래 문서를 기반으로 사진 갤러리 E2E 테스트를 작성해줘.
 
 [docs/05-testing-strategy.md 내용]
-[docs/pages/03-photo-gallery.md 내용]
+[docs/pages/inner/photo-gallery.md 내용]
 
 작성 대상:
 - apps/web/e2e/page-objects/PhotosPage.ts
-- apps/web/e2e/specs/photos.spec.ts
+- apps/web/e2e/specs/inner/photos.spec.ts
 
 테스트 케이스:
 - 갤러리 페이지 진입 시 업로드된 사진이 그리드로 표시된다
@@ -291,7 +291,7 @@ auth.fixture.ts의 authedPage 픽스처를 사용해줘.
 
 [docs/02-design-system.md 내용]
 [docs/03-domain-models.md 내용]
-[docs/pages/03-photo-gallery.md 내용]
+[docs/pages/inner/photo-gallery.md 내용]
 
 이미 구현된 것:
 - apps/web/src/types/index.ts (Photo 타입)
@@ -299,15 +299,15 @@ auth.fixture.ts의 authedPage 픽스처를 사용해줘.
 - apps/web/src/hooks/useAuth.ts
 
 구현할 파일 (apps/web/src/ 하위):
-1. lib/firebase/photos.ts
+1. lib/firebase/inner/photos.ts
 2. lib/firebase/storage.ts
 3. hooks/usePhotos.ts (TanStack Query + useInfiniteQuery)
-4. components/photos/PhotoGrid.tsx
-5. components/photos/PhotoUploadForm.tsx (Sheet + Form + Zod)
-6. app/photos/page.tsx
-7. app/photos/[id]/page.tsx
+4. components/inner/photos/PhotoGrid.tsx
+5. components/inner/photos/PhotoUploadForm.tsx (Sheet + Form + Zod)
+6. app/inner/photos/page.tsx
+7. app/inner/photos/[id]/page.tsx
 
-목표: e2e/specs/photos.spec.ts의 모든 테스트가 통과해야 함.
+목표: e2e/specs/inner/photos.spec.ts의 모든 테스트가 통과해야 함.
 ```
 
 ---

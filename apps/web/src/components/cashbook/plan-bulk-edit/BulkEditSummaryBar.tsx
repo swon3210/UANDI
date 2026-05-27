@@ -83,11 +83,7 @@ export function BulkEditSummaryBar({
             data-testid="bulk-edit-save"
             className="flex-1"
           >
-            {saving
-              ? '저장 중...'
-              : hasChanges
-                ? `${changedCount}개 항목 저장`
-                : '변경 사항 없음'}
+            {saving ? '저장 중...' : hasChanges ? `${changedCount}개 항목 저장` : '변경 사항 없음'}
           </Button>
         </div>
       </div>
@@ -164,16 +160,11 @@ function DeltaPill({
 
   return (
     <div
-      className={cn(
-        'rounded-xl border px-2.5 py-1.5 text-center',
-        DELTA_TONE_CLASS[tone]
-      )}
+      className={cn('rounded-xl border px-2.5 py-1.5 text-center', DELTA_TONE_CLASS[tone])}
       data-testid={testId}
     >
       <div className="text-[10px] font-medium opacity-80">{label}</div>
-      <div className="mt-0.5 text-[13px] font-bold tabular-nums">
-        {formatCurrencyMan(after)}
-      </div>
+      <div className="mt-0.5 text-[13px] font-bold tabular-nums">{formatCurrencyMan(after)}</div>
       <div className="text-[10px] tabular-nums opacity-80">
         {delta === 0 ? '변동 없음' : `${sign}${formatCurrencyMan(Math.abs(delta))}`}
       </div>

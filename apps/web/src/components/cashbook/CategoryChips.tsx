@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Badge } from '@uandi/ui';
-import type {
-  CashbookCategory,
-  CashbookEntryType,
-  CategoryGroup,
-  CategorySubGroup,
-} from '@/types';
+import type { CashbookCategory, CashbookEntryType, CategoryGroup, CategorySubGroup } from '@/types';
 import {
   SUB_GROUPS_BY_GROUP,
   SUB_GROUP_LABELS,
@@ -26,10 +21,7 @@ function findCategoryByName(
   return categories.find((c) => c.name === name && c.group === group);
 }
 
-function recommendCategories(
-  categories: CashbookCategory[],
-  memo: string
-): CashbookCategory[] {
+function recommendCategories(categories: CashbookCategory[], memo: string): CashbookCategory[] {
   const trimmed = memo.trim();
   if (trimmed.length === 0) return [];
   const lower = trimmed.toLowerCase();
@@ -89,9 +81,7 @@ export function CategoryChips({
   const presetNames = new Set(categories.map((c) => c.name));
   const hasOrphanValue = value !== '' && !presetNames.has(value);
 
-  const recommended = recommendCategories(categories, memo).filter(
-    (c) => c.name !== value
-  );
+  const recommended = recommendCategories(categories, memo).filter((c) => c.name !== value);
 
   const [expandedParentId, setExpandedParentId] = useState<string | null>(
     selectedParent?.id ?? null
@@ -113,9 +103,7 @@ export function CategoryChips({
                   (a, b) => a.sortOrder - b.sortOrder
                 );
                 const hasChildren = children.length > 0;
-                const expanded =
-                  expandedParentId === parent.id ||
-                  selectedParent?.id === parent.id;
+                const expanded = expandedParentId === parent.id || selectedParent?.id === parent.id;
                 const isSelectedParent = value === parent.name && !selectedParent;
 
                 return (
@@ -232,8 +220,7 @@ export function CategoryChips({
               {selectedCat.description && <span>{selectedCat.description}</span>}
               {selectedCat.examples.length > 0 && (
                 <span>
-                  {selectedCat.description ? ' · ' : ''}예시:{' '}
-                  {selectedCat.examples.join(', ')}
+                  {selectedCat.description ? ' · ' : ''}예시: {selectedCat.examples.join(', ')}
                 </span>
               )}
             </div>
@@ -243,9 +230,7 @@ export function CategoryChips({
 
       {recommended.length > 0 && (
         <div data-testid="category-recommendations">
-          <div className="mb-1 text-xs text-muted-foreground">
-            메모와 비슷한 카테고리
-          </div>
+          <div className="mb-1 text-xs text-muted-foreground">메모와 비슷한 카테고리</div>
           <div className="flex flex-wrap gap-1.5">
             {recommended.map((cat) => (
               <button
@@ -262,10 +247,7 @@ export function CategoryChips({
               >
                 <CategoryIcon name={cat.icon} size={12} />
                 {cat.name}
-                <Badge
-                  variant="secondary"
-                  className="px-1 py-0 text-[9px] font-normal"
-                >
+                <Badge variant="secondary" className="px-1 py-0 text-[9px] font-normal">
                   {SUB_GROUP_SHORT_LABELS[cat.subGroup]}
                 </Badge>
               </button>

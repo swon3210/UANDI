@@ -17,10 +17,9 @@ const requestSchema = z
       .max(10)
       .optional(),
   })
-  .refine(
-    (data) => (data.text?.trim().length ?? 0) > 0 || (data.images?.length ?? 0) > 0,
-    { message: '텍스트 또는 이미지 중 하나는 반드시 포함되어야 합니다' }
-  );
+  .refine((data) => (data.text?.trim().length ?? 0) > 0 || (data.images?.length ?? 0) > 0, {
+    message: '텍스트 또는 이미지 중 하나는 반드시 포함되어야 합니다',
+  });
 
 const parsedEntrySchema = z.object({
   type: z.enum(['income', 'expense', 'flex']),
@@ -45,9 +44,30 @@ function buildMockResponse(text: string | undefined, imagesCount: number) {
   const count = Math.min(Math.max(textSegments + imagesCount, 1), 10);
 
   const templates = [
-    { type: 'expense' as const, amount: 9000, category: '식비', description: '김치찌개', date: today, confidence: 0.95 },
-    { type: 'expense' as const, amount: 15000, category: '교통', description: '택시', date: yesterday, confidence: 0.9 },
-    { type: 'income' as const, amount: 3500000, category: '정기급여', description: '월급', date: today, confidence: 0.98 },
+    {
+      type: 'expense' as const,
+      amount: 9000,
+      category: '식비',
+      description: '김치찌개',
+      date: today,
+      confidence: 0.95,
+    },
+    {
+      type: 'expense' as const,
+      amount: 15000,
+      category: '교통',
+      description: '택시',
+      date: yesterday,
+      confidence: 0.9,
+    },
+    {
+      type: 'income' as const,
+      amount: 3500000,
+      category: '정기급여',
+      description: '월급',
+      date: today,
+      confidence: 0.98,
+    },
   ];
 
   return {
@@ -70,10 +90,7 @@ export async function POST(req: NextRequest) {
 
   const allowed = await checkAndIncrementUsage(authResult.coupleId);
   if (!allowed) {
-    return NextResponse.json(
-      { error: '일일 사용 한도를 초과했습니다' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
   const { text, categories, images } = parsed.data;
@@ -138,9 +155,7 @@ ${categories.join(', ')}
         userContent.push({ type: 'image_url', image_url: { url, detail: 'high' } });
       }
     }
-    const userText =
-      text?.trim() ||
-      (hasImages ? '첨부된 영수증을 파싱해줘.' : '');
+    const userText = text?.trim() || (hasImages ? '첨부된 영수증을 파싱해줘.' : '');
     if (userText) {
       userContent.push({ type: 'text', text: userText });
     }
@@ -160,10 +175,7 @@ ${categories.join(', ')}
 
     const content = completion.choices[0]?.message?.content;
     if (!content) {
-      return NextResponse.json(
-        { error: 'AI 응답을 처리할 수 없습니다' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
     const result = responseSchema.parse(JSON.parse(content));

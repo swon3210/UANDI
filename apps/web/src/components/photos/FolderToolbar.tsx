@@ -1,14 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@uandi/ui';
+import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@uandi/ui';
 
 export type SortOption = 'latest' | 'oldest' | 'name';
 

@@ -10,9 +10,7 @@ type AuthResult = {
  * API Route에서 Firebase Auth 토큰을 검증하고 coupleId를 반환한다.
  * 실패 시 적절한 에러 NextResponse를 반환한다.
  */
-export async function verifyAuth(
-  req: NextRequest
-): Promise<AuthResult | NextResponse> {
+export async function verifyAuth(req: NextRequest): Promise<AuthResult | NextResponse> {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 });
@@ -29,10 +27,7 @@ export async function verifyAuth(
     const coupleId = userDoc.data()?.coupleId as string | undefined;
 
     if (!coupleId) {
-      return NextResponse.json(
-        { error: '커플 연결이 필요합니다' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '커플 연결이 필요합니다' }, { status: 403 });
     }
 
     return { uid, coupleId };

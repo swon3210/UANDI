@@ -28,10 +28,7 @@ export function CategoryItem({
   children,
 }: CategoryItemProps) {
   return (
-    <div
-      data-testid={`category-item-${category.name}`}
-      className="flex flex-col gap-2 px-2 py-3"
-    >
+    <div data-testid={`category-item-${category.name}`} className="flex flex-col gap-2 px-2 py-3">
       <div className="flex items-center justify-between">
         <div className="flex flex-1 items-start gap-3">
           <span
@@ -68,14 +65,9 @@ export function CategoryItem({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(category)}>편집</DropdownMenuItem>
             {onAddChild && (
-              <DropdownMenuItem onClick={() => onAddChild(category)}>
-                하위 추가
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddChild(category)}>하위 추가</DropdownMenuItem>
             )}
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => onDelete(category)}
-            >
+            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
               삭제
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { User as UserIcon, Settings, LogOut } from 'lucide-react';
 import {
-  Header,
   Avatar,
   AvatarImage,
   AvatarFallback,
@@ -12,13 +11,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@uandi/ui';
+import { PageHeader } from '@/components/shell/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
-import { useQuery } from '@tanstack/react-query';
-import { getDisplayRate } from '@uandi/investment-core';
-import { fetchForexRates } from '@/services/forex';
-import { BottomNav } from '@/components/BottomNav';
-import { InvestmentEntryCard } from '@/components/investment/InvestmentEntryCard';
 import { EntryButtons } from './EntryButtons';
 import { BudgetDashboard } from './BudgetDashboard';
 
@@ -27,28 +22,12 @@ export function Dashboard() {
   const { user } = useAuth();
   const coupleId = user?.coupleId;
 
-  const usdQuery = useQuery({
-    queryKey: ['forexRates', 'USD', '1m'],
-    queryFn: () => fetchForexRates('USD', '1m'),
-    staleTime: 30 * 60 * 1000,
-  });
-  const usdRate = usdQuery.data ? getDisplayRate(usdQuery.data.latest, 'USD') : undefined;
-  const usdPrev =
-    usdQuery.data?.prevClose !== null && usdQuery.data?.prevClose !== undefined
-      ? getDisplayRate(usdQuery.data.prevClose, 'USD')
-      : undefined;
-  const usdDiffPercent =
-    usdRate !== undefined && usdPrev !== undefined && usdPrev !== 0
-      ? ((usdRate - usdPrev) / usdPrev) * 100
-      : undefined;
-
   if (!coupleId) return null;
 
   return (
     <>
-      <Header
+      <PageHeader
         data-testid="dashboard-header"
-        title="UANDI"
         rightSlot={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -84,15 +63,8 @@ export function Dashboard() {
       />
       <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
         <EntryButtons />
-        <InvestmentEntryCard
-          currencyLabel="USD"
-          rate={usdRate}
-          diffPercent={usdDiffPercent}
-          isLoading={usdQuery.isLoading}
-        />
         <BudgetDashboard coupleId={coupleId} />
       </main>
-      <BottomNav activeTab="home" />
     </>
   );
 }

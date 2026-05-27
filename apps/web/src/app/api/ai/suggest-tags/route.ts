@@ -32,10 +32,7 @@ export async function POST(req: NextRequest) {
 
   const allowed = await checkAndIncrementUsage(authResult.coupleId);
   if (!allowed) {
-    return NextResponse.json(
-      { error: '일일 사용 한도를 초과했습니다' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
   if (process.env.USE_AI_MOCK === 'true') {
@@ -81,10 +78,7 @@ ${existingTags.length > 0 ? existingTags.join(', ') : '(없음)'}
 
     const content = completion.choices[0]?.message?.content;
     if (!content) {
-      return NextResponse.json(
-        { error: 'AI 응답을 처리할 수 없습니다' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
     const result = responseSchema.parse(JSON.parse(content));

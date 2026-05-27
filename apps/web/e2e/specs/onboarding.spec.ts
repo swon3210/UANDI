@@ -46,9 +46,8 @@ test.describe('온보딩', () => {
       // couple.memberUids에 uid2 추가 → 실시간 리스너가 감지 → 대시보드 이동
       await noCoupleAuthedPage.evaluate(
         async ({ code, uid2 }) => {
-          const { collection, query, where, getDocs, updateDoc, doc, arrayUnion } = await import(
-            'firebase/firestore'
-          );
+          const { collection, query, where, getDocs, updateDoc, doc, arrayUnion } =
+            await import('firebase/firestore');
           const { getDb } = await import('@/lib/firebase/config');
           const q = query(collection(getDb(), 'couples'), where('inviteCode', '==', code));
           const snap = await getDocs(q);

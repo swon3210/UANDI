@@ -17,7 +17,7 @@ export function FolderCard({ folder, subfolderCount = 0 }: FolderCardProps) {
 
   return (
     <Link
-      href={`/photos/folder/${folder.id}`}
+      href={`/inner/photos/folder/${folder.id}`}
       className="block rounded-xl overflow-hidden border border-border"
       data-testid={`folder-card-${folder.id}`}
     >
@@ -47,24 +47,12 @@ export function FolderCard({ folder, subfolderCount = 0 }: FolderCardProps) {
             }
           >
             {hasSubfolders ? (
-              <Folders
-                size={36}
-                strokeWidth={1.5}
-                className="text-primary/70"
-                aria-hidden
-              />
+              <Folders size={36} strokeWidth={1.5} className="text-primary/70" aria-hidden />
             ) : (
-              <FolderOpen
-                size={36}
-                strokeWidth={1.5}
-                className="text-primary/60"
-                aria-hidden
-              />
+              <FolderOpen size={36} strokeWidth={1.5} className="text-primary/60" aria-hidden />
             )}
             <div className="text-center">
-              <p className="text-sm font-semibold text-foreground line-clamp-1">
-                {folder.name}
-              </p>
+              <p className="text-sm font-semibold text-foreground line-clamp-1">{folder.name}</p>
               <p className="text-xs text-muted-foreground">
                 {hasSubfolders ? `하위 폴더 ${subfolderCount}개` : `${stat?.count ?? 0}장`}
               </p>

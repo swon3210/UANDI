@@ -28,13 +28,7 @@ const options = (): CategoryOption[] => [
   { name: '문화', color: '#368869' },
 ];
 
-function Interactive({
-  initial,
-  max = 5,
-}: {
-  initial: string[];
-  max?: number;
-}) {
+function Interactive({ initial, max = 5 }: { initial: string[]; max?: number }) {
   const [selected, setSelected] = useState<string[]>(initial);
   return (
     <CategorySelector
@@ -59,7 +53,5 @@ export const Empty: Story = {
 };
 
 export const ReachedMax: Story = {
-  render: () => (
-    <Interactive initial={['식비', '교통', '쇼핑', '월세', '여가']} max={5} />
-  ),
+  render: () => <Interactive initial={['식비', '교통', '쇼핑', '월세', '여가']} max={5} />,
 };

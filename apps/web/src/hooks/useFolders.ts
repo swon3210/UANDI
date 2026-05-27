@@ -19,8 +19,7 @@ export function useInfiniteFolders(coupleId: string | null, parentFolderId: stri
     queryKey: ['folders', coupleId, parentFolderId],
     queryFn: ({ pageParam }) => getFoldersByParent(coupleId!, parentFolderId, pageParam),
     initialPageParam: undefined as DocumentSnapshot | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.folders.length > 0 ? lastPage.lastDoc : undefined,
+    getNextPageParam: (lastPage) => (lastPage.folders.length > 0 ? lastPage.lastDoc : undefined),
     enabled: !!coupleId,
   });
 }

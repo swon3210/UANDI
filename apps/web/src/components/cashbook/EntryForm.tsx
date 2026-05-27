@@ -25,12 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@uandi/ui';
-import type {
-  CashbookEntry,
-  CashbookEntryType,
-  CashbookCategory,
-  CategoryGroup,
-} from '@/types';
+import type { CashbookEntry, CashbookEntryType, CashbookCategory, CategoryGroup } from '@/types';
 import { GROUP_LABELS } from '@/constants/default-categories';
 import { useAddCategory } from '@/hooks/useCashbookCategories';
 import { CategoryChips } from './CategoryChips';
@@ -93,16 +88,14 @@ export function EntryForm({
       category: editingEntry?.category ?? prefill?.category ?? '',
       date: editingEntry
         ? dayjs(editingEntry.date.toDate()).format('YYYY-MM-DD')
-        : prefill?.date ?? dayjs().format('YYYY-MM-DD'),
+        : (prefill?.date ?? dayjs().format('YYYY-MM-DD')),
       description: editingEntry?.description ?? prefill?.description ?? '',
     },
   });
 
   const selectedCategory = form.watch('category');
 
-  const typeCategories = categories.filter(
-    (c) => c.group === (activeType as CategoryGroup)
-  );
+  const typeCategories = categories.filter((c) => c.group === (activeType as CategoryGroup));
 
   const handleSubmit = (data: FormValues) => {
     onSubmit({
@@ -184,18 +177,14 @@ export function EntryForm({
                     disableAdd={!coupleId}
                     onAddCategory={() => {
                       overlay.open(({ isOpen, close, unmount }) => (
-                        <Sheet
-                          open={isOpen}
-                          onOpenChange={(open) => !open && close()}
-                        >
+                        <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
                           <CategoryForm
                             group={activeType as CategoryGroup}
                             isSubmitting={addCategoryMutation.isPending}
                             onSubmit={async (data) => {
                               await addCategoryMutation.mutateAsync({
                                 group: activeType as CategoryGroup,
-                                subGroup:
-                                  data.subGroup as CashbookCategory['subGroup'],
+                                subGroup: data.subGroup as CashbookCategory['subGroup'],
                                 name: data.name,
                                 icon: data.icon,
                                 color: data.color,

@@ -18,9 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof CategoryDonutChart>;
 
-const single = (): CategorySlice[] => [
-  { category: '식비', amount: 40000, color: '#E8837A' },
-];
+const single = (): CategorySlice[] => [{ category: '식비', amount: 40000, color: '#E8837A' }];
 
 const multiple = (): CategorySlice[] => [
   { category: '식비', amount: 320_000, color: '#E8837A' },

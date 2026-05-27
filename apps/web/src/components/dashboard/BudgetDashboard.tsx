@@ -119,9 +119,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         className="rounded-xl border border-border bg-card px-4 py-3"
       >
         <div className="text-xs text-muted-foreground">{TOTAL_LABEL[group]}</div>
-        <div
-          className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}
-        >
+        <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
           {totalDisplay.toLocaleString()}원
         </div>
       </div>
@@ -132,10 +130,7 @@ export function BudgetDashboard({ coupleId }: Props) {
           <Skeleton className="h-[260px] w-full rounded-xl" />
         </>
       ) : !hasEntries ? (
-        <div
-          data-testid="dashboard-empty"
-          className="rounded-xl border border-border bg-card p-6"
-        >
+        <div data-testid="dashboard-empty" className="rounded-xl border border-border bg-card p-6">
           <EmptyState
             icon={<BookOpen size={32} />}
             title="이 기간엔 내역이 없어요"
@@ -151,10 +146,7 @@ export function BudgetDashboard({ coupleId }: Props) {
               onToggle={handleToggleCategory}
               max={MAX_TREND_CATEGORIES}
             />
-            <BudgetTrendChart
-              data={trendByCategory}
-              selectedCategories={selectedOptions}
-            />
+            <BudgetTrendChart data={trendByCategory} selectedCategories={selectedOptions} />
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <CategoryDonutChart data={byCategory} />

@@ -20,15 +20,15 @@ export class BudgetAlertPage {
   }
 
   async gotoMonthly() {
-    await this.page.goto('/cashbook/history/monthly');
+    await this.page.goto('/inner/cashbook/history/monthly');
     await this.page.waitForSelector('[data-testid="monthly-overview"]', { timeout: 15000 });
   }
 
   async gotoMain() {
-    await this.page.goto('/cashbook/history');
+    await this.page.goto('/inner/cashbook/history');
   }
 
   async gotoWeekly() {
-    await this.page.goto('/cashbook/history/weekly');
+    await this.page.goto('/inner/cashbook/history/weekly');
   }
 }

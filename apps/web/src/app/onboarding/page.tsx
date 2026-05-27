@@ -74,7 +74,7 @@ export default function OnboardingPage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4">
         <h1 className="mb-2 text-2xl font-bold">UANDI</h1>
-        <p className="mb-10 text-muted-foreground">우리 둘만의 공간</p>
+        <p className="mb-10 text-muted-foreground">둘이서 만드는 살림 공간</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Button
             className="w-full"
@@ -92,8 +92,7 @@ export default function OnboardingPage() {
             }}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}
-            새 커플 공간 만들기
+            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}새 커플 공간 만들기
           </Button>
           <Button variant="outline" className="w-full" onClick={() => setStep('join')}>
             초대 코드 입력하기
@@ -135,9 +134,7 @@ export default function OnboardingPage() {
           <p className="mb-1 text-center text-sm text-muted-foreground">
             상대방에게 이 코드를 공유해 주세요.
           </p>
-          <p className="text-center text-xs text-muted-foreground">
-            코드는 48시간 후 만료됩니다
-          </p>
+          <p className="text-center text-xs text-muted-foreground">코드는 48시간 후 만료됩니다</p>
           <div className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="animate-spin" size={14} />
             상대방이 입력하면 자동으로 연결됩니다

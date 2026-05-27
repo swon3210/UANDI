@@ -18,7 +18,7 @@ export class AnnualPlanItemsPage {
   }
 
   async goto(group: CategoryKey) {
-    await this.page.goto(`/cashbook/plan/annual/items?group=${group}`);
+    await this.page.goto(`/inner/cashbook/plan/annual/items?group=${group}`);
   }
 
   itemRow(categoryName: string) {

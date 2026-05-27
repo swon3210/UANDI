@@ -6,7 +6,11 @@ import {
 } from 'firebase/auth';
 import { getFirestore as firebaseGetFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage as firebaseGetStorage, connectStorageEmulator } from 'firebase/storage';
-import { getMessaging as firebaseGetMessaging, isSupported as messagingIsSupported, type Messaging } from 'firebase/messaging';
+import {
+  getMessaging as firebaseGetMessaging,
+  isSupported as messagingIsSupported,
+  type Messaging,
+} from 'firebase/messaging';
 import { getFunctions as firebaseGetFunctions, type Functions } from 'firebase/functions';
 
 const firebaseConfig = {

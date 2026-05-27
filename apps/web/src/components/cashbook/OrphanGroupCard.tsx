@@ -41,24 +41,14 @@ export function OrphanGroupCard({ name, entries, onRemap }: OrphanGroupCardProps
   const selectedCount = entries.filter((e) => selectedIds.has(e.id)).length;
 
   return (
-    <div
-      data-testid={`orphan-group-${name}`}
-      className="rounded-xl border border-border bg-card"
-    >
+    <div data-testid={`orphan-group-${name}`} className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-border p-3">
         <div className="flex min-w-0 items-center gap-2">
           <Tag size={16} className="shrink-0 text-muted-foreground" />
           <span className="truncate font-medium">{name}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {entries.length}건
-          </span>
+          <span className="shrink-0 text-xs text-muted-foreground">{entries.length}건</span>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          data-testid="orphan-group-remap"
-          onClick={handleRemap}
-        >
+        <Button type="button" size="sm" data-testid="orphan-group-remap" onClick={handleRemap}>
           재매칭
         </Button>
       </div>

@@ -81,13 +81,9 @@ function getValue(
     case 'rsi14':
       return formatNumber(indicators.rsi14, 1);
     case 'percentile52w':
-      return indicators.percentile52w === null
-        ? '—'
-        : `${indicators.percentile52w.toFixed(0)}%`;
+      return indicators.percentile52w === null ? '—' : `${indicators.percentile52w.toFixed(0)}%`;
     case 'percentile13w':
-      return indicators.percentile13w === null
-        ? '—'
-        : `${indicators.percentile13w.toFixed(0)}%`;
+      return indicators.percentile13w === null ? '—' : `${indicators.percentile13w.toFixed(0)}%`;
   }
 }
 
@@ -100,7 +96,8 @@ const TREND_BADGE_CLASS: Record<ForexTrend, string> = {
 const TREND_DESCRIPTION: Record<ForexTrend, string> = {
   up: '20일 평균이 60일 평균을 위로 뚫고 기울기도 양수인 상태예요. 원화 약세(환율 상승) 국면이 이어질 가능성이 있어 매도/매수 신호 모두 신중히 해석합니다.',
   down: '20일 평균이 60일 평균 아래로 내려갔고 기울기도 음수예요. 환율 하락 국면이 이어질 가능성이 있습니다.',
-  sideways: '방향성이 뚜렷하지 않은 횡보 구간입니다. 평균회귀(저점 매수·고점 매도)가 비교적 잘 통하는 시기입니다.',
+  sideways:
+    '방향성이 뚜렷하지 않은 횡보 구간입니다. 평균회귀(저점 매수·고점 매도)가 비교적 잘 통하는 시기입니다.',
 };
 
 function TrendIcon({ trend }: { trend: ForexTrend }) {
@@ -152,11 +149,7 @@ export function IndicatorPanel({ indicators, currency }: Props) {
                 >
                   <HelpCircle size={14} />
                 </PopoverTrigger>
-                <PopoverContent
-                  side="top"
-                  align="start"
-                  className="w-64 text-sm leading-relaxed"
-                >
+                <PopoverContent side="top" align="start" className="w-64 text-sm leading-relaxed">
                   <p className="font-semibold">{meta.label}</p>
                   <p className="mt-1 text-muted-foreground">{meta.description}</p>
                   <p className="mt-2 text-xs text-muted-foreground/80">
@@ -165,10 +158,7 @@ export function IndicatorPanel({ indicators, currency }: Props) {
                 </PopoverContent>
               </Popover>
             </dt>
-            <dd
-              data-testid={`indicator-${meta.key}`}
-              className="font-semibold tabular-nums"
-            >
+            <dd data-testid={`indicator-${meta.key}`} className="font-semibold tabular-nums">
               {getValue(meta.key, indicators, currency)}
             </dd>
           </div>

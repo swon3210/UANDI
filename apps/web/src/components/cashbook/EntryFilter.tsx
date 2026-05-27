@@ -52,12 +52,7 @@ export function EntryFilter({
       <Tabs value={typeFilter} onValueChange={(v) => onTypeChange(v as EntryFilterType)}>
         <TabsList className="w-full">
           {TYPE_ORDER.map((t) => (
-            <TabsTrigger
-              key={t}
-              value={t}
-              data-testid={`filter-type-${t}`}
-              className="flex-1"
-            >
+            <TabsTrigger key={t} value={t} data-testid={`filter-type-${t}`} className="flex-1">
               {TYPE_LABELS[t]}
             </TabsTrigger>
           ))}

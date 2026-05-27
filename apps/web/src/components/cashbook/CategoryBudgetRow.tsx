@@ -59,10 +59,7 @@ export function CategoryBudgetRow({
         <span className="text-sm font-medium flex-1">{categoryName}</span>
         <span className="text-xs text-muted-foreground tabular-nums">{percentage}%</span>
       </div>
-      <Progress
-        value={percentage}
-        className={PROGRESS_CLASS[status]}
-      />
+      <Progress value={percentage} className={PROGRESS_CLASS[status]} />
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground tabular-nums">
           {formatCurrency(actualAmount)} / {formatCurrency(budgetAmount)}

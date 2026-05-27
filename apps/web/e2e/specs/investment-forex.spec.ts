@@ -49,14 +49,14 @@ async function mockForexRates(page: Page) {
 }
 
 test.describe('환테크 (investment/forex)', () => {
-  test('홈 대시보드의 환테크 카드 클릭 → /investment/forex 로 이동한다', async ({ authedPage }) => {
+  test('홈 대시보드의 환테크 카드 클릭 → /outer/forex 로 이동한다', async ({ authedPage }) => {
     await mockForexRates(authedPage);
 
     const entryCard = authedPage.getByTestId('investment-entry-card');
     await expect(entryCard).toBeVisible({ timeout: 10000 });
 
     await entryCard.click();
-    await expect(authedPage).toHaveURL(/\/investment\/forex$/, { timeout: 10000 });
+    await expect(authedPage).toHaveURL(/\/outer\/forex$/, { timeout: 10000 });
     await expect(authedPage.getByTestId('forex-list-header')).toBeVisible();
   });
 
@@ -64,7 +64,7 @@ test.describe('환테크 (investment/forex)', () => {
     authedPage,
   }) => {
     await mockForexRates(authedPage);
-    await authedPage.goto('/investment/forex');
+    await authedPage.goto('/outer/forex');
 
     await expect(authedPage.getByTestId('forex-category-major')).toBeVisible({ timeout: 10000 });
     await expect(authedPage.getByTestId('forex-category-asia')).toBeVisible();
@@ -81,10 +81,10 @@ test.describe('환테크 (investment/forex)', () => {
     authedPage,
   }) => {
     await mockForexRates(authedPage);
-    await authedPage.goto('/investment/forex');
+    await authedPage.goto('/outer/forex');
 
     await authedPage.getByTestId('currency-card-USD').click();
-    await expect(authedPage).toHaveURL(/\/investment\/forex\/USD$/);
+    await expect(authedPage).toHaveURL(/\/outer\/forex\/USD$/);
     await expect(authedPage.getByTestId('forex-detail-header')).toBeVisible();
 
     await expect(authedPage.getByTestId('exchange-rate-chart')).toBeVisible({ timeout: 10000 });
@@ -93,15 +93,11 @@ test.describe('환테크 (investment/forex)', () => {
 
     // AI mock 응답이 ForecastCard에 표시된다 (recommendation 뱃지)
     await expect(
-      authedPage
-        .getByTestId('forecast-card')
-        .getByTestId(/recommendation-(buy|sell|hold)/)
+      authedPage.getByTestId('forecast-card').getByTestId(/recommendation-(buy|sell|hold)/)
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test('TimeRangeSelector 클릭 시 새로운 range로 환율을 다시 요청한다', async ({
-    authedPage,
-  }) => {
+  test('TimeRangeSelector 클릭 시 새로운 range로 환율을 다시 요청한다', async ({ authedPage }) => {
     await mockForexRates(authedPage);
 
     const ratesRequests: string[] = [];
@@ -113,7 +109,7 @@ test.describe('환테크 (investment/forex)', () => {
       }
     });
 
-    await authedPage.goto('/investment/forex/USD');
+    await authedPage.goto('/outer/forex/USD');
     await expect(authedPage.getByTestId('exchange-rate-chart')).toBeVisible({ timeout: 10000 });
 
     // 기본 1m으로 호출됨
@@ -126,7 +122,7 @@ test.describe('환테크 (investment/forex)', () => {
 
   test('지원하지 않는 통화로 진입 시 404를 반환한다', async ({ authedPage }) => {
     await mockForexRates(authedPage);
-    const response = await authedPage.goto('/investment/forex/XYZ');
+    const response = await authedPage.goto('/outer/forex/XYZ');
     expect(response?.status()).toBe(404);
   });
 
@@ -134,7 +130,7 @@ test.describe('환테크 (investment/forex)', () => {
     authedPage,
   }) => {
     await mockForexRates(authedPage);
-    await authedPage.goto('/investment/forex/USD');
+    await authedPage.goto('/outer/forex/USD');
 
     const forecastCard = authedPage.getByTestId('forecast-card');
     await expect(forecastCard.getByTestId(/recommendation-/)).toBeVisible({ timeout: 10000 });

@@ -54,12 +54,8 @@ export function PlanWizardShell({
             <ChevronLeft size={20} />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-semibold text-stone-900">
-              {title}
-            </div>
-            {subtitle && (
-              <div className="truncate text-[11px] text-stone-500">{subtitle}</div>
-            )}
+            <div className="truncate text-[15px] font-semibold text-stone-900">{title}</div>
+            {subtitle && <div className="truncate text-[11px] text-stone-500">{subtitle}</div>}
           </div>
           <button
             type="button"
@@ -83,16 +79,11 @@ export function PlanWizardShell({
           aria-valuemax={100}
           data-testid="wizard-progress"
         >
-          <div
-            className="h-full bg-coral-400 transition-[width]"
-            style={{ width: `${pct}%` }}
-          />
+          <div className="h-full bg-coral-400 transition-[width]" style={{ width: `${pct}%` }} />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-32">
-        {children}
-      </main>
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-32">{children}</main>
 
       {!hideFooter && (
         <footer
