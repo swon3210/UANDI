@@ -16,6 +16,8 @@ export type SidebarNavItem = {
   label: string;
   href: string;
   Icon: LucideIcon;
+  /** 활성 판정용 경로 prefix. 생략 시 href를 사용. 진입 경로와 활성 영역이 다를 때 지정. */
+  match?: string;
 };
 
 export type SidebarSection = {
@@ -44,10 +46,15 @@ const DefaultLink: ComponentType<SidebarLinkProps> = (props) => <a {...props} />
 
 function getActiveHref(sections: SidebarSection[], activePath: string): string {
   let best = '';
+  let bestLen = -1;
   for (const section of sections) {
     for (const item of section.items) {
-      const matches = activePath === item.href || activePath.startsWith(`${item.href}/`);
-      if (matches && item.href.length > best.length) best = item.href;
+      const prefix = item.match ?? item.href;
+      const matches = activePath === prefix || activePath.startsWith(`${prefix}/`);
+      if (matches && prefix.length > bestLen) {
+        best = item.href;
+        bestLen = prefix.length;
+      }
     }
   }
   return best;

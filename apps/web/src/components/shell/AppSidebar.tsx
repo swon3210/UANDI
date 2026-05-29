@@ -23,7 +23,13 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
     items: [
       { id: 'inner-home', label: '홈', href: '/inner', Icon: LayoutDashboard },
       { id: 'photos', label: '사진', href: '/inner/photos', Icon: ImageIcon },
-      { id: 'cashbook', label: '가계부', href: '/inner/cashbook', Icon: BookOpen },
+      {
+        id: 'cashbook',
+        label: '가계부',
+        href: '/inner/cashbook/history',
+        match: '/inner/cashbook',
+        Icon: BookOpen,
+      },
     ],
   },
   {
