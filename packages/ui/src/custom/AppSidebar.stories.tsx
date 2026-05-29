@@ -21,7 +21,13 @@ const SECTIONS: SidebarSection[] = [
     items: [
       { id: 'inner-home', label: '홈', href: '/inner', Icon: LayoutDashboard },
       { id: 'photos', label: '사진', href: '/inner/photos', Icon: ImageIcon },
-      { id: 'cashbook', label: '가계부', href: '/inner/cashbook', Icon: BookOpen },
+      {
+        id: 'cashbook',
+        label: '가계부',
+        href: '/inner/cashbook/history',
+        match: '/inner/cashbook',
+        Icon: BookOpen,
+      },
     ],
   },
   {
@@ -97,7 +103,7 @@ export const InnerHome: Story = {
 
 export const InnerCashbook: Story = {
   name: '우리집 — 가계부 활성',
-  render: () => <Demo activePath="/inner/cashbook" space="inner" />,
+  render: () => <Demo activePath="/inner/cashbook/history" space="inner" />,
 };
 
 export const InnerPhotosDetail: Story = {
