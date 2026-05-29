@@ -402,7 +402,6 @@ const LAYOUT_SPACING: SpacingItem[] = [
 
 const LAYOUT_CONSTANTS = [
   { label: 'Header Height', value: '56px', tw: 'h-14', cssVar: '--header-h' },
-  { label: 'Bottom Nav Height', value: '64px', tw: 'h-16', cssVar: '--bottom-nav-h' },
   { label: 'Page Max Width', value: '448px', tw: 'max-w-md', cssVar: '--page-max-w' },
   { label: 'Page H. Padding', value: '16px', tw: 'px-4', cssVar: '--page-px' },
 ];

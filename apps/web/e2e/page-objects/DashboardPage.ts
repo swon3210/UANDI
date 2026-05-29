@@ -3,7 +3,8 @@ import { type Page, type Locator } from '@playwright/test';
 export class DashboardPage {
   readonly page: Page;
   readonly header: Locator;
-  readonly bottomNav: Locator;
+  readonly sidebarTrigger: Locator;
+  readonly sidebar: Locator;
 
   // 진입 버튼
   readonly photoGalleryEntry: Locator;
@@ -44,7 +45,8 @@ export class DashboardPage {
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByTestId('dashboard-header');
-    this.bottomNav = page.getByTestId('bottom-nav');
+    this.sidebarTrigger = page.getByTestId('sidebar-trigger');
+    this.sidebar = page.getByTestId('app-sidebar');
 
     this.photoGalleryEntry = page.getByTestId('photo-gallery-entry');
     this.cashbookEntry = page.getByTestId('cashbook-entry');

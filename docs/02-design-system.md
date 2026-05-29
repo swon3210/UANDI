@@ -256,7 +256,6 @@ AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"
 
   /* 레이아웃 상수 */
   --header-h: 3.5rem; /* 56px */
-  --bottom-nav-h: 4rem; /* 64px */
   --page-max-w: 28rem; /* 448px */
   --page-px: 1rem; /* 16px */
 }
@@ -294,13 +293,12 @@ AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"
 | ---------------- | ----- | ---------------- | ---------- |
 | 페이지 최대 너비 | 448px | `--page-max-w`   | `max-w-md` |
 | 헤더 높이        | 56px  | `--header-h`     | `h-14`     |
-| 하단 네비 높이   | 64px  | `--bottom-nav-h` | `h-16`     |
 | 페이지 수평 패딩 | 16px  | `--page-px`      | `px-4`     |
 
 ```tsx
 /* 모든 페이지의 기본 레이아웃 */
-<main className="max-w-md mx-auto px-4 pb-16">
-  {/* pb-16: bottom nav 높이만큼 하단 여백 확보 */}
+<main className="max-w-md mx-auto px-4 pb-8">
+  {/* 상시 하단 네비가 없으므로 콘텐츠 하단 여백만 확보 */}
 </main>
 ```
 
@@ -389,9 +387,9 @@ AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"
 | 컴포넌트         | Props                                          | 용도                              |
 | ---------------- | ---------------------------------------------- | --------------------------------- |
 | `Header`         | `title`, `leftSlot?`, `rightSlot?`             | 페이지 헤더                       |
-| `BottomNav`      | `activeTab`                                    | 하단 네비게이션                   |
+| `AppSidebar`     | `open`, `onOpenChange`, `sections`, `activePath`, `space?`, `LinkComponent?`, `onNavigate?` | 좌측 네비게이션 드로어 (Sheet side=left). 우리집/재테크 두 공간 + 페이지를 한 목록에 통합 |
 | `EmptyState`     | `icon`, `title`, `description`, `action?`      | 빈 상태 화면                      |
-| `SpaceSwitcher`  | `currentSpace`, `onSpaceChange`                | 우리집/재테크 공간 전환 (DropdownMenu) |
+| `FullScreenSpinner` | —                                           | 전체 화면 로딩                    |
 
 ---
 
@@ -468,9 +466,8 @@ function LedgerEntryForm() {
 이 서비스는 **모바일 퍼스트**입니다.
 
 - 기본 레이아웃은 `max-w-md` 단일 컬럼
-- 태블릿/데스크탑 (`md:` 이상)에서는 사이드바 또는 2열 그리드로 전환 가능
-- `BottomNav`는 모바일에서만 표시 (`md:hidden`)
-- 데스크탑에서는 Left Sidebar로 전환 (`hidden md:flex`)
+- 태블릿/데스크탑 (`md:` 이상)에서는 2열 그리드로 전환 가능
+- 네비게이션은 헤더 메뉴 버튼으로 여는 `AppSidebar`(좌측 드로어) 하나로 통일하며, 전 뷰포트에서 동일하게 동작한다 (상시 하단 바 없음)
 
 ---
 

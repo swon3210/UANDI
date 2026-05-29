@@ -55,7 +55,7 @@ export default function ForexListPage() {
           </Button>
         }
       />
-      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-16 pt-4">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-8 pt-4">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
             주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.

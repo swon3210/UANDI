@@ -9,10 +9,14 @@ export type { LogoProps, LogoVariant } from './Logo';
 export { Header } from './custom/Header';
 export { EmptyState } from './custom/EmptyState';
 export { FullScreenSpinner } from './custom/FullScreenSpinner';
-export { SpaceSwitcher } from './custom/SpaceSwitcher';
-export type { Space, SpaceSwitcherProps } from './custom/SpaceSwitcher';
-export { BottomNav } from './custom/BottomNav';
-export type { BottomNavItem, BottomNavProps, BottomNavLinkProps } from './custom/BottomNav';
+export { AppSidebar } from './custom/AppSidebar';
+export type {
+  Space,
+  SidebarNavItem,
+  SidebarSection,
+  SidebarLinkProps,
+  AppSidebarProps,
+} from './custom/AppSidebar';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';

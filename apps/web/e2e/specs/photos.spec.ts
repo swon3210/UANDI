@@ -23,15 +23,12 @@ test.describe('사진 갤러리', () => {
       await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
     });
 
-    test('모바일에서 하단 네비게이션이 표시된다', async ({ authedContext, browserName }) => {
-      // BottomNav는 md:hidden이므로 모바일 뷰포트에서만 표시됨
-      test.skip(
-        browserName !== 'chromium' || !(test.info().project.name === 'Mobile Chrome'),
-        '모바일 전용 테스트'
-      );
+    test('메뉴 버튼으로 사이드바를 열 수 있다', async ({ authedContext }) => {
       const photos = new PhotosPage(authedContext.page);
       await photos.goto();
-      await expect(photos.bottomNav).toBeVisible();
+      await photos.sidebarTrigger.click();
+      await expect(photos.sidebar).toBeVisible();
+      await expect(photos.sidebar).toContainText('사진');
     });
   });
 
