@@ -11,10 +11,20 @@ test.describe('대시보드', () => {
       await expect(dashboard.header).toBeVisible();
     });
 
-    test('모바일에서 BottomNav가 표시된다', async ({ authedPage }, testInfo) => {
-      test.skip(testInfo.project.name === 'chromium', 'BottomNav는 모바일 전용');
+    test('메뉴 버튼으로 사이드바를 열면 두 공간 네비게이션이 표시된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
-      await expect(dashboard.bottomNav).toBeVisible();
+      await dashboard.sidebarTrigger.click();
+      await expect(dashboard.sidebar).toBeVisible();
+      await expect(dashboard.sidebar).toContainText('우리집');
+      await expect(dashboard.sidebar).toContainText('재테크');
+    });
+
+    test('사이드바에서 가계부로 이동할 수 있다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.sidebarTrigger.click();
+      await expect(dashboard.sidebar).toBeVisible();
+      await dashboard.sidebar.getByRole('link', { name: '가계부' }).click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook/, { timeout: 30000 });
     });
 
     test('최근 사진 영역과 이번 달 가계부 요약 영역은 더 이상 표시되지 않는다', async ({

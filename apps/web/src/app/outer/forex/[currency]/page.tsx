@@ -67,7 +67,7 @@ export default function ForexDetailPage() {
           </Button>
         }
       />
-      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-16 pt-4">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-8 pt-4">
         <section className="flex flex-col gap-2" data-testid="forex-detail-summary">
           <div className="flex items-center gap-2.5">
             <span

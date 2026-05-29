@@ -1,35 +1,32 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { Header, SpaceSwitcher, type Space } from '@uandi/ui';
+import { Menu } from 'lucide-react';
+import { Button, Header } from '@uandi/ui';
+import { openAppSidebar } from '@/components/shell/AppSidebar';
 
 type HeaderProps = ComponentProps<typeof Header>;
 
-function getCurrentSpace(pathname: string): Space {
-  return pathname.startsWith('/outer') ? 'outer' : 'inner';
-}
-
 /**
- * AppShell 안에서 사용하는 페이지 헤더. shadcn Header 위에 SpaceSwitcher를
- * 자동 prepend하여 어디서나 우리집/재테크 공간 전환이 가능하게 한다.
+ * AppShell 안에서 사용하는 페이지 헤더. shadcn Header 좌측에 사이드바 토글
+ * 메뉴 버튼을 자동 prepend하여 어디서나 공간/페이지 이동이 가능하게 한다.
  */
 export function PageHeader({ leftSlot, ...rest }: HeaderProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const currentSpace = getCurrentSpace(pathname);
-
   return (
     <Header
       {...rest}
       leftSlot={
         <>
-          <SpaceSwitcher
-            currentSpace={currentSpace}
-            onSpaceChange={(space) => {
-              router.push(space === 'inner' ? '/inner' : '/outer');
-            }}
-          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={openAppSidebar}
+            aria-label="메뉴 열기"
+            data-testid="sidebar-trigger"
+          >
+            <Menu size={20} />
+          </Button>
           {leftSlot}
         </>
       }

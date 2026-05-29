@@ -12,7 +12,8 @@ export class PhotosPage {
   readonly folderMenuBtn: Locator;
   readonly folderSearchInput: Locator;
   readonly folderSortTrigger: Locator;
-  readonly bottomNav: Locator;
+  readonly sidebarTrigger: Locator;
+  readonly sidebar: Locator;
 
   // 업로드 관련
   readonly uploadBtn: Locator;
@@ -42,7 +43,8 @@ export class PhotosPage {
     this.folderMenuBtn = page.getByTestId('folder-menu-btn');
     this.folderSearchInput = page.getByTestId('folder-search-input');
     this.folderSortTrigger = page.getByTestId('folder-sort-select');
-    this.bottomNav = page.getByTestId('bottom-nav');
+    this.sidebarTrigger = page.getByTestId('sidebar-trigger');
+    this.sidebar = page.getByTestId('app-sidebar');
 
     // 업로드
     this.uploadBtn = page.getByRole('button', { name: '사진 업로드' });

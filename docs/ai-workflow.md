@@ -139,7 +139,7 @@
    (button, input, form, dialog, sheet, skeleton, tabs, badge, avatar, sonner, separator)
 2. 커스텀 컴포넌트 구현 (packages/ui/src/custom/)
    - Header.tsx — title, leftSlot?, rightSlot? props
-   - BottomNav.tsx — activeTab prop ('home' | 'photos' | 'cashbook')
+   - AppSidebar.tsx — open, onOpenChange, sections, activePath, space? props (좌측 네비 드로어)
    - EmptyState.tsx — icon, title, description, action? props
 3. packages/ui/src/index.ts — 모든 컴포넌트 re-export
 

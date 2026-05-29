@@ -40,9 +40,9 @@
 
 - `currency`는 화이트리스트: `USD | JPY | EUR | CNY`. 그 외는 404.
 - 진입점:
-  1. 재테크 BottomNav의 "환테크" 탭 → `/outer/forex`
+  1. 사이드바 재테크 섹션의 "환테크" 항목 → `/outer/forex`
   2. 재테크 대시보드(`/outer`)의 환테크 요약 카드 → `/outer/forex`
-- 재테크 BottomNav 구성: 홈(`/outer`) · 환테크(`/outer/forex`) · 투자(`/outer/investment`) · 적금(`/outer/savings`).
+- 사이드바 재테크 섹션 구성: 홈(`/outer`) · 환테크(`/outer/forex`) · 투자(`/outer/investment`) · 적금(`/outer/savings`).
 
 ---
 

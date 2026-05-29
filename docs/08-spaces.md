@@ -91,35 +91,47 @@ couples/{coupleId}/
 
 ## 4. 네비게이션 패턴
 
+실사용 결과 가계부↔갤러리처럼 공간 내·공간 간 페이지를 자주 오가는 패턴이 거의 없어, 상시 화면을 차지하는 BottomNav를 제거하고 **온디맨드 좌측 사이드바**로 네비게이션을 통합한다. 공간 전환(SpaceSwitcher)과 페이지 이동을 한 곳에 모은다.
+
 ### AppShell 구조
 
 ```
 ┌─────────────────────────────────┐
-│  [🏠 우리집 ▾]   ⚙️  [👤]      │  ← 상단: SpaceSwitcher + 설정/프로필
+│  [☰]            ⚙️  [👤]        │  ← 상단: 메뉴 버튼 + 페이지별 액션
 ├─────────────────────────────────┤
 │                                 │
-│        (페이지 본문)            │
+│        (페이지 본문)            │  ← 하단 고정 네비 없음
 │                                 │
-├─────────────────────────────────┤
-│  [홈] [사진] [가계부]           │  ← 하단: 공간별 BottomNav
 └─────────────────────────────────┘
+
+[☰] 탭 → 좌측에서 사이드바 슬라이드 인
+┌──────────────┐
+│ UANDI        │
+│ 우리집        │
+│  홈 / 사진 / 가계부 │
+│ 재테크        │
+│  홈 / 환테크 / 투자 / 적금 │
+└──────────────┘
 ```
 
-### SpaceSwitcher (상단)
+### AppSidebar (좌측 드로어)
 
-- 현재 공간 라벨 + 아이콘 표시, 탭하면 두 공간 선택 시트 노출
-- 공간 전환 시 해당 공간 대시보드(`/inner` 또는 `/outer`)로 이동
-- 비로그인 / 온보딩 미완 사용자에게는 노출하지 않음
+- 헤더 좌측의 메뉴 버튼(`data-testid="sidebar-trigger"`)으로 연다. overlay-kit + shadcn `Sheet`(side=left) 기반.
+- **두 공간을 섹션으로 모두 노출** → 다른 공간으로 이동하려면 그 공간의 항목을 그냥 탭한다. 별도의 공간 전환 컨트롤(SpaceSwitcher)을 두지 않는다.
+- 활성 항목은 현재 경로의 가장 긴 prefix 매칭으로 결정하고, 현재 공간 톤(coral/inner · indigo/outer)을 따른다. 사이드바는 포털 밖에 렌더되므로 `data-space`를 SheetContent에 직접 부여한다.
+- 항목 클릭 시 사이드바를 닫고 해당 경로로 이동한다.
+- 비로그인 / 온보딩 미완 사용자에게는 AppShell 자체가 렌더되지 않으므로 노출되지 않는다.
+- 전 뷰포트에서 동일하게 동작한다(기존 BottomNav는 모바일 전용이라 데스크톱에 페이지 네비가 없었음).
 
-### BottomNav (공간별)
+### 공간별 항목 구성
 
-| 공간   | 탭 구성                                         |
+| 공간   | 항목                                         |
 | ------ | ----------------------------------------------- |
 | 우리집 | 홈(`/inner`) · 사진(`/inner/photos`) · 가계부(`/inner/cashbook`) |
 | 재테크   | 홈(`/outer`) · 환테크(`/outer/forex`) · 투자(`/outer/investment`) · 적금(`/outer/savings`) |
 
-- 재테크 탭 중 투자·적금은 v1에서 placeholder 페이지로 연결
-- 탭 활성 색은 해당 공간의 톤 색상 사용
+- 재테크 항목 중 투자·적금은 v1에서 placeholder 페이지로 연결
+- 설정/프로필/로그아웃 등은 사이드바 `footer` 슬롯으로 추후 추가 가능(현재 범위 외)
 
 ---
 
@@ -128,7 +140,7 @@ couples/{coupleId}/
 - **우리집**: 기존 coral 유지 (`--primary: hsl(4 74% 69%)`). 따뜻함·친밀함.
 - **재테크**: Indigo accent (`--primary: hsl(231 48% 48%)`). 차분·신뢰.
 - **공간 톤 적용 방식**: AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"` 속성을 적용한다. CSS에서 `[data-space='outer'] { --primary: var(--outer-primary); ... }`로 시맨틱 토큰을 일괄 오버라이드해, 하위 컴포넌트는 별도 prop 없이 자동으로 해당 공간 톤을 따른다.
-- **로고는 단일 유지**. 공간 정체성은 SpaceSwitcher 라벨·아이콘과 톤 색으로 표현하고, 브랜드 로고 자체는 분기하지 않는다 (브랜드 일관성).
+- **로고는 단일 유지**. 공간 정체성은 사이드바의 공간 섹션 라벨·아이콘과 톤 색으로 표현하고, 브랜드 로고 자체는 분기하지 않는다 (브랜드 일관성).
 - 헤더 active 색, Button primary, ring 등 시맨틱 토큰을 통해 일괄 적용. 배경·텍스트 등 페이지 골격은 두 공간이 동일하게 유지해 같은 앱임을 명확히 한다.
 
 ---
@@ -140,7 +152,7 @@ couples/{coupleId}/
 - 셸·라우팅 마이그레이션 (`/photos`·`/cashbook`·`/investment/*` → `/inner/*`·`/outer/*`)
 - 환테크 이주 (`/investment/forex` → `/outer/forex`)
 - 재테크 대시보드 (환테크 요약 카드 + 투자/적금 placeholder)
-- 디자인 시스템: `SpaceSwitcher`, `Logo variant`, 재테크 accent 토큰
+- 디자인 시스템: `AppSidebar`, `Logo variant`, 재테크 accent 토큰
 - 랜딩 카피: 두 공간 소개
 
 ### v1.1 이후
@@ -167,7 +179,7 @@ couples/{coupleId}/
    - 필요 → 요약 문서(`couples/{coupleId}/meta/<영역>Summary`) 설계 + 원본 변경 시 함께 머지
    - 불필요 → 본인 화면에만 노출
 4. **네비게이션 진입점은?**
-   - 해당 공간 BottomNav 탭에 추가? 대시보드 카드만? 설정 메뉴 안?
+   - 사이드바의 해당 공간 섹션에 항목 추가? 대시보드 카드만? 설정 메뉴 안?
 
 이 4개 질문이 정리되지 않으면 구현을 시작하지 않는다.
 
@@ -177,4 +189,4 @@ couples/{coupleId}/
 
 - `00-overview.md` — 전체 페이지 구성·기능 범위
 - `03-domain-models.md` — Firestore 스키마 (우리집/재테크 소유 분리 적용 예정)
-- `02-design-system.md` — `SpaceSwitcher` / Logo variant / 재테크 accent 토큰 (작업 후 반영)
+- `02-design-system.md` — `AppSidebar` / Logo variant / 재테크 accent 토큰 (작업 후 반영)
