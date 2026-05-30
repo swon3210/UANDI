@@ -13,5 +13,16 @@ service firebase.storage {
     match /users/{userId}/cashbook/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // 커뮤니티 유저 글 이미지 (전역 공유 — 읽기는 모든 로그인 유저, 쓰기는 본인만)
+    // 명세: docs/pages/community/community-feed.md
+    match /communityImages/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
   }
 }

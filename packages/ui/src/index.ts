@@ -27,6 +27,17 @@ export { LinkPostCard } from './custom/community/LinkPostCard';
 export type { LinkPostCardProps } from './custom/community/LinkPostCard';
 export { CommunityPostCard } from './custom/community/CommunityPostCard';
 export type { CommunityPostCardProps } from './custom/community/CommunityPostCard';
+export {
+  CommunityComposer,
+  COMMUNITY_COMPOSER_MAX_BODY,
+  COMMUNITY_COMPOSER_MAX_IMAGE_BYTES,
+} from './custom/community/CommunityComposer';
+export type {
+  CommunityComposerProps,
+  CommunityComposerSubmit,
+} from './custom/community/CommunityComposer';
+export { ReportMenu } from './custom/community/ReportMenu';
+export type { ReportMenuProps } from './custom/community/ReportMenu';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';

@@ -30,11 +30,23 @@ service cloud.firestore {
     // ── 커뮤니티 (전역 공유 — couples/ 격리 예외) ────────────────
     // 명세: docs/pages/community/community-feed.md
     // - 모든 로그인 유저가 승인된 글만 읽기 가능
-    // - 클라이언트 쓰기는 Phase 3(user 생성), Phase 4(본인 삭제, 신고)에서 추가
-    // - scraped 생성·상태 변경은 영구적으로 Admin SDK(서버)만
+    // - user 글 create: 본인 작성 + status=published + reportCount=0 + source 없음
+    // - user 글 delete: 본인만
+    // - update는 v1 클라이언트에서 일체 차단 (편집 UI 없음 + reportCount/status 변조 방지)
+    // - scraped 생성·상태 변경(hidden 등)은 영구적으로 Admin SDK(서버)만
     match /communityPosts/{postId} {
       allow read: if isAuthed() && resource.data.status == 'published';
-      // 클라이언트 write는 v1 Phase 2에서는 일체 불가. Admin SDK 시드는 owner 헤더로 우회.
+
+      allow create: if isAuthed()
+        && request.resource.data.type == 'user'
+        && request.resource.data.status == 'published'
+        && request.resource.data.author.uid == request.auth.uid
+        && request.resource.data.reportCount == 0
+        && !('source' in request.resource.data);
+
+      allow update: if false;
+
+      allow delete: if isAuthed() && resource.data.author.uid == request.auth.uid;
 
       // 신고 서브컬렉션 — Phase 4에서 본격 도입. 현재는 클라이언트 쓰기 차단.
       match /reports/{reporterUid} {
