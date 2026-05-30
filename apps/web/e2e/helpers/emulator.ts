@@ -485,6 +485,31 @@ export async function seedCommunityPost(options: SeedCommunityPostOptions): Prom
   return postId;
 }
 
+// 재테크 자산 배분 목표 비율 (개인 소유 — sideHustles/{uid}/config/assetAllocation)
+export async function seedAssetAllocation(
+  coupleId: string,
+  uid: string,
+  ratio: { deposit: number; savings: number; investment: number }
+): Promise<void> {
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/sideHustles/${uid}/config/assetAllocation`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          uid: { stringValue: uid },
+          coupleId: { stringValue: coupleId },
+          deposit: { integerValue: String(ratio.deposit) },
+          savings: { integerValue: String(ratio.savings) },
+          investment: { integerValue: String(ratio.investment) },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
 export async function seedNotificationSettings(
   userId: string,
   options: {

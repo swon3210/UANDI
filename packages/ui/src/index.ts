@@ -39,6 +39,14 @@ export type {
 export { ReportMenu } from './custom/community/ReportMenu';
 export type { ReportMenuProps } from './custom/community/ReportMenu';
 
+// 재테크 자산 배분 (프레젠테이션 전용 — 도메인 타입과 디커플)
+export { AssetAllocationEditor } from './custom/outer/AssetAllocationEditor';
+export type {
+  AssetAllocationEditorProps,
+  AssetAllocationValue,
+  AssetAllocationBucket,
+} from './custom/outer/AssetAllocationEditor';
+
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';
