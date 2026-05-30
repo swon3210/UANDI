@@ -17,7 +17,7 @@ export async function createTestUser(email: string, password: string): Promise<s
     `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({ email, password, returnSecureToken: true }),
     }
   );
@@ -36,7 +36,7 @@ export async function seedUserDocument(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           uid: { stringValue: uid },
@@ -75,7 +75,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: coupleId },
@@ -109,7 +109,7 @@ export async function seedPhoto(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/photos/${photoId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: photoId },
@@ -153,7 +153,7 @@ export async function seedFolder(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/folders/${folderId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: folderId },
@@ -196,7 +196,7 @@ export async function seedCashbookCategory(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookCategories/${categoryId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: categoryId },
@@ -281,7 +281,7 @@ export async function seedAnnualPlan(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: planId },
@@ -317,7 +317,7 @@ export async function seedAnnualPlanItem(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/items/${itemId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: itemId },
@@ -377,12 +377,112 @@ export async function seedCashbookEntry(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({ fields }),
     }
   );
 
   return entryId;
+}
+
+// ───────────────────────────────────────────────────────────────
+// 커뮤니티 (전역 컬렉션) — couples/ 격리 예외. 자세히는 docs/08-spaces.md 참고.
+// ───────────────────────────────────────────────────────────────
+
+type SeedCommunityPostOptions = {
+  id?: string;
+  type: 'user' | 'scraped';
+  status: 'published' | 'pending' | 'hidden';
+  title?: string;
+  body?: string;
+  publishedAt?: string | null; // ISO, pending이면 null 권장
+  createdAt?: string;
+  reportCount?: number;
+  author?: {
+    uid: string;
+    coupleId: string | null;
+    displayName: string;
+    photoURL?: string | null;
+  };
+  imageUrl?: string | null;
+  source?: {
+    siteName: string;
+    url: string;
+    ogImageUrl?: string | null;
+    originPublishedAt?: string | null;
+    sourceId: string;
+  };
+};
+
+export async function seedCommunityPost(options: SeedCommunityPostOptions): Promise<string> {
+  const postId = options.id ?? `post-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const createdAt = options.createdAt ?? new Date().toISOString();
+  const publishedAt =
+    options.publishedAt === undefined
+      ? options.status === 'published'
+        ? createdAt
+        : null
+      : options.publishedAt;
+
+  const fields: Record<string, unknown> = {
+    id: { stringValue: postId },
+    type: { stringValue: options.type },
+    status: { stringValue: options.status },
+    title: { stringValue: options.title ?? '' },
+    body: { stringValue: options.body ?? '' },
+    createdAt: { timestampValue: createdAt },
+    publishedAt: publishedAt ? { timestampValue: publishedAt } : { nullValue: null },
+    reportCount: { integerValue: String(options.reportCount ?? 0) },
+  };
+
+  if (options.type === 'user' && options.author) {
+    fields.author = {
+      mapValue: {
+        fields: {
+          uid: { stringValue: options.author.uid },
+          coupleId: options.author.coupleId
+            ? { stringValue: options.author.coupleId }
+            : { nullValue: null },
+          displayName: { stringValue: options.author.displayName },
+          photoURL: options.author.photoURL
+            ? { stringValue: options.author.photoURL }
+            : { nullValue: null },
+        },
+      },
+    };
+    fields.imageUrl = options.imageUrl
+      ? { stringValue: options.imageUrl }
+      : { nullValue: null };
+  }
+
+  if (options.type === 'scraped' && options.source) {
+    fields.source = {
+      mapValue: {
+        fields: {
+          siteName: { stringValue: options.source.siteName },
+          url: { stringValue: options.source.url },
+          ogImageUrl: options.source.ogImageUrl
+            ? { stringValue: options.source.ogImageUrl }
+            : { nullValue: null },
+          originPublishedAt: options.source.originPublishedAt
+            ? { timestampValue: options.source.originPublishedAt }
+            : { nullValue: null },
+          sourceId: { stringValue: options.source.sourceId },
+        },
+      },
+    };
+  }
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/communityPosts/${postId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields }),
+    }
+  );
+
+  return postId;
 }
 
 export async function seedNotificationSettings(
@@ -400,7 +500,7 @@ export async function seedNotificationSettings(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/settings/notifications`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           coupleId: { stringValue: options.coupleId },

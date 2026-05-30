@@ -1,4 +1,10 @@
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import {
+  ref,
+  uploadBytes,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
 import { getStorage } from '@/lib/firebase/config';
 
 type UploadOptions = {
@@ -94,4 +100,41 @@ export async function deletePhotoFile(coupleId: string, photoId: string, storage
   const storagePath = `couples/${coupleId}/photos/${photoId}/original.${ext}`;
   const storageRef = ref(getStorage(), storagePath);
   await deleteObject(storageRef);
+}
+
+// ── 커뮤니티 유저 글 이미지 ──
+
+type CommunityImageUploadOptions = {
+  uid: string;
+  postId: string;
+  file: File;
+};
+
+export async function uploadCommunityImage({
+  uid,
+  postId,
+  file,
+}: CommunityImageUploadOptions): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const storagePath = `communityImages/${uid}/${postId}.${ext}`;
+  const storageRef = ref(getStorage(), storagePath);
+  const result = await uploadBytes(storageRef, file, { contentType: file.type });
+  return getDownloadURL(result.ref);
+}
+
+export async function deleteCommunityImage({
+  uid,
+  postId,
+  storageUrl,
+}: {
+  uid: string;
+  postId: string;
+  storageUrl?: string | null;
+}) {
+  if (!storageUrl) return;
+  // storageUrl에서 확장자 파싱 (예: {postId}.png → png)
+  const match = storageUrl.match(new RegExp(`${postId}\\.(\\w+)`));
+  const ext = match ? match[1] : 'jpg';
+  const storagePath = `communityImages/${uid}/${postId}.${ext}`;
+  await deleteObject(ref(getStorage(), storagePath));
 }

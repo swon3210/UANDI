@@ -6,8 +6,10 @@ import {
   Home,
   Image as ImageIcon,
   LayoutDashboard,
+  MessageCircle,
   PiggyBank,
   TrendingUp,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { Button } from '../components/button';
@@ -40,6 +42,12 @@ const SECTIONS: SidebarSection[] = [
       { id: 'investment', label: '투자', href: '/outer/investment', Icon: TrendingUp },
       { id: 'savings', label: '적금', href: '/outer/savings', Icon: PiggyBank },
     ],
+  },
+  {
+    id: 'community',
+    label: '커뮤니티',
+    Icon: Users,
+    items: [{ id: 'community-feed', label: '피드', href: '/community', Icon: MessageCircle }],
   },
 ];
 
@@ -119,4 +127,9 @@ export const OuterForex: Story = {
 export const OuterSavings: Story = {
   name: '재테크 — 적금 활성 (indigo)',
   render: () => <Demo activePath="/outer/savings" space="outer" />,
+};
+
+export const CommunityFeed: Story = {
+  name: '커뮤니티 — 피드 활성 (violet)',
+  render: () => <Demo activePath="/community" space="community" />,
 };

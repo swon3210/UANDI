@@ -346,6 +346,55 @@ type SavingsAccount = {
 
 ---
 
+## 커뮤니티 (전역 공유 — 커플 격리 예외)
+
+> v1에 도입. 자세한 UX·법적 가드레일은 `docs/pages/community/community-feed.md` 참고.
+> 다른 도메인과 달리 **커플 단위로 격리되지 않는다**. 최상위 컬렉션이라는 점이 핵심.
+
+### CommunityPost
+
+```ts
+type CommunityPostType = 'user' | 'scraped';
+type CommunityPostStatus = 'published' | 'pending' | 'hidden';
+
+type CommunityPost = {
+  id: string;
+  type: CommunityPostType;
+  status: CommunityPostStatus;
+  title: string;            // user: '' 허용 / scraped: 원문 제목
+  body: string;             // user: 본문 / scraped: 짧은 발췌(인용 범위)
+  createdAt: Timestamp;
+  publishedAt: Timestamp | null; // 노출 시각(정렬 키). pending이면 null
+  reportCount: number;      // 트리거로 갱신 (Phase 4)
+
+  // type === 'user'
+  author?: {
+    uid: string;
+    coupleId: string | null; // 비커플 유저에도 열어둘 수 있도록 nullable
+    displayName: string;     // 작성 시점 프로필명 스냅샷(비정규화 의도)
+    photoURL: string | null;
+  };
+  imageUrl?: string | null;  // Storage 업로드 이미지, 최대 1장
+
+  // type === 'scraped'
+  source?: {
+    siteName: string;
+    url: string;             // 원문 링크(링크아웃)
+    ogImageUrl: string | null; // 원본 URL 그대로 참조, 우리 서버에 복제 금지
+    originPublishedAt: Timestamp | null;
+    sourceId: string;        // 정규화 URL 해시 — 중복 수집 방지 키
+  };
+};
+```
+
+**Firestore 경로**: `communityPosts/{postId}` (최상위)
+**신고 경로** (Phase 4): `communityPosts/{postId}/reports/{reporterUid}`
+**Storage 경로(유저 이미지)**: `communityImages/{uid}/{postId}.{ext}`
+
+> **비정규화 의도**: `author.displayName`을 글에 스냅샷으로 저장한다. 피드 1페이지당 N번의 프로필 조회를 피하기 위함이며, 닉네임 편집 기능 추가 시 본인 글을 배치 갱신하는 방식으로 전파한다.
+
+---
+
 ## Firestore 보안 규칙 명세
 
 > 실제 rules 파일 작성 시 이 명세를 기반으로 합니다.
@@ -360,6 +409,8 @@ type SavingsAccount = {
 | `couples/{coupleId}/cashbookCategories/*`                 | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/meta/outerSummary`                    | 같은 커플 멤버                             | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신) |
 | `couples/{coupleId}/sideHustles/{uid}/**`                 | `uid == request.auth.uid` (본인만)         | `uid == request.auth.uid` (본인만)         |
+| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함) | **v1 Phase 2**: 클라이언트 쓰기 불가 (읽기 전용). Phase 3에서 user 생성 규칙, Phase 4에서 본인 삭제 + 서버측 상태 변경 추가. scraped 생성은 영구적으로 Admin SDK만. |
+| `communityPosts/{postId}/reports/{uid}` *(Phase 4)*       | 본인 신고만                                | 로그인 유저가 본인 uid 문서만 생성(중복 신고 차단)                                                                                                                                                            |
 
 ---
 
@@ -377,3 +428,6 @@ type SavingsAccount = {
 | forexTrades (v1.1) | `executedAt DESC`                   | 본인 거래 최신순 (sideHustles 하위라 coupleId·uid는 경로로 결정됨) |
 | positions (v1.1)   | `updatedAt DESC`                    | 본인 포지션 최신순 |
 | savings (v1.1)     | `maturesAt ASC`                     | 만기일 빠른 순     |
+| communityPosts     | `status ASC`, `publishedAt DESC`    | 피드(승인 글 최신순) |
+| communityPosts     | `status ASC`, `createdAt DESC`      | admin 승인 대기 큐 (Phase 4) |
+| communityPosts     | `status ASC`, `reportCount DESC`    | admin 신고 검토 (Phase 4) |

@@ -88,7 +88,15 @@
 /outer/forex/[currency]      → 통화별 환율 차트 + AI 전망
 /outer/investment            → (v1: placeholder, v1.1: 포지션 관리)
 /outer/savings               → (v1: placeholder, v1.1: 적금 트래커)
+
+# 커뮤니티 (전역 공유 — 커플 격리 예외)
+/community                   → 신혼부부 공개 피드 (유저 글 + 스크래핑 링크 혼합)
+/community/[id]              → 유저 글 상세
+/community/new               → 글쓰기 (bottom sheet)
+/community/admin             → 모더레이션 (admin 전용)
 ```
+
+> **커뮤니티**는 우리집·재테크와 달리 커플 단위로 격리되지 않는 **전역 공유 공간**이다. 데이터는 최상위 `communityPosts/*`에 저장되고 모든 로그인 유저에게 공개된다. 정의·경계는 `08-spaces.md`, 페이지 명세는 `pages/community/community-feed.md` 참고.
 
 > **기존 경로 처리**: 출시 전 단계이므로 기존 경로(`/photos`, `/cashbook`, `/investment/*`)는 redirect 없이 새 경로로 완전 대체한다. 내부 링크·테스트 경로를 모두 새 prefix 기준으로 갱신한다.
 

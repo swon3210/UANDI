@@ -5,8 +5,8 @@ import type { NextRequest } from 'next/server';
 // 값: 'with_couple' | 'no_couple' | (없음 = 미인증 또는 첫 방문)
 const AUTH_COOKIE = 'uandi-auth';
 
-const PROTECTED_ROUTES = ['/inner', '/outer', '/settings'];
-const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/settings'];
+const PROTECTED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
+const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
