@@ -158,23 +158,30 @@ export type CashbookDisplaySettings = {
 
 // ── 재테크 자산 배분 목표 비율 (개인 소유) ──
 // 저장 경로: couples/{coupleId}/sideHustles/{uid}/config/assetAllocation
-// 본인만 읽기/쓰기 (재테크 sideHustles 규칙 그대로 적용). 세 값의 합은 100이어야 한다.
+// 본인만 읽기/쓰기 (재테크 sideHustles 규칙 그대로 적용). 모든 값의 합은 100이어야 한다.
 export type AssetAllocationRatio = {
   uid: string;
   coupleId: string;
-  cash: number; // 현금 % (0~100 정수)
   savings: number; // 예적금 % (0~100 정수)
-  investment: number; // 투자 % (0~100 정수)
+  stocks: number; // 주식 % (0~100 정수)
+  realEstate: number; // 부동산 % (0~100 정수)
+  crypto: number; // 코인 % (0~100 정수)
+  forex: number; // 외환 % (0~100 정수)
   updatedAt: Timestamp;
 };
 
 // 자산 배분 비율 입력값 (합계 100 강제 전, UI/서비스 공용)
-export type AssetAllocationInput = Pick<AssetAllocationRatio, 'cash' | 'savings' | 'investment'>;
+export type AssetAllocationInput = Pick<
+  AssetAllocationRatio,
+  'savings' | 'stocks' | 'realEstate' | 'crypto' | 'forex'
+>;
 
 export const DEFAULT_ASSET_ALLOCATION: AssetAllocationInput = {
-  cash: 10,
-  savings: 50,
-  investment: 40,
+  savings: 30,
+  stocks: 30,
+  realEstate: 25,
+  crypto: 5,
+  forex: 10,
 };
 
 // ── 커뮤니티 (전역 공유 공간 — couples/ 격리 예외) ──

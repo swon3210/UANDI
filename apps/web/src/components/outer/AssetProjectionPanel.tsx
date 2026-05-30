@@ -11,18 +11,26 @@ import {
 type Ratio = Record<AssetBucketKey, number>;
 
 type AssetProjectionPanelProps = {
-  /** 현재(라이브) 현금/예적금/투자 비율(%) */
+  /** 현재(라이브) 예적금/주식/부동산/코인/외환 비율(%) */
   ratio: Ratio;
 };
 
 const RETURN_FIELDS: { key: AssetBucketKey; label: string; dotClass: string }[] = [
-  { key: 'cash', label: '현금', dotClass: 'bg-sky-500' },
   { key: 'savings', label: '예적금', dotClass: 'bg-emerald-500' },
-  { key: 'investment', label: '투자', dotClass: 'bg-indigo-500' },
+  { key: 'stocks', label: '주식', dotClass: 'bg-indigo-500' },
+  { key: 'realEstate', label: '부동산', dotClass: 'bg-amber-500' },
+  { key: 'crypto', label: '코인', dotClass: 'bg-fuchsia-500' },
+  { key: 'forex', label: '외환', dotClass: 'bg-sky-500' },
 ];
 
-// 기본 연 기대수익률(%) — 현금은 사실상 무이자
-const DEFAULT_RETURNS: Ratio = { cash: 0, savings: 3.5, investment: 7 };
+// 기본 연 기대수익률(%) — 자산군별 보수적 추정치
+const DEFAULT_RETURNS: Ratio = {
+  savings: 3.5,
+  stocks: 7,
+  realEstate: 4,
+  crypto: 10,
+  forex: 2,
+};
 
 function formatKrw(n: number): string {
   return `₩${Math.round(n).toLocaleString('ko-KR')}`;
@@ -45,9 +53,11 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
     monthlyContributionKrw,
     years,
     annualReturns: {
-      cash: returns.cash / 100,
       savings: returns.savings / 100,
-      investment: returns.investment / 100,
+      stocks: returns.stocks / 100,
+      realEstate: returns.realEstate / 100,
+      crypto: returns.crypto / 100,
+      forex: returns.forex / 100,
     },
   };
 

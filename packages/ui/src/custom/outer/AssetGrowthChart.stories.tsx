@@ -10,16 +10,18 @@ const meta: Meta<typeof AssetGrowthChart> = {
 export default meta;
 type Story = StoryObj<typeof AssetGrowthChart>;
 
-// 현금 10 / 예적금 50 / 투자 40, 월 100만 납입, 10년 추정 느낌의 샘플
+// 예적금 30 / 주식 30 / 부동산 25 / 코인 5 / 외환 10, 월 100만 납입, 10년 추정 느낌의 샘플
 function sample(years: number): AssetGrowthPoint[] {
   const data: AssetGrowthPoint[] = [];
   for (let year = 0; year <= years; year++) {
     const months = year * 12;
     data.push({
       year,
-      cash: Math.round(100_000 * months),
-      savings: Math.round(500_000 * months * 1.03),
-      investment: Math.round(400_000 * months * 1.07),
+      savings: Math.round(300_000 * months * 1.035),
+      stocks: Math.round(300_000 * months * 1.07),
+      realEstate: Math.round(250_000 * months * 1.04),
+      crypto: Math.round(50_000 * months * 1.1),
+      forex: Math.round(100_000 * months * 1.02),
     });
   }
   return data;
@@ -44,7 +46,9 @@ export const ShortHorizon: Story = {
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
-      <AssetGrowthChart data={[{ year: 0, cash: 0, savings: 0, investment: 0 }]} />
+      <AssetGrowthChart
+        data={[{ year: 0, savings: 0, stocks: 0, realEstate: 0, crypto: 0, forex: 0 }]}
+      />
     </div>
   ),
 };
