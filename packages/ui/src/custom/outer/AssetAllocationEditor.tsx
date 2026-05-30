@@ -5,10 +5,10 @@ import { Label } from '../../components/label';
 import { Slider } from '../../components/slider';
 import { cn } from '../../lib/utils';
 
-export type AssetAllocationBucket = 'deposit' | 'savings' | 'investment';
+export type AssetAllocationBucket = 'cash' | 'savings' | 'investment';
 
 export type AssetAllocationValue = {
-  deposit: number;
+  cash: number;
   savings: number;
   investment: number;
 };
@@ -22,8 +22,8 @@ export type AssetAllocationEditorProps = {
 };
 
 const BUCKETS: { key: AssetAllocationBucket; label: string; barClass: string }[] = [
-  { key: 'deposit', label: '예금', barClass: 'bg-sky-500' },
-  { key: 'savings', label: '적금', barClass: 'bg-emerald-500' },
+  { key: 'cash', label: '현금', barClass: 'bg-sky-500' },
+  { key: 'savings', label: '예적금', barClass: 'bg-emerald-500' },
   { key: 'investment', label: '투자', barClass: 'bg-indigo-500' },
 ];
 
@@ -36,7 +36,7 @@ export function AssetAllocationEditor({
   isSaving = false,
   className,
 }: AssetAllocationEditorProps) {
-  const total = value.deposit + value.savings + value.investment;
+  const total = value.cash + value.savings + value.investment;
   const isValid = total === 100;
 
   const handleSliderChange = (key: AssetAllocationBucket, next: number) => {

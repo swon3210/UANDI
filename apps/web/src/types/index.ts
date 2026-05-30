@@ -162,19 +162,19 @@ export type CashbookDisplaySettings = {
 export type AssetAllocationRatio = {
   uid: string;
   coupleId: string;
-  deposit: number; // 예금 % (0~100 정수)
-  savings: number; // 적금 % (0~100 정수)
+  cash: number; // 현금 % (0~100 정수)
+  savings: number; // 예적금 % (0~100 정수)
   investment: number; // 투자 % (0~100 정수)
   updatedAt: Timestamp;
 };
 
 // 자산 배분 비율 입력값 (합계 100 강제 전, UI/서비스 공용)
-export type AssetAllocationInput = Pick<AssetAllocationRatio, 'deposit' | 'savings' | 'investment'>;
+export type AssetAllocationInput = Pick<AssetAllocationRatio, 'cash' | 'savings' | 'investment'>;
 
 export const DEFAULT_ASSET_ALLOCATION: AssetAllocationInput = {
-  deposit: 40,
-  savings: 30,
-  investment: 30,
+  cash: 10,
+  savings: 50,
+  investment: 40,
 };
 
 // ── 커뮤니티 (전역 공유 공간 — couples/ 격리 예외) ──

@@ -1,15 +1,15 @@
 // 재테크 자산 배분 비율 기반 미래 자산 추이 추정
 //
 // 가정:
-// - 매달 `monthlyContributionKrw`를 예금/적금/투자 비율대로 나눠 납입한다.
+// - 매달 `monthlyContributionKrw`를 현금/예적금/투자 비율대로 나눠 납입한다.
 // - 시작 자산 `initialAssetKrw`도 동일 비율로 배분돼 있다고 본다.
 // - 각 항목은 연 기대수익률(annualReturns)로 "월복리" 적립된다.
 // - 납입은 매월 말 이뤄진다(기말 연금).
 
-export type AssetBucketKey = 'deposit' | 'savings' | 'investment';
+export type AssetBucketKey = 'cash' | 'savings' | 'investment';
 
 export type AssetProjectionParams = {
-  /** 예금/적금/투자 비율(%) — 합 100 가정. 합이 0이면 빈 결과. */
+  /** 현금/예적금/투자 비율(%) — 합 100 가정. 합이 0이면 빈 결과. */
   ratio: Record<AssetBucketKey, number>;
   initialAssetKrw: number;
   monthlyContributionKrw: number;
@@ -21,13 +21,13 @@ export type AssetProjectionParams = {
 
 export type AssetProjectionPoint = {
   year: number;
-  deposit: number;
+  cash: number;
   savings: number;
   investment: number;
   total: number;
 };
 
-const BUCKETS: AssetBucketKey[] = ['deposit', 'savings', 'investment'];
+const BUCKETS: AssetBucketKey[] = ['cash', 'savings', 'investment'];
 
 // 월복리 + 기말 연금 미래가치. months=0이면 원금만 반환.
 function futureValue(
@@ -64,13 +64,13 @@ export function projectAssetGrowth(params: AssetProjectionParams): AssetProjecti
     const values = perBucket.map((pb) =>
       Math.round(futureValue(pb.principal, pb.monthly, pb.monthlyRate, months))
     );
-    const [deposit, savings, investment] = values;
+    const [cash, savings, investment] = values;
     points.push({
       year,
-      deposit,
+      cash,
       savings,
       investment,
-      total: deposit + savings + investment,
+      total: cash + savings + investment,
     });
   }
   return points;
