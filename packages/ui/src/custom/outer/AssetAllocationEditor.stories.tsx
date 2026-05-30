@@ -24,7 +24,7 @@ function Wrapper({ initial, isSaving }: { initial: AssetAllocationValue; isSavin
       />
       {saved && (
         <p className="text-xs text-muted-foreground">
-          저장됨: 예금 {saved.deposit}% / 적금 {saved.savings}% / 투자 {saved.investment}%
+          저장됨: 현금 {saved.cash}% / 예적금 {saved.savings}% / 투자 {saved.investment}%
         </p>
       )}
     </div>
@@ -33,31 +33,31 @@ function Wrapper({ initial, isSaving }: { initial: AssetAllocationValue; isSavin
 
 // 기본 상태 — 합계 100%
 export const Default: Story = {
-  render: () => <Wrapper initial={{ deposit: 40, savings: 30, investment: 30 }} />,
+  render: () => <Wrapper initial={{ cash: 10, savings: 50, investment: 40 }} />,
 };
 
 // 합계가 100%가 아니라 저장 불가
 export const InvalidTotal: Story = {
-  render: () => <Wrapper initial={{ deposit: 50, savings: 30, investment: 30 }} />,
+  render: () => <Wrapper initial={{ cash: 30, savings: 50, investment: 30 }} />,
 };
 
 // 한 항목에 몰빵 (엣지 케이스)
 export const AllInvestment: Story = {
-  render: () => <Wrapper initial={{ deposit: 0, savings: 0, investment: 100 }} />,
+  render: () => <Wrapper initial={{ cash: 0, savings: 0, investment: 100 }} />,
 };
 
 // 저장 중 (버튼 비활성 + 라벨 변경)
 export const Saving: Story = {
-  render: () => <Wrapper initial={{ deposit: 40, savings: 30, investment: 30 }} isSaving />,
+  render: () => <Wrapper initial={{ cash: 10, savings: 50, investment: 40 }} isSaving />,
 };
 
 // onSave 없이 — 읽기/편집만 (저장 버튼 미노출)
 export const WithoutSaveButton: Story = {
   render: function NoSave() {
     const [value, setValue] = useState<AssetAllocationValue>({
-      deposit: 40,
-      savings: 30,
-      investment: 30,
+      cash: 10,
+      savings: 50,
+      investment: 40,
     });
     return (
       <div className="mx-auto max-w-md">

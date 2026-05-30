@@ -12,7 +12,7 @@ import {
 
 export type AssetGrowthPoint = {
   year: number;
-  deposit: number;
+  cash: number;
   savings: number;
   investment: number;
 };
@@ -24,8 +24,8 @@ export type AssetGrowthChartProps = {
 
 // AssetAllocationEditor의 버킷 색상과 일치 (sky / emerald / indigo)
 const CHART_CONFIG = {
-  deposit: { label: '예금', color: '#0ea5e9' },
-  savings: { label: '적금', color: '#10b981' },
+  cash: { label: '현금', color: '#0ea5e9' },
+  savings: { label: '예적금', color: '#10b981' },
   investment: { label: '투자', color: '#6366f1' },
 } satisfies ChartConfig;
 
@@ -75,7 +75,7 @@ export function AssetGrowthChart({ data, className }: AssetGrowthChartProps) {
           }
         />
         <ChartLegend content={<ChartLegendContent />} />
-        {(['deposit', 'savings', 'investment'] as const).map((key) => (
+        {(['cash', 'savings', 'investment'] as const).map((key) => (
           <Area
             key={key}
             type="monotone"
