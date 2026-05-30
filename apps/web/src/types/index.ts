@@ -155,3 +155,44 @@ export type CashbookDisplaySettings = {
   backgroundImageUrl: string | null;
   updatedAt: Timestamp;
 };
+
+// ── 커뮤니티 (전역 공유 공간 — couples/ 격리 예외) ──
+// 자세히는 docs/pages/community/community-feed.md, docs/08-spaces.md 참고.
+
+export type CommunityPostType = 'user' | 'scraped';
+export type CommunityPostStatus = 'published' | 'pending' | 'hidden';
+
+export type CommunityPostAuthor = {
+  uid: string;
+  coupleId: string | null;
+  displayName: string; // 작성 시점 프로필명 스냅샷
+  photoURL: string | null;
+};
+
+export type CommunityPostSource = {
+  siteName: string;
+  url: string; // 원문 링크(링크아웃 대상)
+  ogImageUrl: string | null; // OG 이미지 URL — 우리 서버에 복제하지 않음
+  originPublishedAt: Timestamp | null;
+  sourceId: string; // 정규화 URL의 해시 — 중복 수집 방지 키
+};
+
+export type CommunityPost = {
+  id: string;
+  type: CommunityPostType;
+  status: CommunityPostStatus;
+
+  // 공통 표시
+  title: string; // user: 빈 문자열 허용 / scraped: 원문 제목
+  body: string; // user: 본문 / scraped: 짧은 발췌 또는 ''
+  createdAt: Timestamp;
+  publishedAt: Timestamp | null; // 노출 시각(정렬 키). pending이면 null
+  reportCount: number; // 트리거로 갱신 (Phase 4)
+
+  // type === 'user' 전용
+  author?: CommunityPostAuthor;
+  imageUrl?: string | null;
+
+  // type === 'scraped' 전용
+  source?: CommunityPostSource;
+};

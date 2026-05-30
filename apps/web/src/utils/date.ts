@@ -1,8 +1,16 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import 'dayjs/locale/ko';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import type { Timestamp } from 'firebase/firestore';
 
 dayjs.locale('ko');
+dayjs.extend(relativeTime);
+
+export function formatRelativeTime(date: Date | Timestamp | null | undefined): string {
+  if (!date) return '';
+  const d = 'toDate' in date ? date.toDate() : date;
+  return dayjs(d).fromNow();
+}
 
 export function formatDate(date: Date | Timestamp): string {
   const d = 'toDate' in date ? date.toDate() : date;

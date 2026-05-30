@@ -18,6 +18,16 @@ export type {
   AppSidebarProps,
 } from './custom/AppSidebar';
 
+// 커뮤니티 카드 (프레젠테이션 전용 — 도메인 타입과 디커플)
+export { PostAuthor } from './custom/community/PostAuthor';
+export type { PostAuthorProps } from './custom/community/PostAuthor';
+export { UserPostCard } from './custom/community/UserPostCard';
+export type { UserPostCardProps } from './custom/community/UserPostCard';
+export { LinkPostCard } from './custom/community/LinkPostCard';
+export type { LinkPostCardProps } from './custom/community/LinkPostCard';
+export { CommunityPostCard } from './custom/community/CommunityPostCard';
+export type { CommunityPostCardProps } from './custom/community/CommunityPostCard';
+
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';
