@@ -134,7 +134,15 @@ shadcn은 컴포넌트 소스를 직접 소유하므로, 브랜드에 맞게 자
 
 ### 공간별 톤 전환
 
-AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"` 속성을 적용합니다. CSS는 `[data-space='outer']` 셀렉터로 `--primary` / `--accent` / `--ring` 등을 재테크 톤으로 일괄 오버라이드합니다. 컴포넌트는 별도 prop 없이 시맨틱 토큰만 따르면 자동으로 해당 공간 톤이 적용됩니다.
+AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer" | "community"` 속성을 적용합니다. CSS는 `[data-space='outer']` / `[data-space='community']` 셀렉터로 `--primary` / `--accent` / `--ring` 등을 해당 공간 톤으로 일괄 오버라이드합니다. 컴포넌트는 별도 prop 없이 시맨틱 토큰만 따르면 자동으로 해당 공간 톤이 적용됩니다.
+
+| 공간 | `--primary` | 토큰 |
+| ---- | ----------- | ---- |
+| 우리집(inner) | coral-400 `hsl(4 74% 69%)` | 기본 |
+| 재테크(outer) | indigo-500 `hsl(231 48% 48%)` | `--outer-primary` |
+| 커뮤니티(community) | violet `hsl(262 52% 55%)` | `--community-primary` |
+
+> 커뮤니티는 우리집·재테크와 구분되는 violet accent를 사용한다. 전역 공유 공간이라는 정체성(둘만의 프라이빗 톤이 아님)을 색으로 구분한다. 공간 정의는 `docs/08-spaces.md` 참고.
 
 ```tsx
 /* 컴포넌트 사용 예 */

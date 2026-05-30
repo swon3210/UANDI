@@ -22,6 +22,18 @@ UANDI는 두 개의 공간으로 나뉜다. 새 페이지·기능·도메인 모
 - **라우팅 prefix**: `/outer/*`
 - **톤**: Indigo accent (`hsl(231 48% 48%)` ≈ `#3F51B5`). 차분·신뢰감으로 우리집의 coral과 명확히 구분.
 
+### 💬 커뮤니티 (Community) — 전역 공유 예외
+
+- **목적**: 신혼부부가 모여 신혼 관련 이야기·유머를 함께 보는 **공개 커뮤니티**
+- **영역**: 피드(유저 글 + 스크래핑 링크 혼합)
+- **소유**: **커플 격리 없음**. 데이터는 `couples/{coupleId}/*`가 아니라 **최상위 `communityPosts/*`** 에 저장되고 모든 로그인 유저에게 공개된다. UANDI 최초의 전역(공유) 공간.
+- **라우팅 prefix**: `/community/*`
+- **톤**: Violet accent (`hsl(262 52% 55%)`). 우리집(coral)·재테크(indigo)와 구분되는 별도 accent로, "둘만의 프라이빗"이 아닌 공개 공간임을 색으로 표현.
+- **접근**: v1은 다른 공간과 동일하게 로그인 + 커플 연결 사용자에게 노출(셸 재사용). 작성자 표시·신고 등 공개 커뮤니티용 장치가 추가된다.
+- 상세 명세: `docs/pages/community/community-feed.md`.
+
+> ⚠️ **커플 격리 가정 주의**: 커뮤니티는 기존 두 공간의 커플 격리·요약문서 패턴을 의도적으로 벗어난다. 새 기능을 커뮤니티에 추가할 때 `couples/{coupleId}` 전제를 그대로 적용하지 말 것.
+
 ---
 
 ## 2. 데이터 소유 모델
@@ -83,7 +95,7 @@ couples/{coupleId}/
 
 ## 3. 라우팅 규칙
 
-- 모든 페이지는 `/inner/*` 또는 `/outer/*` 중 하나에 속한다. 예외: `/` (대시보드), `/onboarding`, `/auth/*`, `/settings/*`.
+- 모든 페이지는 `/inner/*` 또는 `/outer/*` 중 하나에 속한다. 예외: `/community/*`(전역 공유 공간), `/` (대시보드), `/onboarding`, `/auth/*`, `/settings/*`.
 - 출시 전이므로 기존 경로(`/inner/photos`, `/inner/cashbook`, `/outer/*`)는 **redirect 없이** 새 경로로 완전 대체한다. 내부 링크·E2E 테스트 경로를 모두 새 prefix 기준으로 갱신한다.
 - 페이지 내 모든 내부 링크는 새 prefix 기준으로 작성한다. 기존 경로 사용 금지.
 
@@ -129,7 +141,9 @@ couples/{coupleId}/
 | ------ | ----------------------------------------------- |
 | 우리집 | 홈(`/inner`) · 사진(`/inner/photos`) · 가계부(`/inner/cashbook`) |
 | 재테크   | 홈(`/outer`) · 환테크(`/outer/forex`) · 투자(`/outer/investment`) · 적금(`/outer/savings`) |
+| 커뮤니티 | 피드(`/community`) |
 
+- 사이드바는 세 공간을 각각 섹션으로 노출한다(우리집 · 재테크 · 커뮤니티).
 - 재테크 항목 중 투자·적금은 v1에서 placeholder 페이지로 연결
 - 설정/프로필/로그아웃 등은 사이드바 `footer` 슬롯으로 추후 추가 가능(현재 범위 외)
 
@@ -139,7 +153,8 @@ couples/{coupleId}/
 
 - **우리집**: 기존 coral 유지 (`--primary: hsl(4 74% 69%)`). 따뜻함·친밀함.
 - **재테크**: Indigo accent (`--primary: hsl(231 48% 48%)`). 차분·신뢰.
-- **공간 톤 적용 방식**: AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"` 속성을 적용한다. CSS에서 `[data-space='outer'] { --primary: var(--outer-primary); ... }`로 시맨틱 토큰을 일괄 오버라이드해, 하위 컴포넌트는 별도 prop 없이 자동으로 해당 공간 톤을 따른다.
+- **커뮤니티**: Violet accent (`--primary: hsl(262 52% 55%)`). 공개 공간 정체성.
+- **공간 톤 적용 방식**: AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer" | "community"` 속성을 적용한다. CSS에서 `[data-space='outer'] { --primary: var(--outer-primary); ... }` / `[data-space='community'] { --primary: var(--community-primary); ... }`로 시맨틱 토큰을 일괄 오버라이드해, 하위 컴포넌트는 별도 prop 없이 자동으로 해당 공간 톤을 따른다.
 - **로고는 단일 유지**. 공간 정체성은 사이드바의 공간 섹션 라벨·아이콘과 톤 색으로 표현하고, 브랜드 로고 자체는 분기하지 않는다 (브랜드 일관성).
 - 헤더 active 색, Button primary, ring 등 시맨틱 토큰을 통해 일괄 적용. 배경·텍스트 등 페이지 골격은 두 공간이 동일하게 유지해 같은 앱임을 명확히 한다.
 

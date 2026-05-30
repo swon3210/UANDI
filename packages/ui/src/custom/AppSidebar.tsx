@@ -4,7 +4,7 @@ import { Logo } from '../Logo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../components/sheet';
 import { cn } from '../lib/utils';
 
-export type Space = 'inner' | 'outer';
+export type Space = 'inner' | 'outer' | 'community';
 
 export type SidebarLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;

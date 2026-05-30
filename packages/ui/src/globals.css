@@ -198,6 +198,12 @@
   --outer-primary-foreground: 0 0% 100%;
   --outer-accent: 231 100% 96%; /* indigo-50 */
   --outer-accent-foreground: 232 54% 41%; /* indigo-700 */
+
+  /* 커뮤니티 공간 토큰 — [data-space='community']에서 사용 (violet) */
+  --community-primary: 262 52% 55%; /* violet */
+  --community-primary-foreground: 0 0% 100%;
+  --community-accent: 262 100% 97%; /* violet 틴트 */
+  --community-accent-foreground: 262 48% 40%; /* violet 다크 */
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -209,6 +215,17 @@
   --accent: var(--outer-accent);
   --accent-foreground: var(--outer-accent-foreground);
   --ring: var(--outer-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   커뮤니티 공간 톤 — AppShell이 root에 data-space="community" 적용 시 자동 전환
+   ───────────────────────────────────────────────────────────────── */
+[data-space='community'] {
+  --primary: var(--community-primary);
+  --primary-foreground: var(--community-primary-foreground);
+  --accent: var(--community-accent);
+  --accent-foreground: var(--community-accent-foreground);
+  --ring: var(--community-primary);
 }
 
 .dark {

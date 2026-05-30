@@ -17,7 +17,7 @@ export async function createTestUser(email: string, password: string): Promise<s
     `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake-api-key`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({ email, password, returnSecureToken: true }),
     }
   );
@@ -36,7 +36,7 @@ export async function seedUserDocument(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           uid: { stringValue: uid },
@@ -75,7 +75,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: coupleId },
@@ -109,7 +109,7 @@ export async function seedPhoto(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/photos/${photoId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: photoId },
@@ -153,7 +153,7 @@ export async function seedFolder(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/folders/${folderId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: folderId },
@@ -196,7 +196,7 @@ export async function seedCashbookCategory(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookCategories/${categoryId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: categoryId },
@@ -281,7 +281,7 @@ export async function seedAnnualPlan(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: planId },
@@ -317,7 +317,7 @@ export async function seedAnnualPlanItem(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/items/${itemId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           id: { stringValue: itemId },
@@ -377,7 +377,7 @@ export async function seedCashbookEntry(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({ fields }),
     }
   );
@@ -400,7 +400,7 @@ export async function seedNotificationSettings(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/settings/notifications`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
       body: JSON.stringify({
         fields: {
           coupleId: { stringValue: options.coupleId },

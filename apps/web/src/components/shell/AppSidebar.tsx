@@ -9,8 +9,10 @@ import {
   Home,
   Image as ImageIcon,
   LayoutDashboard,
+  MessageCircle,
   PiggyBank,
   TrendingUp,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { AppSidebar as AppSidebarUI, type SidebarSection, type Space } from '@uandi/ui';
@@ -43,11 +45,21 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
       { id: 'savings', label: '적금', href: '/outer/savings', Icon: PiggyBank },
     ],
   },
+  {
+    id: 'community',
+    label: '커뮤니티',
+    Icon: Users,
+    items: [{ id: 'community-feed', label: '피드', href: '/community', Icon: MessageCircle }],
+  },
 ];
 
 function AppSidebarSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname();
-  const space: Space = pathname.startsWith('/outer') ? 'outer' : 'inner';
+  const space: Space = pathname.startsWith('/community')
+    ? 'community'
+    : pathname.startsWith('/outer')
+      ? 'outer'
+      : 'inner';
 
   return (
     <AppSidebarUI
