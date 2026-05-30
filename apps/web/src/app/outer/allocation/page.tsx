@@ -40,12 +40,14 @@ export default function OuterAllocationPage() {
   const { data, isLoading } = useAssetAllocation(coupleId, uid);
   const updateMutation = useUpdateAssetAllocation(coupleId, uid);
 
-  // 구버전(예금/적금) 문서가 남아 있을 수 있어 누락 필드는 기본값으로 보정한다
+  // 구버전(현금/예적금/투자) 문서가 남아 있을 수 있어 누락 필드는 기본값으로 보정한다
   const initial: AssetAllocationValue = data
     ? {
-        cash: data.cash ?? DEFAULT_ASSET_ALLOCATION.cash,
         savings: data.savings ?? DEFAULT_ASSET_ALLOCATION.savings,
-        investment: data.investment ?? DEFAULT_ASSET_ALLOCATION.investment,
+        stocks: data.stocks ?? DEFAULT_ASSET_ALLOCATION.stocks,
+        realEstate: data.realEstate ?? DEFAULT_ASSET_ALLOCATION.realEstate,
+        crypto: data.crypto ?? DEFAULT_ASSET_ALLOCATION.crypto,
+        forex: data.forex ?? DEFAULT_ASSET_ALLOCATION.forex,
       }
     : DEFAULT_ASSET_ALLOCATION;
 
@@ -54,8 +56,8 @@ export default function OuterAllocationPage() {
       <PageHeader data-testid="outer-allocation-header" title="자산 배분" />
       <main className="mx-auto max-w-md px-4 pb-20 pt-4">
         <p className="mb-6 text-sm text-muted-foreground">
-          현금·예적금·투자에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 세 항목의 합이 100%가
-          되어야 저장할 수 있어요.
+          예적금·주식·부동산·코인·외환에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 모든 항목의
+          합이 100%가 되어야 저장할 수 있어요.
         </p>
         {isLoading || !uid || !coupleId ? (
           <FullScreenSpinner />

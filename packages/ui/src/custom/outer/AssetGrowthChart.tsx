@@ -12,9 +12,11 @@ import {
 
 export type AssetGrowthPoint = {
   year: number;
-  cash: number;
   savings: number;
-  investment: number;
+  stocks: number;
+  realEstate: number;
+  crypto: number;
+  forex: number;
 };
 
 export type AssetGrowthChartProps = {
@@ -22,11 +24,13 @@ export type AssetGrowthChartProps = {
   className?: string;
 };
 
-// AssetAllocationEditor의 버킷 색상과 일치 (sky / emerald / indigo)
+// AssetAllocationEditor의 버킷 색상과 일치 (emerald / indigo / amber / fuchsia / sky)
 const CHART_CONFIG = {
-  cash: { label: '현금', color: '#0ea5e9' },
   savings: { label: '예적금', color: '#10b981' },
-  investment: { label: '투자', color: '#6366f1' },
+  stocks: { label: '주식', color: '#6366f1' },
+  realEstate: { label: '부동산', color: '#f59e0b' },
+  crypto: { label: '코인', color: '#d946ef' },
+  forex: { label: '외환', color: '#0ea5e9' },
 } satisfies ChartConfig;
 
 function formatCompactKrw(n: number): string {
@@ -75,7 +79,7 @@ export function AssetGrowthChart({ data, className }: AssetGrowthChartProps) {
           }
         />
         <ChartLegend content={<ChartLegendContent />} />
-        {(['cash', 'savings', 'investment'] as const).map((key) => (
+        {(['savings', 'stocks', 'realEstate', 'crypto', 'forex'] as const).map((key) => (
           <Area
             key={key}
             type="monotone"

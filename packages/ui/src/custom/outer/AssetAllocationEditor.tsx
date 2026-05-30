@@ -5,12 +5,14 @@ import { Label } from '../../components/label';
 import { Slider } from '../../components/slider';
 import { cn } from '../../lib/utils';
 
-export type AssetAllocationBucket = 'cash' | 'savings' | 'investment';
+export type AssetAllocationBucket = 'savings' | 'stocks' | 'realEstate' | 'crypto' | 'forex';
 
 export type AssetAllocationValue = {
-  cash: number;
   savings: number;
-  investment: number;
+  stocks: number;
+  realEstate: number;
+  crypto: number;
+  forex: number;
 };
 
 export type AssetAllocationEditorProps = {
@@ -22,9 +24,11 @@ export type AssetAllocationEditorProps = {
 };
 
 const BUCKETS: { key: AssetAllocationBucket; label: string; barClass: string }[] = [
-  { key: 'cash', label: '현금', barClass: 'bg-sky-500' },
   { key: 'savings', label: '예적금', barClass: 'bg-emerald-500' },
-  { key: 'investment', label: '투자', barClass: 'bg-indigo-500' },
+  { key: 'stocks', label: '주식', barClass: 'bg-indigo-500' },
+  { key: 'realEstate', label: '부동산', barClass: 'bg-amber-500' },
+  { key: 'crypto', label: '코인', barClass: 'bg-fuchsia-500' },
+  { key: 'forex', label: '외환', barClass: 'bg-sky-500' },
 ];
 
 const STEP = 5;
@@ -36,7 +40,7 @@ export function AssetAllocationEditor({
   isSaving = false,
   className,
 }: AssetAllocationEditorProps) {
-  const total = value.cash + value.savings + value.investment;
+  const total = BUCKETS.reduce((sum, { key }) => sum + value[key], 0);
   const isValid = total === 100;
 
   const handleSliderChange = (key: AssetAllocationBucket, next: number) => {
@@ -103,7 +107,7 @@ export function AssetAllocationEditor({
         </div>
         {!isValid && (
           <p className="text-xs text-destructive" data-testid="allocation-total-warning">
-            세 항목의 합이 100%가 되어야 저장할 수 있어요.
+            모든 항목의 합이 100%가 되어야 저장할 수 있어요.
           </p>
         )}
         {onSave && (

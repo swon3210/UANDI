@@ -3,7 +3,7 @@ import { test } from '../fixtures/auth.fixture';
 import { seedAssetAllocation } from '../helpers/emulator';
 import { AssetAllocationPage } from '../page-objects/AssetAllocationPage';
 
-test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => {
+test.describe('재테크 자산 배분 비율 (예적금/주식/부동산/코인/외환)', () => {
   test('대시보드의 자산 배분 카드를 누르면 /outer/allocation 으로 이동한다', async ({
     authedPage,
   }) => {
@@ -16,15 +16,17 @@ test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => 
     await expect(authedPage.getByTestId('asset-allocation-editor')).toBeVisible();
   });
 
-  test('설정값이 없으면 기본 비율(10/50/40)로 합계 100%, 저장 버튼이 활성화된다', async ({
+  test('설정값이 없으면 기본 비율(30/30/25/5/10)로 합계 100%, 저장 버튼이 활성화된다', async ({
     authedPage,
   }) => {
     const allocation = new AssetAllocationPage(authedPage);
     await allocation.goto();
 
-    await expect(allocation.value('cash')).toHaveText('10%');
-    await expect(allocation.value('savings')).toHaveText('50%');
-    await expect(allocation.value('investment')).toHaveText('40%');
+    await expect(allocation.value('savings')).toHaveText('30%');
+    await expect(allocation.value('stocks')).toHaveText('30%');
+    await expect(allocation.value('realEstate')).toHaveText('25%');
+    await expect(allocation.value('crypto')).toHaveText('5%');
+    await expect(allocation.value('forex')).toHaveText('10%');
     await expect(allocation.total).toHaveText('100%');
     await expect(allocation.saveButton).toBeEnabled();
     await expect(allocation.totalWarning).toBeHidden();
@@ -32,14 +34,22 @@ test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => 
 
   test('저장된 비율이 있으면 그 값으로 렌더링된다', async ({ authedContext }) => {
     const { page, coupleId, uid } = authedContext;
-    await seedAssetAllocation(coupleId, uid, { cash: 20, savings: 50, investment: 30 });
+    await seedAssetAllocation(coupleId, uid, {
+      savings: 40,
+      stocks: 20,
+      realEstate: 20,
+      crypto: 10,
+      forex: 10,
+    });
 
     const allocation = new AssetAllocationPage(page);
     await allocation.goto();
 
-    await expect(allocation.value('cash')).toHaveText('20%');
-    await expect(allocation.value('savings')).toHaveText('50%');
-    await expect(allocation.value('investment')).toHaveText('30%');
+    await expect(allocation.value('savings')).toHaveText('40%');
+    await expect(allocation.value('stocks')).toHaveText('20%');
+    await expect(allocation.value('realEstate')).toHaveText('20%');
+    await expect(allocation.value('crypto')).toHaveText('10%');
+    await expect(allocation.value('forex')).toHaveText('10%');
     await expect(allocation.total).toHaveText('100%');
   });
 
@@ -47,9 +57,9 @@ test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => 
     const allocation = new AssetAllocationPage(authedPage);
     await allocation.goto();
 
-    // 현금 10 → 15 (합계 105)
-    await allocation.nudge('cash', 'up');
-    await expect(allocation.value('cash')).toHaveText('15%');
+    // 코인 5 → 10 (합계 105)
+    await allocation.nudge('crypto', 'up');
+    await expect(allocation.value('crypto')).toHaveText('10%');
     await expect(allocation.total).toHaveText('105%');
     await expect(allocation.totalWarning).toBeVisible();
     await expect(allocation.saveButton).toBeDisabled();
@@ -61,11 +71,11 @@ test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => 
     const allocation = new AssetAllocationPage(authedPage);
     await allocation.goto();
 
-    // 현금 10 → 20, 투자 40 → 30 (합계 100 유지)
-    await allocation.nudge('cash', 'up', 2);
-    await allocation.nudge('investment', 'down', 2);
-    await expect(allocation.value('cash')).toHaveText('20%');
-    await expect(allocation.value('investment')).toHaveText('30%');
+    // 코인 5 → 10, 외환 10 → 5 (합계 100 유지)
+    await allocation.nudge('crypto', 'up');
+    await allocation.nudge('forex', 'down');
+    await expect(allocation.value('crypto')).toHaveText('10%');
+    await expect(allocation.value('forex')).toHaveText('5%');
     await expect(allocation.total).toHaveText('100%');
 
     await allocation.save();
@@ -74,9 +84,9 @@ test.describe('재테크 자산 배분 비율 (현금/예적금/투자)', () => 
     });
 
     await authedPage.reload();
-    await expect(allocation.value('cash')).toHaveText('20%');
-    await expect(allocation.value('savings')).toHaveText('50%');
-    await expect(allocation.value('investment')).toHaveText('30%');
+    await expect(allocation.value('savings')).toHaveText('30%');
+    await expect(allocation.value('crypto')).toHaveText('10%');
+    await expect(allocation.value('forex')).toHaveText('5%');
   });
 });
 

@@ -81,7 +81,7 @@ export function OuterDashboard() {
             </span>
             <div className="flex-1">
               <p className="text-base font-semibold">자산 배분</p>
-              <p className="text-xs text-muted-foreground">현금·예적금·투자 목표 비율 설정</p>
+              <p className="text-xs text-muted-foreground">자산군별 목표 비율 설정</p>
             </div>
           </div>
         </Link>

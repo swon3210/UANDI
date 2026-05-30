@@ -507,7 +507,13 @@ export async function seedCommunityReport(
 export async function seedAssetAllocation(
   coupleId: string,
   uid: string,
-  ratio: { cash: number; savings: number; investment: number }
+  ratio: {
+    savings: number;
+    stocks: number;
+    realEstate: number;
+    crypto: number;
+    forex: number;
+  }
 ): Promise<void> {
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/sideHustles/${uid}/config/assetAllocation`,
@@ -518,9 +524,11 @@ export async function seedAssetAllocation(
         fields: {
           uid: { stringValue: uid },
           coupleId: { stringValue: coupleId },
-          cash: { integerValue: String(ratio.cash) },
           savings: { integerValue: String(ratio.savings) },
-          investment: { integerValue: String(ratio.investment) },
+          stocks: { integerValue: String(ratio.stocks) },
+          realEstate: { integerValue: String(ratio.realEstate) },
+          crypto: { integerValue: String(ratio.crypto) },
+          forex: { integerValue: String(ratio.forex) },
           updatedAt: { timestampValue: new Date().toISOString() },
         },
       }),
