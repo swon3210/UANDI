@@ -6,6 +6,7 @@ import { AssetAllocationEditor, type AssetAllocationValue, FullScreenSpinner } f
 import { userAtom } from '@/stores/auth.store';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { useAssetAllocation, useUpdateAssetAllocation } from '@/hooks/useAssetAllocation';
+import { AssetProjectionPanel } from '@/components/outer/AssetProjectionPanel';
 import { DEFAULT_ASSET_ALLOCATION } from '@/types';
 
 type AllocationFormProps = {
@@ -15,15 +16,19 @@ type AllocationFormProps = {
 };
 
 function AllocationForm({ initial, isSaving, onSave }: AllocationFormProps) {
+  // 비율은 에디터와 미래 자산 추이 패널이 함께 공유한다 (슬라이더 조정이 그래프에 즉시 반영)
   const [value, setValue] = useState<AssetAllocationValue>(initial);
 
   return (
-    <AssetAllocationEditor
-      value={value}
-      onChange={setValue}
-      isSaving={isSaving}
-      onSave={() => onSave(value)}
-    />
+    <div className="space-y-8">
+      <AssetAllocationEditor
+        value={value}
+        onChange={setValue}
+        isSaving={isSaving}
+        onSave={() => onSave(value)}
+      />
+      <AssetProjectionPanel ratio={value} />
+    </div>
   );
 }
 

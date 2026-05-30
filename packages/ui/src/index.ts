@@ -46,6 +46,8 @@ export type {
   AssetAllocationValue,
   AssetAllocationBucket,
 } from './custom/outer/AssetAllocationEditor';
+export { AssetGrowthChart } from './custom/outer/AssetGrowthChart';
+export type { AssetGrowthChartProps, AssetGrowthPoint } from './custom/outer/AssetGrowthChart';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';

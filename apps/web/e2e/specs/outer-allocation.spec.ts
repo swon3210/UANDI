@@ -79,3 +79,33 @@ test.describe('재테크 자산 배분 비율 (예금/적금/투자)', () => {
     await expect(allocation.value('investment')).toHaveText('20%');
   });
 });
+
+test.describe('미래 자산 추이 그래프', () => {
+  const onlyDigits = (s: string | null) => Number((s ?? '').replace(/[^0-9]/g, ''));
+
+  test('자산 배분 페이지 하단에 미래 자산 추이 패널과 그래프가 표시된다', async ({
+    authedPage,
+  }) => {
+    await authedPage.goto('/outer/allocation');
+    await expect(authedPage.getByTestId('asset-projection-panel')).toBeVisible({ timeout: 10000 });
+    await expect(authedPage.getByTestId('projection-chart')).toBeVisible();
+
+    // 기본 입력(월 100만, 10년)으로 0보다 큰 예상 자산이 계산된다
+    const result = authedPage.getByTestId('projection-result');
+    await expect(result).toBeVisible();
+    expect(onlyDigits(await result.textContent())).toBeGreaterThan(0);
+  });
+
+  test('월 납입액을 늘리면 예상 자산이 증가한다', async ({ authedPage }) => {
+    await authedPage.goto('/outer/allocation');
+    const result = authedPage.getByTestId('projection-result');
+    await expect(result).toBeVisible({ timeout: 10000 });
+
+    const before = onlyDigits(await result.textContent());
+
+    const monthly = authedPage.getByTestId('projection-input-monthly');
+    await monthly.fill('3000000');
+
+    await expect.poll(async () => onlyDigits(await result.textContent())).toBeGreaterThan(before);
+  });
+});
