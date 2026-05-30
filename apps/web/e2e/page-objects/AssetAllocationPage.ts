@@ -1,6 +1,6 @@
 import { type Page, type Locator, expect } from '@playwright/test';
 
-type Bucket = 'deposit' | 'savings' | 'investment';
+type Bucket = 'cash' | 'savings' | 'investment';
 
 export class AssetAllocationPage {
   readonly page: Page;

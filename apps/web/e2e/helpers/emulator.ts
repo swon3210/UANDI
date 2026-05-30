@@ -450,9 +450,7 @@ export async function seedCommunityPost(options: SeedCommunityPostOptions): Prom
         },
       },
     };
-    fields.imageUrl = options.imageUrl
-      ? { stringValue: options.imageUrl }
-      : { nullValue: null };
+    fields.imageUrl = options.imageUrl ? { stringValue: options.imageUrl } : { nullValue: null };
   }
 
   if (options.type === 'scraped' && options.source) {
@@ -485,11 +483,31 @@ export async function seedCommunityPost(options: SeedCommunityPostOptions): Prom
   return postId;
 }
 
+export async function seedCommunityReport(
+  postId: string,
+  reporterUid: string,
+  reason: string = 'inappropriate'
+): Promise<void> {
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/communityPosts/${postId}/reports/${reporterUid}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          reason: { stringValue: reason },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
 // 재테크 자산 배분 목표 비율 (개인 소유 — sideHustles/{uid}/config/assetAllocation)
 export async function seedAssetAllocation(
   coupleId: string,
   uid: string,
-  ratio: { deposit: number; savings: number; investment: number }
+  ratio: { cash: number; savings: number; investment: number }
 ): Promise<void> {
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/sideHustles/${uid}/config/assetAllocation`,
@@ -500,10 +518,26 @@ export async function seedAssetAllocation(
         fields: {
           uid: { stringValue: uid },
           coupleId: { stringValue: coupleId },
-          deposit: { integerValue: String(ratio.deposit) },
+          cash: { integerValue: String(ratio.cash) },
           savings: { integerValue: String(ratio.savings) },
           investment: { integerValue: String(ratio.investment) },
           updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
+export async function seedAdminConfig(uid: string): Promise<void> {
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/admins/${uid}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          uid: { stringValue: uid },
+          createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
     }
