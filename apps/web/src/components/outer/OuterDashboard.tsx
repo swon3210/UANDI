@@ -3,7 +3,7 @@
 import type { ComponentType } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { PiggyBank, TrendingUp } from 'lucide-react';
+import { PieChart, PiggyBank, TrendingUp } from 'lucide-react';
 import { getDisplayRate } from '@uandi/investment-core';
 import { Badge } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
@@ -70,6 +70,21 @@ export function OuterDashboard() {
           diffPercent={usdDiffPercent}
           isLoading={usdQuery.isLoading}
         />
+        <Link
+          href="/outer/allocation"
+          data-testid="outer-allocation-entry"
+          className="block rounded-xl border border-border bg-card p-4 text-card-foreground transition-colors hover:bg-accent/40"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <PieChart size={18} />
+            </span>
+            <div className="flex-1">
+              <p className="text-base font-semibold">자산 배분</p>
+              <p className="text-xs text-muted-foreground">예금·적금·투자 목표 비율 설정</p>
+            </div>
+          </div>
+        </Link>
         <PlaceholderCard
           Icon={TrendingUp}
           title="투자"

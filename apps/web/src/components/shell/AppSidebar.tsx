@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   MessageCircle,
+  PieChart,
   PiggyBank,
   TrendingUp,
   Users,
@@ -40,6 +41,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
     Icon: Briefcase,
     items: [
       { id: 'outer-home', label: '홈', href: '/outer', Icon: LayoutDashboard },
+      { id: 'allocation', label: '자산 배분', href: '/outer/allocation', Icon: PieChart },
       { id: 'forex', label: '환테크', href: '/outer/forex', Icon: Wallet },
       { id: 'investment', label: '투자', href: '/outer/investment', Icon: TrendingUp },
       { id: 'savings', label: '적금', href: '/outer/savings', Icon: PiggyBank },
