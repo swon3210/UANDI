@@ -4,6 +4,7 @@ import {
   createTestUser,
   seedUserDocument,
   seedCoupleWithTwoMembers,
+  seedAdminConfig,
 } from '../helpers/emulator';
 
 const EMAIL_1 = 'user1@test.com';
@@ -48,6 +49,8 @@ type Fixtures = {
   authedContext: AuthContext;
   // 두 유저의 uid를 모두 제공 (업로더 구분 테스트용)
   twoUserAuthedContext: TwoUserAuthContext;
+  // 로그인한 uid를 config/admins/{uid} 문서로 admin 등록한 컨텍스트
+  adminAuthedContext: AuthContext;
 };
 
 export const test = base.extend<Fixtures>({
@@ -120,5 +123,23 @@ export const test = base.extend<Fixtures>({
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
 
     await use({ page, uid1, uid2, coupleId });
+  },
+
+  adminAuthedContext: async ({ page, context }, use) => {
+    await clearEmulatorData();
+    await context.clearCookies();
+
+    const uid1 = await createTestUser(EMAIL_1, PASSWORD);
+    const uid2 = await createTestUser(EMAIL_2, PASSWORD);
+    const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
+    await seedUserDocument(uid1, EMAIL_1, coupleId);
+    await seedUserDocument(uid2, EMAIL_2, coupleId);
+    await seedAdminConfig(uid1);
+
+    await page.goto('/');
+    await signInOnPage(page, EMAIL_1, PASSWORD);
+    await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
+
+    await use({ page, uid: uid1, coupleId });
   },
 });

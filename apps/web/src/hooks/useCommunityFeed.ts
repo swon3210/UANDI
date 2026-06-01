@@ -5,7 +5,9 @@ import {
   deleteCommunityPost,
   getCommunityFeedPage,
   getCommunityPost,
+  reportCommunityPost,
   type CreateCommunityPostInput,
+  type CommunityReportReason,
 } from '@/services/community';
 import type { CommunityPost } from '@/types';
 
@@ -45,5 +47,12 @@ export function useDeleteCommunityPost() {
       queryClient.invalidateQueries({ queryKey: ['communityFeed'] });
       queryClient.invalidateQueries({ queryKey: ['communityPost', post.id] });
     },
+  });
+}
+
+export function useReportCommunityPost() {
+  return useMutation({
+    mutationFn: (input: { postId: string; uid: string; reason: CommunityReportReason }) =>
+      reportCommunityPost(input),
   });
 }

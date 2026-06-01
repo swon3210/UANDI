@@ -388,7 +388,8 @@ type CommunityPost = {
 ```
 
 **Firestore 경로**: `communityPosts/{postId}` (최상위)
-**신고 경로** (Phase 4): `communityPosts/{postId}/reports/{reporterUid}`
+**신고 경로**: `communityPosts/{postId}/reports/{reporterUid}` — `{ reason: string; createdAt: Timestamp }`. 문서 id == 신고자 uid로 중복 신고 방지.
+**관리자 식별 경로**: `admins/{uid}` — 문서 존재 자체가 admin 권한. 본인만 read, write는 콘솔/Admin SDK 전용.
 **Storage 경로(유저 이미지)**: `communityImages/{uid}/{postId}.{ext}`
 
 > **비정규화 의도**: `author.displayName`을 글에 스냅샷으로 저장한다. 피드 1페이지당 N번의 프로필 조회를 피하기 위함이며, 닉네임 편집 기능 추가 시 본인 글을 배치 갱신하는 방식으로 전파한다.
@@ -409,8 +410,9 @@ type CommunityPost = {
 | `couples/{coupleId}/cashbookCategories/*`                 | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/meta/outerSummary`                    | 같은 커플 멤버                             | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신) |
 | `couples/{coupleId}/sideHustles/{uid}/**`                 | `uid == request.auth.uid` (본인만)         | `uid == request.auth.uid` (본인만)         |
-| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함) | **v1 Phase 2**: 클라이언트 쓰기 불가 (읽기 전용). Phase 3에서 user 생성 규칙, Phase 4에서 본인 삭제 + 서버측 상태 변경 추가. scraped 생성은 영구적으로 Admin SDK만. |
-| `communityPosts/{postId}/reports/{uid}` *(Phase 4)*       | 본인 신고만                                | 로그인 유저가 본인 uid 문서만 생성(중복 신고 차단)                                                                                                                                                            |
+| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 클라이언트 일체 차단(`status`/`reportCount` 변조 방지). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
+| `communityPosts/{postId}/reports/{uid}`                   | 클라이언트 read 불가(누적은 `reportCount`로만 노출) | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                  |
+| `admins/{uid}`                                            | 본인 uid 문서만(가드용)                    | 콘솔/Admin SDK만                                                                                                                                                                                          |
 
 ---
 
@@ -429,5 +431,5 @@ type CommunityPost = {
 | positions (v1.1)   | `updatedAt DESC`                    | 본인 포지션 최신순 |
 | savings (v1.1)     | `maturesAt ASC`                     | 만기일 빠른 순     |
 | communityPosts     | `status ASC`, `publishedAt DESC`    | 피드(승인 글 최신순) |
-| communityPosts     | `status ASC`, `createdAt DESC`      | admin 승인 대기 큐 (Phase 4) |
-| communityPosts     | `status ASC`, `reportCount DESC`    | admin 신고 검토 (Phase 4) |
+| communityPosts     | `status ASC`, `createdAt DESC`      | admin 승인 대기 큐 |
+| communityPosts     | `status ASC`, `reportCount DESC`    | admin 신고 검토 (`status='published' AND reportCount >= 1`) |

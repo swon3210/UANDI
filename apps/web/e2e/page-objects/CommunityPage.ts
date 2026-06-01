@@ -50,9 +50,31 @@ export class CommunityPage {
     return this.page.getByRole('menuitem', { name: '삭제하기' });
   }
 
+  reportMenuItem(): Locator {
+    return this.page.getByRole('menuitem', { name: '신고하기' });
+  }
+
   /** 삭제 확인 모달의 확인 버튼 */
   confirmDeleteButton(): Locator {
     return this.page.getByRole('button', { name: '삭제' });
+  }
+
+  /** 신고 다이얼로그 */
+  reportDialog(): Locator {
+    return this.page.getByTestId('community-report-dialog');
+  }
+
+  /** 신고 사유 라디오 (스팸/부적절/저작권/기타) */
+  reportReasonOption(label: string): Locator {
+    return this.reportDialog().getByRole('radio', { name: label });
+  }
+
+  reportSubmitButton(): Locator {
+    return this.reportDialog().getByRole('button', { name: '신고' });
+  }
+
+  reportCancelButton(): Locator {
+    return this.reportDialog().getByRole('button', { name: '취소' });
   }
 
   async goto() {
