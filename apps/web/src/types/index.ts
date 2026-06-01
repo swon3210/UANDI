@@ -23,8 +23,20 @@ export type User = {
 export type Couple = {
   id: string;
   memberUids: string[]; // 생성 시 1명, 커플 연결 완료 후 2명
-  inviteCode: string;
-  inviteCodeExpiresAt: Timestamp;
+  createdAt: Timestamp;
+};
+
+// 초대 코드 인덱스 (couples/ 격리 예외 — 최상위 컬렉션)
+// 저장 경로: inviteCodes/{code}
+// - code는 문서 id 자체 (6자리 대문자 영숫자)
+// - createdBy의 자기 자신 합류 불가
+// - consumedBy != null이면 합류 완료(만석)
+export type InviteCode = {
+  code: string;
+  coupleId: string;
+  createdBy: string;
+  expiresAt: Timestamp;
+  consumedBy: string | null;
   createdAt: Timestamp;
 };
 

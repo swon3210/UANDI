@@ -128,6 +128,9 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 ## 초대 코드 생성 규칙
 
 - 6자리 대문자 영숫자 (`[A-Z0-9]{6}`)
-- 생성 시 Firestore에서 중복 확인 후 유니크하게 저장
-- 유효 기간: 생성 후 **48시간**
-- 커플 연결 완료 후 `inviteCode`, `inviteCodeExpiresAt` 필드는 유지 (기록 목적)
+- 저장 위치는 `inviteCodes/{code}` 최상위 인덱스. 코드 자체가 문서 id.
+  - 신규 유저(아직 어떤 couple 멤버도 아님)는 `couples/*` read 권한이 없으므로 couple을 직접 쿼리할 수 없다. 인덱스를 통해 코드 → coupleId만 한 건씩 `get`으로 조회.
+  - 중복 체크는 `getDoc(inviteCodes/{candidate})` 한 번으로 처리 (전체 `couples` 컬렉션 스캔 금지).
+- 유효 기간: 생성 후 **48시간** (`expiresAt`)
+- `consumedBy`로 합류 완료 표시. 합류 시 클라이언트가 `null → 본인 uid`로 한 번 update하고, 이후 couple `memberUids`에 본인 추가.
+- 커플 연결 완료 후 `inviteCodes/{code}` 문서는 기록 목적으로 유지 (createdBy만 삭제 가능)

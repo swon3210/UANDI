@@ -65,8 +65,6 @@ type User = {
 type Couple = {
   id: string;
   memberUids: string[]; // 생성 시 1명, 커플 연결 완료 후 2명
-  inviteCode: string; // 6자리 대문자 영숫자, 유니크
-  inviteCodeExpiresAt: Timestamp; // 생성 후 48시간
   createdAt: Timestamp;
 };
 ```
@@ -74,6 +72,27 @@ type Couple = {
 > **memberUids 상태 변화**: `createCouple()` 직후에는 `[uid]` (1명), 상대방이 합류하면 `[uid1, uid2]` (2명)이 됩니다. 커플 연결 완료 여부는 `memberUids.length === 2`로 판단합니다.
 
 **Firestore 경로**: `couples/{coupleId}`
+
+---
+
+### InviteCode (초대 코드 인덱스)
+
+`couples/*` read는 멤버만 가능하므로, 신규 유저가 코드로 couple을 찾을 수 있도록 별도 최상위 인덱스를 둔다. 문서 id 자체가 6자리 초대 코드.
+
+```ts
+type InviteCode = {
+  code: string;
+  coupleId: string;
+  createdBy: string;          // 커플 생성자 uid
+  expiresAt: Timestamp;       // 생성 후 48시간
+  consumedBy: string | null;  // 합류 시 두 번째 멤버의 uid. null이면 만석 아님
+  createdAt: Timestamp;
+};
+```
+
+**Firestore 경로**: `inviteCodes/{code}` (최상위)
+
+> **보안 모델**: `get`만 허용하고 `list`는 금지 — 6자리 코드를 알아야만 한 건씩 조회 가능. 코드 공간이 36^6 ≈ 21억 이라 브루트포스는 비현실적. coupleId는 자동 생성 20자라 추측 불가하므로 inviteCodes 인덱스가 사실상 합류 자격 증명 역할.
 
 ---
 
@@ -403,7 +422,8 @@ type CommunityPost = {
 | 컬렉션                                                    | 읽기                                       | 쓰기                                       |
 | --------------------------------------------------------- | ------------------------------------------ | ------------------------------------------ |
 | `users/{uid}`                                             | 본인만                                     | 본인만                                     |
-| `couples/{coupleId}`                                      | memberUids에 포함된 유저                   | memberUids에 포함된 유저                   |
+| `couples/{coupleId}`                                      | memberUids에 포함된 유저                   | memberUids 본인 또는 self-join(size 1→2, memberUids만 변경, 본인 추가) |
+| `inviteCodes/{code}`                                      | 로그인 유저, **get만 허용 (list 금지)** — 코드를 알아야 read 가능 | create: 본인이 createdBy. update: consumedBy를 null→본인 uid로 한 번만 (createdBy ≠ 본인). delete: createdBy 본인만 |
 | `couples/{coupleId}/folders/*`                            | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/photos/*`                             | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/cashbookEntries/*`                    | 같은 커플 멤버                             | 같은 커플 멤버                             |

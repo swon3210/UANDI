@@ -42,17 +42,17 @@ test.describe('온보딩', () => {
       const uid2 = await createTestUser('partner@test.com', 'testpassword123');
       await seedUserDocument(uid2, 'partner@test.com', null);
 
-      // 두 번째 유저가 코드를 입력해 합류하는 상황을 REST API로 시뮬레이션
-      // couple.memberUids에 uid2 추가 → 실시간 리스너가 감지 → 대시보드 이동
+      // 두 번째 유저가 코드를 입력해 합류하는 상황을 시뮬레이션
+      // inviteCodes/{code} → coupleId 조회 후 memberUids에 uid2 추가 → 리스너가 감지 → 대시보드 이동
       await noCoupleAuthedPage.evaluate(
         async ({ code, uid2 }) => {
-          const { collection, query, where, getDocs, updateDoc, doc, arrayUnion } =
-            await import('firebase/firestore');
+          const { getDoc, updateDoc, doc, arrayUnion } = await import('firebase/firestore');
           const { getDb } = await import('@/lib/firebase/config');
-          const q = query(collection(getDb(), 'couples'), where('inviteCode', '==', code));
-          const snap = await getDocs(q);
-          if (!snap.empty) {
-            await updateDoc(doc(getDb(), 'couples', snap.docs[0].id), {
+          const codeSnap = await getDoc(doc(getDb(), 'inviteCodes', code));
+          if (codeSnap.exists()) {
+            const { coupleId } = codeSnap.data() as { coupleId: string };
+            await updateDoc(doc(getDb(), 'inviteCodes', code), { consumedBy: uid2 });
+            await updateDoc(doc(getDb(), 'couples', coupleId), {
               memberUids: arrayUnion(uid2),
             });
           }

@@ -65,7 +65,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     expiresInMs = 48 * 60 * 60 * 1000,
     secondMemberUid,
   } = options;
-  const coupleId = `couple-test-${Date.now()}`;
+  const coupleId = `couple-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
 
   const memberValues = [{ stringValue: uid }];
@@ -80,8 +80,27 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
         fields: {
           id: { stringValue: coupleId },
           memberUids: { arrayValue: { values: memberValues } },
-          inviteCode: { stringValue: inviteCode },
-          inviteCodeExpiresAt: { timestampValue: expiresAt },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+
+  // inviteCodes/{code} 인덱스 동기 시드 — 두 멤버가 모두 있으면 consumedBy를 채워 "만석" 상태로 표현
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/inviteCodes/${inviteCode}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          code: { stringValue: inviteCode },
+          coupleId: { stringValue: coupleId },
+          createdBy: { stringValue: uid },
+          expiresAt: { timestampValue: expiresAt },
+          consumedBy: secondMemberUid
+            ? { stringValue: secondMemberUid }
+            : { nullValue: null },
           createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
