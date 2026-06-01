@@ -48,10 +48,28 @@ service cloud.firestore {
 
       allow delete: if isAuthed() && resource.data.author.uid == request.auth.uid;
 
-      // 신고 서브컬렉션 — Phase 4에서 본격 도입. 현재는 클라이언트 쓰기 차단.
+      // 신고 서브컬렉션
+      // - create: 본인 uid 문서만(중복 신고 방지: 문서 id == uid)
+      // - update/delete: 클라이언트 불가(신고 철회 UI 없음 + 임의 조작 방지)
+      // - read: 클라이언트 불가(누적은 서버 트리거의 reportCount로만 노출)
       match /reports/{reporterUid} {
-        allow read, write: if false;
+        allow read: if false;
+        allow create: if isAuthed()
+          && request.auth.uid == reporterUid
+          && request.resource.data.reason is string
+          && request.resource.data.reason.size() > 0
+          && request.resource.data.reason.size() < 50;
+        allow update, delete: if false;
       }
+    }
+
+    // ── 관리자 식별 ───────────────────────────────────────────────
+    // admins/{uid} 문서가 존재하면 해당 uid는 admin.
+    // - 본인의 admin 여부만 클라이언트가 read 가능 (UI 가드용)
+    // - 추가/제거는 Firebase 콘솔/Admin SDK로만
+    match /admins/{uid} {
+      allow read: if isAuthed() && request.auth.uid == uid;
+      allow write: if false;
     }
 
     // ── 커플 ──────────────────────────────────────────────────────

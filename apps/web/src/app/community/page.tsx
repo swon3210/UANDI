@@ -13,13 +13,16 @@ import {
   Sheet,
   Skeleton,
   type CommunityPostCardProps,
+  type ReportReason,
 } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { CommunityDeleteConfirmDialog } from '@/components/community/CommunityDeleteConfirmDialog';
+import { CommunityReportDialog } from '@/components/community/CommunityReportDialog';
 import {
   useCommunityFeed,
   useCreateCommunityPost,
   useDeleteCommunityPost,
+  useReportCommunityPost,
 } from '@/hooks/useCommunityFeed';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { userAtom } from '@/stores/auth.store';
@@ -73,6 +76,7 @@ export default function CommunityFeedPage() {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useCommunityFeed();
   const createMutation = useCreateCommunityPost();
   const deleteMutation = useDeleteCommunityPost();
+  const reportMutation = useReportCommunityPost();
 
   const sentinelRef = useInfiniteScroll({
     hasNextPage: !!hasNextPage,
@@ -110,6 +114,37 @@ export default function CommunityFeedPage() {
         />
       </Sheet>
     ));
+  };
+
+  const openReportDialog = async (post: CommunityPost) => {
+    if (!user) return;
+    const reason = await overlay.openAsync<ReportReason | null>(({ isOpen, close, unmount }) => (
+      <CommunityReportDialog
+        isOpen={isOpen}
+        onSubmit={(r) => {
+          close(r);
+          setTimeout(unmount, 300);
+        }}
+        onCancel={() => {
+          close(null);
+          setTimeout(unmount, 300);
+        }}
+      />
+    ));
+    if (!reason) return;
+
+    try {
+      await reportMutation.mutateAsync({ postId: post.id, uid: user.uid, reason });
+      toast.success('신고가 접수됐어요');
+    } catch (err) {
+      // Firestore rule이 update를 deny → 두 번째 신고 시도면 PERMISSION_DENIED
+      const code = (err as { code?: string } | null)?.code ?? '';
+      if (code === 'permission-denied') {
+        toast.error('이미 신고한 글이에요');
+      } else {
+        toast.error('신고를 접수하지 못했어요. 잠시 후 다시 시도해주세요.');
+      }
+    }
   };
 
   const openDeleteConfirm = async (post: CommunityPost) => {
@@ -170,8 +205,11 @@ export default function CommunityFeedPage() {
             {posts.map((post) => {
               const isOwner =
                 post.type === 'user' && !!user && post.author?.uid === user.uid;
+              // 본인 글: 삭제만, 타인 글/스크랩: 신고만. (community-feed.md L140)
               const actionSlot = isOwner ? (
                 <ReportMenu onDelete={() => openDeleteConfirm(post)} />
+              ) : user ? (
+                <ReportMenu onReport={() => openReportDialog(post)} />
               ) : null;
               const props = postToCardProps(post, actionSlot);
               if (!props) return null;

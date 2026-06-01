@@ -38,6 +38,8 @@ export type {
 } from './custom/community/CommunityComposer';
 export { ReportMenu } from './custom/community/ReportMenu';
 export type { ReportMenuProps } from './custom/community/ReportMenu';
+export { ReportDialog, REPORT_REASON_LABELS } from './custom/community/ReportDialog';
+export type { ReportDialogProps, ReportReason } from './custom/community/ReportDialog';
 
 // 재테크 자산 배분 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { AssetAllocationEditor } from './custom/outer/AssetAllocationEditor';

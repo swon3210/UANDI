@@ -93,6 +93,25 @@ export async function createCommunityPost(input: CreateCommunityPostInput): Prom
   return postId;
 }
 
+export type CommunityReportReason = 'spam' | 'inappropriate' | 'copyright' | 'other';
+
+/**
+ * 신고 제출 — `communityPosts/{postId}/reports/{uid}` 에 본인 uid 문서 1개 생성.
+ * 문서 id == uid이므로 같은 유저의 두 번째 신고는 setDoc(merge=false)에서도 같은 doc을 덮어쓰게 된다.
+ * Firestore rule은 `update`를 deny하므로 두 번째 시도는 PERMISSION_DENIED를 던진다 — 호출자가 이를 잡아 안내.
+ */
+export async function reportCommunityPost(input: {
+  postId: string;
+  uid: string;
+  reason: CommunityReportReason;
+}): Promise<void> {
+  const ref = doc(getDb(), COMMUNITY_POSTS, input.postId, 'reports', input.uid);
+  await setDoc(ref, {
+    reason: input.reason,
+    createdAt: serverTimestamp(),
+  });
+}
+
 /** 본인 글 삭제 — Firestore 문서 삭제 + (있으면) Storage 이미지 삭제. */
 export async function deleteCommunityPost(post: CommunityPost): Promise<void> {
   await deleteDoc(doc(getDb(), COMMUNITY_POSTS, post.id));
