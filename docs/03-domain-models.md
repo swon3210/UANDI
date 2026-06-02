@@ -384,6 +384,7 @@ type CommunityPost = {
   body: string;             // user: 본문 / scraped: 짧은 발췌(인용 범위)
   createdAt: Timestamp;
   publishedAt: Timestamp | null; // 노출 시각(정렬 키). pending이면 null
+  editedAt: Timestamp | null;    // 본인 수정 시각. 미수정이면 null('수정됨' 마커 판정)
   reportCount: number;      // 트리거로 갱신 (Phase 4)
 
   // type === 'user'
@@ -430,7 +431,7 @@ type CommunityPost = {
 | `couples/{coupleId}/cashbookCategories/*`                 | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/meta/outerSummary`                    | 같은 커플 멤버                             | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신) |
 | `couples/{coupleId}/sideHustles/{uid}/**`                 | `uid == request.auth.uid` (본인만)         | `uid == request.auth.uid` (본인만)         |
-| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 클라이언트 일체 차단(`status`/`reportCount` 변조 방지). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
+| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 본인 글에 한해 변경 키를 `body`/`imageUrl`/`editedAt`로만 한정(`diff().affectedKeys().hasOnly(...)` — `status`/`reportCount`/`author`/`type`/시각 변조 차단). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
 | `communityPosts/{postId}/reports/{uid}`                   | 클라이언트 read 불가(누적은 `reportCount`로만 노출) | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                  |
 | `admins/{uid}`                                            | 본인 uid 문서만(가드용)                    | 콘솔/Admin SDK만                                                                                                                                                                                          |
 

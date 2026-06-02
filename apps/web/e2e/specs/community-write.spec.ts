@@ -89,6 +89,78 @@ test.describe('커뮤니티 글쓰기·삭제·상세', () => {
     });
   });
 
+  test.describe('수정', () => {
+    test('본인 글의 액션 메뉴에 수정하기가 노출된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedCommunityPost({
+        type: 'user',
+        status: 'published',
+        body: '수정 전 본문',
+        author: { uid, coupleId, displayName: '민지' },
+      });
+
+      const community = new CommunityPage(page);
+      await community.goto();
+      const card = community.userPostCards.first();
+      await expect(card).toBeVisible();
+
+      await community.openActionMenu(card);
+      await expect(community.editMenuItem()).toBeVisible();
+      await expect(community.deleteMenuItem()).toBeVisible();
+    });
+
+    test('본인 글을 수정하면 카드에 새 본문과 수정됨 마커가 노출된다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedCommunityPost({
+        type: 'user',
+        status: 'published',
+        body: '수정 전 본문',
+        author: { uid, coupleId, displayName: '민지' },
+      });
+
+      const community = new CommunityPage(page);
+      await community.goto();
+      const card = community.userPostCards.first();
+      await expect(card).toBeVisible();
+
+      await community.openActionMenu(card);
+      await community.editMenuItem().click();
+
+      // 편집 모드: 기존 본문이 채워진 채로 시트가 열린다
+      await expect(community.composer).toBeVisible();
+      await expect(community.composerBody).toHaveValue('수정 전 본문');
+
+      await community.composerBody.fill('수정 후 본문 🎉');
+      await community.composerEditSubmit.click();
+
+      await expect(community.composer).toBeHidden();
+      const updated = community.userPostCards.first();
+      await expect(updated).toContainText('수정 후 본문');
+      await expect(updated).toContainText('수정됨');
+    });
+
+    test('타인 글에는 수정하기가 노출되지 않는다', async ({ authedContext }) => {
+      const { page } = authedContext;
+      await seedCommunityPost({
+        type: 'user',
+        status: 'published',
+        body: '다른 사람 글',
+        author: { uid: 'someone-else', coupleId: 'other-couple', displayName: '다른사람' },
+      });
+
+      const community = new CommunityPage(page);
+      await community.goto();
+      const card = community.userPostCards.first();
+      await expect(card).toBeVisible();
+
+      await community.openActionMenu(card);
+      await expect(community.editMenuItem()).toHaveCount(0);
+      await expect(community.reportMenuItem()).toBeVisible();
+    });
+  });
+
   test.describe('상세 페이지', () => {
     test('본인 글 상세 페이지에서 작성자와 본문이 전부 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;

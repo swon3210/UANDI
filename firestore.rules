@@ -31,8 +31,9 @@ service cloud.firestore {
     // 명세: docs/pages/community/community-feed.md
     // - 모든 로그인 유저가 승인된 글만 읽기 가능
     // - user 글 create: 본인 작성 + status=published + reportCount=0 + source 없음
+    // - user 글 update: 본인 글에 한해 body/imageUrl/editedAt만 변경 가능
+    //   (affectedKeys.hasOnly로 status/reportCount/author/type/시각 변조 차단)
     // - user 글 delete: 본인만
-    // - update는 v1 클라이언트에서 일체 차단 (편집 UI 없음 + reportCount/status 변조 방지)
     // - scraped 생성·상태 변경(hidden 등)은 영구적으로 Admin SDK(서버)만
     match /communityPosts/{postId} {
       allow read: if isAuthed() && resource.data.status == 'published';
@@ -44,7 +45,15 @@ service cloud.firestore {
         && request.resource.data.reportCount == 0
         && !('source' in request.resource.data);
 
-      allow update: if false;
+      // 본인 글 수정 — 변경 키를 본문/이미지/수정시각으로만 한정.
+      // hasOnly는 부분집합도 허용하므로 imageUrl 미변경(본문만 수정)도 통과한다.
+      allow update: if isAuthed()
+        && resource.data.author.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['body', 'imageUrl', 'editedAt'])
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 1000;
 
       allow delete: if isAuthed() && resource.data.author.uid == request.auth.uid;
 

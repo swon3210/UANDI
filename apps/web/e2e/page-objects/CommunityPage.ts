@@ -18,6 +18,7 @@ export class CommunityPage {
   readonly composerBody: Locator;
   readonly composerImageInput: Locator;
   readonly composerSubmit: Locator;
+  readonly composerEditSubmit: Locator;
   readonly composerImagePreview: Locator;
 
   constructor(page: Page) {
@@ -39,6 +40,7 @@ export class CommunityPage {
     this.composerImageInput = this.composer.getByTestId('composer-image-input');
     this.composerImagePreview = this.composer.getByTestId('composer-image-preview');
     this.composerSubmit = this.composer.getByRole('button', { name: '올리기' });
+    this.composerEditSubmit = this.composer.getByRole('button', { name: '수정하기' });
   }
 
   /** 본인 글 카드의 [⋯] 메뉴를 연다 */
@@ -48,6 +50,10 @@ export class CommunityPage {
 
   deleteMenuItem(): Locator {
     return this.page.getByRole('menuitem', { name: '삭제하기' });
+  }
+
+  editMenuItem(): Locator {
+    return this.page.getByRole('menuitem', { name: '수정하기' });
   }
 
   reportMenuItem(): Locator {

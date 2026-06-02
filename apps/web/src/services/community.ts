@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
   startAfter,
+  updateDoc,
   where,
   type DocumentSnapshot,
   type QueryConstraint,
@@ -85,12 +86,64 @@ export async function createCommunityPost(input: CreateCommunityPostInput): Prom
     body: input.body,
     createdAt: serverTimestamp(),
     publishedAt: serverTimestamp(),
+    editedAt: null,
     reportCount: 0,
     author: input.author,
     imageUrl,
   });
 
   return postId;
+}
+
+export type UpdateCommunityPostInput = {
+  post: CommunityPost;
+  body: string;
+  /** 새로 첨부/교체한 이미지. 없으면 기존 유지(또는 imageRemoved로 제거). */
+  imageFile?: File | null;
+  /** 새 파일 없이 기존 이미지를 제거할 때 true. */
+  imageRemoved?: boolean;
+};
+
+/**
+ * 본인 글 수정 — 본문/이미지/수정시각만 변경한다.
+ * 규칙(firestore.rules)이 변경 키를 body/imageUrl/editedAt로만 한정하므로
+ * status·reportCount·author 등은 절대 함께 보내지 않는다.
+ * 이미지: 교체 시 새 파일 업로드(같은 경로 덮어쓰기, ext 다르면 구 객체 정리),
+ * 제거 시 Storage 객체 삭제 후 imageUrl=null.
+ */
+export async function updateCommunityPost(input: UpdateCommunityPostInput): Promise<void> {
+  const { post, body, imageFile, imageRemoved } = input;
+  const uid = post.author?.uid;
+
+  let imageUrl: string | null | undefined = undefined; // undefined면 imageUrl 미변경
+
+  if (imageFile && uid) {
+    const newUrl = await uploadCommunityImage({ uid, postId: post.id, file: imageFile });
+    // 확장자가 달라 구 객체가 남는 경우 정리(best-effort)
+    if (post.imageUrl && post.imageUrl !== newUrl) {
+      try {
+        await deleteCommunityImage({ uid, postId: post.id, storageUrl: post.imageUrl });
+      } catch {
+        // 이미 없거나 새 파일이 덮어썼을 수 있음 — 무시.
+      }
+    }
+    imageUrl = newUrl;
+  } else if (imageRemoved && uid) {
+    if (post.imageUrl) {
+      try {
+        await deleteCommunityImage({ uid, postId: post.id, storageUrl: post.imageUrl });
+      } catch {
+        // Storage 객체가 이미 없을 수 있음 — 무시.
+      }
+    }
+    imageUrl = null;
+  }
+
+  await updateDoc(doc(getDb(), COMMUNITY_POSTS, post.id), {
+    body,
+    editedAt: serverTimestamp(),
+    ...(imageUrl !== undefined ? { imageUrl } : {}),
+  });
 }
 
 export type CommunityReportReason = 'spam' | 'inappropriate' | 'copyright' | 'other';
