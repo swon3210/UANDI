@@ -6,7 +6,9 @@ import {
   getCommunityFeedPage,
   getCommunityPost,
   reportCommunityPost,
+  updateCommunityPost,
   type CreateCommunityPostInput,
+  type UpdateCommunityPostInput,
   type CommunityReportReason,
 } from '@/services/community';
 import type { CommunityPost } from '@/types';
@@ -35,6 +37,17 @@ export function useCreateCommunityPost() {
     mutationFn: (input: CreateCommunityPostInput) => createCommunityPost(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communityFeed'] });
+    },
+  });
+}
+
+export function useUpdateCommunityPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateCommunityPostInput) => updateCommunityPost(input),
+    onSuccess: (_v, input) => {
+      queryClient.invalidateQueries({ queryKey: ['communityFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['communityPost', input.post.id] });
     },
   });
 }

@@ -36,35 +36,56 @@ type FormValues = z.infer<typeof formSchema>;
 
 export type CommunityComposerSubmit = {
   body: string;
+  /** 새로 첨부/교체한 이미지. 없으면 null. */
   imageFile: File | null;
+  /** 편집 모드에서 기존 이미지를 제거했는지(새 파일 없이). create 모드에선 항상 false. */
+  imageRemoved: boolean;
 };
 
 export type CommunityComposerProps = {
   onSubmit: (values: CommunityComposerSubmit) => void | Promise<void>;
   isPending?: boolean;
+  /** 'create'(기본)는 글쓰기, 'edit'는 기존 글 수정. */
+  mode?: 'create' | 'edit';
+  /** 편집 모드 초기값. */
+  initialBody?: string;
+  initialImageUrl?: string | null;
 };
 
-export function CommunityComposer({ onSubmit, isPending }: CommunityComposerProps) {
+export function CommunityComposer({
+  onSubmit,
+  isPending,
+  mode = 'create',
+  initialBody = '',
+  initialImageUrl = null,
+}: CommunityComposerProps) {
+  const isEdit = mode === 'edit';
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { body: '' },
+    defaultValues: { body: initialBody },
     mode: 'onChange',
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
+  // 편집 모드에서 화면에 유지되는 기존 이미지 URL. 제거하면 null.
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(initialImageUrl);
   const [imageError, setImageError] = useState<string | null>(null);
   const imageInputId = useId();
 
-  const previewUrl = useMemo(
+  const newImagePreview = useMemo(
     () => (imageFile ? URL.createObjectURL(imageFile) : null),
     [imageFile]
   );
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (newImagePreview) URL.revokeObjectURL(newImagePreview);
     };
-  }, [previewUrl]);
+  }, [newImagePreview]);
+
+  // 새로 첨부한 파일 우선, 없으면 기존 이미지를 미리보기로 노출
+  const previewUrl = newImagePreview ?? existingImageUrl;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImageError(null);
@@ -87,12 +108,19 @@ export function CommunityComposer({ onSubmit, isPending }: CommunityComposerProp
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
+    if (imageFile) {
+      // 새로 첨부한 파일만 취소 — 기존 이미지는 남는다
+      setImageFile(null);
+    } else {
+      // 기존 이미지 제거
+      setExistingImageUrl(null);
+    }
     setImageError(null);
   };
 
   const handleSubmit = form.handleSubmit(async ({ body }) => {
-    await onSubmit({ body, imageFile });
+    const imageRemoved = !!initialImageUrl && !imageFile && existingImageUrl === null;
+    await onSubmit({ body, imageFile, imageRemoved });
   });
 
   return (
@@ -102,9 +130,9 @@ export function CommunityComposer({ onSubmit, isPending }: CommunityComposerProp
       className="rounded-t-[20px] max-h-[90vh]"
     >
       <SheetHeader>
-        <SheetTitle>글쓰기</SheetTitle>
+        <SheetTitle>{isEdit ? '글 수정' : '글쓰기'}</SheetTitle>
         <SheetDescription className="sr-only">
-          신혼부부 커뮤니티에 글을 올립니다
+          {isEdit ? '커뮤니티에 올린 글을 수정합니다' : '신혼부부 커뮤니티에 글을 올립니다'}
         </SheetDescription>
       </SheetHeader>
 
@@ -181,7 +209,13 @@ export function CommunityComposer({ onSubmit, isPending }: CommunityComposerProp
               !form.formState.isValid || form.formState.isSubmitting || !!isPending
             }
           >
-            {form.formState.isSubmitting || isPending ? '올리는 중...' : '올리기'}
+            {form.formState.isSubmitting || isPending
+              ? isEdit
+                ? '수정하는 중...'
+                : '올리는 중...'
+              : isEdit
+                ? '수정하기'
+                : '올리기'}
           </Button>
         </form>
       </Form>

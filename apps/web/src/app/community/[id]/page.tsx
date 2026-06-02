@@ -5,13 +5,19 @@ import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import {
+  CommunityComposer,
   FullScreenSpinner,
   PostAuthor,
   ReportMenu,
+  Sheet,
 } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { CommunityDeleteConfirmDialog } from '@/components/community/CommunityDeleteConfirmDialog';
-import { useCommunityPost, useDeleteCommunityPost } from '@/hooks/useCommunityFeed';
+import {
+  useCommunityPost,
+  useDeleteCommunityPost,
+  useUpdateCommunityPost,
+} from '@/hooks/useCommunityFeed';
 import { userAtom } from '@/stores/auth.store';
 import { formatRelativeTime } from '@/utils/date';
 import type { CommunityPost } from '@/types';
@@ -23,6 +29,7 @@ export default function CommunityPostDetailPage() {
   const user = useAtomValue(userAtom);
 
   const { data: post, isLoading } = useCommunityPost(postId);
+  const updateMutation = useUpdateCommunityPost();
   const deleteMutation = useDeleteCommunityPost();
 
   if (isLoading) {
@@ -36,6 +43,28 @@ export default function CommunityPostDetailPage() {
 
   const userPost: CommunityPost = post;
   const isOwner = !!user && userPost.author?.uid === user.uid;
+
+  const openEditComposer = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <CommunityComposer
+          mode="edit"
+          initialBody={userPost.body}
+          initialImageUrl={userPost.imageUrl ?? null}
+          onSubmit={async ({ body, imageFile, imageRemoved }) => {
+            try {
+              await updateMutation.mutateAsync({ post: userPost, body, imageFile, imageRemoved });
+              toast.success('글을 수정했어요');
+              close();
+              setTimeout(unmount, 300);
+            } catch {
+              toast.error('글을 수정하지 못했어요. 잠시 후 다시 시도해주세요.');
+            }
+          }}
+        />
+      </Sheet>
+    ));
+  };
 
   const openDeleteConfirm = async () => {
     const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
@@ -75,10 +104,16 @@ export default function CommunityPostDetailPage() {
               <PostAuthor
                 displayName={userPost.author.displayName}
                 photoURL={userPost.author.photoURL}
-                timeLabel={formatRelativeTime(userPost.publishedAt)}
+                timeLabel={
+                  userPost.editedAt
+                    ? `${formatRelativeTime(userPost.publishedAt)} · 수정됨`
+                    : formatRelativeTime(userPost.publishedAt)
+                }
               />
             ) : null}
-            {isOwner ? <ReportMenu onDelete={openDeleteConfirm} /> : null}
+            {isOwner ? (
+              <ReportMenu onEdit={openEditComposer} onDelete={openDeleteConfirm} />
+            ) : null}
           </div>
           <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground">
             {userPost.body}

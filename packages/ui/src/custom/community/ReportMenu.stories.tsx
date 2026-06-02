@@ -10,7 +10,7 @@ const meta: Meta<typeof ReportMenu> = {
     docs: {
       description: {
         component:
-          '카드 [⋯] 액션 메뉴. 콜백(onDelete/onReport)이 전달된 항목만 렌더된다. Phase 3은 본인 글 삭제만, Phase 4에서 신고하기 추가.',
+          '카드 [⋯] 액션 메뉴. 콜백(onEdit/onDelete/onReport)이 전달된 항목만 렌더된다. 본인 글은 수정+삭제, 타인 글/스크랩 글은 신고.',
       },
     },
   },
@@ -19,15 +19,16 @@ const meta: Meta<typeof ReportMenu> = {
 export default meta;
 type Story = StoryObj<typeof ReportMenu>;
 
-export const OwnerDeleteOnly: Story = {
-  name: '본인 글 (삭제만)',
+export const Owner: Story = {
+  name: '본인 글 (수정 + 삭제)',
   args: {
+    onEdit: () => alert('수정'),
     onDelete: () => alert('삭제'),
   },
 };
 
 export const OtherReportOnly: Story = {
-  name: '타인 글 (신고만 — Phase 4 미리보기)',
+  name: '타인 글 (신고만)',
   args: {
     onReport: () => alert('신고'),
   },

@@ -227,6 +227,7 @@ export type CommunityPost = {
   body: string; // user: 본문 / scraped: 짧은 발췌 또는 ''
   createdAt: Timestamp;
   publishedAt: Timestamp | null; // 노출 시각(정렬 키). pending이면 null
+  editedAt?: Timestamp | null; // 본인 수정 시각. 없거나 null이면 미수정('수정됨' 마커 판정)
   reportCount: number; // 트리거로 갱신 (Phase 4)
 
   // type === 'user' 전용

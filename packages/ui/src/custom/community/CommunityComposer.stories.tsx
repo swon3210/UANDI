@@ -22,20 +22,34 @@ const meta: Meta<typeof CommunityComposer> = {
 export default meta;
 type Story = StoryObj<typeof CommunityComposer>;
 
-function Harness({ isPending = false }: { isPending?: boolean }) {
+function Harness({
+  isPending = false,
+  mode = 'create',
+  initialBody,
+  initialImageUrl,
+}: {
+  isPending?: boolean;
+  mode?: 'create' | 'edit';
+  initialBody?: string;
+  initialImageUrl?: string | null;
+}) {
   const [open, setOpen] = useState(true);
   const [last, setLast] = useState<CommunityComposerSubmit | null>(null);
 
   return (
     <div className="min-h-[600px] bg-background p-4">
-      <Button onClick={() => setOpen(true)}>글쓰기 열기</Button>
+      <Button onClick={() => setOpen(true)}>{mode === 'edit' ? '글 수정 열기' : '글쓰기 열기'}</Button>
       {last ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          제출됨: 본문 {last.body.length}자 / 이미지 {last.imageFile ? last.imageFile.name : '없음'}
+          제출됨: 본문 {last.body.length}자 / 이미지{' '}
+          {last.imageFile ? last.imageFile.name : last.imageRemoved ? '제거됨' : '변경 없음'}
         </p>
       ) : null}
       <Sheet open={open} onOpenChange={setOpen}>
         <CommunityComposer
+          mode={mode}
+          initialBody={initialBody}
+          initialImageUrl={initialImageUrl}
           isPending={isPending}
           onSubmit={async (values) => {
             setLast(values);
@@ -57,4 +71,20 @@ export const Default: Story = {
 export const Submitting: Story = {
   name: '제출 중 (올리기 버튼 로딩)',
   render: () => <Harness isPending />,
+};
+
+export const EditMode: Story = {
+  name: '편집 모드 (본문 채워짐)',
+  render: () => <Harness mode="edit" initialBody="오늘 신랑이 처음으로 설거지를 했어요 🥹" />,
+};
+
+export const EditWithImage: Story = {
+  name: '편집 모드 (기존 이미지 있음)',
+  render: () => (
+    <Harness
+      mode="edit"
+      initialBody="우리집 떡볶이 레시피"
+      initialImageUrl="https://placehold.co/200x200/png"
+    />
+  ),
 };

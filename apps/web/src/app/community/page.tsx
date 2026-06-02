@@ -23,6 +23,7 @@ import {
   useCreateCommunityPost,
   useDeleteCommunityPost,
   useReportCommunityPost,
+  useUpdateCommunityPost,
 } from '@/hooks/useCommunityFeed';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { userAtom } from '@/stores/auth.store';
@@ -43,7 +44,8 @@ function postToCardProps(
   post: CommunityPost,
   actionSlot: React.ReactNode
 ): CommunityPostCardProps | null {
-  const timeLabel = formatRelativeTime(post.publishedAt);
+  const baseTime = formatRelativeTime(post.publishedAt);
+  const timeLabel = post.editedAt ? `${baseTime} · 수정됨` : baseTime;
   if (post.type === 'user') {
     if (!post.author) return null;
     return {
@@ -75,6 +77,7 @@ export default function CommunityFeedPage() {
   const user = useAtomValue(userAtom);
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useCommunityFeed();
   const createMutation = useCreateCommunityPost();
+  const updateMutation = useUpdateCommunityPost();
   const deleteMutation = useDeleteCommunityPost();
   const reportMutation = useReportCommunityPost();
 
@@ -109,6 +112,29 @@ export default function CommunityFeedPage() {
               setTimeout(unmount, 300);
             } catch {
               toast.error('글을 올리지 못했어요. 잠시 후 다시 시도해주세요.');
+            }
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const openEditComposer = (post: CommunityPost) => {
+    if (!user) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <CommunityComposer
+          mode="edit"
+          initialBody={post.body}
+          initialImageUrl={post.imageUrl ?? null}
+          onSubmit={async ({ body, imageFile, imageRemoved }) => {
+            try {
+              await updateMutation.mutateAsync({ post, body, imageFile, imageRemoved });
+              toast.success('글을 수정했어요');
+              close();
+              setTimeout(unmount, 300);
+            } catch {
+              toast.error('글을 수정하지 못했어요. 잠시 후 다시 시도해주세요.');
             }
           }}
         />
@@ -205,9 +231,12 @@ export default function CommunityFeedPage() {
             {posts.map((post) => {
               const isOwner =
                 post.type === 'user' && !!user && post.author?.uid === user.uid;
-              // 본인 글: 삭제만, 타인 글/스크랩: 신고만. (community-feed.md L140)
+              // 본인 글: 수정+삭제, 타인 글/스크랩: 신고만. (community-feed.md 액션 메뉴)
               const actionSlot = isOwner ? (
-                <ReportMenu onDelete={() => openDeleteConfirm(post)} />
+                <ReportMenu
+                  onEdit={() => openEditComposer(post)}
+                  onDelete={() => openDeleteConfirm(post)}
+                />
               ) : user ? (
                 <ReportMenu onReport={() => openReportDialog(post)} />
               ) : null;
