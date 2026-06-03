@@ -36,28 +36,6 @@ test.describe('대시보드', () => {
     });
   });
 
-  test.describe('진입 버튼', () => {
-    test('사진 갤러리와 가계부 진입 버튼이 모두 표시된다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await expect(dashboard.photoGalleryEntry).toBeVisible();
-      await expect(dashboard.photoGalleryEntry).toContainText('사진 갤러리');
-      await expect(dashboard.cashbookEntry).toBeVisible();
-      await expect(dashboard.cashbookEntry).toContainText('가계부');
-    });
-
-    test('사진 갤러리 버튼 클릭 시 /inner/photos로 이동한다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.photoGalleryEntry.click();
-      await expect(authedPage).toHaveURL(/\/inner\/photos/, { timeout: 30000 });
-    });
-
-    test('가계부 버튼 클릭 시 /inner/cashbook으로 이동한다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.cashbookEntry.click();
-      await expect(authedPage).toHaveURL(/\/inner\/cashbook/, { timeout: 30000 });
-    });
-  });
-
   test.describe('가계부 대시보드 — 컨트롤', () => {
     test('기본값으로 주간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);

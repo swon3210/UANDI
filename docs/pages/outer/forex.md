@@ -10,14 +10,14 @@
 
 > **재테크 영역 문서 구성**
 >
-> | 파일                              | 내용                            | 상태       |
-> | --------------------------------- | ------------------------------- | ---------- |
-> | `outer/dashboard.md`              | 재테크 대시보드                   | v1         |
-> | `outer/forex.md` (이 문서)        | 환테크 차트 + AI 전망           | v1         |
-> | `outer/investment.md`             | 투자 placeholder → 본 구현      | v1.1 예정  |
-> | `outer/savings.md`                | 적금 placeholder → 본 구현      | v1.1 예정  |
-> | (예정) `outer/forex-trade.md`     | 외화 거래 기록 + 보유 + 손익    | v1.1 예정  |
-> | (예정) `outer/forex-alerts.md`    | 목표 환율 알림                  | v1.1+ 예정 |
+> | 파일                           | 내용                         | 상태       |
+> | ------------------------------ | ---------------------------- | ---------- |
+> | `outer/dashboard.md`           | 재테크 대시보드              | v1         |
+> | `outer/forex.md` (이 문서)     | 환테크 차트 + AI 전망        | v1         |
+> | `outer/investment.md`          | 투자 placeholder → 본 구현   | v1.1 예정  |
+> | `outer/savings.md`             | 적금 placeholder → 본 구현   | v1.1 예정  |
+> | (예정) `outer/forex-trade.md`  | 외화 거래 기록 + 보유 + 손익 | v1.1 예정  |
+> | (예정) `outer/forex-alerts.md` | 목표 환율 알림               | v1.1+ 예정 |
 
 ---
 
@@ -65,7 +65,7 @@
 
 ```
 ┌─────────────────────────┐
-│  환테크              ←   │  ← Header (뒤로 가기)
+│  ☰  환테크              │  ← Header (사이드바 토글)
 ├─────────────────────────┤
 │  ┌───────────────────┐  │
 │  │ 🇺🇸 USD  매수 우호  │  │  ← BuyRecommendationBadge
@@ -192,21 +192,21 @@ useForexOutlook(currency: SupportedCurrency)
 
 `@uandi/investment-core` 패키지의 순수 함수로 분리.
 
-| 지표         | 정의                                                     |
-| ------------ | -------------------------------------------------------- |
-| MA(n)        | 최근 n일 종가 단순 평균                                  |
-| RSI(14)      | 14일 평균 상승폭 / (평균 상승폭 + 평균 하락폭) × 100     |
-| 52주 백분위  | 최근 252영업일 중 현재값의 백분위 (0~100)                |
+| 지표        | 정의                                                 |
+| ----------- | ---------------------------------------------------- |
+| MA(n)       | 최근 n일 종가 단순 평균                              |
+| RSI(14)     | 14일 평균 상승폭 / (평균 상승폭 + 평균 하락폭) × 100 |
+| 52주 백분위 | 최근 252영업일 중 현재값의 백분위 (0~100)            |
 
 ### 추천 로직 (기술 지표만, AI 미사용)
 
 `computeRecommendation(indicators) → 'buy' | 'sell' | 'hold'`
 
-| 조건                                                | 결과 |
-| --------------------------------------------------- | ---- |
-| 52주 백분위 ≤ 25 **AND** RSI(14) ≤ 35               | buy  |
-| 52주 백분위 ≥ 75 **AND** RSI(14) ≥ 65               | sell |
-| 그 외                                               | hold |
+| 조건                                  | 결과 |
+| ------------------------------------- | ---- |
+| 52주 백분위 ≤ 25 **AND** RSI(14) ≤ 35 | buy  |
+| 52주 백분위 ≥ 75 **AND** RSI(14) ≥ 65 | sell |
+| 그 외                                 | hold |
 
 - 통화 목록 카드의 뱃지는 이 규칙만 사용 (외부 API 호출 없음, 즉시 표시)
 - 상세 화면의 AI 전망은 별도 (아래)
@@ -218,6 +218,7 @@ useForexOutlook(currency: SupportedCurrency)
 ### API Route — `POST /api/ai/forex-outlook`
 
 **공통 규칙** (`docs/pages/05-ai-features.md`와 동일)
+
 - POST만 허용, JSON 응답
 - Firebase Auth 토큰 인증 (`verifyAuth`)
 - 일일 사용량 제한: 커플당 50회/일 (`checkAndIncrementUsage`, 카운터 키: `aiUsage`)
@@ -228,14 +229,18 @@ useForexOutlook(currency: SupportedCurrency)
 ```ts
 {
   currency: 'USD' | 'JPY' | 'EUR' | 'CNY';
-  points: { date: string; rate: number }[];  // 최근 90일
+  points: {
+    date: string;
+    rate: number;
+  }
+  []; // 최근 90일
   indicators: {
     current: number;
     ma20: number;
     ma60: number;
     rsi14: number;
-    percentile52w: number;  // 0~100
-  };
+    percentile52w: number; // 0~100
+  }
 }
 ```
 
@@ -243,9 +248,9 @@ useForexOutlook(currency: SupportedCurrency)
 
 ```ts
 {
-  summary: string;                             // 1~3문장 한국어 요약
+  summary: string; // 1~3문장 한국어 요약
   recommendation: 'buy' | 'sell' | 'hold';
-  confidence: number;                          // 0~1
+  confidence: number; // 0~1
 }
 ```
 
@@ -268,8 +273,8 @@ export type SupportedCurrency = 'USD' | 'JPY' | 'EUR' | 'CNY';
 export type ForexRange = '1w' | '1m' | '3m' | '6m' | '1y' | '5y';
 
 export type ExchangeRatePoint = {
-  date: string;   // 'YYYY-MM-DD'
-  rate: number;   // 1 단위당 KRW
+  date: string; // 'YYYY-MM-DD'
+  rate: number; // 1 단위당 KRW
 };
 
 export type ForexIndicators = {
@@ -292,11 +297,14 @@ export type ForexOutlook = {
 
 export const SUPPORTED_CURRENCIES: SupportedCurrency[] = ['USD', 'JPY', 'EUR', 'CNY'];
 
-export const CURRENCY_META: Record<SupportedCurrency, {
-  flag: string;
-  label: string;
-  displayDivisor: number;  // JPY=100, 나머지=1
-}> = {
+export const CURRENCY_META: Record<
+  SupportedCurrency,
+  {
+    flag: string;
+    label: string;
+    displayDivisor: number; // JPY=100, 나머지=1
+  }
+> = {
   USD: { flag: '🇺🇸', label: '미국 달러', displayDivisor: 1 },
   JPY: { flag: '🇯🇵', label: '일본 엔(100엔)', displayDivisor: 0.01 },
   EUR: { flag: '🇪🇺', label: '유로', displayDivisor: 1 },
@@ -319,6 +327,7 @@ export const CURRENCY_META: Record<SupportedCurrency, {
 ## 환경 변수
 
 추가 변경 없음.
+
 - `OPENAI_API_KEY` 이미 존재 (`apps/web/.env.local`)
 - Frankfurter는 키 불필요
 

@@ -14,7 +14,6 @@ import {
 import { PageHeader } from '@/components/shell/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
-import { EntryButtons } from './EntryButtons';
 import { BudgetDashboard } from './BudgetDashboard';
 
 export function Dashboard() {
@@ -62,7 +61,6 @@ export function Dashboard() {
         }
       />
       <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
-        <EntryButtons />
         <BudgetDashboard coupleId={coupleId} />
       </main>
     </>

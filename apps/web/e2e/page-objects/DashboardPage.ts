@@ -6,10 +6,6 @@ export class DashboardPage {
   readonly sidebarTrigger: Locator;
   readonly sidebar: Locator;
 
-  // 진입 버튼
-  readonly photoGalleryEntry: Locator;
-  readonly cashbookEntry: Locator;
-
   // 가계부 대시보드
   readonly periodSelector: Locator;
   readonly periodTabWeekly: Locator;
@@ -47,9 +43,6 @@ export class DashboardPage {
     this.header = page.getByTestId('dashboard-header');
     this.sidebarTrigger = page.getByTestId('sidebar-trigger');
     this.sidebar = page.getByTestId('app-sidebar');
-
-    this.photoGalleryEntry = page.getByTestId('photo-gallery-entry');
-    this.cashbookEntry = page.getByTestId('cashbook-entry');
 
     this.periodSelector = page.getByTestId('period-selector');
     this.periodTabWeekly = this.periodSelector.getByRole('tab', { name: '주간' });

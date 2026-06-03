@@ -1,10 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useQueries } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { ArrowLeft } from 'lucide-react';
-import { Button, Skeleton } from '@uandi/ui';
+import { Skeleton } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import {
   CATEGORY_LABEL,
@@ -19,8 +17,6 @@ import { fetchForexRates } from '@/services/forex';
 import { CurrencyCard } from '@/components/investment/CurrencyCard';
 
 export default function ForexListPage() {
-  const router = useRouter();
-
   const queries = useQueries({
     queries: SUPPORTED_CURRENCIES.map((currency) => ({
       queryKey: ['forexRates', currency, '1y'],
@@ -47,14 +43,7 @@ export default function ForexListPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader
-        data-testid="forex-list-header"
-        leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로">
-            <ArrowLeft size={20} />
-          </Button>
-        }
-      />
+      <PageHeader data-testid="forex-list-header" />
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-8 pt-4">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
