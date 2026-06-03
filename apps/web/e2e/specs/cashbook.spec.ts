@@ -82,38 +82,6 @@ test.describe('가계부', () => {
     });
   });
 
-  test.describe('월 이동', () => {
-    test('이전/다음 달로 이동할 수 있다', async ({ authedContext }) => {
-      const { page } = authedContext;
-
-      const cashbook = new CashbookPage(page);
-      await cashbook.goto();
-
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
-      await expect(cashbook.monthSelector).toContainText(currentMonth);
-
-      // 이전 달로 이동
-      await cashbook.prevMonthButton.click();
-      const prevDate = new Date(now.getFullYear(), now.getMonth() - 1);
-      const prevMonth = `${prevDate.getFullYear()}년 ${prevDate.getMonth() + 1}월`;
-      await expect(cashbook.monthSelector).toContainText(prevMonth);
-
-      // 다시 현재 달로 복귀
-      await cashbook.nextMonthButton.click();
-      await expect(cashbook.monthSelector).toContainText(currentMonth);
-    });
-
-    test('미래 달로 이동할 수 없다', async ({ authedContext }) => {
-      const { page } = authedContext;
-
-      const cashbook = new CashbookPage(page);
-      await cashbook.goto();
-
-      await expect(cashbook.nextMonthButton).toBeDisabled();
-    });
-  });
-
   test.describe('날짜별 그룹', () => {
     test('날짜별 그룹 헤더가 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;

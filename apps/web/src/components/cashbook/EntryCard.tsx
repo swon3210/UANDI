@@ -2,15 +2,17 @@
 
 import type { CashbookEntry, CashbookCategory } from '@/types';
 import { formatAmount } from '@/utils/currency';
+import { formatDay } from '@/utils/date';
 import { CategoryIcon } from './CategoryIcon';
 
 type EntryCardProps = {
   entry: CashbookEntry;
   category?: CashbookCategory;
   onClick: (entry: CashbookEntry) => void;
+  showDate?: boolean;
 };
 
-export function EntryCard({ entry, category, onClick }: EntryCardProps) {
+export function EntryCard({ entry, category, onClick, showDate = false }: EntryCardProps) {
   const icon = category?.icon ?? '';
   const color = category?.color ?? '#78909C';
 
@@ -32,6 +34,7 @@ export function EntryCard({ entry, category, onClick }: EntryCardProps) {
         {entry.description && (
           <p className="text-xs text-muted-foreground truncate">{entry.description}</p>
         )}
+        {showDate && <p className="text-xs text-muted-foreground">{formatDay(entry.date)}</p>}
       </div>
       <span
         className={`text-sm font-semibold tabular-nums shrink-0 ${

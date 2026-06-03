@@ -2,6 +2,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import 'dayjs/locale/ko';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import type { Timestamp } from 'firebase/firestore';
+import type { PeriodSelection } from '@/hooks/useCashbook';
 
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
@@ -64,4 +65,56 @@ export function shiftPeriod(kind: PeriodKind, cursor: Dayjs, delta: number): Day
 
 export function normalizeCursor(kind: PeriodKind, cursor: Dayjs): Dayjs {
   return cursor.startOf(UNIT_BY_PERIOD[kind]);
+}
+
+export type CashbookPeriodResult = { start: Date; end: Date; label: string };
+
+/**
+ * 가계부 기간 필터 선택값(프리셋/커스텀)을 조회용 날짜 범위 + 라벨로 해석한다.
+ * `now`는 호출부에서 useMemo로 고정해 queryKey 안정성을 확보할 것.
+ */
+export function resolvePeriod(
+  selection: PeriodSelection,
+  now: Dayjs = dayjs()
+): CashbookPeriodResult {
+  switch (selection.mode) {
+    case 'month': {
+      const m = dayjs(new Date(selection.year, selection.month, 1));
+      return {
+        start: m.startOf('month').toDate(),
+        end: m.endOf('month').toDate(),
+        label: m.format('YYYY년 M월'),
+      };
+    }
+    case 'last3Months': {
+      const start = now.subtract(2, 'month').startOf('month');
+      const end = now.endOf('month');
+      return {
+        start: start.toDate(),
+        end: end.toDate(),
+        label: `${start.format('YYYY년 M월')} ~ ${end.format('YYYY년 M월')}`,
+      };
+    }
+    case 'thisYear': {
+      return {
+        start: now.startOf('year').toDate(),
+        end: now.endOf('year').toDate(),
+        label: now.format('YYYY년'),
+      };
+    }
+    case 'custom': {
+      let start = dayjs(selection.start);
+      let end = dayjs(selection.end);
+      if (end.isBefore(start)) {
+        [start, end] = [end, start]; // 방어: 뒤집힌 범위 swap
+      }
+      start = start.startOf('day');
+      end = end.endOf('day');
+      return {
+        start: start.toDate(),
+        end: end.toDate(),
+        label: `${start.format('YYYY. M. D.')} ~ ${end.format('YYYY. M. D.')}`,
+      };
+    }
+  }
 }

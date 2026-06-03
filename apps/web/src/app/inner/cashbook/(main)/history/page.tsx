@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -8,7 +8,7 @@ import { BookOpen } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
-  useCashbookEntries,
+  useCashbookEntriesInRange,
   useMonthlySummary,
   useFilteredEntries,
   useGroupedEntries,
@@ -16,14 +16,17 @@ import {
   useAddEntries,
   useUpdateEntry,
   useDeleteEntry,
-  type EntryFilterType,
+  createDefaultFilterState,
+  isDateSort,
+  type CashbookFilterState,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
-import { MonthSelector } from '@/components/cashbook/MonthSelector';
+import { resolvePeriod } from '@/utils/date';
+import { CashbookFilterBar } from '@/components/cashbook/CashbookFilterBar';
+import { CashbookFilterSheet } from '@/components/cashbook/CashbookFilterSheet';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
-import { EntryFilter } from '@/components/cashbook/EntryFilter';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
 import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
@@ -32,57 +35,116 @@ import { formatAmount } from '@/utils/currency';
 import { parseEntriesFromText, analyzeSpending } from '@/services/ai';
 import type { CashbookEntry, CashbookEntryType } from '@/types';
 
+/**
+ * 필터 시트를 쿼리 캐시의 최신 카테고리로 렌더한다.
+ * overlay-kit은 open 시점의 props를 클로저로 캡처하므로, 카테고리 로드 전에 열면
+ * 빈 목록이 고정되는 레이스가 있다. 시트 안에서 훅을 구독해 로드 완료 시 자동 갱신한다.
+ */
+function FilterSheetContent({
+  coupleId,
+  initial,
+  onApply,
+  onClose,
+}: {
+  coupleId: string | null;
+  initial: CashbookFilterState;
+  onApply: (next: CashbookFilterState) => void;
+  onClose: () => void;
+}) {
+  const { data: categories } = useCashbookCategories(coupleId);
+  return (
+    <CashbookFilterSheet
+      categories={categories ?? []}
+      initial={initial}
+      onApply={onApply}
+      onClose={onClose}
+    />
+  );
+}
+
 export default function CashbookPage() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const year = dayjs(selectedDate).year();
-  const month = dayjs(selectedDate).month();
+  const [filter, setFilter] = useState<CashbookFilterState>(createDefaultFilterState);
+  const range = useMemo(() => resolvePeriod(filter.period), [filter.period]);
 
-  const [typeFilter, setTypeFilter] = useState<EntryFilterType>('all');
-  const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([]);
-  const isFilterActive = typeFilter !== 'all' || selectedCategoryNames.length > 0;
+  const isFilterActive =
+    filter.typeFilter !== 'all' ||
+    filter.selectedCategoryNames.length > 0 ||
+    filter.keyword.trim() !== '';
 
-  const { data: entries, isLoading: entriesLoading } = useCashbookEntries(coupleId, year, month);
+  const activeFilterCount =
+    (filter.typeFilter !== 'all' ? 1 : 0) +
+    (filter.selectedCategoryNames.length > 0 ? 1 : 0) +
+    (filter.keyword.trim() !== '' ? 1 : 0);
+
+  // 단일 캘린더 월(month 모드)일 때만 월 단위 AI 분석을 노출한다.
+  const isSingleMonthPeriod = filter.period.mode === 'month';
+
+  const { data: entries, isLoading: entriesLoading } = useCashbookEntriesInRange(
+    coupleId,
+    range.start,
+    range.end
+  );
   const { data: categories, isLoading: categoriesLoading } = useCashbookCategories(coupleId);
   const isLoading = entriesLoading || categoriesLoading;
   const summary = useMonthlySummary(entries);
-  const filteredEntries = useFilteredEntries(entries, typeFilter, selectedCategoryNames);
+  const filteredEntries = useFilteredEntries(
+    entries,
+    filter.typeFilter,
+    filter.selectedCategoryNames,
+    filter.keyword
+  );
   const filterSummary = useMonthlySummary(filteredEntries);
-  const groups = useGroupedEntries(filteredEntries);
+  const groups = useGroupedEntries(filteredEntries, filter.sort);
 
-  const handleMonthChange = (next: Date) => {
-    setSelectedDate(next);
-    setSelectedCategoryNames([]);
+  // 예산 알림 토스트는 항상 현재 달 기준(신규 내역 기본 날짜=오늘).
+  const now = useMemo(() => dayjs(), []);
+  const { notifyTransition } = useBudgetAlerts(coupleId, now.year(), now.month() + 1);
+
+  // 인라인 월 이동 스테퍼는 month 모드일 때만 노출되며, 이번 달 이후로는 이동 불가.
+  const canGoNext =
+    filter.period.mode === 'month' &&
+    !(filter.period.year === now.year() && filter.period.month === now.month());
+
+  const handlePrevMonth = () => {
+    if (filter.period.mode !== 'month') return;
+    const prev = dayjs(new Date(filter.period.year, filter.period.month, 1)).subtract(1, 'month');
+    setFilter((f) => ({ ...f, period: { mode: 'month', year: prev.year(), month: prev.month() } }));
   };
 
-  const handleTypeChange = (next: EntryFilterType) => {
-    setTypeFilter(next);
-    setSelectedCategoryNames([]);
+  const handleNextMonth = () => {
+    if (filter.period.mode !== 'month' || !canGoNext) return;
+    const next = dayjs(new Date(filter.period.year, filter.period.month, 1)).add(1, 'month');
+    setFilter((f) => ({ ...f, period: { mode: 'month', year: next.year(), month: next.month() } }));
   };
 
-  const handleCategoryToggle = (name: string) => {
-    setSelectedCategoryNames((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
-    );
-  };
-
-  const handleFilterReset = () => {
-    setSelectedCategoryNames([]);
+  const openFilterSheet = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <FilterSheetContent
+          coupleId={coupleId}
+          initial={filter}
+          onApply={setFilter}
+          onClose={() => {
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
   };
 
   const handleAllFiltersReset = () => {
-    setTypeFilter('all');
-    setSelectedCategoryNames([]);
+    setFilter(createDefaultFilterState());
   };
 
   const addMutation = useAddEntry(coupleId);
   const addManyMutation = useAddEntries(coupleId);
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
-  const { notifyTransition } = useBudgetAlerts(coupleId, year, month + 1);
 
   const handleAdd = (prefill?: {
     type?: CashbookEntryType;
@@ -171,7 +233,17 @@ export default function CashbookPage() {
       />
 
       <div className="mt-4">
-        <MonthSelector selectedDate={selectedDate} onChange={handleMonthChange} />
+        <CashbookFilterBar
+          period={filter.period}
+          periodLabel={range.label}
+          activeCount={activeFilterCount}
+          canGoNext={canGoNext}
+          sort={filter.sort}
+          onSortChange={(sort) => setFilter((f) => ({ ...f, sort }))}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          onOpen={openFilterSheet}
+        />
       </div>
 
       {isLoading ? (
@@ -212,20 +284,7 @@ export default function CashbookPage() {
             )}
           </div>
 
-          {(categories ?? []).length > 0 && (
-            <div className="mt-4">
-              <EntryFilter
-                categories={categories ?? []}
-                typeFilter={typeFilter}
-                selectedCategoryNames={selectedCategoryNames}
-                onTypeChange={handleTypeChange}
-                onCategoryToggle={handleCategoryToggle}
-                onReset={handleFilterReset}
-              />
-            </div>
-          )}
-
-          {!isFilterActive && (entries ?? []).length > 0 && (
+          {!isFilterActive && isSingleMonthPeriod && (entries ?? []).length > 0 && (
             <div className="mt-4">
               <AiSpendingAnalysis
                 params={{
@@ -236,8 +295,8 @@ export default function CashbookPage() {
                     date: dayjs(e.date.toDate()).format('YYYY-MM-DD'),
                     description: e.description,
                   })),
-                  year,
-                  month: month + 1,
+                  year: dayjs(range.start).year(),
+                  month: dayjs(range.start).month() + 1,
                 }}
                 analyzeFn={analyzeSpending}
               />
@@ -250,6 +309,7 @@ export default function CashbookPage() {
                 groups={groups}
                 categories={categories ?? []}
                 onEntryClick={handleEntryClick}
+                showDateHeaders={isDateSort(filter.sort)}
               />
             ) : isFilterActive ? (
               <EmptyState
