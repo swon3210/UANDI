@@ -76,6 +76,24 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
         </p>
       </div>
 
+      {/* 결과 요약 */}
+      <div className="rounded-xl border border-border bg-muted/40 p-4">
+        <p className="text-xs text-muted-foreground">{years}년 후 예상 자산</p>
+        <p className="text-2xl font-bold tabular-nums" data-testid="projection-result">
+          {formatKrw(projectedTotal)}
+        </p>
+        <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+          <span>
+            납입 원금 <span className="tabular-nums">{formatKrw(principal)}</span>
+          </span>
+          <span className="text-emerald-600">
+            예상 수익 <span className="tabular-nums">+{formatKrw(profit)}</span>
+          </span>
+        </div>
+      </div>
+
+      <AssetGrowthChart data={data} />
+
       {/* 입력 */}
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -145,24 +163,6 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
           ))}
         </div>
       </div>
-
-      {/* 결과 요약 */}
-      <div className="rounded-xl border border-border bg-muted/40 p-4">
-        <p className="text-xs text-muted-foreground">{years}년 후 예상 자산</p>
-        <p className="text-2xl font-bold tabular-nums" data-testid="projection-result">
-          {formatKrw(projectedTotal)}
-        </p>
-        <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-          <span>
-            납입 원금 <span className="tabular-nums">{formatKrw(principal)}</span>
-          </span>
-          <span className="text-emerald-600">
-            예상 수익 <span className="tabular-nums">+{formatKrw(profit)}</span>
-          </span>
-        </div>
-      </div>
-
-      <AssetGrowthChart data={data} />
     </section>
   );
 }

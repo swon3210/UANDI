@@ -21,13 +21,19 @@ function AllocationForm({ initial, isSaving, onSave }: AllocationFormProps) {
 
   return (
     <div className="space-y-8">
-      <AssetAllocationEditor
-        value={value}
-        onChange={setValue}
-        isSaving={isSaving}
-        onSave={() => onSave(value)}
-      />
       <AssetProjectionPanel ratio={value} />
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          예적금·주식·부동산·코인·외환에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 모든 항목의
+          합이 100%가 되어야 저장할 수 있어요.
+        </p>
+        <AssetAllocationEditor
+          value={value}
+          onChange={setValue}
+          isSaving={isSaving}
+          onSave={() => onSave(value)}
+        />
+      </div>
     </div>
   );
 }
@@ -55,10 +61,6 @@ export default function OuterAllocationPage() {
     <>
       <PageHeader data-testid="outer-allocation-header" title="자산 배분" />
       <main className="mx-auto max-w-md px-4 pb-20 pt-4">
-        <p className="mb-6 text-sm text-muted-foreground">
-          예적금·주식·부동산·코인·외환에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 모든 항목의
-          합이 100%가 되어야 저장할 수 있어요.
-        </p>
         {isLoading || !uid || !coupleId ? (
           <FullScreenSpinner />
         ) : (
