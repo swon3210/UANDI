@@ -33,6 +33,19 @@ export async function fetchSources(): Promise<CommunitySourceView[]> {
   return data.sources;
 }
 
+export async function discoverFeed(
+  pageUrl: string
+): Promise<{ feedUrl: string; siteName: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch('/api/community/sources/discover', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ url: pageUrl }),
+  });
+  if (!res.ok) await parseError(res, 'RSS 피드를 찾지 못했어요');
+  return (await res.json()) as { feedUrl: string; siteName: string };
+}
+
 export async function createSource(input: { siteName: string; feedUrl: string }): Promise<void> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/community/sources', {

@@ -39,15 +39,31 @@ export type RunCrawlOptions = {
   parseFeed?: (feedUrl: string) => Promise<ParsedFeed>;
 };
 
+// 브라우저를 사칭하지 않고 봇임을 명시하는 정직한 UA. 크롤·자동탐지가 공유한다.
+export const CRAWLER_USER_AGENT = 'UANDIBot/1.0 (+https://uandi.app; RSS reader)';
+const FEED_ACCEPT = 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*';
+
 // 일부 플랫폼(예: 티스토리)은 Accept 헤더가 없으면 406으로 거부한다.
-// 브라우저를 사칭하지 않고 봇임을 명시하는 정직한 UA + 표준 Accept를 보낸다.
-const defaultParser = new Parser({
-  timeout: 15000,
-  headers: {
-    'User-Agent': 'UANDIBot/1.0 (+https://uandi.app; RSS reader)',
-    Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
-  },
-});
+function createFeedParser(): Parser {
+  return new Parser({
+    timeout: 15000,
+    headers: { 'User-Agent': CRAWLER_USER_AGENT, Accept: FEED_ACCEPT },
+  });
+}
+
+const defaultParser = createFeedParser();
+
+// 단일 피드 URL을 파싱해 제목·항목 수를 확인한다. 자동탐지/검증에서 재사용.
+export async function probeFeed(
+  feedUrl: string
+): Promise<{ title: string; itemCount: number } | null> {
+  try {
+    const feed = await createFeedParser().parseURL(feedUrl);
+    return { title: feed.title ?? '', itemCount: feed.items?.length ?? 0 };
+  } catch {
+    return null;
+  }
+}
 
 async function defaultParseFeed(feedUrl: string): Promise<ParsedFeed> {
   const feed = await defaultParser.parseURL(feedUrl);

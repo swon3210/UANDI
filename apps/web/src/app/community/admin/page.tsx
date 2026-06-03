@@ -31,6 +31,7 @@ import {
   useTriggerCrawl,
   useUpdateSource,
 } from '@/hooks/useCommunitySources';
+import { discoverFeed } from '@/services/community-sources';
 import type { AdminCommunityPost, ModerateAction } from '@/services/community-admin';
 import type { CommunitySourceView } from '@/services/community-sources';
 
@@ -167,6 +168,13 @@ function SourcesPanel({ enabled }: { enabled: boolean }) {
           mode={source ? 'edit' : 'create'}
           initialSiteName={source?.siteName ?? ''}
           initialFeedUrl={source?.feedUrl ?? ''}
+          onDiscover={async (url) => {
+            try {
+              return await discoverFeed(url);
+            } catch {
+              return null;
+            }
+          }}
           onSubmit={async ({ siteName, feedUrl }) => {
             try {
               if (source) {
