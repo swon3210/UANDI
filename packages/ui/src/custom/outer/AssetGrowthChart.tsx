@@ -47,7 +47,7 @@ export function AssetGrowthChart({ data, className }: AssetGrowthChartProps) {
       data-testid="projection-chart"
       className={className ?? 'aspect-[16/10] w-full'}
     >
-      <AreaChart data={data} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+      <AreaChart data={data} margin={{ left: 8, right: 8, top: 8, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="year"
@@ -61,7 +61,7 @@ export function AssetGrowthChart({ data, className }: AssetGrowthChartProps) {
           tickLine={false}
           axisLine={false}
           tickMargin={4}
-          width={44}
+          width={60}
           tickFormatter={formatCompactKrw}
         />
         <ChartTooltip
