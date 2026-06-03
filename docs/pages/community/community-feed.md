@@ -255,9 +255,13 @@ type CommunityPost = {
 
 ## 크롤러 명세 (Cloud Functions `onSchedule`)
 
-`functions/src/community/crawlHumorLinks.ts` (신규). 기존 `functions/` 코드베이스에 추가.
+> **구현 (2026-06)**: 크롤 코어는 web의 `apps/web/src/lib/community/crawl.ts`(`runCrawl`)에 단일 구현으로 두고, 두 경로로 실행한다.
+> - **수동**: 어드민 `/community/admin`의 "소스 관리" 탭 "지금 수집" 버튼 → `POST /api/community/crawl`(verifyAdmin).
+> - **스케줄**: `functions/src/community/crawlSchedule.ts`의 `onSchedule('every 6 hours')`가 같은 엔드포인트를 공유 시크릿(`x-crawl-secret`)으로 호출.
+>
+> 크롤 방식은 **v1에서 RSS/Atom 피드 전용**(법적 가드레일상 가장 안전). 일반 HTML/OG 스크래핑은 보류. 소스는 코드 상수가 아니라 **`communitySources/{id}` 컬렉션**에 저장하고 어드민이 추가/수정/삭제·활성토글로 관리한다. 중복 수집은 정규화 URL 해시를 문서 id(`scraped-{hash}`)로 사용해 방지.
 
-### 소스 선정 (별도 작업)
+### 소스 선정 (어드민 관리)
 
 > **구체적인 크롤 대상 사이트는 이 명세에서 정하지 않는다. 별도 작업으로 진행한다.**
 >

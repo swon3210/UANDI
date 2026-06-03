@@ -17,6 +17,12 @@ service cloud.firestore {
         request.auth.uid in get(/databases/$(database)/documents/couples/$(coupleId)).data.memberUids;
     }
 
+    // admins/{uid} 문서가 존재하면 admin. (식별만 — 실제 권한 강제는 서버 라우트의 verifyAdmin)
+    function isAdmin() {
+      return isAuthed() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     // ── 사용자 본인 데이터 ───────────────────────────────────────
     match /users/{uid} {
       allow read, write: if isAuthed() && request.auth.uid == uid;
@@ -78,6 +84,15 @@ service cloud.firestore {
     // - 추가/제거는 Firebase 콘솔/Admin SDK로만
     match /admins/{uid} {
       allow read: if isAuthed() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ── 커뮤니티 크롤 소스 (전역 — 어드민 관리) ──────────────────
+    // communitySources/{id} → { siteName, feedUrl, enabled, createdAt, lastCrawledAt, lastError }
+    // - read: admin만 (어드민 소스 관리 UI 가드용). 일반 유저는 소스를 알 필요 없음.
+    // - write: 클라이언트 전면 차단 — 추가/수정/삭제·크롤 갱신은 서버 라우트(verifyAdmin)/Admin SDK만.
+    match /communitySources/{sourceId} {
+      allow read: if isAdmin();
       allow write: if false;
     }
 

@@ -2,10 +2,21 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { overlay } from 'overlay-kit';
+import { RefreshCw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   FullScreenSpinner,
+  Sheet,
+  SourceForm,
+  SourceListItem,
   Tabs,
   TabsContent,
   TabsList,
@@ -13,7 +24,15 @@ import {
 } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { useIsAdmin, useModerationLists, useModeratePost } from '@/hooks/useCommunityAdmin';
+import {
+  useCommunitySources,
+  useCreateSource,
+  useDeleteSource,
+  useTriggerCrawl,
+  useUpdateSource,
+} from '@/hooks/useCommunitySources';
 import type { AdminCommunityPost, ModerateAction } from '@/services/community-admin';
+import type { CommunitySourceView } from '@/services/community-sources';
 
 function formatDate(iso: string | null): string {
   if (!iso) return '-';
@@ -134,6 +153,143 @@ function ReportedCard({
   );
 }
 
+function SourcesPanel({ enabled }: { enabled: boolean }) {
+  const { data: sources, isLoading } = useCommunitySources(enabled);
+  const createSource = useCreateSource();
+  const updateSource = useUpdateSource();
+  const deleteSource = useDeleteSource();
+  const crawl = useTriggerCrawl();
+
+  const openSourceForm = (source?: CommunitySourceView) => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <SourceForm
+          mode={source ? 'edit' : 'create'}
+          initialSiteName={source?.siteName ?? ''}
+          initialFeedUrl={source?.feedUrl ?? ''}
+          onSubmit={async ({ siteName, feedUrl }) => {
+            try {
+              if (source) {
+                await updateSource.mutateAsync({ id: source.id, siteName, feedUrl });
+                toast.success('소스를 수정했어요');
+              } else {
+                await createSource.mutateAsync({ siteName, feedUrl });
+                toast.success('소스를 추가했어요');
+              }
+              close();
+              setTimeout(unmount, 300);
+            } catch {
+              toast.error('처리하지 못했어요. 잠시 후 다시 시도해주세요.');
+            }
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const handleToggle = async (source: CommunitySourceView, nextEnabled: boolean) => {
+    try {
+      await updateSource.mutateAsync({ id: source.id, enabled: nextEnabled });
+    } catch {
+      toast.error('상태를 변경하지 못했어요.');
+    }
+  };
+
+  const openDeleteConfirm = async (source: CommunitySourceView) => {
+    const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && close(false)}>
+        <DialogContent data-testid="source-delete-dialog">
+          <DialogHeader>
+            <DialogTitle>소스를 삭제할까요?</DialogTitle>
+            <DialogDescription>
+              삭제해도 이미 수집된 글은 남아요. 이후 이 소스에서는 더 이상 수집하지 않아요.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                close(false);
+                setTimeout(unmount, 300);
+              }}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                close(true);
+                setTimeout(unmount, 300);
+              }}
+            >
+              삭제
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    ));
+    if (!confirmed) return;
+    try {
+      await deleteSource.mutateAsync(source.id);
+      toast.success('소스를 삭제했어요');
+    } catch {
+      toast.error('삭제하지 못했어요.');
+    }
+  };
+
+  const handleCrawl = async () => {
+    try {
+      const result = await crawl.mutateAsync();
+      toast.success(`수집 완료 — 새 글 ${result.created}건`);
+    } catch {
+      toast.error('수집에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  };
+
+  const isMutating =
+    createSource.isPending || updateSource.isPending || deleteSource.isPending;
+
+  return (
+    <div className="space-y-4 pt-4">
+      <div className="flex gap-2">
+        <Button size="sm" onClick={() => openSourceForm()}>
+          <Plus size={16} className="mr-1" />
+          소스 추가
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleCrawl}
+          disabled={crawl.isPending}
+          data-testid="crawl-now"
+        >
+          <RefreshCw size={16} className={`mr-1 ${crawl.isPending ? 'animate-spin' : ''}`} />
+          {crawl.isPending ? '수집 중...' : '지금 수집'}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">불러오는 중...</p>
+        ) : sources && sources.length > 0 ? (
+          sources.map((source) => (
+            <SourceListItem
+              key={source.id}
+              source={source}
+              isPending={isMutating}
+              onToggle={(nextEnabled) => handleToggle(source, nextEnabled)}
+              onEdit={() => openSourceForm(source)}
+              onDelete={() => openDeleteConfirm(source)}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">등록된 소스가 없어요.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CommunityAdminPage() {
   const router = useRouter();
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
@@ -177,9 +333,10 @@ export default function CommunityAdminPage() {
         className="mx-auto max-w-md px-4 pb-8 pt-4"
       >
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending">승인 대기</TabsTrigger>
             <TabsTrigger value="reported">신고됨</TabsTrigger>
+            <TabsTrigger value="sources">소스 관리</TabsTrigger>
           </TabsList>
           <TabsContent value="pending" className="space-y-3 pt-4">
             {isLoading ? (
@@ -212,6 +369,9 @@ export default function CommunityAdminPage() {
             ) : (
               <p className="text-sm text-muted-foreground">신고된 글이 없어요.</p>
             )}
+          </TabsContent>
+          <TabsContent value="sources">
+            <SourcesPanel enabled={enabled} />
           </TabsContent>
         </Tabs>
       </main>
