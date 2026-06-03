@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>테스트 신혼 피드</title>
+    <link>https://example.com</link>
+    <description>E2E 크롤 테스트용 고정 피드</description>
+    <item>
+      <title>신혼 첫 명절 후기</title>
+      <link>https://example.com/articles/first-holiday</link>
+      <description>명절 첫날 시댁에서 있었던 일을 풀어봅니다. 웃음과 눈물이 교차했던 하루.</description>
+      <pubDate>Mon, 01 Jun 2026 09:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>신랑이 설거지를 시작했다</title>
+      <link>https://example.com/articles/dishes</link>
+      <description>결혼 6개월 차, 드디어 신랑이 자발적으로 설거지를 합니다.</description>
+      <pubDate>Sun, 31 May 2026 12:30:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

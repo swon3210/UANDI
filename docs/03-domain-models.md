@@ -414,6 +414,27 @@ type CommunityPost = {
 
 > **비정규화 의도**: `author.displayName`을 글에 스냅샷으로 저장한다. 피드 1페이지당 N번의 프로필 조회를 피하기 위함이며, 닉네임 편집 기능 추가 시 본인 글을 배치 갱신하는 방식으로 전파한다.
 
+### CommunitySource
+
+크롤러(스케줄/수동)가 수집할 RSS/공식 피드 소스. 어드민이 `/community/admin`의 "소스 관리" 탭에서 관리한다.
+
+```ts
+type CommunitySource = {
+  id: string;
+  siteName: string;        // 출처 표시명 (scraped 글 source.siteName으로 사용)
+  feedUrl: string;         // RSS/Atom 피드 URL
+  enabled: boolean;        // false면 크롤 스킵
+  createdAt: Timestamp;
+  lastCrawledAt: Timestamp | null; // 마지막 수집 시각 (운영 가시성)
+  lastError: string | null;        // 마지막 크롤 에러 메시지 (운영 가시성)
+};
+```
+
+**Firestore 경로**: `communitySources/{sourceId}` (최상위, 전역)
+**관리**: read는 admin만(소스 관리 UI 가드용), write는 클라이언트 전면 차단 — 추가/수정/삭제는 `/api/community/sources`(verifyAdmin) 서버 라우트에서 Admin SDK로만. 크롤 수집 시 `lastCrawledAt`/`lastError` 갱신도 서버(`runCrawl`)만.
+
+> **법적 가드레일**: 크롤은 RSS/공식 피드의 **메타데이터(제목·링크·발췌·OG이미지 URL)만** 저장한다. 원문 본문 전문/이미지를 복제·재호스팅하지 않으며 클릭 시 원문으로 링크아웃한다. 중복 수집은 정규화 URL 해시(`scraped-{hash}`를 문서 id로 사용)로 방지한다.
+
 ---
 
 ## Firestore 보안 규칙 명세
@@ -434,6 +455,7 @@ type CommunityPost = {
 | `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 본인 글에 한해 변경 키를 `body`/`imageUrl`/`editedAt`로만 한정(`diff().affectedKeys().hasOnly(...)` — `status`/`reportCount`/`author`/`type`/시각 변조 차단). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
 | `communityPosts/{postId}/reports/{uid}`                   | 클라이언트 read 불가(누적은 `reportCount`로만 노출) | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                  |
 | `admins/{uid}`                                            | 본인 uid 문서만(가드용)                    | 콘솔/Admin SDK만                                                                                                                                                                                          |
+| `communitySources/{id}` *(전역)*                          | admin만(`admins/{uid}` 존재)               | 클라이언트 전면 차단 — 추가/수정/삭제·크롤 갱신은 `/api/community/sources` + `runCrawl`(Admin SDK)만 |
 
 ---
 

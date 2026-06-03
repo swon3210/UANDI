@@ -555,6 +555,35 @@ export async function seedAssetAllocation(
   );
 }
 
+// 커뮤니티 크롤 소스 (전역 — 어드민 관리)
+export async function seedCommunitySource(options: {
+  id?: string;
+  siteName: string;
+  feedUrl: string;
+  enabled?: boolean;
+}): Promise<string> {
+  const sourceId =
+    options.id ?? `source-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/communitySources/${sourceId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          siteName: { stringValue: options.siteName },
+          feedUrl: { stringValue: options.feedUrl },
+          enabled: { booleanValue: options.enabled ?? true },
+          createdAt: { timestampValue: new Date().toISOString() },
+          lastCrawledAt: { nullValue: null },
+          lastError: { nullValue: null },
+        },
+      }),
+    }
+  );
+  return sourceId;
+}
+
 export async function seedAdminConfig(uid: string): Promise<void> {
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/admins/${uid}`,

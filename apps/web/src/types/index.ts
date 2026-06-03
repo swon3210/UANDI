@@ -237,3 +237,17 @@ export type CommunityPost = {
   // type === 'scraped' 전용
   source?: CommunityPostSource;
 };
+
+// ── 커뮤니티 크롤 소스 (전역 — 어드민 관리, Admin SDK/서버만 write) ──
+// 저장 경로: communitySources/{sourceId}
+// 크롤러(스케줄/수동)가 enabled==true인 소스의 RSS/Atom 피드만 수집한다.
+// 법적 가드레일: 피드의 메타데이터(제목·링크·발췌·OG이미지 URL)만 저장, 원문/이미지 복제 금지.
+export type CommunitySource = {
+  id: string;
+  siteName: string; // 출처 표시명 (scraped 카드 source.siteName으로 사용)
+  feedUrl: string; // RSS/Atom 피드 URL
+  enabled: boolean; // false면 크롤 스킵
+  createdAt: Timestamp;
+  lastCrawledAt: Timestamp | null; // 마지막 수집 시각 (운영 가시성)
+  lastError: string | null; // 마지막 크롤 에러 메시지 (운영 가시성)
+};

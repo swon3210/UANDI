@@ -14,7 +14,7 @@ export type ModerationLists = {
   reported: AdminCommunityPost[];
 };
 
-async function getAuthHeaders(): Promise<HeadersInit> {
+export async function getAuthHeaders(): Promise<HeadersInit> {
   const auth = getAuth();
   await auth.authStateReady();
   const user = auth.currentUser;
