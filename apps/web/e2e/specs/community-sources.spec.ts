@@ -106,6 +106,33 @@ test.describe('커뮤니티 크롤 소스 관리 (/community/admin · 소스 관
     await expect(admin.pendingCards).toHaveCount(2);
   });
 
+  test('링크로 RSS 자동 탐지하면 피드 URL이 자동으로 채워진다', async ({
+    adminAuthedContext,
+    baseURL,
+  }) => {
+    const { page } = adminAuthedContext;
+    const admin = new CommunityAdminPage(page);
+    await admin.goto();
+    await admin.sourcesTab.click();
+    await admin.addSourceButton.click();
+
+    const form = page.getByTestId('source-form');
+    await expect(form).toBeVisible();
+    // RSS link 태그가 있는 픽스처 블로그 페이지 링크를 넣고 자동 탐지
+    await form.getByTestId('source-discover-input').fill(`${baseURL}/test-fixtures/sample-blog.html`);
+    await form.getByTestId('source-discover-btn').click();
+
+    // 피드 URL이 자동으로 채워짐 (sample-feed.xml) + 출처명도 피드 제목으로 채워짐
+    await expect(form.getByTestId('source-feedurl')).toHaveValue(
+      `${baseURL}/test-fixtures/sample-feed.xml`
+    );
+    await expect(form.getByTestId('source-sitename')).not.toHaveValue('');
+
+    // 그대로 추가 → 목록에 노출
+    await form.getByRole('button', { name: '추가하기' }).click();
+    await expect(admin.sourceItems).toHaveCount(1);
+  });
+
   test('인증 없이 소스 API를 호출하면 401', async ({ request }) => {
     const res = await request.post('/api/community/sources', {
       data: { siteName: 'x', feedUrl: 'https://example.com/rss' },

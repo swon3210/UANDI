@@ -45,3 +45,20 @@ export const Edit: Story = {
 export const Pending: Story = {
   render: () => <Wrapper isPending />,
 };
+
+export const WithDiscover: Story = {
+  render: () => (
+    <Wrapper
+      onDiscover={async (pageUrl) => {
+        // 데모용 mock: 입력 origin + /rss를 피드로 가정
+        await new Promise((r) => setTimeout(r, 600));
+        try {
+          const origin = new URL(pageUrl).origin;
+          return { feedUrl: `${origin}/rss`, siteName: '자동 탐지된 블로그' };
+        } catch {
+          return null;
+        }
+      }}
+    />
+  ),
+};
