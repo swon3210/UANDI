@@ -22,6 +22,7 @@ const config: StorybookConfig = {
       'next/image': path.resolve(__dirname, '__mocks__/next-image.tsx'),
       'firebase/firestore': path.resolve(__dirname, '__mocks__/firebase-firestore.ts'),
       'dayjs/plugin/isoWeek': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
+      'dayjs/plugin/relativeTime': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
       'dayjs/locale/ko': path.resolve(__dirname, '__mocks__/dayjs-plugin-stub.ts'),
       'dayjs': path.resolve(__dirname, '__mocks__/dayjs.ts'),
       '@': path.resolve(__dirname, '../../../apps/web/src'),

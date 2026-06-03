@@ -9,18 +9,27 @@ type EntryListProps = {
   groups: GroupedEntries[];
   categories: CashbookCategory[];
   onEntryClick: (entry: CashbookEntry) => void;
+  /** 날짜 헤더 노출 여부. 금액순 등 평면 목록일 땐 false(카드에 날짜 표기). */
+  showDateHeaders?: boolean;
 };
 
-export function EntryList({ groups, categories, onEntryClick }: EntryListProps) {
+export function EntryList({
+  groups,
+  categories,
+  onEntryClick,
+  showDateHeaders = true,
+}: EntryListProps) {
   const categoryMap = new Map(categories.map((c) => [c.name, c]));
 
   return (
     <div className="space-y-5">
       {groups.map((group) => (
         <div key={group.date.toISOString()}>
-          <div className="mb-2 text-xs font-medium text-muted-foreground px-1">
-            {formatDay(group.date)}
-          </div>
+          {showDateHeaders && (
+            <div className="mb-2 text-xs font-medium text-muted-foreground px-1">
+              {formatDay(group.date)}
+            </div>
+          )}
           <div className="space-y-2">
             {group.entries.map((entry) => (
               <EntryCard
@@ -28,6 +37,7 @@ export function EntryList({ groups, categories, onEntryClick }: EntryListProps) 
                 entry={entry}
                 category={categoryMap.get(entry.category)}
                 onClick={onEntryClick}
+                showDate={!showDateHeaders}
               />
             ))}
           </div>

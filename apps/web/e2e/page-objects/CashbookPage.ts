@@ -4,14 +4,12 @@ export class CashbookPage {
   readonly page: Page;
   readonly header: Locator;
   readonly addButton: Locator;
-  readonly monthSelector: Locator;
   readonly monthlySummary: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByTestId('cashbook-header');
     this.addButton = page.getByTestId('add-entry-button');
-    this.monthSelector = page.getByTestId('month-selector');
     this.monthlySummary = page.getByTestId('monthly-summary');
   }
 
@@ -19,13 +17,83 @@ export class CashbookPage {
     await this.page.goto('/inner/cashbook/history');
   }
 
-  // Month selector
+  // Filter bar + sheet
   get prevMonthButton() {
-    return this.monthSelector.getByRole('button').first();
+    return this.page.getByTestId('cashbook-prev-month');
   }
 
   get nextMonthButton() {
-    return this.monthSelector.getByRole('button').last();
+    return this.page.getByTestId('cashbook-next-month');
+  }
+
+  get periodLabel() {
+    return this.page.getByTestId('cashbook-period-label');
+  }
+
+  get sortSelect() {
+    return this.page.getByTestId('cashbook-sort-select');
+  }
+
+  get filterTrigger() {
+    return this.page.getByTestId('cashbook-filter-trigger');
+  }
+
+  get filterCount() {
+    return this.page.getByTestId('cashbook-filter-count');
+  }
+
+  get filterSheet() {
+    return this.page.getByTestId('cashbook-filter-sheet');
+  }
+
+  get keywordInput() {
+    return this.page.getByTestId('filter-keyword-input');
+  }
+
+  periodPreset(preset: string) {
+    return this.page.getByTestId(`filter-period-${preset}`);
+  }
+
+  get periodStart() {
+    return this.page.getByTestId('filter-period-start');
+  }
+
+  get periodEnd() {
+    return this.page.getByTestId('filter-period-end');
+  }
+
+  typeFilter(type: string) {
+    return this.page.getByTestId(`filter-type-${type}`);
+  }
+
+  get categoryTrigger() {
+    return this.page.getByTestId('filter-category-trigger');
+  }
+
+  categoryOption(name: string) {
+    return this.page.getByTestId(`filter-category-option-${name}`);
+  }
+
+  get applyButton() {
+    return this.page.getByTestId('filter-apply');
+  }
+
+  get resetButton() {
+    return this.page.getByTestId('filter-reset');
+  }
+
+  get filterResultSummary() {
+    return this.page.getByTestId('filter-result-summary');
+  }
+
+  async openFilter() {
+    await this.filterTrigger.click();
+    await this.filterSheet.waitFor({ state: 'visible' });
+  }
+
+  async applyFilter() {
+    await this.applyButton.click();
+    await this.filterSheet.waitFor({ state: 'hidden' });
   }
 
   // Bottom Sheet form
