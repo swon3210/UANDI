@@ -60,6 +60,26 @@ test.describe('자연어 가계부 다건 입력', () => {
     await expect(page.getByTestId('ai-bulk-preview-sheet')).not.toBeVisible();
   });
 
+  test('10건을 초과하는 다건 입력도 잘리지 않고 미리보기에 모두 표시된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/inner/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    // 12줄 입력 → mock은 구분된 항목 수만큼 entries를 반환한다.
+    // (기존엔 최대 10건으로 잘려 한 달치 결산용 스크린샷이 일부만 추가됐음)
+    const lines = Array.from({ length: 12 }, (_, i) => `지출항목${i + 1} ${(i + 1) * 1000}원`);
+    await page.getByTestId('ai-parse-input').fill(lines.join('\n'));
+    await page.getByTestId('ai-parse-submit').click();
+
+    // 미리보기에 12개 카드가 모두 표시되고 전부 추가 대상이 된다.
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+    await expect(page.getByTestId('parsed-entry-card')).toHaveCount(12);
+    await expect(page.getByTestId('ai-bulk-confirm')).toHaveText('12건 추가');
+  });
+
   test('카드 탭 → EntryForm 오버레이로 편집 후 저장 → 미리보기 카드에 수정값 반영', async ({
     authedContext,
   }) => {
