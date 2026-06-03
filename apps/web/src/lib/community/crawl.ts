@@ -39,7 +39,15 @@ export type RunCrawlOptions = {
   parseFeed?: (feedUrl: string) => Promise<ParsedFeed>;
 };
 
-const defaultParser = new Parser();
+// 일부 플랫폼(예: 티스토리)은 Accept 헤더가 없으면 406으로 거부한다.
+// 브라우저를 사칭하지 않고 봇임을 명시하는 정직한 UA + 표준 Accept를 보낸다.
+const defaultParser = new Parser({
+  timeout: 15000,
+  headers: {
+    'User-Agent': 'UANDIBot/1.0 (+https://uandi.app; RSS reader)',
+    Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+  },
+});
 
 async function defaultParseFeed(feedUrl: string): Promise<ParsedFeed> {
   const feed = await defaultParser.parseURL(feedUrl);
