@@ -8,6 +8,15 @@ import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
 const imageDataUrlRegex = /^data:image\/(png|jpe?g|webp|gif);base64,/i;
 
+// 한 요청에서 추출 가능한 최대 entry 수.
+// 거래 내역 목록 스크린샷은 한 화면에 수십 건이 들어갈 수 있어 넉넉히 잡는다.
+const MAX_ENTRIES = 100;
+
+// OCR·자연어 파싱 모델. 거래 내역 스크린샷의 행 누락을 줄이기 위해 GPT-5 계열 사용.
+// gpt-5-mini는 vision 입력을 지원하며, 추론 모델이라 max_tokens 대신
+// max_completion_tokens / reasoning_effort 를 사용한다 (forex-outlook 라우트와 동일 패턴).
+const PARSE_MODEL = 'gpt-5-mini';
+
 const requestSchema = z
   .object({
     text: z.string().max(1000).optional(),
@@ -31,7 +40,7 @@ const parsedEntrySchema = z.object({
 });
 
 const responseSchema = z.object({
-  entries: z.array(parsedEntrySchema).min(1).max(10),
+  entries: z.array(parsedEntrySchema).min(1).max(MAX_ENTRIES),
 });
 
 function buildMockResponse(text: string | undefined, imagesCount: number) {
@@ -41,7 +50,7 @@ function buildMockResponse(text: string | undefined, imagesCount: number) {
     .split(/[\n,]/)
     .map((s) => s.trim())
     .filter(Boolean).length;
-  const count = Math.min(Math.max(textSegments + imagesCount, 1), 10);
+  const count = Math.min(Math.max(textSegments + imagesCount, 1), MAX_ENTRIES);
 
   const templates = [
     {
@@ -117,10 +126,14 @@ ${categories.join(', ')}
 
 입력 구성:
 - 텍스트: 여러 줄/쉼표/"그리고" 등으로 구분된 여러 건이 포함될 수 있음
-- 이미지: 영수증/결제 내역 사진. 각 이미지에서 상호명, 품목, 금액, 결제 날짜를 추출
-  - 여러 품목이 한 영수증에 있어도 영수증 1장 = entry 1개로 합쳐서 처리 (description에 대표 품목/상호명 요약)
-  - 영수증에 날짜가 명확히 찍혀 있으면 해당 날짜 사용, 없거나 인식 불가하면 오늘 날짜(${today}) 사용
-  - 단, 영수증에 인쇄된 날짜가 오늘보다 6개월 이상 과거라면 인식 오류 가능성이 있으므로 confidence 0.5 이하로 낮춤
+- 이미지: 영수증 사진이거나, 카드/계좌의 거래 내역 목록 화면(스크린샷)일 수 있음
+  - **단일 영수증 사진**: 여러 품목이 찍혀 있어도 영수증 1장 = entry 1개로 합쳐서 처리 (description에 상호명 + 대표 품목 요약)
+  - **거래 내역 목록 화면**(카드 사용 내역, 통장/계좌 거래 내역 등 여러 거래가 행으로 나열된 화면): 화면에 보이는 **거래 한 건(한 행)마다 개별 entry를 만든다.** 한 화면에 20건이 보이면 20개의 entry를 생성하고, 절대 하나로 합치거나 일부만 추리지 마.
+    - 각 행에서 가맹점/상호명 → description, 결제 금액 → amount, 거래 날짜 → date 로 추출
+    - 합계·잔액·청구예정·카드번호·기간표시처럼 개별 거래가 아닌 행은 entry로 만들지 않는다
+    - 승인취소된 거래는 제외한다
+  - 날짜가 화면/영수증에 보이면 그 날짜를 사용하고, 없거나 인식 불가하면 오늘 날짜(${today}) 사용
+  - 단, 인쇄된 날짜가 오늘보다 6개월 이상 과거라면 인식 오류 가능성이 있으므로 confidence 0.5 이하로 낮춤
 
 텍스트와 이미지가 함께 오면 **둘을 합쳐서 하나의 entries 배열**로 응답해. 다른 텍스트는 절대 포함하지 마.
 
@@ -138,7 +151,7 @@ ${categories.join(', ')}
 }
 
 규칙:
-- 최소 1개, 최대 10개의 entry를 생성
+- 최소 1개, 최대 ${MAX_ENTRIES}개의 entry를 생성 (거래 내역 목록 화면이면 보이는 거래를 빠짐없이 추출하되 ${MAX_ENTRIES}건은 넘지 않도록)
 - amount는 반드시 양의 정수 (원 단위)
 - "만원"은 10000, "천원"은 1000으로 변환
 - date가 명시되지 않으면 반드시 오늘 날짜(${today})를 사용
@@ -161,8 +174,11 @@ ${categories.join(', ')}
     }
 
     const completion = await client.chat.completions.create({
-      model: hasImages ? 'gpt-4o' : 'gpt-4o-mini',
-      max_tokens: 1024,
+      model: PARSE_MODEL,
+      // 추론 토큰 + 최대 100건 JSON 출력을 모두 수용하도록 넉넉히 확보
+      max_completion_tokens: 16000,
+      // OCR/추출 위주 작업이라 낮은 추론 강도로도 충분 (필요 시 'medium'까지 상향)
+      reasoning_effort: 'low',
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },

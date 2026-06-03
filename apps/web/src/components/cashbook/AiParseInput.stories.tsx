@@ -26,7 +26,7 @@ const mockParseFnSingle = async (text: string, _categories: string[], images?: s
     date: today,
     confidence: 0.82,
   }));
-  return [...base.slice(0, text.trim() ? 1 : 0), ...fromImages].slice(0, 10);
+  return [...base.slice(0, text.trim() ? 1 : 0), ...fromImages].slice(0, 100);
 };
 
 const mockParseFnMulti = async (text: string) => {
