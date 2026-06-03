@@ -24,7 +24,7 @@ const meta: Meta<typeof CashbookFilterBar> = {
 export default meta;
 type Story = StoryObj<typeof CashbookFilterBar>;
 
-// 월 모드: 좌우 화살표 스테퍼 + 필터 버튼
+// 월 모드: 상단 연도 표시 + 좌우 화살표 스테퍼('월'만) + 필터 버튼
 export const MonthMode: Story = {
   args: {
     period: { mode: 'month', year: 2024, month: 0 },

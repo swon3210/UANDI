@@ -30,6 +30,10 @@ export class CashbookPage {
     return this.page.getByTestId('cashbook-period-label');
   }
 
+  get yearLabel() {
+    return this.page.getByTestId('cashbook-year-label');
+  }
+
   get sortSelect() {
     return this.page.getByTestId('cashbook-sort-select');
   }

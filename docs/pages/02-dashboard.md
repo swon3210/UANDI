@@ -91,12 +91,7 @@ query(
 - 카테고리 메타(아이콘/색상)는 `couples/${coupleId}/cashbookCategories` 1회 조회
 - 쿼리 키: `['cashbookEntries', coupleId, 'range', start.toISOString(), end.toISOString()]`
 
-### 상단 진입 버튼 (`EntryButtons`)
-
-- 2-column grid의 outline 버튼 2개
-- 사진 갤러리 (`data-testid="photo-gallery-entry"`) — `ImageIcon` + "사진 갤러리" → `/inner/photos`
-- 가계부 (`data-testid="cashbook-entry"`) — `BookOpen` + "가계부" → `/inner/cashbook/history`
-- 썸네일 미사용
+> 페이지 간 이동은 좌측 사이드바(`AppSidebar`)로 통합되었으므로, 대시보드 상단의 갤러리/가계부 진입 버튼은 제거되었다.
 
 ### 기간 선택기 (`PeriodSelector`)
 

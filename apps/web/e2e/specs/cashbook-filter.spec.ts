@@ -159,8 +159,8 @@ test.describe('가계부 내역 필터', () => {
     await expect(cashbook.entryCard(lastMonthId)).not.toBeVisible();
 
     await cashbook.prevMonthButton.click();
-    const lastLabel = `${lastMonth.getFullYear()}년 ${lastMonth.getMonth() + 1}월`;
-    await expect(cashbook.periodLabel).toHaveText(lastLabel);
+    await expect(cashbook.yearLabel).toHaveText(`${lastMonth.getFullYear()}년`);
+    await expect(cashbook.periodLabel).toHaveText(`${lastMonth.getMonth() + 1}월`);
     await expect(cashbook.entryCard(lastMonthId)).toBeVisible();
     await expect(cashbook.entryCard(thisMonthId)).not.toBeVisible();
 
@@ -317,9 +317,7 @@ test.describe('가계부 내역 필터', () => {
     await expect(cashbook.entryCard(gasId)).not.toBeVisible();
   });
 
-  test('키워드는 카테고리명에도 매칭되며 대소문자를 구분하지 않는다', async ({
-    authedContext,
-  }) => {
+  test('키워드는 카테고리명에도 매칭되며 대소문자를 구분하지 않는다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
     const cafeId = await seedCashbookEntry(coupleId, uid, {
@@ -389,9 +387,7 @@ test.describe('가계부 내역 필터', () => {
     await expect
       .poll(async () => {
         const order = await cardOrder();
-        return (
-          order.indexOf(`entry-card-${olderId}`) < order.indexOf(`entry-card-${newerId}`)
-        );
+        return order.indexOf(`entry-card-${olderId}`) < order.indexOf(`entry-card-${newerId}`);
       })
       .toBe(true);
   });
