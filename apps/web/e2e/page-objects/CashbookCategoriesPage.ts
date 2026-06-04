@@ -131,6 +131,11 @@ export class CashbookCategoriesPage {
     return this.categoryItem(name).getByTestId('category-recurrence-badge');
   }
 
+  // 자식 chip에 노출되는 정기 발생 배지
+  childRecurrenceBadge(name: string) {
+    return this.childChip(name).getByTestId('category-recurrence-badge');
+  }
+
   async openEdit(name: string) {
     await this.openCategoryMenu(name);
     await this.menuItem('편집').click();

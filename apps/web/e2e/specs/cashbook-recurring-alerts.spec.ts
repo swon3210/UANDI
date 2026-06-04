@@ -118,6 +118,33 @@ test.describe('고정 지출·수입 정기 알림', () => {
 
       await expect(categoriesPage.recurrenceBadge('월세')).toContainText('매월 25일');
     });
+
+    test('고정 지출의 자식 카테고리도 정기 발생을 설정하면 chip에 배지가 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      // 고정 지출(월세)에 자식 추가 → 자식은 부모의 고정 구분을 상속
+      await categoriesPage.addChildCategory('월세', '주차비');
+
+      // 자식 편집 시트에 정기 발생 섹션이 노출된다(부모 구분 상속)
+      await categoriesPage.childMenuButton('주차비').click();
+      await categoriesPage.menuItem('편집').click();
+      await expect(categoriesPage.recurrenceSection).toBeVisible();
+
+      await categoriesPage.recurrenceSwitch.click();
+      await categoriesPage.recurrenceKind('dayOfMonth').click();
+      await categoriesPage.recurrenceDayInput.fill('5');
+      await categoriesPage.saveButton.click();
+
+      // 자식 chip에 "매월 5일" 배지 표시
+      await expect(categoriesPage.childRecurrenceBadge('주차비')).toContainText('매월 5일');
+    });
   });
 
   test.describe('알림 설정', () => {
