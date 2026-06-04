@@ -62,7 +62,7 @@ export function OuterDashboard() {
 
   return (
     <>
-      <PageHeader data-testid="outer-dashboard-header" />
+      <PageHeader title="재테크" data-testid="outer-dashboard-header" />
       <main className="mx-auto max-w-md space-y-4 px-4 pb-20 pt-4">
         <InvestmentEntryCard
           currencyLabel="USD"

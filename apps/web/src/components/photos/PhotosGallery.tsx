@@ -210,6 +210,7 @@ export function PhotosGallery() {
   return (
     <div className="flex min-h-screen flex-col">
       <PageHeader
+        title="갤러리"
         rightSlot={
           <div className="flex items-center">
             <Button

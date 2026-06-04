@@ -26,6 +26,7 @@ export function Dashboard() {
   return (
     <>
       <PageHeader
+        title="대시보드"
         data-testid="dashboard-header"
         rightSlot={
           <DropdownMenu>
