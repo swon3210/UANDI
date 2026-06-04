@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -169,6 +170,36 @@ export default function CashbookPage() {
       </Sheet>
     ));
   };
+
+  // 푸시 알림 딥링크(quickAdd=1)로 진입하면 prefill된 추가 시트를 1회 자동으로 연다.
+  // 카테고리 로드 후 열어야 prefill 카테고리가 선택되므로 categories를 기다린다.
+  // 외부 트리거(URL)에 반응하는 일회성 동작이라 effect + ref 가드를 사용한다.
+  const searchParams = useSearchParams();
+  const quickAddHandledRef = useRef(false);
+  useEffect(() => {
+    if (quickAddHandledRef.current) return;
+    if (searchParams.get('quickAdd') !== '1') return;
+    if (!categories) return;
+    quickAddHandledRef.current = true;
+
+    const qaType = searchParams.get('qaType');
+    const type: CashbookEntryType =
+      qaType === 'income' || qaType === 'flex' ? qaType : 'expense';
+    const amountRaw = searchParams.get('qaAmount');
+    const amount =
+      amountRaw && Number.isFinite(Number(amountRaw)) ? Number(amountRaw) : undefined;
+
+    handleAdd({
+      type,
+      category: searchParams.get('qaCategory') ?? undefined,
+      amount,
+    });
+
+    // 새로고침/뒤로가기 시 시트가 다시 열리지 않도록 쿼리 제거
+    window.history.replaceState(null, '', '/inner/cashbook/history');
+    // handleAdd는 매 렌더 새로 생성되어 deps에서 제외(일회성 가드로 충분)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, categories]);
 
   const handleEntryClick = (entry: CashbookEntry) => {
     overlay.open(({ isOpen, close, unmount }) => (
