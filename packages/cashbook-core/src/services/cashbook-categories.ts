@@ -126,7 +126,14 @@ export async function updateCategory(
   data: Partial<
     Pick<
       CashbookCategory,
-      'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder' | 'description' | 'examples'
+      | 'name'
+      | 'icon'
+      | 'color'
+      | 'subGroup'
+      | 'sortOrder'
+      | 'description'
+      | 'examples'
+      | 'recurrence'
     >
   >
 ): Promise<void> {

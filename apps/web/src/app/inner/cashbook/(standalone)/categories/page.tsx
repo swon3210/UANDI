@@ -32,9 +32,43 @@ import { countEntriesByCategory } from '@/services/cashbook';
 import { GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
-import type { CashbookCategory, CategoryGroup } from '@/types';
+import type { CashbookCategory, CategoryGroup, RecurringSchedule } from '@/types';
 
 const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'flex'];
+
+const RECURRENCE_SUBGROUPS: CashbookCategory['subGroup'][] = ['fixed_expense', 'regular_income'];
+
+type RecurrenceFormValue = {
+  enabled: boolean;
+  kind: 'dayOfMonth' | 'nthWeekday';
+  dayOfMonth?: number;
+  week?: number;
+  weekday?: number;
+  leadDays?: number;
+  expectedAmount?: number | null;
+};
+
+// 폼 값 → Firestore 저장용 payload. undefined 필드를 제거하고(Firestore가 거부),
+// 설정이 전혀 없으면 null을 반환한다.
+function buildRecurrencePayload(value: RecurrenceFormValue): RecurringSchedule | null {
+  const hasConfig =
+    value.dayOfMonth != null ||
+    value.week != null ||
+    value.weekday != null ||
+    value.expectedAmount != null;
+  if (!value.enabled && !hasConfig) return null;
+
+  const payload: RecurringSchedule = { enabled: value.enabled, kind: value.kind };
+  if (value.kind === 'dayOfMonth') {
+    if (value.dayOfMonth != null) payload.dayOfMonth = value.dayOfMonth;
+  } else {
+    if (value.week != null) payload.week = value.week as RecurringSchedule['week'];
+    if (value.weekday != null) payload.weekday = value.weekday;
+  }
+  if (value.leadDays != null) payload.leadDays = value.leadDays;
+  payload.expectedAmount = value.expectedAmount ?? null;
+  return payload;
+}
 
 export default function CashbookCategoriesPage() {
   const router = useRouter();
@@ -62,15 +96,19 @@ export default function CashbookCategoriesPage() {
           editingCategory={props.editingCategory}
           onSubmit={async (data) => {
             if (props.editingCategory) {
+              const editSubGroup = data.subGroup as CashbookCategory['subGroup'];
               await updateMutation.mutateAsync({
                 categoryId: props.editingCategory.id,
                 data: {
                   name: data.name,
                   icon: data.icon,
                   color: data.color,
-                  subGroup: data.subGroup as CashbookCategory['subGroup'],
+                  subGroup: editSubGroup,
                   description: data.description,
                   examples: data.examples,
+                  ...(RECURRENCE_SUBGROUPS.includes(editSubGroup)
+                    ? { recurrence: buildRecurrencePayload(data.recurrence) }
+                    : {}),
                 },
               });
               return;
@@ -80,10 +118,11 @@ export default function CashbookCategoriesPage() {
             const siblingCount = parent
               ? (categories ?? []).filter((c) => c.parentCategoryId === parent.id).length
               : groupCategories.filter((c) => c.parentCategoryId === null).length;
+            const addSubGroup = (parent?.subGroup ?? data.subGroup) as CashbookCategory['subGroup'];
 
             await addMutation.mutateAsync({
               group: props.group,
-              subGroup: (parent?.subGroup ?? data.subGroup) as CashbookCategory['subGroup'],
+              subGroup: addSubGroup,
               name: data.name,
               icon: data.icon,
               color: data.color,
@@ -92,6 +131,9 @@ export default function CashbookCategoriesPage() {
               parentCategoryId: parent?.id ?? null,
               description: data.description,
               examples: data.examples,
+              ...(RECURRENCE_SUBGROUPS.includes(addSubGroup)
+                ? { recurrence: buildRecurrencePayload(data.recurrence) }
+                : {}),
             });
           }}
           onClose={() => {

@@ -28,6 +28,26 @@ export type CategorySubGroup =
   | 'joint_flex'
   | 'personal_flex';
 
+export type RecurringScheduleKind = 'dayOfMonth' | 'nthWeekday';
+
+/** 카테고리의 정기 발생 주기. fixed_expense / regular_income 카테고리에만 설정한다. */
+export type RecurringSchedule = {
+  /** 정기 알림 on/off. false면 발생일 데이터는 보존하되 알림을 보내지 않는다. */
+  enabled: boolean;
+  /** 발생일 지정 방식 */
+  kind: RecurringScheduleKind;
+  /** kind === 'dayOfMonth': 1~31. 해당 월에 그 날이 없으면 그 달 마지막 날로 clamp. */
+  dayOfMonth?: number;
+  /** kind === 'nthWeekday': 몇째 주(1~5, 또는 -1=마지막 주). */
+  week?: 1 | 2 | 3 | 4 | 5 | -1;
+  /** kind === 'nthWeekday': 요일(1=월 ~ 7=일). */
+  weekday?: number;
+  /** 발생일 며칠 전에 알림을 보낼지. 0 = 당일. 0~7. 미지정 시 0. */
+  leadDays?: number;
+  /** 예상 금액(선택). 있으면 알림 본문에 노출. */
+  expectedAmount?: number | null;
+};
+
 export type CashbookCategory = {
   id: string;
   coupleId: string;
@@ -44,5 +64,7 @@ export type CashbookCategory = {
   description: string;
   /** 이 카테고리에 해당하는 항목 예시 목록. 입력 메모와 매칭해 자동 추천에도 사용. */
   examples: string[];
+  /** 정기 발생 주기. fixed_expense / regular_income에서만 설정. 미설정이면 정기 알림 없음. */
+  recurrence?: RecurringSchedule | null;
   createdAt: Timestamp;
 };

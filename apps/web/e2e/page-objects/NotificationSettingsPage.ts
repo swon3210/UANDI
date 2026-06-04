@@ -5,6 +5,7 @@ export class NotificationSettingsPage {
   readonly header: Locator;
   readonly recordReminderSwitch: Locator;
   readonly budgetWarningSwitch: Locator;
+  readonly recurringTransactionSwitch: Locator;
   readonly timeInput: Locator;
   readonly dayButtons: Locator;
 
@@ -13,6 +14,7 @@ export class NotificationSettingsPage {
     this.header = page.getByTestId('notification-settings-header');
     this.recordReminderSwitch = page.getByTestId('record-reminder-switch');
     this.budgetWarningSwitch = page.getByTestId('budget-warning-switch');
+    this.recurringTransactionSwitch = page.getByTestId('recurring-transaction-switch');
     this.timeInput = page.getByTestId('reminder-time-input');
     this.dayButtons = page.getByTestId('day-selector');
   }

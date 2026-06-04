@@ -93,6 +93,49 @@ export class CashbookCategoriesPage {
     return this.page.getByTestId('locked-parent');
   }
 
+  // ── 정기 발생(고정 지출·수입) 섹션 ──
+  get recurrenceSection() {
+    return this.page.getByTestId('recurrence-section');
+  }
+
+  get recurrenceSwitch() {
+    return this.page.getByTestId('recurrence-enabled-switch');
+  }
+
+  recurrenceKind(kind: 'dayOfMonth' | 'nthWeekday') {
+    return this.page.getByTestId(`recurrence-kind-${kind}`);
+  }
+
+  get recurrenceDayInput() {
+    return this.page.getByTestId('recurrence-day-input');
+  }
+
+  recurrenceWeekButton(week: number) {
+    return this.page.getByTestId(`recurrence-week-${week}`);
+  }
+
+  recurrenceWeekdayButton(weekday: number) {
+    return this.page.getByTestId(`recurrence-weekday-${weekday}`);
+  }
+
+  get recurrenceLeadInput() {
+    return this.page.getByTestId('recurrence-lead-input');
+  }
+
+  get recurrenceAmountInput() {
+    return this.page.getByTestId('recurrence-amount-input');
+  }
+
+  // 카테고리 카드에 노출되는 정기 발생 배지
+  recurrenceBadge(name: string) {
+    return this.categoryItem(name).getByTestId('category-recurrence-badge');
+  }
+
+  async openEdit(name: string) {
+    await this.openCategoryMenu(name);
+    await this.menuItem('편집').click();
+  }
+
   async addCategory(
     name: string,
     options?: { icon?: string; description?: string; examples?: string[] }

@@ -10,6 +10,7 @@ import {
 import { MoreVertical } from 'lucide-react';
 import type { CashbookCategory } from '@/types';
 import { CategoryIcon } from './CategoryIcon';
+import { RecurringBadge } from './RecurringBadge';
 
 type CategoryItemProps = {
   category: CashbookCategory;
@@ -37,7 +38,7 @@ export function CategoryItem({
           >
             <CategoryIcon name={category.icon} size={20} />
           </span>
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-base font-medium">{category.name}</span>
             {category.description && (
               <span
@@ -46,6 +47,11 @@ export function CategoryItem({
               >
                 {category.description}
               </span>
+            )}
+            {category.recurrence?.enabled && (
+              <div className="flex">
+                <RecurringBadge schedule={category.recurrence} />
+              </div>
             )}
           </div>
         </div>

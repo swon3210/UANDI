@@ -24,6 +24,7 @@ export function useUpdateNotificationSettings(userId: string | null) {
       coupleId: string;
       recordReminder: NotificationSettings['recordReminder'];
       budgetWarning: NotificationSettings['budgetWarning'];
+      recurringTransaction?: NotificationSettings['recurringTransaction'];
     }) => updateNotificationSettings(userId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, userId] });
