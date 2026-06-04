@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -16,6 +16,7 @@ import {
   RadioGroup,
   RadioGroupItem,
   Label,
+  Separator,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -32,6 +33,48 @@ import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
 import { CategoryIcon } from './CategoryIcon';
 import { ExampleTagInput, ExampleChipList, EXAMPLES_MAX } from './ExampleTagInput';
+import { RecurringScheduleFields } from './RecurringScheduleFields';
+
+// 정기 발생 설정을 노출할 subGroup (고정 지출 / 고정 수입)
+const RECURRENCE_SUBGROUPS: CategorySubGroup[] = ['fixed_expense', 'regular_income'];
+
+const recurrenceSchema = z
+  .object({
+    enabled: z.boolean(),
+    kind: z.enum(['dayOfMonth', 'nthWeekday']),
+    dayOfMonth: z.number().min(1).max(31).optional(),
+    week: z.number().optional(),
+    weekday: z.number().min(1).max(7).optional(),
+    leadDays: z.number().min(0).max(7).optional(),
+    expectedAmount: z.number().min(0).nullable().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (!val.enabled) return;
+    if (val.kind === 'dayOfMonth') {
+      if (val.dayOfMonth == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '며칠에 발생하는지 입력해주세요',
+          path: ['dayOfMonth'],
+        });
+      }
+    } else {
+      if (val.week == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '몇째 주인지 선택해주세요',
+          path: ['week'],
+        });
+      }
+      if (val.weekday == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '요일을 선택해주세요',
+          path: ['weekday'],
+        });
+      }
+    }
+  });
 
 const schema = z.object({
   name: z.string().min(1, '카테고리 이름을 입력해주세요'),
@@ -42,6 +85,7 @@ const schema = z.object({
   examples: z
     .array(z.string().min(1).max(20))
     .max(EXAMPLES_MAX, `예시는 ${EXAMPLES_MAX}개까지 입력할 수 있어요`),
+  recurrence: recurrenceSchema,
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -77,8 +121,22 @@ export function CategoryForm({
       subGroup: editingCategory?.subGroup ?? lockedSubGroup ?? subGroups[0],
       description: editingCategory?.description ?? '',
       examples: editingCategory?.examples ?? [],
+      recurrence: editingCategory?.recurrence
+        ? {
+            enabled: editingCategory.recurrence.enabled,
+            kind: editingCategory.recurrence.kind,
+            dayOfMonth: editingCategory.recurrence.dayOfMonth,
+            week: editingCategory.recurrence.week,
+            weekday: editingCategory.recurrence.weekday,
+            leadDays: editingCategory.recurrence.leadDays,
+            expectedAmount: editingCategory.recurrence.expectedAmount ?? null,
+          }
+        : { enabled: false, kind: 'dayOfMonth' },
     },
   });
+
+  const currentSubGroup = useWatch({ control: form.control, name: 'subGroup' });
+  const showRecurrence = RECURRENCE_SUBGROUPS.includes(currentSubGroup as CategorySubGroup);
 
   const handleSubmit = async (data: FormValues) => {
     try {
@@ -245,6 +303,28 @@ export function CategoryForm({
                 </FormItem>
               )}
             />
+          )}
+
+          {showRecurrence && (
+            <>
+              <Separator />
+              <FormField
+                control={form.control}
+                name="recurrence"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <RecurringScheduleFields
+                        value={field.value}
+                        onChange={field.onChange}
+                        variant={group === 'income' ? 'income' : 'expense'}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
           )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

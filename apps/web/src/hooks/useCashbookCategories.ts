@@ -48,7 +48,14 @@ export function useUpdateCategory(coupleId: string | null) {
       data: Partial<
         Pick<
           CashbookCategory,
-          'name' | 'icon' | 'color' | 'subGroup' | 'sortOrder' | 'description' | 'examples'
+          | 'name'
+          | 'icon'
+          | 'color'
+          | 'subGroup'
+          | 'sortOrder'
+          | 'description'
+          | 'examples'
+          | 'recurrence'
         >
       >;
     }) => updateCategory(coupleId!, categoryId, data),

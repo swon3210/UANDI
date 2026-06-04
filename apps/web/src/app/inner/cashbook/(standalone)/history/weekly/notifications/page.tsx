@@ -37,6 +37,9 @@ const DEFAULT_VALUES = {
     enabled: true,
     selfAlertInApp: true,
   },
+  recurringTransaction: {
+    enabled: true,
+  },
 };
 
 export default function NotificationSettingsPage() {
@@ -115,6 +118,10 @@ export default function NotificationSettingsPage() {
           // 기존 사용자 문서에는 selfAlertInApp이 없을 수 있어 기본값 true 보정.
           selfAlertInApp: settings.budgetWarning.selfAlertInApp ?? true,
         },
+        recurringTransaction: {
+          // 기존 사용자 문서에는 recurringTransaction이 없을 수 있어 기본값 true 보정.
+          enabled: settings.recurringTransaction?.enabled ?? true,
+        },
       }
     : DEFAULT_VALUES;
 
@@ -145,6 +152,7 @@ export default function NotificationSettingsPage() {
                 coupleId,
                 recordReminder: data.recordReminder,
                 budgetWarning: data.budgetWarning,
+                recurringTransaction: data.recurringTransaction,
               },
               {
                 onSuccess: async () => {

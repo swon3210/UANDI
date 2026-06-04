@@ -7,6 +7,8 @@ export type {
   CashbookCategory,
   CategoryGroup,
   CategorySubGroup,
+  RecurringSchedule,
+  RecurringScheduleKind,
 } from '@uandi/cashbook-core';
 
 // ── 앱 전용 타입 ──
@@ -157,6 +159,10 @@ export type NotificationSettings = {
     enabled: boolean;
     // 본인 지출로 인해 발생한 예산 경고를 in-app toast로 띄울지 여부. 미지정 시 true 취급.
     selfAlertInApp?: boolean;
+  };
+  // 고정 지출·수입 정기 알림 on/off. 미지정 시 true 취급(기존 유저 호환).
+  recurringTransaction?: {
+    enabled: boolean;
   };
   updatedAt: Timestamp;
 };

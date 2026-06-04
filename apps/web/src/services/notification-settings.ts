@@ -20,6 +20,7 @@ export async function updateNotificationSettings(
     coupleId: string;
     recordReminder: NotificationSettings['recordReminder'];
     budgetWarning: NotificationSettings['budgetWarning'];
+    recurringTransaction?: NotificationSettings['recurringTransaction'];
   }
 ): Promise<void> {
   await setDoc(

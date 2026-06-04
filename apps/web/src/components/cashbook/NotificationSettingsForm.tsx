@@ -35,6 +35,9 @@ const notificationSettingsSchema = z.object({
     enabled: z.boolean(),
     selfAlertInApp: z.boolean(),
   }),
+  recurringTransaction: z.object({
+    enabled: z.boolean(),
+  }),
 });
 
 type NotificationSettingsFormValues = z.infer<typeof notificationSettingsSchema>;
@@ -184,6 +187,35 @@ export function NotificationSettingsForm({
               )}
             />
           )}
+        </div>
+
+        <Separator />
+
+        {/* 고정 지출·수입 알림 */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold">고정 지출·수입 알림</h3>
+
+          <FormField
+            control={form.control}
+            name="recurringTransaction.enabled"
+            render={({ field }) => (
+              <FormItem className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <FormLabel className="text-sm">알림 받기</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    카테고리에 설정한 발생일에 맞춰 월세·구독·정기 급여 기록을 알려드려요.
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="recurring-transaction-switch"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
         <Button type="submit" className="w-full" disabled={isSaving}>

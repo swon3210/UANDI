@@ -5,6 +5,8 @@ export type {
   CashbookCategory,
   CategoryGroup,
   CategorySubGroup,
+  RecurringSchedule,
+  RecurringScheduleKind,
 } from './types';
 
 // Services
@@ -39,3 +41,10 @@ export {
 
 // Utils
 export { formatCurrency, formatAmount } from './utils/currency';
+export {
+  occurrenceDateInMonth,
+  shouldFireOn,
+  formatRecurrence,
+  WEEK_LABELS,
+  WEEKDAY_LABELS,
+} from './utils/recurrence';
