@@ -43,7 +43,7 @@ export default function ForexListPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader data-testid="forex-list-header" />
+      <PageHeader title="환테크" data-testid="forex-list-header" />
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-8 pt-4">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">

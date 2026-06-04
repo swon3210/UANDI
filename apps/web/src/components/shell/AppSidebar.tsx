@@ -24,8 +24,8 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
     label: '우리집',
     Icon: Home,
     items: [
-      { id: 'inner-home', label: '홈', href: '/inner', Icon: LayoutDashboard },
-      { id: 'photos', label: '사진', href: '/inner/photos', Icon: ImageIcon },
+      { id: 'inner-home', label: '대시보드', href: '/inner', Icon: LayoutDashboard },
+      { id: 'photos', label: '갤러리', href: '/inner/photos', Icon: ImageIcon },
       {
         id: 'cashbook',
         label: '가계부',

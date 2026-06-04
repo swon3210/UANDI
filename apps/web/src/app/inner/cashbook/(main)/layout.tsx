@@ -57,6 +57,7 @@ export default function CashbookLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <PageHeader
+        title="가계부"
         data-testid="cashbook-header"
         rightSlot={
           <>
