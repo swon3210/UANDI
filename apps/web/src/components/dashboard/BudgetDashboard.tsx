@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronRight } from 'lucide-react';
 import { EmptyState, Skeleton } from '@uandi/ui';
 import { useDashboardData, type GroupFilter } from '@/hooks/useDashboardData';
 import {
@@ -114,15 +115,22 @@ export function BudgetDashboard({ coupleId }: Props) {
       />
       <GroupTabs value={group} onChange={handleGroupChange} />
 
-      <div
+      <Link
+        href="/inner/cashbook/history"
         data-testid="dashboard-total"
-        className="rounded-xl border border-border bg-card px-4 py-3"
+        className="block rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40"
       >
-        <div className="text-xs text-muted-foreground">{TOTAL_LABEL[group]}</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">{TOTAL_LABEL[group]}</div>
+          <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+            내역 보기
+            <ChevronRight size={14} />
+          </span>
+        </div>
         <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
           {totalDisplay.toLocaleString()}원
         </div>
-      </div>
+      </Link>
 
       {isLoading ? (
         <>
