@@ -36,6 +36,22 @@ test.describe('대시보드', () => {
     });
   });
 
+  test.describe('진입점', () => {
+    test('예산 설정 진입점 클릭 시 연간 예산 계획으로 이동한다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await expect(dashboard.entryBudget).toBeVisible();
+      await dashboard.entryBudget.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/plan\/annual/, { timeout: 30000 });
+    });
+
+    test('합계 카드 클릭 시 가계부 내역 페이지로 이동한다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await expect(dashboard.totalAmount).toBeVisible();
+      await dashboard.totalAmount.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+    });
+  });
+
   test.describe('가계부 대시보드 — 컨트롤', () => {
     test('기본값으로 주간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);

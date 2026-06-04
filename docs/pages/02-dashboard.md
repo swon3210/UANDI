@@ -45,7 +45,9 @@
 │  UANDI          [프로필] │  ← Header
 ├─────────────────────────┤
 │                         │
-│  [🖼 사진 갤러리][📒 가계부]│  ← 상단 진입 버튼 2개 (2-column grid)
+│  ┌───────────────────┐  │
+│  │ 🎯 예산 설정     › │  │  ← 진입 카드 → /inner/cashbook/plan/annual
+│  └───────────────────┘  │
 │                         │
 │  [주간] [월간] [연간]    │  ← 기간 선택 (Tabs/ToggleGroup)
 │                         │
@@ -54,7 +56,8 @@
 │  [전체|지출|수입|FLEX|투자]│  ← 그룹 탭
 │                         │
 │  ┌───────────────────┐  │
-│  │ 합계 -1,230,000원  │  │  ← KPI 카드 (선택 그룹의 기간 총합)
+│  │ 합계  내역 보기 ›  │  │  ← KPI 카드(클릭 시 내역 페이지로 이동)
+│  │ -1,230,000원       │  │
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
@@ -91,7 +94,18 @@ query(
 - 카테고리 메타(아이콘/색상)는 `couples/${coupleId}/cashbookCategories` 1회 조회
 - 쿼리 키: `['cashbookEntries', coupleId, 'range', start.toISOString(), end.toISOString()]`
 
-> 페이지 간 이동은 좌측 사이드바(`AppSidebar`)로 통합되었으므로, 대시보드 상단의 갤러리/가계부 진입 버튼은 제거되었다.
+> 공간 간 이동은 좌측 사이드바(`AppSidebar`)로 통합되어 있다. 다만 우리집 홈에서 자주 쓰는 영역은 사이드바와 별개로 다음 진입점을 둔다.
+
+### 진입점
+
+- **예산 설정 진입 카드 (`DashboardEntryList`)**
+  - 홈 상단에 전폭 가로 카드로 표시 (아이콘 + 레이블 + 설명 + `ChevronRight`)
+  - `예산 설정` → `/inner/cashbook/plan/annual` (연간 예산 계획)
+  - 항목별 `data-testid="dashboard-entry-{id}"` (예산: `dashboard-entry-budget`)
+  - `entries: DashboardEntry[]`를 props로 받는 프레젠테이션 컴포넌트 — 라우트/아이콘/레이블은 `Dashboard`가 주입
+- **내역 진입 — 합계 KPI 카드 재사용**
+  - 별도 진입 UI를 추가하지 않고, 기존 합계 KPI 카드(`dashboard-total`)를 `next/link`로 감싸 클릭 시 `/inner/cashbook/history`로 이동
+  - 카드 우상단에 `내역 보기 ›` 보조 라벨 표시, `data-testid="dashboard-total"` 유지
 
 ### 기간 선택기 (`PeriodSelector`)
 

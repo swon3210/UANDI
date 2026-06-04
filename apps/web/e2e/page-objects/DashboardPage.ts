@@ -30,6 +30,9 @@ export class DashboardPage {
   readonly emptyState: Locator;
   readonly categorySelector: Locator;
 
+  // 진입점
+  readonly entryBudget: Locator;
+
   categoryChip(name: string): Locator {
     return this.page.getByTestId(`category-chip-${name}`);
   }
@@ -66,6 +69,8 @@ export class DashboardPage {
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
     this.categorySelector = page.getByTestId('category-selector');
+
+    this.entryBudget = page.getByTestId('dashboard-entry-budget');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

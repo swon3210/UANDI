@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { User as UserIcon, Settings, LogOut } from 'lucide-react';
+import { User as UserIcon, Settings, LogOut, Target } from 'lucide-react';
 import {
   Avatar,
   AvatarImage,
@@ -15,6 +15,18 @@ import { PageHeader } from '@/components/shell/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
 import { BudgetDashboard } from './BudgetDashboard';
+import { DashboardEntryList, type DashboardEntry } from './DashboardEntryList';
+
+const ENTRIES: DashboardEntry[] = [
+  {
+    id: 'budget',
+    label: '예산 설정',
+    description: '연간 예산 계획',
+    href: '/inner/cashbook/plan/annual',
+    Icon: Target,
+    testId: 'dashboard-entry-budget',
+  },
+];
 
 export function Dashboard() {
   const router = useRouter();
@@ -61,6 +73,7 @@ export function Dashboard() {
         }
       />
       <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
+        <DashboardEntryList entries={ENTRIES} />
         <BudgetDashboard coupleId={coupleId} />
       </main>
     </>
