@@ -81,3 +81,19 @@ export const FlexJoint: Story = {
     onDelete: () => {},
   },
 };
+
+// 고정 지출의 자식: 정기 발생 배지("매월 N일")가 chip에 표시됨
+export const FixedWithRecurrence: Story = {
+  args: {
+    category: {
+      ...base,
+      subGroup: 'fixed_expense',
+      name: '주차비',
+      icon: 'car',
+      color: '#D8635A',
+      recurrence: { enabled: true, kind: 'dayOfMonth', dayOfMonth: 5 },
+    },
+    onEdit: () => {},
+    onDelete: () => {},
+  },
+};

@@ -145,7 +145,9 @@ test.describe('카테고리 설정', () => {
       ).toBeVisible();
     });
 
-    test('자식 카테고리 chip에 부모 subGroup 뱃지가 노출된다', async ({ authedContext }) => {
+    test('자식 카테고리 chip에는 subGroup 뱃지를 중복 표시하지 않는다', async ({
+      authedContext,
+    }) => {
       const { page, coupleId } = authedContext;
       const parentId = await seedCashbookCategory(coupleId, {
         group: 'expense',
@@ -165,8 +167,9 @@ test.describe('카테고리 설정', () => {
       await categoriesPage.goto();
       await categoriesPage.selectTab('지출');
 
-      // 자식 chip에 "공통" 뱃지 표시
-      await expect(categoriesPage.childChip('외식').getByText('공통')).toBeVisible();
+      // 자식은 부모의 subGroup을 따르므로 chip에 "공통" 뱃지를 따로 표시하지 않는다
+      await expect(categoriesPage.childChip('외식')).toBeVisible();
+      await expect(categoriesPage.childChip('외식').getByText('공통')).toHaveCount(0);
     });
 
     test('부모 카테고리에 description을 입력하면 부모 카드에 표시된다', async ({

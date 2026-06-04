@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,8 +9,8 @@ import {
 } from '@uandi/ui';
 import { MoreVertical } from 'lucide-react';
 import type { CashbookCategory } from '@/types';
-import { SUB_GROUP_SHORT_LABELS } from '@/constants/default-categories';
 import { CategoryIcon } from './CategoryIcon';
+import { RecurringBadge } from './RecurringBadge';
 
 type CategoryChildChipProps = {
   category: CashbookCategory;
@@ -32,9 +31,7 @@ export function CategoryChildChip({ category, onEdit, onDelete }: CategoryChildC
         <CategoryIcon name={category.icon} size={12} />
       </span>
       <span>{category.name}</span>
-      <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-        {SUB_GROUP_SHORT_LABELS[category.subGroup]}
-      </Badge>
+      {category.recurrence?.enabled && <RecurringBadge schedule={category.recurrence} />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

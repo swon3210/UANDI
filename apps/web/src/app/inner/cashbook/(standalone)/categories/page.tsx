@@ -146,8 +146,13 @@ export default function CashbookCategoriesPage() {
   };
 
   const handleAdd = () => openForm({ group: activeTab });
-  const handleEdit = (category: CashbookCategory) =>
-    openForm({ group: category.group, editingCategory: category });
+  const handleEdit = (category: CashbookCategory) => {
+    // 자식 카테고리 편집 시 부모를 함께 넘겨 subGroup이 부모에 종속되도록 한다.
+    const parentCategory = category.parentCategoryId
+      ? (categories ?? []).find((c) => c.id === category.parentCategoryId)
+      : undefined;
+    openForm({ group: category.group, parentCategory, editingCategory: category });
+  };
   const handleAddChild = (parent: CashbookCategory) =>
     openForm({ group: parent.group, parentCategory: parent });
 

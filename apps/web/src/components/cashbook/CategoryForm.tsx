@@ -118,7 +118,8 @@ export function CategoryForm({
       name: editingCategory?.name ?? '',
       icon: editingCategory?.icon ?? parentCategory?.icon ?? '',
       color: editingCategory?.color ?? parentCategory?.color ?? COLOR_PRESETS[0],
-      subGroup: editingCategory?.subGroup ?? lockedSubGroup ?? subGroups[0],
+      // 자식 카테고리는 항상 부모의 구분을 따른다(부모가 잠금값으로 우선).
+      subGroup: lockedSubGroup ?? editingCategory?.subGroup ?? subGroups[0],
       description: editingCategory?.description ?? '',
       examples: editingCategory?.examples ?? [],
       recurrence: editingCategory?.recurrence
