@@ -123,6 +123,21 @@ function buildPushBody(category: CategoryDoc, schedule: RecurringSchedule): stri
   return `${leadDays}일 후 ${name} ${phrase}${amountStr} ${emoji}`;
 }
 
+/**
+ * 푸시 클릭 시 가계부 내역 추가 시트를 prefill 상태로 여는 딥링크.
+ * 가계부 history 페이지가 quickAdd 쿼리를 읽어 EntryForm을 자동으로 연다.
+ */
+function buildQuickAddLink(category: CategoryDoc, schedule: RecurringSchedule): string {
+  const isIncome = category.group === 'income';
+  const params = new URLSearchParams();
+  params.set('quickAdd', '1');
+  params.set('qaType', isIncome ? 'income' : 'expense');
+  if (category.name) params.set('qaCategory', category.name);
+  const amount = schedule.expectedAmount;
+  if (amount != null && amount > 0) params.set('qaAmount', String(amount));
+  return `/inner/cashbook/history?${params.toString()}`;
+}
+
 type FireTarget = {
   categoryId: string;
   category: CategoryDoc;
@@ -202,7 +217,7 @@ export const recurringTransactionReminder = onSchedule(
                 tokens,
                 notification: { title: 'UANDI 가계부', body: buildPushBody(t.category, t.schedule) },
                 data: {
-                  click_action: '/cashbook/history/monthly',
+                  click_action: buildQuickAddLink(t.category, t.schedule),
                   categoryId: t.categoryId,
                   kind: 'recurringTransaction',
                 },

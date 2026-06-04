@@ -42,7 +42,7 @@ if (firebaseConfig.apiKey) {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.click_action ?? '/cashbook/history/monthly';
+  const url = event.notification.data?.click_action ?? '/inner/cashbook/history/monthly';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {

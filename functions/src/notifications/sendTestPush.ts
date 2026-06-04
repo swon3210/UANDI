@@ -44,7 +44,7 @@ export const sendTestPush = onCall(
         body: '푸시가 정상적으로 도착했어요 🎉',
       },
       data: {
-        click_action: '/cashbook/history/weekly/notifications',
+        click_action: '/inner/cashbook/history/weekly/notifications',
       },
     });
 
