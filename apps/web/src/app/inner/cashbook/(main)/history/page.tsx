@@ -31,9 +31,8 @@ import { EntryList } from '@/components/cashbook/EntryList';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
 import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
-import { AiSpendingAnalysis } from '@/components/cashbook/AiSpendingAnalysis';
 import { formatAmount } from '@/utils/currency';
-import { parseEntriesFromText, analyzeSpending } from '@/services/ai';
+import { parseEntriesFromText } from '@/services/ai';
 import type { CashbookEntry, CashbookEntryType } from '@/types';
 
 /**
@@ -80,9 +79,6 @@ export default function CashbookPage() {
     (filter.typeFilter !== 'all' ? 1 : 0) +
     (filter.selectedCategoryNames.length > 0 ? 1 : 0) +
     (filter.keyword.trim() !== '' ? 1 : 0);
-
-  // 단일 캘린더 월(month 모드)일 때만 월 단위 AI 분석을 노출한다.
-  const isSingleMonthPeriod = filter.period.mode === 'month';
 
   const { data: entries, isLoading: entriesLoading } = useCashbookEntriesInRange(
     coupleId,
@@ -314,25 +310,6 @@ export default function CashbookPage() {
               </div>
             )}
           </div>
-
-          {!isFilterActive && isSingleMonthPeriod && (entries ?? []).length > 0 && (
-            <div className="mt-4">
-              <AiSpendingAnalysis
-                params={{
-                  entries: (entries ?? []).map((e) => ({
-                    type: e.type,
-                    amount: e.amount,
-                    category: e.category,
-                    date: dayjs(e.date.toDate()).format('YYYY-MM-DD'),
-                    description: e.description,
-                  })),
-                  year: dayjs(range.start).year(),
-                  month: dayjs(range.start).month() + 1,
-                }}
-                analyzeFn={analyzeSpending}
-              />
-            </div>
-          )}
 
           <div className="mt-6">
             {groups.length > 0 ? (
