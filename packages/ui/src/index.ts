@@ -58,6 +58,20 @@ export type {
 export { AssetGrowthChart } from './custom/outer/AssetGrowthChart';
 export type { AssetGrowthChartProps, AssetGrowthPoint } from './custom/outer/AssetGrowthChart';
 
+// 가계부 결산 차트 (프레젠테이션 전용 — 도메인 타입과 디커플)
+export { BudgetVsActualChart } from './custom/inner/BudgetVsActualChart';
+export type {
+  BudgetVsActualChartProps,
+  BudgetVsActualPoint,
+} from './custom/inner/BudgetVsActualChart';
+export { IncomeExpensePieChart } from './custom/inner/IncomeExpensePieChart';
+export type { IncomeExpensePieChartProps, PieSlice } from './custom/inner/IncomeExpensePieChart';
+export { DailyCumulativeChart } from './custom/inner/DailyCumulativeChart';
+export type {
+  DailyCumulativeChartProps,
+  DailyCumulativePoint,
+} from './custom/inner/DailyCumulativeChart';
+
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';
