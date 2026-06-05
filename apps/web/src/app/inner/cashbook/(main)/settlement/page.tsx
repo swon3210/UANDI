@@ -3,10 +3,12 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
+import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { CalendarDays, ImageDown } from 'lucide-react';
+import { CalendarDays, ImageDown, ScanLine } from 'lucide-react';
 import {
   Button,
+  Sheet,
   EmptyState,
   FullScreenSpinner,
   BudgetVsActualChart,
@@ -15,12 +17,13 @@ import {
 } from '@uandi/ui';
 import { toast } from 'sonner';
 import { userAtom } from '@/stores/auth.store';
-import { useCashbookEntries } from '@/hooks/useCashbook';
+import { useCashbookEntries, useAddEntries } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget, useCategoryBudgetSummaries } from '@/hooks/useMonthlyBudget';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
 import { SettlementReport, type SettlementChart } from '@/components/cashbook/SettlementReport';
-import { analyzeSpending } from '@/services/ai';
+import { ReceiptReconcileSheet } from '@/components/cashbook/ReceiptReconcileSheet';
+import { analyzeSpending, parseEntriesFromText } from '@/services/ai';
 import { downloadElementAsPng } from '@/lib/export/report';
 
 export default function CashbookSettlementPage() {
@@ -37,6 +40,25 @@ export default function CashbookSettlementPage() {
   const { data: entries, isPending: entriesPending } = useCashbookEntries(coupleId, year, month0);
   const { data: categories, isPending: categoriesPending } = useCashbookCategories(coupleId);
   const { data: budget, isPending: budgetPending } = useMonthlyBudget(coupleId, year, month1);
+  const addManyMutation = useAddEntries(coupleId);
+
+  const openReconcile = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <ReceiptReconcileSheet
+          categories={categories ?? []}
+          coupleId={coupleId}
+          createdBy={user?.uid ?? ''}
+          parseFn={parseEntriesFromText}
+          onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
+          onClose={() => {
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
+  };
 
   const isLoading = entriesPending || categoriesPending || budgetPending;
 
@@ -183,6 +205,17 @@ export default function CashbookSettlementPage() {
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
       <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+
+      {/* 영수증 대조 점검 진입점 */}
+      <Button
+        data-testid="settlement-reconcile-btn"
+        variant="outline"
+        className="mt-4 w-full justify-start gap-2"
+        onClick={openReconcile}
+      >
+        <ScanLine size={16} className="text-primary" />
+        영수증으로 내역 점검
+      </Button>
 
       {/* 차트 영역 */}
       <section className="mt-4 space-y-6">
