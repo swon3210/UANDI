@@ -25,6 +25,12 @@ function formatCompact(n: number): string {
 }
 
 const ROW_HEIGHT = 40;
+// Y축 라벨이 차지할 수 있는 최대 글자 수. 이보다 길면 말줄임(…) 처리한다.
+const MAX_LABEL_CHARS = 7;
+
+function truncateLabel(label: string): string {
+  return label.length > MAX_LABEL_CHARS ? `${label.slice(0, MAX_LABEL_CHARS - 1)}…` : label;
+}
 
 export function CategoryBarChart({ data }: Props) {
   if (data.length === 0) {
@@ -45,6 +51,9 @@ export function CategoryBarChart({ data }: Props) {
   }, {});
 
   const chartHeight = data.length * ROW_HEIGHT + 16;
+  // 가장 긴 라벨(상한 적용)에 맞춰 Y축 폭을 잡아 라벨이 잘리지 않게 한다.
+  const longestLabel = Math.min(Math.max(...data.map((d) => d.category.length)), MAX_LABEL_CHARS);
+  const yAxisWidth = Math.max(longestLabel * 12 + 12, 56);
 
   return (
     <ChartContainer
@@ -61,7 +70,8 @@ export function CategoryBarChart({ data }: Props) {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          width={72}
+          width={yAxisWidth}
+          tickFormatter={truncateLabel}
         />
         <ChartTooltip
           cursor={false}
