@@ -4,8 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Header, Button } from '@uandi/ui';
 
 export const metadata: Metadata = {
-  title: '개인정보처리방침 | UANDI',
-  description: 'UANDI 서비스의 개인정보처리방침입니다.',
+  title: '개인정보처리방침 | MOA',
+  description: 'MOA 서비스의 개인정보처리방침입니다.',
   robots: {
     index: true,
     follow: true,
@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-muted-foreground">시행일: {EFFECTIVE_DATE}</p>
 
           <p className="mt-4">
-            UANDI(이하 &lsquo;서비스&rsquo;)의 운영자는 이용자의 개인정보를 소중하게
+            MOA(이하 &lsquo;서비스&rsquo;)의 운영자는 이용자의 개인정보를 소중하게
             생각하며,「개인정보 보호법」및「정보통신망 이용촉진 및 정보보호 등에 관한 법률」등 관련
             법령을 준수합니다. 본 개인정보처리방침은 서비스가 어떤 정보를 어떤 목적으로
             수집·이용하며, 이용자가 어떤 권리를 행사할 수 있는지 안내합니다.

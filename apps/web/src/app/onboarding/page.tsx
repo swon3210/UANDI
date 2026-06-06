@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Loader2, ChevronLeft, Copy, Check } from 'lucide-react';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
-import { Button, InputOTP, InputOTPGroup, InputOTPSlot } from '@uandi/ui';
+import { Button, InputOTP, InputOTPGroup, InputOTPSlot, Logo } from '@uandi/ui';
 import { userAtom, authStatusAtom } from '@/stores/auth.store';
 import { setAuthCookie } from '@/lib/auth-cookie';
 import { createCouple, joinCoupleByInviteCode, subscribeToCouple } from '@/services/couple';
@@ -73,8 +73,8 @@ export default function OnboardingPage() {
   if (step === 'select') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <h1 className="mb-2 text-2xl font-bold">UANDI</h1>
-        <p className="mb-10 text-muted-foreground">둘이서 만드는 살림 공간</p>
+        <Logo variant="full" className="mb-2 h-10 w-auto" aria-label="MOA" />
+        <p className="mb-10 text-muted-foreground">함께 모아가는 즐거움</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Button
             className="w-full"

@@ -30,7 +30,7 @@ const meta: Meta<typeof Button> = {
     docs: {
       description: {
         component:
-          '**UANDI 버튼 컴포넌트.** shadcn/ui 기반 버튼으로, 6가지 변형(variant)과 4가지 사이즈를 지원합니다.\n\n' +
+          '**MOA 버튼 컴포넌트.** shadcn/ui 기반 버튼으로, 6가지 변형(variant)과 4가지 사이즈를 지원합니다.\n\n' +
           '기본 버튼은 코랄(primary) 색상이며, `asChild` prop으로 다른 요소를 버튼처럼 렌더링할 수 있습니다.',
       },
     },

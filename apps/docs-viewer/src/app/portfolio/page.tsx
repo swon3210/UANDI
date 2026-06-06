@@ -7,9 +7,9 @@ import { KeyDecisions } from './_components/KeyDecisions';
 import { Footer } from './_components/Footer';
 
 export const metadata: Metadata = {
-  title: 'UANDI — Portfolio',
+  title: 'MOA — Portfolio',
   description:
-    'UANDI 개발자 포트폴리오 — Next.js 14, Firebase, 모노레포 기반 신혼부부 라이프 매니지먼트 앱.',
+    'MOA 개발자 포트폴리오 — Next.js 14, Firebase, 모노레포 기반 신혼부부 라이프 매니지먼트 앱.',
 };
 
 export default function PortfolioPage() {

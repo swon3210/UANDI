@@ -49,7 +49,7 @@ export function Hero() {
           >
             데이트 기록부터 추억 사진, 매달 씀씀이까지.
             <br />
-            신혼부부의 가정생활을 UANDI 하나로 책임져요.
+            신혼부부의 가정생활을 MOA 하나로 책임져요.
           </p>
           <div className="flex flex-wrap gap-3">
             <a

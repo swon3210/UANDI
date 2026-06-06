@@ -13,7 +13,7 @@ type FcmForegroundToastPreviewProps = {
 
 const PARTNER_PAYLOAD: MessagePayload = {
   notification: {
-    title: 'UANDI 가계부',
+    title: 'MOA',
     body: '이번 달 식비가 예산의 80%를 넘었어요',
   },
   data: {
@@ -29,7 +29,7 @@ const PARTNER_PAYLOAD: MessagePayload = {
 
 const SELF_PAYLOAD: MessagePayload = {
   notification: {
-    title: 'UANDI 가계부',
+    title: 'MOA',
     body: '[내 지출] 이번 달 카페가 예산을 넘었어요',
   },
   data: {

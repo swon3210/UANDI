@@ -9,9 +9,9 @@ const meta: Meta<typeof Logo> = {
     docs: {
       description: {
         component:
-          '**UANDI 브랜드 로고.** "ui" 리가처 아이콘 마크 + UANDI 워드마크.\n\n' +
-          '아이콘 마크는 U(You) + i(I) 리가처로, U 아크의 오른쪽 다리 위에 "i" 점을 더해 ' +
-          '"You and I"를 하나의 스트로크로 표현합니다.',
+          '**MOA 브랜드 로고.** sage·coral 두 꽃 엠블럼 + MOA 워드마크.\n\n' +
+          '엠블럼은 sage·coral 두 꽃(캐릭터)이 겹치고 중앙에 하트를 두어 ' +
+          '"둘이 함께 모아가는" 의미를 표현합니다.',
       },
     },
   },

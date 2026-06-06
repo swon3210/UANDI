@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'UANDI',
-    short_name: 'UANDI',
-    description: '함께 모으는 우리집, 각자 운영하는 재테크까지',
+    name: 'MOA',
+    short_name: 'MOA',
+    description: '둘이 함께 쓰는 커플 가계부 — 함께 모아가는 즐거움',
     start_url: '/',
     scope: '/',
     display: 'standalone',
@@ -14,31 +14,25 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'ko',
     icons: [
       {
-        src: '/icons/icon.svg',
+        src: '/icons/favicon.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-192.png',
+        src: '/icons/pwa-192.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-512.png',
+        src: '/icons/pwa-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-maskable-192.png',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-      {
-        src: '/icons/icon-maskable-512.png',
+        src: '/icons/pwa-maskable-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

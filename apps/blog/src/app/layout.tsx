@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: '독개의 개발블로그',
-  description: 'UANDI 서비스를 만들어가는 과정을 기록합니다.',
+  description: 'MOA 서비스를 만들어가는 과정을 기록합니다.',
   alternates: {
     types: {
       'application/rss+xml': '/feed.xml',
