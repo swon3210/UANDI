@@ -29,7 +29,7 @@ if (firebaseConfig.apiKey) {
   const messaging = firebase.messaging();
 
   messaging.onBackgroundMessage((payload) => {
-    const title = payload.notification?.title ?? 'UANDI 가계부';
+    const title = payload.notification?.title ?? 'MOA';
     const body = payload.notification?.body ?? '';
     const click_action = payload.data?.click_action ?? '/cashbook/history/monthly';
 

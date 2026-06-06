@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getDocBySlug(slug);
   return {
-    title: doc ? `${doc.title} — UANDI Docs` : 'Not Found',
+    title: doc ? `${doc.title} — MOA Docs` : 'Not Found',
   };
 }
 

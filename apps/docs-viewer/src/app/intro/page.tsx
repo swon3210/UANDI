@@ -10,9 +10,9 @@ import { CTA } from './_components/CTA';
 import { Footer } from './_components/Footer';
 
 export const metadata: Metadata = {
-  title: 'UANDI — 둘이서 만드는 우리만의 일상',
+  title: 'MOA — 둘이서 만드는 우리만의 일상',
   description:
-    '신혼부부의 가정생활을 UANDI 하나로. 사진, 가계부, 추억까지 — 우리 둘만의 프라이빗 공간에서 함께 관리해요.',
+    '신혼부부의 가정생활을 MOA 하나로. 사진, 가계부, 추억까지 — 우리 둘만의 프라이빗 공간에서 함께 관리해요.',
 };
 
 export default function IntroPage() {

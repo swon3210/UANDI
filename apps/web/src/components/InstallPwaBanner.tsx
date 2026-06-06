@@ -192,13 +192,13 @@ function IosGuide() {
         <li className="flex items-start gap-3">
           <StepNumber n={3} />
           <div className="flex-1 text-sm">
-            오른쪽 상단의 <strong>추가</strong>를 누르면 홈 화면에 UANDI 아이콘이 생겨요
+            오른쪽 상단의 <strong>추가</strong>를 누르면 홈 화면에 MOA 아이콘이 생겨요
           </div>
         </li>
         <li className="flex items-start gap-3">
           <StepNumber n={4} />
           <div className="flex-1 text-sm">
-            홈 화면의 UANDI 아이콘으로 앱을 실행하고, 알림 설정에서 <strong>알림 켜기</strong>를
+            홈 화면의 MOA 아이콘으로 앱을 실행하고, 알림 설정에서 <strong>알림 켜기</strong>를
             눌러주세요
           </div>
         </li>
@@ -251,7 +251,7 @@ function AndroidGuide({ canPrompt, installing, onInstall }: AndroidGuideProps) {
           <li className="flex items-start gap-3">
             <StepNumber n={3} />
             <div className="flex-1 text-sm">
-              홈 화면의 UANDI 아이콘으로 앱을 실행한 뒤 알림을 켜주세요
+              홈 화면의 MOA 아이콘으로 앱을 실행한 뒤 알림을 켜주세요
             </div>
           </li>
         </ol>

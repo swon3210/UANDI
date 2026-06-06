@@ -1,11 +1,10 @@
 import { test, expect, request } from '@playwright/test';
 
 const ICON_PATHS = [
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/icon-maskable-192.png',
-  '/icons/icon-maskable-512.png',
+  '/icons/favicon.svg',
+  '/icons/pwa-192.png',
+  '/icons/pwa-512.png',
+  '/icons/pwa-maskable-512.png',
 ];
 
 test.describe('PWA manifest', () => {
@@ -15,8 +14,8 @@ test.describe('PWA manifest', () => {
     expect(res.status()).toBe(200);
 
     const json = await res.json();
-    expect(json.name).toBe('UANDI 가계부');
-    expect(json.short_name).toBe('UANDI');
+    expect(json.name).toBe('MOA');
+    expect(json.short_name).toBe('MOA');
     expect(json.start_url).toBe('/');
     expect(json.scope).toBe('/');
     expect(json.display).toBe('standalone');
@@ -75,6 +74,6 @@ test.describe('PWA manifest', () => {
       .locator('meta[name="apple-mobile-web-app-title"]')
       .first()
       .getAttribute('content');
-    expect(appleTitle).toBe('UANDI 가계부');
+    expect(appleTitle).toBe('MOA');
   });
 });

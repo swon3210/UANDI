@@ -29,7 +29,7 @@ ${tagCategories}
   <channel>
     <title>독개의 개발블로그</title>
     <link>${siteUrl}</link>
-    <description>UANDI 서비스를 만들어가는 과정을 기록합니다.</description>
+    <description>MOA 서비스를 만들어가는 과정을 기록합니다.</description>
     <language>ko</language>
     <atom:link href="${siteUrl}/feed.xml" rel="self" type="application/rss+xml"/>
     ${items}

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'UANDI',
+  title: 'MOA',
   description: '신혼부부를 위한 프라이빗 라이프 매니지먼트 앱',
 };
 

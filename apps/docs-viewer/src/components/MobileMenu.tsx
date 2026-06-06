@@ -24,7 +24,7 @@ export function MobileMenu() {
           {/* 사이드바 패널 */}
           <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl flex flex-col">
             <div className="h-14 flex items-center justify-between px-4 border-b border-[#E8E4E0]">
-              <span className="font-semibold text-[#1C1917]">UANDI Docs</span>
+              <span className="font-semibold text-[#1C1917]">MOA Docs</span>
               <button
                 onClick={() => setOpen(false)}
                 className="p-2 rounded-md text-[#57534E] hover:bg-[#F5F3F0] transition-colors"
