@@ -224,8 +224,10 @@ test.describe('가계부 예산 초과 알림', () => {
       // 거래 추가 트리거 (UI에서 mutation 호출 시뮬레이션)
       await page.reload();
 
-      // 토스트 메시지 확인
-      await expect(page.getByText(/식비.*80%/)).toBeVisible({ timeout: 5000 });
+      // 80% 알림 확인 (배너 영역으로 한정 — 월간 카테고리 행의 "식비 80%"와 구분)
+      await expect(
+        page.getByTestId('budget-alert-banner').getByText(/식비.*80%/)
+      ).toBeVisible({ timeout: 5000 });
     });
 
     test('같은 임계값 내 추가 거래에는 토스트가 다시 뜨지 않는다', async ({ authedContext }) => {

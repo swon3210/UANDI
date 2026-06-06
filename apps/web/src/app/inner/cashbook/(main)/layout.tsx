@@ -4,7 +4,16 @@ import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
-import { Plus, Tag, CalendarDays, Bell, Settings, MoreVertical, FileBarChart } from 'lucide-react';
+import {
+  Plus,
+  Tag,
+  CalendarDays,
+  CalendarRange,
+  Bell,
+  Settings,
+  MoreVertical,
+  FileBarChart,
+} from 'lucide-react';
 import {
   Button,
   Sheet,
@@ -84,6 +93,13 @@ export default function CashbookLayout({ children }: { children: ReactNode }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => router.push('/inner/cashbook/cashflow')}
+                  data-testid="menu-cashflow"
+                >
+                  <CalendarRange size={16} className="mr-2" />
+                  현금흐름 캘린더
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => router.push('/inner/cashbook/settlement')}
                   data-testid="menu-settlement"
