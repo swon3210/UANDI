@@ -156,6 +156,9 @@ export function BudgetDashboard({ coupleId }: Props) {
         </div>
       ) : (
         <>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <CategoryDonutChart data={byCategory} />
+          </div>
           <div className="space-y-3 rounded-xl border border-border bg-card p-4">
             <CategorySelector
               options={options}
@@ -163,9 +166,6 @@ export function BudgetDashboard({ coupleId }: Props) {
               onToggle={handleToggleCategory}
             />
             <CategoryBarChart data={selectedSlices} />
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <CategoryDonutChart data={byCategory} />
           </div>
         </>
       )}
