@@ -404,6 +404,93 @@ export async function seedCashbookEntry(
   return entryId;
 }
 
+// 월 결산 (couples/{coupleId}/cashbookSettlements/{YYYY-MM})
+function pieSliceValue(name: string, value: number) {
+  return {
+    mapValue: {
+      fields: { name: { stringValue: name }, value: { integerValue: String(value) } },
+    },
+  };
+}
+
+export async function seedSettlement(
+  coupleId: string,
+  options: {
+    monthKey: string; // 'YYYY-MM'
+    year: number;
+    month: number; // 1-indexed
+    status: 'draft' | 'completed';
+    totals?: { income: number; expense: number; flex: number };
+    aiAnalysis?: string;
+  }
+): Promise<void> {
+  const {
+    monthKey,
+    year,
+    month,
+    status,
+    totals = { income: 0, expense: 0, flex: 0 },
+    aiAnalysis = '',
+  } = options;
+  const now = new Date().toISOString();
+
+  const fields: Record<string, unknown> = {
+    id: { stringValue: monthKey },
+    coupleId: { stringValue: coupleId },
+    year: { integerValue: String(year) },
+    month: { integerValue: String(month) },
+    status: { stringValue: status },
+    attachments: { arrayValue: { values: [] } },
+    createdAt: { timestampValue: now },
+    updatedAt: { timestampValue: now },
+    completedAt: status === 'completed' ? { timestampValue: now } : { nullValue: null },
+  };
+
+  if (status === 'completed') {
+    const pieValues = [
+      totals.income > 0 ? pieSliceValue('수입', totals.income) : null,
+      totals.expense > 0 ? pieSliceValue('지출', totals.expense) : null,
+      totals.flex > 0 ? pieSliceValue('FLEX', totals.flex) : null,
+    ].filter(Boolean);
+
+    fields.report = {
+      mapValue: {
+        fields: {
+          totals: {
+            mapValue: {
+              fields: {
+                income: { integerValue: String(totals.income) },
+                expense: { integerValue: String(totals.expense) },
+                flex: { integerValue: String(totals.flex) },
+              },
+            },
+          },
+          spending: { integerValue: String(totals.expense + totals.flex) },
+          budgetCeiling: { integerValue: '0' },
+          spentPct: { nullValue: null },
+          barData: { arrayValue: { values: [] } },
+          pieData: { arrayValue: { values: pieValues } },
+          dailyData: { arrayValue: { values: [] } },
+          aiAnalysis: { stringValue: aiAnalysis },
+          entryCount: { integerValue: '0' },
+          completedAt: { timestampValue: now },
+        },
+      },
+    };
+  } else {
+    fields.report = { nullValue: null };
+  }
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookSettlements/${monthKey}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields }),
+    }
+  );
+}
+
 // ───────────────────────────────────────────────────────────────
 // 커뮤니티 (전역 컬렉션) — couples/ 격리 예외. 자세히는 docs/08-spaces.md 참고.
 // ───────────────────────────────────────────────────────────────

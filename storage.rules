@@ -9,6 +9,14 @@ service firebase.storage {
       allow read, write: if request.auth != null;
     }
 
+    // 월 결산 첨부 영수증·스크린샷 (결산 완료 전까지 유지, 완료 시 삭제)
+    match /couples/{coupleId}/cashbookSettlements/{allPaths=**} {
+      allow read, delete: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
     // 가계부 배경 이미지 (유저 개인)
     match /users/{userId}/cashbook/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

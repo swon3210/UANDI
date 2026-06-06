@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Sparkles, Loader2, ArrowUp, Paperclip, X } from 'lucide-react';
-import { Textarea, Button } from '@uandi/ui';
+import { Textarea, Button, cn } from '@uandi/ui';
 
 type ParseResult = {
   type: string;
@@ -19,12 +19,24 @@ type AttachedImage = {
   id: string;
   dataUrl: string;
   name: string;
+  file: File;
 };
 
 type AiParseInputProps = {
   onParsed: (results: ParseResult[]) => void;
   categories: string[];
   parseFn: (text: string, categories: string[], images?: string[]) => Promise<ParseResult[]>;
+  /**
+   * 첨부 이미지를 영속 저장해야 하는 경우(예: 월 결산) 전달한다.
+   * 압축된 파일과 함께 콜백되며, 상위에서 Storage 업로드를 담당한다.
+   * 미전달 시 기존 동작(이미지는 파싱 후 폐기)을 유지한다.
+   */
+  onImagePersist?: (img: { id: string; dataUrl: string; name: string; file: File }) => void;
+  /**
+   * 텍스트영역에 추가할 클래스. 스크롤 시트 안에서는 포커스 링이 잘리지 않도록
+   * inset 링(`focus-visible:ring-inset focus-visible:ring-offset-0`)을 전달한다.
+   */
+  textareaClassName?: string;
 };
 
 const MAX_IMAGES = 10;
@@ -39,7 +51,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-async function compressAndEncode(file: File): Promise<string> {
+async function compressAndEncode(file: File): Promise<{ dataUrl: string; file: File }> {
   const imageCompression = (await import('browser-image-compression')).default;
   const compressed = await imageCompression(file, {
     maxSizeMB: 1,
@@ -47,10 +59,16 @@ async function compressAndEncode(file: File): Promise<string> {
     initialQuality: 0.85,
     useWebWorker: true,
   });
-  return readFileAsDataUrl(compressed);
+  return { dataUrl: await readFileAsDataUrl(compressed), file: compressed };
 }
 
-export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProps) {
+export function AiParseInput({
+  onParsed,
+  categories,
+  parseFn,
+  onImagePersist,
+  textareaClassName,
+}: AiParseInputProps) {
   const [text, setText] = useState('');
   const [images, setImages] = useState<AttachedImage[]>([]);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
@@ -69,6 +87,10 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
   const handleSubmit = () => {
     if (mutation.isPending || isProcessingFiles) return;
     if (!text.trim() && images.length === 0) return;
+    // 영속 저장이 필요한 경우(월 결산): 제출 시점에 첨부 이미지를 업로드한다
+    if (onImagePersist) {
+      for (const img of images) onImagePersist(img);
+    }
     mutation.mutate({
       text: text.trim(),
       images: images.map((img) => img.dataUrl),
@@ -114,11 +136,15 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
     setIsProcessingFiles(true);
     try {
       const encoded = await Promise.all(
-        sized.map(async (file) => ({
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          dataUrl: await compressAndEncode(file),
-          name: file.name,
-        }))
+        sized.map(async (file) => {
+          const { dataUrl, file: compressed } = await compressAndEncode(file);
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            dataUrl,
+            name: file.name,
+            file: compressed,
+          };
+        })
       );
       setImages((prev) => [...prev, ...encoded]);
     } catch (err) {
@@ -172,7 +198,7 @@ export function AiParseInput({ onParsed, categories, parseFn }: AiParseInputProp
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={'예: 점심 김밥 5천원\n어제 택시 15000원'}
-            className="pl-9 pr-10 min-h-[100px] max-h-40"
+            className={cn('pl-9 pr-10 min-h-[100px] max-h-40', textareaClassName)}
             rows={1}
             disabled={mutation.isPending}
           />
