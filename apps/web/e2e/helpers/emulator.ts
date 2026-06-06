@@ -404,6 +404,105 @@ export async function seedCashbookEntry(
   return entryId;
 }
 
+// 현금흐름 캘린더 예측 (couples/{coupleId}/cashbookPredictions/{predictionId})
+export async function seedPrediction(
+  coupleId: string,
+  createdBy: string,
+  options: {
+    type: 'income' | 'expense' | 'flex';
+    amount: number;
+    category?: string;
+    description?: string;
+    date?: string; // ISO. 예측 발생 예정일
+    source?: 'calendar' | 'auto';
+    status?: 'predicted' | 'rejected' | 'confirmed';
+    recurrenceKey?: string | null;
+    confidence?: number;
+    rejectedUntil?: string | null; // ISO
+    linkedEntryId?: string | null;
+  }
+): Promise<string> {
+  const predictionId = `pred-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const date = options.date ?? new Date().toISOString();
+  const now = new Date().toISOString();
+  const recurrenceKey = options.recurrenceKey ?? null;
+
+  const fields: Record<string, unknown> = {
+    id: { stringValue: predictionId },
+    coupleId: { stringValue: coupleId },
+    createdBy: { stringValue: createdBy },
+    source: { stringValue: options.source ?? 'calendar' },
+    status: { stringValue: options.status ?? 'predicted' },
+    type: { stringValue: options.type },
+    amount: { integerValue: String(options.amount) },
+    category: { stringValue: options.category ?? '기타' },
+    description: { stringValue: options.description ?? '' },
+    date: { timestampValue: date },
+    recurrenceKey: recurrenceKey != null ? { stringValue: recurrenceKey } : { nullValue: null },
+    confidence: { doubleValue: options.confidence ?? 1 },
+    rejectedUntil: options.rejectedUntil
+      ? { timestampValue: options.rejectedUntil }
+      : { nullValue: null },
+    linkedEntryId: options.linkedEntryId
+      ? { stringValue: options.linkedEntryId }
+      : { nullValue: null },
+    createdAt: { timestampValue: now },
+    updatedAt: { timestampValue: now },
+  };
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookPredictions/${predictionId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields }),
+    }
+  );
+
+  return predictionId;
+}
+
+// 현금흐름 캘린더 설정 (couples/{coupleId}/meta/cashflow)
+export async function seedCashflowSettings(
+  coupleId: string,
+  options: {
+    currentCash?: number;
+    paydays?: { id: string; label: string; type: string; dayOfMonth: number }[];
+    variableMode?: 1 | 3 | 6;
+  } = {}
+): Promise<void> {
+  const paydays = options.paydays ?? [];
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/meta/cashflow`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          coupleId: { stringValue: coupleId },
+          currentCash: { integerValue: String(options.currentCash ?? 0) },
+          variableMode: { integerValue: String(options.variableMode ?? 3) },
+          paydays: {
+            arrayValue: {
+              values: paydays.map((p) => ({
+                mapValue: {
+                  fields: {
+                    id: { stringValue: p.id },
+                    label: { stringValue: p.label },
+                    type: { stringValue: p.type },
+                    dayOfMonth: { integerValue: String(p.dayOfMonth) },
+                  },
+                },
+              })),
+            },
+          },
+          updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
 // 월 결산 (couples/{coupleId}/cashbookSettlements/{YYYY-MM})
 function pieSliceValue(name: string, value: number) {
   return {

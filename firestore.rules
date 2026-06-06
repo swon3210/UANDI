@@ -161,6 +161,10 @@ service cloud.firestore {
       match /cashbookSettlements/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }
+      // 현금흐름 캘린더 예측 (가계부와 분리된 별도 컬렉션 — 대시보드/결산 쿼리 비간섭)
+      match /cashbookPredictions/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
       match /annualPlans/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }

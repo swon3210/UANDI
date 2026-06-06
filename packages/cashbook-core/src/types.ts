@@ -68,3 +68,42 @@ export type CashbookCategory = {
   recurrence?: RecurringSchedule | null;
   createdAt: Timestamp;
 };
+
+// ── 현금흐름 캘린더 예측 (저장 경로: couples/{coupleId}/cashbookPredictions/{predictionId}) ──
+// 명세: docs/spec — 현금흐름 캘린더. 가계부(cashbookEntries)와 분리된 별도 컬렉션이라
+// 대시보드·결산·내역의 기존 쿼리는 예측을 절대 보지 않는다(§11 대시보드 비간섭 구조적 보장).
+
+/**
+ * 예측 상태(§6).
+ * - predicted: ◇ 미확정. 캘린더 잔액 포함, 가계부에 점선 V/X 프롬프트.
+ * - rejected: ✗ 거절. 가계부 프롬프트 제거. calendar 출처는 캘린더에 잔존, auto 출처는 삭제(시나리오 B).
+ * - confirmed: ✓ 확정. linkedEntryId로 실거래(cashbookEntries) 생성됨. 캘린더는 ✓로 표시, 잔액은 실거래로 계산.
+ */
+export type PredictionStatus = 'predicted' | 'rejected' | 'confirmed';
+
+/** 예측 출처. calendar=사용자가 캘린더에서 직접 생성, auto=고정지출 자동감지(§7-1). */
+export type PredictionSource = 'calendar' | 'auto';
+
+export type CashbookPrediction = {
+  id: string;
+  coupleId: string;
+  createdBy: string;
+  source: PredictionSource;
+  status: PredictionStatus;
+  type: CashbookEntryType;
+  amount: number;
+  category: string;
+  description: string;
+  /** 예측 발생 예정일 */
+  date: Timestamp;
+  /** 자동감지 패턴 식별 키(`${category}|${type}|${dayOfMonth}` 정규화). 재제안 게이트(§7-1)·30일 거절(SYNC-04)에 사용. calendar 출처는 null. */
+  recurrenceKey: string | null;
+  /** 신뢰도 0~1. calendar 출처는 1. confidence 학습(§7-3)은 v1.1. */
+  confidence: number;
+  /** ✗ 거절 시 now+30d. 같은 recurrenceKey는 이 시각 이전엔 재제안 금지(SYNC-04). */
+  rejectedUntil: Timestamp | null;
+  /** ✓ 확정 시 생성된 cashbookEntry id(SYNC-03). 미확정이면 null. */
+  linkedEntryId: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};

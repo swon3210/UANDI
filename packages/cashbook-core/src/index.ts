@@ -7,6 +7,9 @@ export type {
   CategorySubGroup,
   RecurringSchedule,
   RecurringScheduleKind,
+  CashbookPrediction,
+  PredictionStatus,
+  PredictionSource,
 } from './types';
 
 // Services
@@ -27,6 +30,14 @@ export {
   deleteCategory,
   initDefaultCategories,
 } from './services/cashbook-categories';
+export {
+  getPredictionsInRange,
+  getActivePredictions,
+  addPrediction,
+  updatePrediction,
+  deletePrediction,
+  getPredictionByRecurrenceKey,
+} from './services/predictions';
 
 // Constants
 export type { DefaultCategory } from './constants/default-categories';
