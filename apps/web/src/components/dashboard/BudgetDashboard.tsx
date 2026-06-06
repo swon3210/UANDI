@@ -16,7 +16,7 @@ import {
 import { PeriodSelector } from './PeriodSelector';
 import { PeriodNavigator } from './PeriodNavigator';
 import { GroupTabs } from './GroupTabs';
-import { BudgetTrendChart } from './BudgetTrendChart';
+import { CategoryBarChart } from './CategoryBarChart';
 import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategorySelector, type CategoryOption } from './CategorySelector';
 
@@ -38,7 +38,16 @@ const TOTAL_COLOR: Record<GroupFilter, string> = {
   flex: 'text-foreground',
 };
 
-const MAX_TREND_CATEGORIES = 5;
+// 순잔액(전체 그룹)은 부호에 따라 지출/수입 합계와 동일한 색으로 표기한다.
+function totalColorClass(group: GroupFilter, total: number): string {
+  if (group === 'all') {
+    if (total < 0) return 'text-expense';
+    if (total > 0) return 'text-income';
+    return 'text-foreground';
+  }
+  return TOTAL_COLOR[group];
+}
+
 const DEFAULT_TREND_TOP_N = 3;
 
 export function BudgetDashboard({ coupleId }: Props) {
@@ -48,7 +57,7 @@ export function BudgetDashboard({ coupleId }: Props) {
   // null = 자동(상위 N개), 배열 = 사용자가 직접 선택
   const [trendSelection, setTrendSelection] = useState<string[] | null>(null);
 
-  const { trendByCategory, byCategory, total, hasEntries, isLoading } = useDashboardData({
+  const { byCategory, total, hasEntries, isLoading } = useDashboardData({
     coupleId,
     period,
     group,
@@ -89,9 +98,8 @@ export function BudgetDashboard({ coupleId }: Props) {
   }));
   const defaultSelection = options.slice(0, DEFAULT_TREND_TOP_N).map((o) => o.name);
   const effectiveSelected = trendSelection ?? defaultSelection;
-  const selectedOptions: CategoryOption[] = effectiveSelected
-    .map((name) => options.find((o) => o.name === name))
-    .filter((o): o is CategoryOption => Boolean(o));
+  // byCategory(금액 내림차순)에서 선택된 카테고리만 추려 막대 길이순으로 비교한다.
+  const selectedSlices = byCategory.filter((c) => effectiveSelected.includes(c.category));
 
   const handleToggleCategory = (name: string) => {
     setTrendSelection((prev) => {
@@ -99,7 +107,6 @@ export function BudgetDashboard({ coupleId }: Props) {
       if (current.includes(name)) {
         return current.filter((n) => n !== name);
       }
-      if (current.length >= MAX_TREND_CATEGORIES) return current;
       return [...current, name];
     });
   };
@@ -127,7 +134,9 @@ export function BudgetDashboard({ coupleId }: Props) {
             <ChevronRight size={14} />
           </span>
         </div>
-        <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
+        <div
+          className={`mt-1 text-2xl font-semibold tabular-nums ${totalColorClass(group, total)}`}
+        >
           {totalDisplay.toLocaleString()}원
         </div>
       </Link>
@@ -152,9 +161,8 @@ export function BudgetDashboard({ coupleId }: Props) {
               options={options}
               selected={effectiveSelected}
               onToggle={handleToggleCategory}
-              max={MAX_TREND_CATEGORIES}
             />
-            <BudgetTrendChart data={trendByCategory} selectedCategories={selectedOptions} />
+            <CategoryBarChart data={selectedSlices} />
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <CategoryDonutChart data={byCategory} />

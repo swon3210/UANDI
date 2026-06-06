@@ -61,8 +61,8 @@
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
-│  │ [카테고리 칩 멀티셀] │  │  ← 비교할 카테고리 선택 (max 5)
-│  │  [시계열 다중 라인] │  │  ← 카테고리당 라인 1개, 추이 비교
+│  │ [카테고리 칩 멀티셀] │  │  ← 비교할 카테고리 선택 (개수 제한 없음)
+│  │ [가로 막대 비교]    │  │  ← 카테고리당 막대 1개, 금액 비교
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
@@ -136,20 +136,17 @@ query(
 
 - 칩 멀티 토글 (`data-testid="category-selector"`, 칩별 `data-testid="category-chip-{name}"`)
 - 옵션은 현재 그룹 탭 + 기간에서 데이터가 있는 카테고리(amount 내림차순)
-- 최대 동시 선택: **5개** (`MAX_TREND_CATEGORIES`)
+- 최대 동시 선택: **제한 없음** — 원하는 만큼 카테고리를 비교할 수 있음
 - 기본 선택: 기간 내 금액 상위 **3개** (`DEFAULT_TREND_TOP_N`)
 - 그룹/기간/cursor 변경 시 사용자 선택은 자동 리셋되어 다시 자동 상위 3개로 돌아감
 
-### 시계열 추이 차트 (`BudgetTrendChart`)
+### 카테고리 비교 막대 차트 (`CategoryBarChart`)
 
-- `recharts LineChart` + shadcn `ChartContainer` + Legend
+- `recharts BarChart` (`layout="vertical"`, 가로 막대) + shadcn `ChartContainer`
 - `data-testid="trend-chart"`
-- 선택된 카테고리당 라인 1개 (스트로크 색 = 카테고리 메타 `color`)
-- 버킷 규칙:
-  - weekly: 일별 7개 (일~토)
-  - monthly: 일별 (해당 월의 일수, 28~31)
-  - yearly: 월별 12개
-- X축 라벨: 요일 / 일자 / 월
+- 선택된 카테고리당 가로 막대 1개 (막대 색 = 카테고리 메타 `color`)
+- 데이터는 선택된 카테고리의 **기간 합계 금액**을 금액 내림차순으로 비교
+- 막대 우측에 합계 금액 라벨(`LabelList`, compact 포맷) 표시
 - 선택 0개일 때는 안전망으로 EmptyState 표시 ("비교할 카테고리를 선택해주세요")
 
 ### 카테고리 도넛 차트 (`CategoryDonutChart`)
