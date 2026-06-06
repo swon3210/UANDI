@@ -263,4 +263,49 @@ test.describe('대시보드', () => {
       await expect(food).toHaveAttribute('data-state', 'unselected');
     });
   });
+
+  test.describe('현금 흐름 예측', () => {
+    test('과거 여러 달 내역을 시드하면 현금 흐름 차트와 예측 어포던스가 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      // 최근 완료된 4개월 + 현재 달에 수입/지출 시드 → 과거 실선이 그려질 데이터 확보
+      for (const n of [1, 2, 3, 4]) {
+        await seedCashbookEntry(coupleId, uid, {
+          type: 'income',
+          amount: 3_000_000,
+          category: '정기급여',
+          date: dayjs().subtract(n, 'month').date(10).toISOString(),
+        });
+        await seedCashbookEntry(coupleId, uid, {
+          type: 'expense',
+          amount: 1_800_000,
+          category: '식비',
+          date: dayjs().subtract(n, 'month').date(15).toISOString(),
+        });
+      }
+      // 현재(진행 중) 달 내역
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 500_000,
+        category: '식비',
+        date: dayjs().date(3).toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.cashFlowSection).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.cashFlowChart).toBeVisible();
+      // 미래 예측 어포던스(캡션/범례)가 DOM에 노출된다 (캡션·범례 둘 다 매칭되므로 first)
+      await expect(dashboard.cashFlowSection.getByText('예측').first()).toBeVisible();
+    });
+
+    test('내역이 전혀 없으면 현금 흐름 섹션이 표시되지 않는다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await expect(dashboard.cashFlowSection).toHaveCount(0);
+    });
+  });
 });

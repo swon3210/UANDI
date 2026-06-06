@@ -71,6 +71,8 @@ export type {
   DailyCumulativeChartProps,
   DailyCumulativePoint,
 } from './custom/inner/DailyCumulativeChart';
+export { CashFlowChart } from './custom/inner/CashFlowChart';
+export type { CashFlowChartProps, CashFlowPoint } from './custom/inner/CashFlowChart';
 
 // shadcn 컴포넌트
 export { Button, buttonVariants } from './components/button';

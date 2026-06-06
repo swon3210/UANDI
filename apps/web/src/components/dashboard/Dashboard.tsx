@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/shell/PageHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
 import { BudgetDashboard } from './BudgetDashboard';
+import { CashFlowSection } from './CashFlowSection';
 import { DashboardEntryList, type DashboardEntry } from './DashboardEntryList';
 
 const ENTRIES: DashboardEntry[] = [
@@ -75,6 +76,7 @@ export function Dashboard() {
       />
       <main className="max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
         <DashboardEntryList entries={ENTRIES} />
+        <CashFlowSection coupleId={coupleId} />
         <BudgetDashboard coupleId={coupleId} />
       </main>
     </>

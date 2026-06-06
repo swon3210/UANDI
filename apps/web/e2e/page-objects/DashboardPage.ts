@@ -30,6 +30,10 @@ export class DashboardPage {
   readonly emptyState: Locator;
   readonly categorySelector: Locator;
 
+  // 현금 흐름 예측
+  readonly cashFlowSection: Locator;
+  readonly cashFlowChart: Locator;
+
   // 진입점
   readonly entryBudget: Locator;
 
@@ -69,6 +73,9 @@ export class DashboardPage {
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
     this.categorySelector = page.getByTestId('category-selector');
+
+    this.cashFlowSection = page.getByTestId('cashflow-section');
+    this.cashFlowChart = page.getByTestId('cashflow-chart');
 
     this.entryBudget = page.getByTestId('dashboard-entry-budget');
 
