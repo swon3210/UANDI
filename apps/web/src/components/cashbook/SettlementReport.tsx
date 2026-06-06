@@ -27,9 +27,17 @@ type SettlementReportProps = {
   monthLabel: string;
   /** 보고서(PDF·Markdown)에 함께 담을 차트들 */
   charts?: SettlementChart[];
+  /** 생성된 분석 마크다운을 상위로 전달(결산 완료 스냅샷에 담기 위함) */
+  onContentChange?: (markdown: string) => void;
 };
 
-export function SettlementReport({ params, analyzeFn, monthLabel, charts }: SettlementReportProps) {
+export function SettlementReport({
+  params,
+  analyzeFn,
+  monthLabel,
+  charts,
+  onContentChange,
+}: SettlementReportProps) {
   const [content, setContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -37,10 +45,14 @@ export function SettlementReport({ params, analyzeFn, monthLabel, charts }: Sett
 
   const mutation = useMutation({
     mutationFn: async () => {
+      let acc = '';
       setContent('');
+      onContentChange?.('');
       setIsStreaming(true);
       await analyzeFn(params, (chunk) => {
-        setContent((prev) => prev + chunk);
+        acc += chunk;
+        setContent(acc);
+        onContentChange?.(acc);
       });
       setIsStreaming(false);
     },

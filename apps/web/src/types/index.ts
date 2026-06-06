@@ -133,6 +133,50 @@ export type MonthlyBudgetItem = {
   ownerUid: string | null;
 };
 
+// ── 월 결산 (저장 경로: couples/{coupleId}/cashbookSettlements/{YYYY-MM}) ──
+// 월별 단일 문서. 결정적 ID(월 키)로 전체 스캔 없이 조회한다.
+// - draft: 라이브 내역으로 작업 중. attachments(영수증·스크린샷)는 완료 전까지 유지.
+// - completed: report 스냅샷이 박제되고 attachments는 비워진다.
+//   "다시 결산하기"로 draft로 되돌려 재작성하면 report를 덮어쓴다.
+
+export type SettlementStatus = 'draft' | 'completed';
+
+// 결산 작업 중 첨부한 영수증·스크린샷 (완료 시 Storage에서 삭제)
+export type SettlementAttachment = {
+  id: string;
+  storagePath: string; // couples/{coupleId}/cashbookSettlements/{YYYY-MM}/{id}.{ext}
+  url: string; // downloadURL
+  name: string; // 원본 파일명
+  createdAt: Timestamp;
+};
+
+// 결산 완료 시 박제되는 보고서 스냅샷 (차트 데이터 사전 계산 — 재조회 시 내역 쿼리 불필요)
+export type SettlementReportSnapshot = {
+  totals: { income: number; expense: number; flex: number };
+  spending: number; // expense + flex (지출 분석 기준값)
+  budgetCeiling: number; // 완료 시점 (지출+FLEX) 예산 합
+  spentPct: number | null;
+  barData: { category: string; budget: number; actual: number }[]; // 예산 대비 실적
+  pieData: { name: string; value: number }[]; // 수입/지출/FLEX 슬라이스
+  dailyData: { day: number; cumulative: number | null }[]; // 일별 누적 (지출+FLEX)
+  aiAnalysis: string; // 캡처한 AI 분석 마크다운 ('' 가능)
+  entryCount: number;
+  completedAt: Timestamp;
+};
+
+export type CashbookSettlement = {
+  id: string; // 'YYYY-MM' (== month key, month는 1-indexed)
+  coupleId: string;
+  year: number;
+  month: number; // 1~12 (id와 일치)
+  status: SettlementStatus;
+  attachments: SettlementAttachment[]; // draft에만 존재, 완료 시 []
+  report: SettlementReportSnapshot | null; // 완료 시에만 채워짐
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  completedAt: Timestamp | null;
+};
+
 // FCM 푸시 토큰 (다중 디바이스 지원)
 export type FcmTokenPlatform = 'web' | 'android' | 'ios';
 

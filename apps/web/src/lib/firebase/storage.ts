@@ -42,6 +42,49 @@ export async function uploadPhotoFile({
   });
 }
 
+// ── 월 결산 첨부 (영수증·스크린샷) ──
+
+type SettlementAttachmentUploadOptions = {
+  coupleId: string;
+  monthKey: string; // 'YYYY-MM'
+  attachmentId: string;
+  file: File;
+  onProgress?: (percent: number) => void;
+};
+
+export async function uploadSettlementAttachment({
+  coupleId,
+  monthKey,
+  attachmentId,
+  file,
+  onProgress,
+}: SettlementAttachmentUploadOptions): Promise<{ url: string; storagePath: string }> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const storagePath = `couples/${coupleId}/cashbookSettlements/${monthKey}/${attachmentId}.${ext}`;
+  const storageRef = ref(getStorage(), storagePath);
+
+  return new Promise((resolve, reject) => {
+    const uploadTask = uploadBytesResumable(storageRef, file, { contentType: file.type });
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        onProgress?.(percent);
+      },
+      reject,
+      async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve({ url, storagePath });
+      }
+    );
+  });
+}
+
+export async function deleteSettlementAttachment(storagePath: string) {
+  await deleteObject(ref(getStorage(), storagePath));
+}
+
 // ── 가계부 배경 이미지 ──
 
 type BackgroundUploadOptions = {

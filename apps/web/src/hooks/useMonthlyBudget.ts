@@ -1,7 +1,12 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getComputedMonthlyBudget } from '@/services/monthly-budget';
-import type { CashbookEntry, CashbookCategory, MonthlyBudgetItem } from '@/types';
+import type {
+  CashbookEntry,
+  CashbookCategory,
+  CategoryGroup,
+  MonthlyBudgetItem,
+} from '@/types';
 
 const QUERY_KEY = 'monthlyBudget';
 
@@ -84,27 +89,32 @@ export type CategoryBudgetSummary = {
   margin: number;
 };
 
+// 기본은 지출 그룹만 — 참조 안정성을 위해 모듈 상수로 둔다(useMemo 의존성 안정).
+const DEFAULT_SUMMARY_GROUPS: CategoryGroup[] = ['expense'];
+
 export function useCategoryBudgetSummaries(
   budgetItems: MonthlyBudgetItem[] | undefined,
   entries: CashbookEntry[] | undefined,
-  categories: CashbookCategory[] | undefined
+  categories: CashbookCategory[] | undefined,
+  /** 집계 대상 그룹. 월 결산은 ['expense','flex']로 FLEX까지 합산한다. */
+  groups: CategoryGroup[] = DEFAULT_SUMMARY_GROUPS
 ): CategoryBudgetSummary[] {
   return useMemo(() => {
     if (!budgetItems || !entries || !categories) return [];
 
-    const expenseBudgets = budgetItems.filter((b) => b.group === 'expense');
+    const targetBudgets = budgetItems.filter((b) => groups.includes(b.group));
 
     // categoryId → 실제 지출 합산
     const actualByCategoryId = new Map<string, number>();
     for (const entry of entries) {
-      if (entry.type !== 'expense') continue;
+      if (!groups.includes(entry.type as CategoryGroup)) continue;
       // entry.category는 카테고리 이름 — categoryId로 매핑
       const cat = categories.find((c) => c.name === entry.category);
       if (!cat) continue;
       actualByCategoryId.set(cat.id, (actualByCategoryId.get(cat.id) ?? 0) + entry.amount);
     }
 
-    return expenseBudgets.map((b) => {
+    return targetBudgets.map((b) => {
       const cat = categories.find((c) => c.id === b.categoryId);
       const actualAmount = actualByCategoryId.get(b.categoryId) ?? 0;
       const percentage = b.budgetAmount > 0 ? Math.round((actualAmount / b.budgetAmount) * 100) : 0;
@@ -120,7 +130,7 @@ export function useCategoryBudgetSummaries(
         margin: b.budgetAmount - actualAmount,
       };
     });
-  }, [budgetItems, entries, categories]);
+  }, [budgetItems, entries, categories, groups]);
 }
 
 export type WeeklyExpense = {

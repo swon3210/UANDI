@@ -158,6 +158,9 @@ service cloud.firestore {
       match /cashbookCategories/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }
+      match /cashbookSettlements/{document=**} {
+        allow read, write: if isCoupleMember(coupleId);
+      }
       match /annualPlans/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }
