@@ -9,7 +9,7 @@ ORIGIN_REPO="/Users/jinsong/Documents/Github/UANDI"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-ENV_FILES="apps/web/.env.local apps/mobile/.env"
+ENV_FILES="apps/web/.env.local apps/mobile/.env apps/mobile/google-services.json"
 
 for ENV_FILE in $ENV_FILES; do
   ORIGIN_ENV="$ORIGIN_REPO/$ENV_FILE"
