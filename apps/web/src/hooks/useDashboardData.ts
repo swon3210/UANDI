@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import dayjs, { type Dayjs } from 'dayjs';
+import { type Dayjs } from 'dayjs';
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
@@ -13,14 +13,7 @@ export type CategorySlice = {
   color: string;
 };
 
-/** Recharts에 그대로 넘길 수 있는 평탄 형태. 키 = 카테고리명 (선택된 카테고리들). */
-export type TrendByCategoryPoint = {
-  bucketKey: string;
-  label: string;
-} & Record<string, number | string>;
-
 export type DashboardData = {
-  trendByCategory: TrendByCategoryPoint[];
   byCategory: CategorySlice[];
   total: number;
   hasEntries: boolean;
@@ -49,62 +42,6 @@ function categoryColor(
   index: number
 ): string {
   return CHART_PALETTE[index % CHART_PALETTE.length];
-}
-
-function bucketKeyFor(period: PeriodKind, date: dayjs.Dayjs): string {
-  if (period === 'yearly') {
-    return `${date.year()}-${String(date.month() + 1).padStart(2, '0')}`;
-  }
-  return date.format('YYYY-MM-DD');
-}
-
-function buildBuckets(period: PeriodKind, cursor: Dayjs): { bucketKey: string; label: string }[] {
-  if (period === 'weekly') {
-    const start = cursor.startOf('week');
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = start.add(i, 'day');
-      return { bucketKey: d.format('YYYY-MM-DD'), label: d.format('dd') };
-    });
-  }
-  if (period === 'monthly') {
-    const start = cursor.startOf('month');
-    const days = cursor.daysInMonth();
-    return Array.from({ length: days }, (_, i) => {
-      const d = start.add(i, 'day');
-      return { bucketKey: d.format('YYYY-MM-DD'), label: String(i + 1) };
-    });
-  }
-  return Array.from({ length: 12 }, (_, i) => ({
-    bucketKey: `${cursor.year()}-${String(i + 1).padStart(2, '0')}`,
-    label: `${i + 1}월`,
-  }));
-}
-
-function buildTrendByCategory(
-  entries: CashbookEntry[],
-  period: PeriodKind,
-  cursor: Dayjs
-): TrendByCategoryPoint[] {
-  const buckets = buildBuckets(period, cursor);
-  const categoryNames = Array.from(new Set(entries.map((e) => e.category)));
-
-  const points: TrendByCategoryPoint[] = buckets.map((b) => {
-    const point: TrendByCategoryPoint = { bucketKey: b.bucketKey, label: b.label };
-    for (const name of categoryNames) point[name] = 0;
-    return point;
-  });
-
-  const indexByKey = new Map(points.map((p, i) => [p.bucketKey, i]));
-
-  for (const entry of entries) {
-    const key = bucketKeyFor(period, dayjs(entry.date.toDate()));
-    const idx = indexByKey.get(key);
-    if (idx === undefined) continue;
-    const point = points[idx];
-    point[entry.category] = (point[entry.category] as number) + entry.amount;
-  }
-
-  return points;
 }
 
 function buildByCategory(
@@ -155,7 +92,6 @@ export function useDashboardData(args: {
     const filtered = group === 'all' ? allEntries : allEntries.filter((e) => e.type === group);
 
     return {
-      trendByCategory: buildTrendByCategory(filtered, period, cursor),
       byCategory: buildByCategory(filtered, categoriesQuery.data),
       total: computeTotal(filtered, group),
       hasEntries: filtered.length > 0,
@@ -167,7 +103,5 @@ export function useDashboardData(args: {
     categoriesQuery.data,
     categoriesQuery.isLoading,
     group,
-    period,
-    cursor,
   ]);
 }

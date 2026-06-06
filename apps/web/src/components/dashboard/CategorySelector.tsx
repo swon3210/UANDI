@@ -13,8 +13,8 @@ type Props = {
   max?: number;
 };
 
-export function CategorySelector({ options, selected, onToggle, max = 5 }: Props) {
-  const reachedMax = selected.length >= max;
+export function CategorySelector({ options, selected, onToggle, max }: Props) {
+  const reachedMax = max !== undefined && selected.length >= max;
 
   if (options.length === 0) {
     return null;
@@ -24,9 +24,7 @@ export function CategorySelector({ options, selected, onToggle, max = 5 }: Props
     <div data-testid="category-selector" className="flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>비교할 카테고리</span>
-        <span>
-          {selected.length} / {max}
-        </span>
+        <span>{max !== undefined ? `${selected.length} / ${max}` : `${selected.length}개`}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {options.map((opt) => {
