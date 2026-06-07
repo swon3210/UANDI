@@ -4,7 +4,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
-import { useSplashReady } from '@/components/splash-ready-context';
 import type { FcmTokenInfo } from '@/lib/fcm';
 
 const UANDI_HOST = 'uandi-web.vercel.app';
@@ -33,7 +32,6 @@ export function AppWebView({
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
   const insets = useSafeAreaInsets();
-  const onSplashReady = useSplashReady();
 
   // Android 뒤로가기 버튼 처리
   useFocusEffect(
@@ -93,7 +91,6 @@ export function AppWebView({
         style={styles.webview}
         source={{ uri: `https://${UANDI_HOST}${path}` }}
         onNavigationStateChange={handleNavigationStateChange}
-        onLoadEnd={onSplashReady}
         originWhitelist={['*']}
         userAgent="Mozilla/5.0 (Linux; Android 13; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         javaScriptEnabled
