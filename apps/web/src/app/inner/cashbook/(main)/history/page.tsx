@@ -29,6 +29,7 @@ import {
   useRejectPrediction,
   useDismissPrompt,
 } from '@/hooks/usePredictions';
+import { useAutoPredictions } from '@/hooks/useAutoPredictions';
 import { resolvePeriod, formatDay } from '@/utils/date';
 import { CashbookFilterBar } from '@/components/cashbook/CashbookFilterBar';
 import { CashbookFilterSheet } from '@/components/cashbook/CashbookFilterSheet';
@@ -155,6 +156,9 @@ export default function CashbookPage() {
   const confirmPredictionMutation = useConfirmPrediction(coupleId);
   const rejectPredictionMutation = useRejectPrediction(coupleId);
   const dismissPromptMutation = useDismissPrompt(coupleId);
+
+  // 가계부 진입 시 1회 고정지출 자동 감지(§7-1)
+  useAutoPredictions(coupleId);
 
   // 표시 기간의 '오늘 이후' 미확정 예측을 날짜별로 묶는다(SYNC-02).
   const promptsByDate = useDayPredictions(coupleId, range.start, range.end);

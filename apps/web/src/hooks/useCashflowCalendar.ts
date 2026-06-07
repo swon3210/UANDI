@@ -14,7 +14,8 @@ import {
   type CashflowCardData,
   type CashflowTransaction,
 } from '@/utils/cashflow';
-import type { CashflowSettings } from '@/types';
+import { estimateVariableDaily } from '@/utils/auto-detect';
+import { DEFAULT_CASHFLOW_VARIABLE_MODE, type CashflowSettings } from '@/types';
 
 /** 캘린더 표시 기간(개월). 다음 결제일부터 N개월. */
 export const CASHFLOW_HORIZON_MONTHS = 3;
@@ -52,6 +53,18 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
     from.toDate()
   );
 
+  // §7-2 변동지출 추정용 과거 내역 (variableMode개월)
+  const variableMode = settings?.variableMode ?? DEFAULT_CASHFLOW_VARIABLE_MODE;
+  const pastFrom = useMemo(
+    () => from.subtract(variableMode, 'month').toDate(),
+    [from, variableMode]
+  );
+  const { data: pastEntries } = useCashbookEntriesInRange(coupleId, pastFrom, from.toDate());
+  const estimatedDailyVariable = useMemo(
+    () => estimateVariableDaily(pastEntries ?? [], variableMode),
+    [pastEntries, variableMode]
+  );
+
   const cards = useMemo<CashflowCardData[]>(() => {
     const currentCash = settings?.currentCash ?? 0;
     const paydays = settings?.paydays ?? [];
@@ -86,8 +99,11 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
       });
     }
 
-    return buildCashflowCards(boundaries, txns, currentCash);
-  }, [settings, entries, predictions, from]);
+    return buildCashflowCards(boundaries, txns, currentCash, {
+      from: from.toDate(),
+      estimatedDailyVariable,
+    });
+  }, [settings, entries, predictions, from, estimatedDailyVariable]);
 
   return {
     cards,

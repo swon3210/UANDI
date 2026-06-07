@@ -149,7 +149,8 @@ export function weeklyBoundaries(buckets: WeekBucket[]): CardBoundary[] {
 export function buildCashflowCards(
   boundaries: CardBoundary[],
   transactions: CashflowTransaction[],
-  currentCash: number
+  currentCash: number,
+  opts: { from?: Date; estimatedDailyVariable?: number } = {}
 ): CashflowCardData[] {
   const sorted = [...boundaries].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
   const buckets = sorted.map((b) => ({ boundary: b, txns: [] as CashflowTransaction[] }));
@@ -159,7 +160,10 @@ export function buildCashflowCards(
     if (bucket) bucket.txns.push(t);
   }
 
+  const dailyVar = opts.estimatedDailyVariable ?? 0;
   let running = currentCash;
+  let prevEnd = opts.from ? opts.from.getTime() : (sorted[0]?.endDate.getTime() ?? 0);
+
   return buckets.map(({ boundary, txns }) => {
     let inflow = 0;
     let outflow = 0;
@@ -168,6 +172,12 @@ export function buildCashflowCards(
       else outflow += t.amount; // expense + flex
     }
     running = running + inflow - outflow;
+
+    // §7-2 예상 변동지출 = 일평균 변동지출 × 직전 결제일 이후 경과일수 (표시 전용, 잔액 미반영)
+    const spanDays = Math.max(1, Math.round((boundary.endDate.getTime() - prevEnd) / 86400000));
+    prevEnd = boundary.endDate.getTime();
+    const estimatedVariable = dailyVar > 0 ? Math.round(dailyVar * spanDays) : undefined;
+
     return {
       key: boundary.key,
       label: boundary.label,
@@ -179,6 +189,7 @@ export function buildCashflowCards(
       balance: running,
       isNegative: running < 0,
       transactions: [...txns].sort((a, b) => a.date.getTime() - b.date.getTime()),
+      estimatedVariable,
     };
   });
 }
