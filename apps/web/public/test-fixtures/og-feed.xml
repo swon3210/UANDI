@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>OG 이미지 테스트 피드</title>
+    <link>https://example.com</link>
+    <description>og:image 추출 E2E 테스트용 고정 피드</description>
+    <!-- (A) RSS media:content로 대표 이미지를 직접 제공 → 그대로 저장된다.
+         절대 URL은 E2E 서버 포트(3100)에 고정한다(playwright.config의 E2E_PORT). -->
+    <item>
+      <title>RSS 대표 이미지 글</title>
+      <link>https://example.com/articles/media-post</link>
+      <description>media:content로 대표 이미지를 제공하는 항목.</description>
+      <media:content url="http://localhost:3100/test-fixtures/og-media.jpg" medium="image" />
+      <pubDate>Mon, 01 Jun 2026 09:00:00 GMT</pubDate>
+    </item>
+    <!-- (B) RSS에 이미지가 없고 link만 있음 → 크롤러가 원문 HTML의 og:image로 폴백. -->
+    <item>
+      <title>OG 폴백 이미지 글</title>
+      <link>http://localhost:3100/test-fixtures/og-post.html</link>
+      <description>RSS에 이미지가 없어 원문 HTML의 og:image로 폴백하는 항목.</description>
+      <pubDate>Sun, 31 May 2026 12:30:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
