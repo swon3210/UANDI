@@ -20,8 +20,10 @@ import type { CashflowPaydayType } from '@/types';
 type CashflowCardProps = {
   card: CashflowCardData;
   defaultOpen?: boolean;
-  /** 있으면 펼친 카드 하단에 "예측 추가" 버튼을 노출(PR3에서 캘린더 예측 생성과 연결). */
+  /** 있으면 펼친 카드 하단에 "예측 추가" 버튼을 노출(SYNC-02). */
   onAddPrediction?: () => void;
+  /** 있으면 예측 거래 행에 삭제 버튼을 노출(SYNC-05). */
+  onDeletePrediction?: (txnId: string) => void;
 };
 
 const TYPE_META: Record<CashflowPaydayType, { Icon: LucideIcon; tint: string }> = {
@@ -33,7 +35,12 @@ const TYPE_META: Record<CashflowPaydayType, { Icon: LucideIcon; tint: string }> 
 const WEEK_META = { Icon: CalendarRange, tint: 'bg-stone-200 text-stone-600' };
 
 /** 결제일 카드(§4-3): 결제일·남는 돈을 강조하고, 들어올/나갈 돈을 2열로, 펼치면 거래 목록. */
-export function CashflowCard({ card, defaultOpen = false, onAddPrediction }: CashflowCardProps) {
+export function CashflowCard({
+  card,
+  defaultOpen = false,
+  onAddPrediction,
+  onDeletePrediction,
+}: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const { Icon, tint } = card.paydayType ? TYPE_META[card.paydayType] : WEEK_META;
 
@@ -126,7 +133,15 @@ export function CashflowCard({ card, defaultOpen = false, onAddPrediction }: Cas
             ) : (
               <div className="space-y-0.5">
                 {card.transactions.map((t) => (
-                  <CashflowTransactionRow key={t.id} txn={t} />
+                  <CashflowTransactionRow
+                    key={t.id}
+                    txn={t}
+                    onDelete={
+                      onDeletePrediction && t.kind === 'predicted'
+                        ? () => onDeletePrediction(t.id)
+                        : undefined
+                    }
+                  />
                 ))}
               </div>
             )}

@@ -82,6 +82,7 @@ export async function updatePrediction(
       | 'confidence'
       | 'rejectedUntil'
       | 'linkedEntryId'
+      | 'promptDismissed'
     >
   >
 ): Promise<void> {

@@ -51,6 +51,14 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-settings-save');
   }
 
+  get addPredictionButton(): Locator {
+    return this.page.getByTestId('cashflow-add-prediction');
+  }
+
+  get predictionDelete(): Locator {
+    return this.page.getByTestId('cashflow-prediction-delete');
+  }
+
   async openSettings() {
     await this.settingsButton.click();
     await this.settingsSheet.waitFor({ state: 'visible' });

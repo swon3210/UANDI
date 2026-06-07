@@ -420,6 +420,7 @@ export async function seedPrediction(
     confidence?: number;
     rejectedUntil?: string | null; // ISO
     linkedEntryId?: string | null;
+    promptDismissed?: boolean;
   }
 ): Promise<string> {
   const predictionId = `pred-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -446,6 +447,7 @@ export async function seedPrediction(
     linkedEntryId: options.linkedEntryId
       ? { stringValue: options.linkedEntryId }
       : { nullValue: null },
+    promptDismissed: { booleanValue: options.promptDismissed ?? false },
     createdAt: { timestampValue: now },
     updatedAt: { timestampValue: now },
   };

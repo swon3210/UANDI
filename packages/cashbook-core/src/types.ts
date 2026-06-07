@@ -104,6 +104,12 @@ export type CashbookPrediction = {
   rejectedUntil: Timestamp | null;
   /** ✓ 확정 시 생성된 cashbookEntry id(SYNC-03). 미확정이면 null. */
   linkedEntryId: string | null;
+  /**
+   * 가계부 점선 프롬프트만 닫혔는지(SYNC-04). calendar 출처를 ✗하면 true가 되어
+   * 가계부에선 사라지지만 status는 'predicted' 그대로라 캘린더에는 잔존한다.
+   * (auto 출처 ✗는 status='rejected'로 양쪽에서 제거 — 시나리오 B.)
+   */
+  promptDismissed: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 };

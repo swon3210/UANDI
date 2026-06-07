@@ -153,6 +153,23 @@ export class CashbookPage {
     return this.page.getByTestId(`entry-card-${id}`);
   }
 
+  // 예측 점선 박스 (SYNC-02~05)
+  get predictionPrompt() {
+    return this.page.getByTestId('prediction-prompt-box');
+  }
+
+  get predictionConfirm() {
+    return this.page.getByTestId('prediction-confirm');
+  }
+
+  get predictionReject() {
+    return this.page.getByTestId('prediction-reject');
+  }
+
+  get predictionEdit() {
+    return this.page.getByTestId('prediction-edit');
+  }
+
   async addEntry(options: {
     type?: string;
     amount: number;

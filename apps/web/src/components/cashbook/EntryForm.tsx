@@ -64,6 +64,8 @@ type EntryFormProps = {
   onDelete?: () => void;
   onClose: () => void;
   createdBy: string;
+  /** 시트 제목 override. 예측 추가/수정 등 재사용 시 사용. 미지정 시 내역 추가/수정. */
+  title?: string;
 };
 
 export function EntryForm({
@@ -75,6 +77,7 @@ export function EntryForm({
   onDelete,
   onClose,
   createdBy,
+  title,
 }: EntryFormProps) {
   const [activeType, setActiveType] = useState<CashbookEntryType>(
     editingEntry?.type ?? prefill?.type ?? 'expense'
@@ -116,7 +119,7 @@ export function EntryForm({
       data-testid="entry-form-sheet"
     >
       <SheetHeader>
-        <SheetTitle>{editingEntry ? '내역 수정' : '내역 추가'}</SheetTitle>
+        <SheetTitle>{title ?? (editingEntry ? '내역 수정' : '내역 추가')}</SheetTitle>
       </SheetHeader>
 
       <Form {...form}>

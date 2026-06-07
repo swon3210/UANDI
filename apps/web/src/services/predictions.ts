@@ -130,3 +130,11 @@ export async function rejectPrediction(coupleId: string, predictionId: string): 
     rejectedUntil,
   });
 }
+
+/**
+ * ✗ 가계부 프롬프트만 닫기(SYNC-04, calendar 출처).
+ * status는 'predicted' 그대로 유지 → 캘린더엔 잔존, 가계부 점선박스만 사라진다.
+ */
+export async function dismissPrompt(coupleId: string, predictionId: string): Promise<void> {
+  return _updatePrediction(getDb(), coupleId, predictionId, { promptDismissed: true });
+}

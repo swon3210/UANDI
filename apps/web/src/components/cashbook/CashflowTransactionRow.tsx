@@ -1,7 +1,7 @@
 'use client';
 
-import { Check } from 'lucide-react';
-import { cn } from '@uandi/ui';
+import { Check, Trash2 } from 'lucide-react';
+import { Button, cn } from '@uandi/ui';
 import { formatAmount } from '@/utils/currency';
 import type { CashflowTransaction } from '@/utils/cashflow';
 
@@ -10,8 +10,14 @@ const SOURCE_LABEL: Record<NonNullable<CashflowTransaction['source']>, string> =
   auto: '자동감지',
 };
 
+type CashflowTransactionRowProps = {
+  txn: CashflowTransaction;
+  /** 예측 거래에 한해 삭제 버튼 노출(SYNC-05). */
+  onDelete?: () => void;
+};
+
 /** 캘린더 카드 펼침 시 거래 1건. 확정(✓ 채움)/예측(◇ 점선) 마커 + 출처 표기. */
-export function CashflowTransactionRow({ txn }: { txn: CashflowTransaction }) {
+export function CashflowTransactionRow({ txn, onDelete }: CashflowTransactionRowProps) {
   const isPredicted = txn.kind === 'predicted';
   const sublabel = isPredicted
     ? txn.source
@@ -56,6 +62,20 @@ export function CashflowTransactionRow({ txn }: { txn: CashflowTransaction }) {
       >
         {formatAmount(txn.amount, txn.type)}
       </span>
+
+      {isPredicted && onDelete && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-muted-foreground"
+          onClick={onDelete}
+          aria-label="예측 삭제"
+          data-testid="cashflow-prediction-delete"
+        >
+          <Trash2 size={13} />
+        </Button>
+      )}
     </div>
   );
 }

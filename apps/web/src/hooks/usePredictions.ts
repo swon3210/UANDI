@@ -6,6 +6,7 @@ import {
   addPrediction,
   confirmPrediction,
   rejectPrediction,
+  dismissPrompt,
   deletePrediction,
   type ConfirmOverride,
 } from '@/services/predictions';
@@ -66,6 +67,16 @@ export function useRejectPrediction(coupleId: string | null) {
     mutationFn: (predictionId: string) => rejectPrediction(coupleId!, predictionId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
     onError: () => toast.error('예측 거절에 실패했어요. 다시 시도해주세요.'),
+  });
+}
+
+/** ✗ 가계부 프롬프트만 닫기(calendar 출처). 캘린더 예측은 유지. */
+export function useDismissPrompt(coupleId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (predictionId: string) => dismissPrompt(coupleId!, predictionId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onError: () => toast.error('처리에 실패했어요. 다시 시도해주세요.'),
   });
 }
 
