@@ -1,21 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  ChevronDown,
-  Plus,
-  CreditCard,
-  Landmark,
-  Home,
-  CalendarClock,
-  CalendarRange,
-  type LucideIcon,
-} from 'lucide-react';
+import { ChevronDown, Plus, CalendarClock, CalendarRange } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, Button, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
 import type { CashflowCardData } from '@/utils/cashflow';
-import type { CashflowPaydayType } from '@/types';
 
 type CashflowCardProps = {
   card: CashflowCardData;
@@ -26,15 +16,10 @@ type CashflowCardProps = {
   onDeletePrediction?: (txnId: string) => void;
 };
 
-const TYPE_META: Record<CashflowPaydayType, { Icon: LucideIcon; tint: string }> = {
-  card: { Icon: CreditCard, tint: 'bg-coral-100 text-coral-600' },
-  loan: { Icon: Landmark, tint: 'bg-amber-100 text-amber-700' },
-  rent: { Icon: Home, tint: 'bg-violet-100 text-violet-600' },
-  custom: { Icon: CalendarClock, tint: 'bg-stone-200 text-stone-600' },
-};
-const WEEK_META = { Icon: CalendarRange, tint: 'bg-stone-200 text-stone-600' };
-
-/** 결제일 카드(§4-3): 결제일·남는 돈을 강조하고, 들어올/나갈 돈을 2열로, 펼치면 거래 목록. */
+/**
+ * 지출 예정일 카드(§4-3): 그 '날짜까지'의 남는 돈을 강조하는 현금 체크포인트.
+ * 특정 결제수단(카드)이 아니라 날짜 기준 합산이므로, 결제수단 아이콘 대신 중립 달력 아이콘을 쓴다.
+ */
 export function CashflowCard({
   card,
   defaultOpen = false,
@@ -42,7 +27,7 @@ export function CashflowCard({
   onDeletePrediction,
 }: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const { Icon, tint } = card.paydayType ? TYPE_META[card.paydayType] : WEEK_META;
+  const Icon = card.paydayType ? CalendarClock : CalendarRange;
 
   return (
     <Collapsible
@@ -59,7 +44,7 @@ export function CashflowCard({
       >
         <CollapsibleTrigger className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-accent/40">
           <span
-            className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', tint)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-200 text-stone-600"
             aria-hidden
           >
             <Icon size={20} />
@@ -129,9 +114,12 @@ export function CashflowCard({
             )}
 
             {card.transactions.length === 0 ? (
-              <p className="py-1 text-sm text-muted-foreground">이 결제일에 잡힌 거래가 없어요</p>
+              <p className="py-1 text-sm text-muted-foreground">이 날짜까지 잡힌 거래가 없어요</p>
             ) : (
               <div className="space-y-0.5">
+                <p className="px-0.5 pb-0.5 text-[11px] font-medium text-muted-foreground">
+                  이 날짜까지 예정된 거래
+                </p>
                 {card.transactions.map((t) => (
                   <CashflowTransactionRow
                     key={t.id}

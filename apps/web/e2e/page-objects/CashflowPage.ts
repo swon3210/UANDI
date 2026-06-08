@@ -70,8 +70,8 @@ export class CashflowPage {
     if (options.payday) {
       await this.addPaydayButton.click();
       const row = this.paydayRows.last();
-      await row.getByPlaceholder('이름 (예: 신한카드)').fill(options.payday.label);
-      await row.getByLabel('결제 일자').fill(String(options.payday.day));
+      await row.getByPlaceholder('예: 월세, 관리비, 대출이자').fill(options.payday.label);
+      await row.getByLabel('매월 지출일').fill(String(options.payday.day));
     }
     await this.saveButton.click();
     await this.settingsSheet.waitFor({ state: 'hidden' });

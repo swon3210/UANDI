@@ -24,7 +24,7 @@ export type PaydayInstance = {
   id: string; // `${paydayId}-${YYYY-MM-DD}`
   paydayId: string;
   label: string;
-  type: CashflowPaydayType;
+  type?: CashflowPaydayType;
   date: Date; // 발생일(해당 일자의 시작)
 };
 

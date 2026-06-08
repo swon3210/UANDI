@@ -229,8 +229,13 @@ export type CashflowPaydayType = 'card' | 'loan' | 'rent' | 'custom';
 
 export type CashflowPayday = {
   id: string; // crypto.randomUUID()
-  label: string; // "신한카드 결제", "월세"
-  type: CashflowPaydayType;
+  /**
+   * 큰 지출이 빠지는 '지출 이벤트' 이름 (예: 월세, 관리비, 대출이자, 카드값).
+   * 결제 수단(카드 이름)이 아니라 '무슨 돈이 빠지는 날'을 가리킨다.
+   */
+  label: string;
+  /** 내부 호환용(아이콘/분류). UI에서는 더 이상 노출하지 않는다. */
+  type?: CashflowPaydayType;
   dayOfMonth: number; // 1~31 (해당 월에 없는 날이면 말일로 clamp)
 };
 

@@ -4,7 +4,7 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Lightbulb } from 'lucide-react';
 import {
   Form,
   FormField,
@@ -17,29 +17,16 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
 } from '@uandi/ui';
-import type { CashflowPayday, CashflowPaydayType } from '@/types';
+import type { CashflowPayday } from '@/types';
 
-const PAYDAY_TYPE_LABELS: Record<CashflowPaydayType, string> = {
-  card: '카드',
-  loan: '대출',
-  rent: '월세',
-  custom: '기타',
-};
-const PAYDAY_TYPES: CashflowPaydayType[] = ['card', 'loan', 'rent', 'custom'];
 const VARIABLE_MODES = [1, 3, 6] as const;
 
 const paydaySchema = z.object({
   id: z.string(),
-  label: z.string().min(1, '이름을 입력해주세요'),
-  type: z.enum(['card', 'loan', 'rent', 'custom']),
+  label: z.string().min(1, '항목 이름을 입력해주세요'),
   dayOfMonth: z
-    .number({ error: '결제일을 입력해주세요' })
+    .number({ error: '며칠인지 입력해주세요' })
     .int()
     .min(1, '1~31 사이로 입력해주세요')
     .max(31, '1~31 사이로 입력해주세요'),
@@ -65,14 +52,18 @@ type CashflowSettingsFormProps = {
   onClose: () => void;
 };
 
-/** 현금흐름 설정 시트(결제일 목록 + 현재 보유 현금 + 변동지출 추정 기간). */
+/** 현금흐름 설정 시트(큰 지출 예정일 + 현재 보유 현금 + 변동지출 추정 기간). */
 export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSettingsFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       currentCash: initial?.currentCash ?? ('' as unknown as number),
       variableMode: initial?.variableMode ?? 3,
-      paydays: initial?.paydays ?? [],
+      paydays: initial?.paydays?.map((p) => ({
+        id: p.id,
+        label: p.label,
+        dayOfMonth: p.dayOfMonth,
+      })) ?? [],
     },
   });
 
@@ -137,24 +128,31 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">결제일</p>
+              <p className="text-sm font-medium">큰 지출 예정일</p>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 data-testid="cashflow-add-payday"
-                onClick={() =>
-                  append({ id: crypto.randomUUID(), label: '', type: 'card', dayOfMonth: 1 })
-                }
+                onClick={() => append({ id: crypto.randomUUID(), label: '', dayOfMonth: 1 })}
               >
                 <Plus size={14} className="mr-1" />
                 추가
               </Button>
             </div>
 
+            {/* 입력 가이드 — '결제 수단'이 아니라 '지출 이벤트'를 적도록 명확히 안내 */}
+            <div className="flex gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <Lightbulb size={15} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
+              <p className="leading-5">
+                카드 이름이 아니라 <span className="font-semibold">돈이 빠지는 항목</span>을
+                적어주세요. (예: 월세, 관리비, 대출이자, 카드값)
+              </p>
+            </div>
+
             {fields.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                결제일이 없으면 주 단위로 묶어서 보여줘요.
+                큰 지출일이 없으면 주 단위로 묶어서 보여줘요.
               </p>
             )}
 
@@ -170,7 +168,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                   render={({ field }) => (
                     <FormItem className="flex-1">
                       <FormControl>
-                        <Input placeholder="이름 (예: 신한카드)" {...field} />
+                        <Input placeholder="예: 월세, 관리비, 대출이자" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -178,42 +176,25 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                 />
                 <FormField
                   control={form.control}
-                  name={`paydays.${index}.type`}
-                  render={({ field }) => (
-                    <FormItem className="w-20">
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {PAYDAY_TYPES.map((t) => (
-                            <SelectItem key={t} value={t}>
-                              {PAYDAY_TYPE_LABELS[t]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name={`paydays.${index}.dayOfMonth`}
                   render={({ field }) => (
-                    <FormItem className="w-16">
+                    <FormItem className="w-24">
                       <FormControl>
-                        <Input
-                          type="number"
-                          inputMode="numeric"
-                          min={1}
-                          max={31}
-                          className="text-right"
-                          aria-label="결제 일자"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                        />
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={31}
+                            className="pr-10 text-right"
+                            aria-label="매월 지출일"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                          />
+                          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                            매월
+                          </span>
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -223,7 +204,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                   variant="ghost"
                   size="icon"
                   className="mt-0.5 shrink-0 text-muted-foreground"
-                  aria-label="결제일 삭제"
+                  aria-label="삭제"
                   onClick={() => remove(index)}
                 >
                   <Trash2 size={16} />

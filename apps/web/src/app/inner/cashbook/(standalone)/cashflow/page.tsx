@@ -178,7 +178,7 @@ export default function CashflowCalendarPage() {
           <EmptyState
             icon={<CalendarRange size={48} className="text-muted-foreground" />}
             title="현금흐름을 보려면 설정이 필요해요"
-            description="현재 보유 현금과 결제일을 입력하면 결제일별로 남는 돈을 예측해 보여드려요"
+            description="현재 보유 현금과 큰 지출 예정일(월세·관리비·대출이자 등)을 입력하면 그 날짜별로 남는 돈을 예측해 보여드려요"
             action={
               <Button onClick={openSettings} data-testid="cashflow-setup-button">
                 설정하기

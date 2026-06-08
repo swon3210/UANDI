@@ -21,8 +21,8 @@ export function CashflowCardList({
     return (
       <EmptyState
         icon={<CalendarRange size={48} className="text-muted-foreground" />}
-        title="표시할 결제일이 없어요"
-        description="결제일과 현재 보유 현금을 설정하면 현금흐름이 보여요"
+        title="표시할 지출 예정일이 없어요"
+        description="큰 지출 예정일과 현재 보유 현금을 설정하면 현금흐름이 보여요"
       />
     );
   }
