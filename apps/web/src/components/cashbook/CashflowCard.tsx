@@ -40,7 +40,9 @@ export function CashflowCard({
   onDeletePrediction,
 }: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const isPayday = !!card.paydayType;
+  // 결제일 카드는 subLabel(단일 날짜)을 갖고, 주 단위 폴백은 갖지 않는다.
+  // (paydayType은 리프레이밍으로 UI에서 제거돼 비어 있을 수 있으므로 기준으로 쓰지 않는다.)
+  const isPayday = !!card.subLabel;
 
   return (
     <Collapsible
@@ -59,6 +61,7 @@ export function CashflowCard({
           {isPayday ? (
             <div
               className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-stone-100 leading-none"
+              data-testid="cashflow-card-date"
               aria-hidden
             >
               <span className="text-[10px] font-medium text-stone-500">

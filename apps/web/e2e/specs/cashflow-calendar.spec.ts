@@ -21,9 +21,10 @@ const PAYDAY = 15; // 테스트용 결제일(매월 15일)
 test.describe('현금흐름 캘린더', () => {
   test('결제일 카드에 들어올/나갈/남는 돈이 누적 계산되어 표시된다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
+    // 실제 폼과 동일하게 type 없이 결제일을 심는다(날짜 블록이 type에 의존하지 않아야 함).
     await seedCashflowSettings(coupleId, {
       currentCash: 2000000,
-      paydays: [{ id: 'p1', label: '신한카드', type: 'card', dayOfMonth: PAYDAY }],
+      paydays: [{ id: 'p1', label: '신한카드', dayOfMonth: PAYDAY }],
     });
     await seedPrediction(coupleId, uid, {
       type: 'expense',
@@ -40,6 +41,8 @@ test.describe('현금흐름 캘린더', () => {
     const first = cashflow.cards.first();
     await expect(first).toBeVisible();
     await expect(first).toContainText('신한카드');
+    // 결제일 카드에는 날짜 블록이 보여야 한다(type 미지정이어도)
+    await expect(first.getByTestId('cashflow-card-date')).toBeVisible();
     // 남는 돈 = 2,000,000 - 700,000
     await expect(first.getByTestId('cashflow-card-balance')).toHaveText('1,300,000원');
     // 나갈 돈 = 700,000 (예측 ◇ 포함)
