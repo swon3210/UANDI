@@ -49,6 +49,25 @@ test.describe('현금흐름 캘린더', () => {
     await expect(first).toContainText('700,000원');
   });
 
+  test('같은 날짜의 결제일은 한 카드로 묶여 표시된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedCashflowSettings(coupleId, {
+      currentCash: 3000000,
+      paydays: [
+        { id: 'p1', label: '대출이자', dayOfMonth: PAYDAY },
+        { id: 'p2', label: '관리비', dayOfMonth: PAYDAY },
+      ],
+    });
+
+    const cashflow = new CashflowPage(page);
+    await cashflow.goto();
+
+    // 첫(가장 가까운) 결제일 카드에 두 이벤트가 함께 묶여 보인다 (날짜별 카드는 1개)
+    const first = cashflow.cards.first();
+    await expect(first).toContainText('대출이자');
+    await expect(first).toContainText('관리비');
+  });
+
   test('남는 돈이 음수면 빨갛게 강조되고 음수 경고 배너가 뜬다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
     await seedCashflowSettings(coupleId, {
