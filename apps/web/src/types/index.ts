@@ -9,6 +9,9 @@ export type {
   CategorySubGroup,
   RecurringSchedule,
   RecurringScheduleKind,
+  CashbookPrediction,
+  PredictionStatus,
+  PredictionSource,
 } from '@uandi/cashbook-core';
 
 // ── 앱 전용 타입 ──
@@ -217,6 +220,37 @@ export type CashbookDisplaySettings = {
   backgroundImageUrl: string | null;
   updatedAt: Timestamp;
 };
+
+// ── 현금흐름 캘린더 설정 (커플 공동) ──
+// 저장 경로: couples/{coupleId}/meta/cashflow (단일 문서 — 결정적 ID로 전체 스캔 회피)
+// 결제일 목록 + 현재 보유 현금 + 변동지출 추정 기간을 한 문서에 보관한다.
+
+export type CashflowPaydayType = 'card' | 'loan' | 'rent' | 'custom';
+
+export type CashflowPayday = {
+  id: string; // crypto.randomUUID()
+  /**
+   * 큰 지출이 빠지는 '지출 이벤트' 이름 (예: 월세, 관리비, 대출이자, 카드값).
+   * 결제 수단(카드 이름)이 아니라 '무슨 돈이 빠지는 날'을 가리킨다.
+   */
+  label: string;
+  /** 내부 호환용(아이콘/분류). UI에서는 더 이상 노출하지 않는다. */
+  type?: CashflowPaydayType;
+  dayOfMonth: number; // 1~31 (해당 월에 없는 날이면 말일로 clamp)
+};
+
+export type CashflowSettings = {
+  coupleId: string;
+  /** §9-2 잔액 계산 시작점("현재 보유 현금"). */
+  currentCash: number;
+  /** 비어 있으면 캘린더는 주 단위로 묶어서 표시(§9-1). */
+  paydays: CashflowPayday[];
+  /** §7-2 변동지출 평균 추정 기간(개월). */
+  variableMode: 1 | 3 | 6;
+  updatedAt: Timestamp;
+};
+
+export const DEFAULT_CASHFLOW_VARIABLE_MODE = 3 as const;
 
 // ── 재테크 자산 배분 목표 비율 (개인 소유) ──
 // 저장 경로: couples/{coupleId}/sideHustles/{uid}/config/assetAllocation

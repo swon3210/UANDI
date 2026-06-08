@@ -23,17 +23,27 @@ import {
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
-import { resolvePeriod } from '@/utils/date';
+import { useDayPredictions, toPromptView } from '@/hooks/useDayPredictions';
+import {
+  useConfirmPrediction,
+  useRejectPrediction,
+  useDismissPrompt,
+} from '@/hooks/usePredictions';
+import { useAutoPredictions } from '@/hooks/useAutoPredictions';
+import { resolvePeriod, formatDay } from '@/utils/date';
 import { CashbookFilterBar } from '@/components/cashbook/CashbookFilterBar';
 import { CashbookFilterSheet } from '@/components/cashbook/CashbookFilterSheet';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
 import { EntryList } from '@/components/cashbook/EntryList';
+import { EntryCard } from '@/components/cashbook/EntryCard';
 import { EntryForm } from '@/components/cashbook/EntryForm';
+import { PredictionPromptList } from '@/components/cashbook/PredictionPromptList';
+import type { PredictionPromptView } from '@/components/cashbook/PredictionPromptBox';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
 import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
 import { formatAmount } from '@/utils/currency';
 import { parseEntriesFromText } from '@/services/ai';
-import type { CashbookEntry, CashbookEntryType } from '@/types';
+import type { CashbookEntry, CashbookEntryType, CashbookPrediction } from '@/types';
 
 /**
  * 필터 시트를 쿼리 캐시의 최신 카테고리로 렌더한다.
@@ -143,6 +153,49 @@ export default function CashbookPage() {
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
 
+  const confirmPredictionMutation = useConfirmPrediction(coupleId);
+  const rejectPredictionMutation = useRejectPrediction(coupleId);
+  const dismissPromptMutation = useDismissPrompt(coupleId);
+
+  // 가계부 진입 시 1회 고정지출 자동 감지(§7-1)
+  useAutoPredictions(coupleId);
+
+  // 표시 기간의 '오늘 이후' 미확정 예측을 날짜별로 묶는다(SYNC-02).
+  const promptsByDate = useDayPredictions(coupleId, range.start, range.end);
+  const predictionById = useMemo(() => {
+    const m = new Map<string, CashbookPrediction>();
+    for (const list of promptsByDate.values()) for (const p of list) m.set(p.id, p);
+    return m;
+  }, [promptsByDate]);
+
+  const categoryMap = useMemo(
+    () => new Map((categories ?? []).map((c) => [c.name, c])),
+    [categories]
+  );
+
+  // 날짜 정렬 모드에서 거래 그룹 + 예측 프롬프트를 같은 날짜로 합친다.
+  const daySections = useMemo(() => {
+    if (!isDateSort(filter.sort)) return [];
+    const map = new Map<
+      string,
+      { date: Date; entries: CashbookEntry[]; prompts: CashbookPrediction[] }
+    >();
+    for (const g of groups) {
+      map.set(dayjs(g.date).format('YYYY-MM-DD'), {
+        date: g.date,
+        entries: g.entries,
+        prompts: [],
+      });
+    }
+    for (const [key, preds] of promptsByDate) {
+      const existing = map.get(key);
+      if (existing) existing.prompts = preds;
+      else map.set(key, { date: dayjs(key).toDate(), entries: [], prompts: preds });
+    }
+    const dir = filter.sort === 'latest' ? -1 : 1;
+    return [...map.values()].sort((a, b) => (a.date.getTime() - b.date.getTime()) * dir);
+  }, [groups, promptsByDate, filter.sort]);
+
   const handleAdd = (prefill?: {
     type?: CashbookEntryType;
     amount?: number;
@@ -226,6 +279,79 @@ export default function CashbookPage() {
       </Sheet>
     ));
   };
+
+  // ✓ 추가: 예측을 정식 거래로 확정(SYNC-03)
+  const handlePromptConfirm = (view: PredictionPromptView) => {
+    const p = predictionById.get(view.id);
+    if (p) confirmPredictionMutation.mutate({ prediction: p });
+  };
+
+  // ✗ 아니오: calendar 출처는 프롬프트만 닫고(캘린더 잔존, SYNC-04), auto 출처는 거절(양쪽 제거)
+  const handlePromptReject = (view: PredictionPromptView) => {
+    const p = predictionById.get(view.id);
+    if (!p) return;
+    if (p.source === 'calendar') dismissPromptMutation.mutate(p.id);
+    else rejectPredictionMutation.mutate(p.id);
+  };
+
+  // ✎ 수정 후 추가: EntryForm을 prefill로 열어 수정값으로 확정(시나리오 E)
+  const handlePromptEdit = (view: PredictionPromptView) => {
+    const p = predictionById.get(view.id);
+    if (!p) return;
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <EntryForm
+          categories={categories ?? []}
+          coupleId={coupleId}
+          createdBy={uid}
+          title="수정 후 추가"
+          prefill={{
+            type: p.type,
+            amount: p.amount,
+            category: p.category,
+            description: p.description,
+            date: dayjs(p.date.toDate()).format('YYYY-MM-DD'),
+          }}
+          onSubmit={(data) =>
+            confirmPredictionMutation.mutate({
+              prediction: p,
+              override: {
+                type: data.type,
+                amount: data.amount,
+                category: data.category,
+                description: data.description,
+                date: data.date,
+              },
+            })
+          }
+          onClose={() => {
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const listEmptyState = isFilterActive ? (
+    <EmptyState
+      icon={<BookOpen size={48} className="text-muted-foreground" />}
+      title="조건에 맞는 내역이 없어요"
+      description="다른 필터를 시도해보세요"
+      action={
+        <Button variant="outline" onClick={handleAllFiltersReset}>
+          필터 초기화
+        </Button>
+      }
+    />
+  ) : (
+    <EmptyState
+      icon={<BookOpen size={48} className="text-muted-foreground" />}
+      title="아직 내역이 없어요"
+      description="가계부를 시작해보세요"
+      action={<Button onClick={() => handleAdd()}>추가하기</Button>}
+    />
+  );
 
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
@@ -312,31 +438,49 @@ export default function CashbookPage() {
           </div>
 
           <div className="mt-6">
-            {groups.length > 0 ? (
+            {isDateSort(filter.sort) ? (
+              daySections.length > 0 ? (
+                <div className="space-y-5">
+                  {daySections.map((s) => (
+                    <div key={dayjs(s.date).format('YYYY-MM-DD')}>
+                      <div className="mb-2 px-1 text-xs font-medium text-muted-foreground">
+                        {formatDay(s.date)}
+                      </div>
+                      {s.prompts.length > 0 && (
+                        <div className="mb-2">
+                          <PredictionPromptList
+                            prompts={s.prompts.map(toPromptView)}
+                            onConfirm={handlePromptConfirm}
+                            onReject={handlePromptReject}
+                            onEdit={handlePromptEdit}
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        {s.entries.map((entry) => (
+                          <EntryCard
+                            key={entry.id}
+                            entry={entry}
+                            category={categoryMap.get(entry.category)}
+                            onClick={handleEntryClick}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                listEmptyState
+              )
+            ) : groups.length > 0 ? (
               <EntryList
                 groups={groups}
                 categories={categories ?? []}
                 onEntryClick={handleEntryClick}
-                showDateHeaders={isDateSort(filter.sort)}
-              />
-            ) : isFilterActive ? (
-              <EmptyState
-                icon={<BookOpen size={48} className="text-muted-foreground" />}
-                title="조건에 맞는 내역이 없어요"
-                description="다른 필터를 시도해보세요"
-                action={
-                  <Button variant="outline" onClick={handleAllFiltersReset}>
-                    필터 초기화
-                  </Button>
-                }
+                showDateHeaders={false}
               />
             ) : (
-              <EmptyState
-                icon={<BookOpen size={48} className="text-muted-foreground" />}
-                title="아직 내역이 없어요"
-                description="가계부를 시작해보세요"
-                action={<Button onClick={() => handleAdd()}>추가하기</Button>}
-              />
+              listEmptyState
             )}
           </div>
         </>

@@ -55,6 +55,22 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "reportCount", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "cashbookPredictions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cashbookPredictions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recurrenceKey", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

@@ -153,6 +153,44 @@ export class CashbookPage {
     return this.page.getByTestId(`entry-card-${id}`);
   }
 
+  // 예측 점선 박스 (SYNC-02~05)
+  get predictionPrompt() {
+    return this.page.getByTestId('prediction-prompt-box');
+  }
+
+  get predictionConfirm() {
+    return this.page.getByTestId('prediction-confirm');
+  }
+
+  get predictionReject() {
+    return this.page.getByTestId('prediction-reject');
+  }
+
+  get predictionEdit() {
+    return this.page.getByTestId('prediction-edit');
+  }
+
+  // 회고 배너 (SYNC-06)
+  get retroBanner() {
+    return this.page.getByTestId('prediction-retro-banner');
+  }
+
+  get retroItem() {
+    return this.page.getByTestId('retro-item');
+  }
+
+  get retroConfirm() {
+    return this.page.getByTestId('retro-confirm');
+  }
+
+  get retroReject() {
+    return this.page.getByTestId('retro-reject');
+  }
+
+  get retroDismiss() {
+    return this.page.getByTestId('retro-dismiss');
+  }
+
   async addEntry(options: {
     type?: string;
     amount: number;
