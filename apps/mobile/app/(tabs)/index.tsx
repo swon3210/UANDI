@@ -1,12 +1,19 @@
 import { useCallback, useState } from 'react';
-import { AppWebView } from '@/components/app-webview';
+import { AppWebView, type PendingDeeplink } from '@/components/app-webview';
 import { useFcmRegistration } from '@/hooks/use-fcm-registration';
+import { useDeepLink } from '@/hooks/use-deep-link';
 
 export default function HomeScreen() {
-  const [pendingDeeplink, setPendingDeeplink] = useState<string | null>(null);
+  const [pendingDeeplink, setPendingDeeplink] = useState<PendingDeeplink | null>(null);
 
+  // FCM 알림 탭: 목적지로 직행한다.
   const handleNotificationTap = useCallback((clickAction: string | null) => {
-    if (clickAction) setPendingDeeplink(clickAction);
+    if (clickAction) setPendingDeeplink({ path: clickAction, viaDashboard: false });
+  }, []);
+
+  // 커스텀 스킴 딥링크: 대시보드를 거쳐 목적지로 이동한다.
+  const handleDeeplink = useCallback((path: string) => {
+    setPendingDeeplink({ path, viaDashboard: true });
   }, []);
 
   const handleDeeplinkConsumed = useCallback(() => {
@@ -14,6 +21,7 @@ export default function HomeScreen() {
   }, []);
 
   const tokenInfo = useFcmRegistration({ onNotificationTap: handleNotificationTap });
+  useDeepLink(handleDeeplink);
 
   return (
     <AppWebView
