@@ -1,6 +1,5 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { Check, Trash2 } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 import { formatAmount } from '@/utils/currency';
@@ -20,13 +19,11 @@ type CashflowTransactionRowProps = {
 /** 캘린더 카드 펼침 시 거래 1건. 확정(✓ 채움)/예측(◇ 점선) 마커 + 출처 표기. */
 export function CashflowTransactionRow({ txn, onDelete }: CashflowTransactionRowProps) {
   const isPredicted = txn.kind === 'predicted';
-  // 각 항목의 '실제 날짜'를 맨 앞에 붙여, 한 카드 아래 묶였어도 서로 다른 날짜임을 드러낸다.
-  const dateLabel = dayjs(txn.date).format('M/D');
   const sublabel = isPredicted
     ? txn.source
-      ? `${dateLabel} · ${SOURCE_LABEL[txn.source]} · 예측`
-      : `${dateLabel} · 예측`
-    : `${dateLabel} · 확정`;
+      ? `${SOURCE_LABEL[txn.source]} · 예측`
+      : '예측'
+    : '확정';
 
   return (
     <div

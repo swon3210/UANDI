@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Plus, CalendarClock, CalendarRange } from 'lucide-react';
+import dayjs from 'dayjs';
+import { ChevronDown, Plus, CalendarRange } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, Button, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
-import type { CashflowCardData } from '@/utils/cashflow';
+import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
 
 type CashflowCardProps = {
   card: CashflowCardData;
@@ -16,9 +17,21 @@ type CashflowCardProps = {
   onDeletePrediction?: (txnId: string) => void;
 };
 
+/** 펼친 카드 안 거래를 '실제 날짜'별로 묶는다(각 날짜를 분명히 보이게). */
+function groupByDate(txns: CashflowTransaction[]): { key: string; date: Date; items: CashflowTransaction[] }[] {
+  const map = new Map<string, { key: string; date: Date; items: CashflowTransaction[] }>();
+  for (const t of txns) {
+    const key = dayjs(t.date).format('YYYY-MM-DD');
+    const g = map.get(key);
+    if (g) g.items.push(t);
+    else map.set(key, { key, date: t.date, items: [t] });
+  }
+  return [...map.values()].sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
 /**
  * 지출 예정일 카드(§4-3): 그 '날짜까지'의 남는 돈을 강조하는 현금 체크포인트.
- * 특정 결제수단(카드)이 아니라 날짜 기준 합산이므로, 결제수단 아이콘 대신 중립 달력 아이콘을 쓴다.
+ * 날짜를 큰 블록으로 끌어올려 어느 날 기준인지 한눈에 보이게 한다.
  */
 export function CashflowCard({
   card,
@@ -27,7 +40,7 @@ export function CashflowCard({
   onDeletePrediction,
 }: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const Icon = card.paydayType ? CalendarClock : CalendarRange;
+  const isPayday = !!card.paydayType;
 
   return (
     <Collapsible
@@ -43,17 +56,37 @@ export function CashflowCard({
         )}
       >
         <CollapsibleTrigger className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-accent/40">
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-200 text-stone-600"
-            aria-hidden
-          >
-            <Icon size={20} />
-          </span>
+          {isPayday ? (
+            <div
+              className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-stone-100 leading-none"
+              aria-hidden
+            >
+              <span className="text-[10px] font-medium text-stone-500">
+                {dayjs(card.endDate).format('M')}월
+              </span>
+              <span className="text-xl font-bold leading-tight text-stone-800">
+                {dayjs(card.endDate).format('D')}
+              </span>
+            </div>
+          ) : (
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-stone-200 text-stone-600"
+              aria-hidden
+            >
+              <CalendarRange size={20} />
+            </span>
+          )}
 
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold leading-tight">{card.label}</p>
-            {card.subLabel && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{card.subLabel}</p>
+            {isPayday && card.subLabel ? (
+              <>
+                <p className="truncate text-sm font-semibold leading-tight text-foreground">
+                  {card.subLabel}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{card.label}</p>
+              </>
+            ) : (
+              <p className="truncate font-semibold leading-tight">{card.label}</p>
             )}
           </div>
 
@@ -100,7 +133,7 @@ export function CashflowCard({
         </div>
 
         <CollapsibleContent>
-          <div className="space-y-2 border-t border-border bg-muted/20 px-4 py-3">
+          <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
             {card.estimatedVariable != null && card.estimatedVariable > 0 && (
               <div
                 className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm"
@@ -116,22 +149,26 @@ export function CashflowCard({
             {card.transactions.length === 0 ? (
               <p className="py-1 text-sm text-muted-foreground">이 날짜까지 잡힌 거래가 없어요</p>
             ) : (
-              <div className="space-y-0.5">
-                <p className="px-0.5 pb-0.5 text-[11px] font-medium text-muted-foreground">
-                  이 날짜까지 예정된 거래
-                </p>
-                {card.transactions.map((t) => (
-                  <CashflowTransactionRow
-                    key={t.id}
-                    txn={t}
-                    onDelete={
-                      onDeletePrediction && t.kind === 'predicted'
-                        ? () => onDeletePrediction(t.id)
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
+              groupByDate(card.transactions).map((g) => (
+                <div key={g.key} data-testid="cashflow-day-group">
+                  <p className="mb-1 border-b border-border/50 pb-1 text-xs font-semibold text-foreground/80">
+                    {dayjs(g.date).format('M월 D일 (dd)')}
+                  </p>
+                  <div className="space-y-0.5">
+                    {g.items.map((t) => (
+                      <CashflowTransactionRow
+                        key={t.id}
+                        txn={t}
+                        onDelete={
+                          onDeletePrediction && t.kind === 'predicted'
+                            ? () => onDeletePrediction(t.id)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
             )}
 
             {onAddPrediction && (
