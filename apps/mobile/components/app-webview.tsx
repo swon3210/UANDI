@@ -7,11 +7,20 @@ import { WebView, type WebViewNavigation } from 'react-native-webview';
 import type { FcmTokenInfo } from '@/lib/fcm';
 
 const UANDI_HOST = 'uandi-web.vercel.app';
+// 딥링크 진입 시 항상 대시보드를 거쳐 목적지로 이동한다(synthetic back stack).
+const DASHBOARD_PATH = '/inner';
+
+// path: 이동할 경로(`/community/123`) 또는 전체 웹 URL.
+// viaDashboard: true면 대시보드를 거쳐 이동(커스텀 스킴), false면 직행(FCM 알림 탭).
+export type PendingDeeplink = {
+  path: string;
+  viaDashboard: boolean;
+};
 
 type AppWebViewProps = {
   path: string;
   tokenInfo?: FcmTokenInfo | null;
-  pendingDeeplink?: string | null;
+  pendingDeeplink?: PendingDeeplink | null;
   onDeeplinkConsumed?: () => void;
 };
 
@@ -31,7 +40,15 @@ export function AppWebView({
 }: AppWebViewProps) {
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
+  // 대시보드 로드가 끝나면 이동할 최종 목적지. 2단계 이동의 두 번째 단계용.
+  const pendingTargetRef = useRef<string | null>(null);
   const insets = useSafeAreaInsets();
+
+  // 경로(`/community/123`)면 호스트를 붙이고, 전체 웹 URL이면 그대로 이동한다.
+  const navigateWebView = useCallback((target: string) => {
+    const url = /^https?:\/\//.test(target) ? target : `https://${UANDI_HOST}${target}`;
+    webViewRef.current?.injectJavaScript(`window.location.href = ${JSON.stringify(url)}; true;`);
+  }, []);
 
   // Android 뒤로가기 버튼 처리
   useFocusEffect(
@@ -73,16 +90,31 @@ export function AppWebView({
     );
   }, [tokenInfo]);
 
-  // 알림 탭으로 들어온 deeplink를 WebView에 반영.
+  // 딥링크를 WebView에 반영.
+  //  - viaDashboard(커스텀 스킴): 대시보드를 먼저 띄운 뒤(handleLoadEnd) 목적지로 이동.
+  //  - 직행(FCM 알림 탭): 목적지로 바로 이동.
   useEffect(() => {
     if (!pendingDeeplink) return;
     if (!webViewRef.current) return;
-    const url = `https://${UANDI_HOST}${pendingDeeplink}`;
-    webViewRef.current.injectJavaScript(
-      `window.location.href = ${JSON.stringify(url)}; true;`
-    );
+
+    const { path: target, viaDashboard } = pendingDeeplink;
+    if (viaDashboard && target !== DASHBOARD_PATH) {
+      pendingTargetRef.current = target;
+      navigateWebView(DASHBOARD_PATH);
+    } else {
+      pendingTargetRef.current = null;
+      navigateWebView(target);
+    }
     onDeeplinkConsumed?.();
-  }, [pendingDeeplink, onDeeplinkConsumed]);
+  }, [pendingDeeplink, onDeeplinkConsumed, navigateWebView]);
+
+  // 대시보드 로드가 끝나면 대기 중인 목적지로 이동(2단계 이동의 두 번째 단계).
+  const handleLoadEnd = useCallback(() => {
+    const target = pendingTargetRef.current;
+    if (!target) return;
+    pendingTargetRef.current = null;
+    navigateWebView(target);
+  }, [navigateWebView]);
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -91,6 +123,7 @@ export function AppWebView({
         style={styles.webview}
         source={{ uri: `https://${UANDI_HOST}${path}` }}
         onNavigationStateChange={handleNavigationStateChange}
+        onLoadEnd={handleLoadEnd}
         originWhitelist={['*']}
         userAgent="Mozilla/5.0 (Linux; Android 13; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         javaScriptEnabled
