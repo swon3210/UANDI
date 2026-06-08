@@ -124,15 +124,31 @@ export function buildWeeklyBuckets(from: Dayjs, months = 3): WeekBucket[] {
   return out;
 }
 
-/** PaydayInstance[] → 카드 경계. 각 결제일 당일을 상한(endDate)으로 본다. */
+/**
+ * PaydayInstance[] → 카드 경계. 각 결제일 당일을 상한(endDate)으로 본다.
+ * 같은 날짜의 결제일들은 하나의 카드로 묶고, 이벤트명을 ' · '로 합친다.
+ */
 export function paydayBoundaries(instances: PaydayInstance[]): CardBoundary[] {
-  return instances.map((inst) => ({
-    key: inst.id,
-    label: inst.label,
-    endDate: dayjs(inst.date).endOf('day').toDate(),
-    subLabel: dayjs(inst.date).format('M월 D일 (ddd)'),
-    paydayType: inst.type,
-  }));
+  const byDate = new Map<string, PaydayInstance[]>();
+  for (const inst of instances) {
+    const key = dayjs(inst.date).format('YYYY-MM-DD');
+    const arr = byDate.get(key);
+    if (arr) arr.push(inst);
+    else byDate.set(key, [inst]);
+  }
+
+  return [...byDate.values()]
+    .map((insts) => {
+      const date = insts[0].date;
+      return {
+        key: dayjs(date).format('YYYY-MM-DD'),
+        label: insts.map((i) => i.label).join(' · '),
+        endDate: dayjs(date).endOf('day').toDate(),
+        subLabel: dayjs(date).format('M월 D일 (ddd)'),
+        paydayType: insts[0].type,
+      };
+    })
+    .sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 }
 
 /** WeekBucket[] → 카드 경계. 주의 마지막 날을 상한으로 본다. */
