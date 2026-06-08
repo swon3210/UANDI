@@ -469,7 +469,8 @@ export async function seedCashflowSettings(
   coupleId: string,
   options: {
     currentCash?: number;
-    paydays?: { id: string; label: string; type: string; dayOfMonth: number }[];
+    // type은 선택 — 리프레이밍 후 실제 폼은 type을 저장하지 않는다(실데이터와 동일하게 검증).
+    paydays?: { id: string; label: string; type?: string; dayOfMonth: number }[];
     variableMode?: 1 | 3 | 6;
   } = {}
 ): Promise<void> {
@@ -486,16 +487,15 @@ export async function seedCashflowSettings(
           variableMode: { integerValue: String(options.variableMode ?? 3) },
           paydays: {
             arrayValue: {
-              values: paydays.map((p) => ({
-                mapValue: {
-                  fields: {
-                    id: { stringValue: p.id },
-                    label: { stringValue: p.label },
-                    type: { stringValue: p.type },
-                    dayOfMonth: { integerValue: String(p.dayOfMonth) },
-                  },
-                },
-              })),
+              values: paydays.map((p) => {
+                const fields: Record<string, unknown> = {
+                  id: { stringValue: p.id },
+                  label: { stringValue: p.label },
+                  dayOfMonth: { integerValue: String(p.dayOfMonth) },
+                };
+                if (p.type) fields.type = { stringValue: p.type };
+                return { mapValue: { fields } };
+              }),
             },
           },
           updatedAt: { timestampValue: new Date().toISOString() },
