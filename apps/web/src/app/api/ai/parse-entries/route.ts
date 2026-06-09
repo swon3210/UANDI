@@ -25,6 +25,9 @@ const requestSchema = z
       .array(z.string().regex(imageDataUrlRegex, '지원하지 않는 이미지 형식입니다'))
       .max(10)
       .optional(),
+    // 첨부 이미지의 분류. 'account'(계좌/통장 내역)면 카드대금 일괄출금을 제외하고,
+    // 'card'(카드 사용 내역)면 이미지가 실제 카드 내역인지 검증한다.
+    imageKind: z.enum(['account', 'card']).optional(),
   })
   .refine((data) => (data.text?.trim().length ?? 0) > 0 || (data.images?.length ?? 0) > 0, {
     message: '텍스트 또는 이미지 중 하나는 반드시 포함되어야 합니다',
@@ -41,9 +44,15 @@ const parsedEntrySchema = z.object({
 
 const responseSchema = z.object({
   entries: z.array(parsedEntrySchema).min(1).max(MAX_ENTRIES),
+  // imageKind='card'로 첨부했지만 카드 내역이 아니라고 판단되면 true.
+  imageKindMismatch: z.boolean().optional(),
 });
 
-function buildMockResponse(text: string | undefined, imagesCount: number) {
+function buildMockResponse(
+  text: string | undefined,
+  imagesCount: number,
+  imageKind?: 'account' | 'card'
+) {
   const today = dayjs().format('YYYY-MM-DD');
   const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
   const textSegments = (text ?? '')
@@ -81,6 +90,8 @@ function buildMockResponse(text: string | undefined, imagesCount: number) {
 
   return {
     entries: Array.from({ length: count }, (_, i) => templates[i % templates.length]),
+    // 테스트용 결정적 신호: 카드 분류인데 입력 텍스트에 'mismatch'가 있으면 불일치로 간주.
+    imageKindMismatch: imageKind === 'card' && (text ?? '').includes('mismatch'),
   };
 }
 
@@ -102,16 +113,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
-  const { text, categories, images } = parsed.data;
+  const { text, categories, images, imageKind } = parsed.data;
   const hasImages = (images?.length ?? 0) > 0;
 
   if (process.env.USE_AI_MOCK === 'true') {
-    return NextResponse.json(buildMockResponse(text, images?.length ?? 0));
+    return NextResponse.json(buildMockResponse(text, images?.length ?? 0, imageKind));
   }
 
   const todayDayjs = dayjs().startOf('day');
   const today = todayDayjs.format('YYYY-MM-DD');
   const todayYear = todayDayjs.year();
+
+  // 첨부 이미지에 분류가 지정된 경우에만 추가하는 규칙.
+  // 계좌(통장) 내역이면 카드대금 일괄출금을 제외해 카드 내역과의 이중 집계를 막고,
+  // 카드 내역이면 이미지가 실제 카드 사용 내역인지 검증한다.
+  const imageKindSection =
+    imageKind && hasImages
+      ? imageKind === 'account'
+        ? `
+[이미지 분류 — 계좌(통장) 거래 내역]
+첨부된 이미지는 은행 계좌/통장의 거래 내역이다.
+신용카드 청구대금이 한 번에 빠져나가는 출금 행("OO카드", "카드대금", "신용카드", "체크카드 정산", 카드사명(예: 신한/삼성/현대/국민 등)으로 표시된 자동이체·출금)은
+개별 소비가 아니라 카드 내역에서 따로 집계되므로 **절대 entry로 만들지 마라(이중 집계 방지)**.
+그 외 일반 소비·이체·급여·이자 등 거래는 정상적으로 추출한다.
+
+[이미지 종류 검증]
+첨부 이미지가 계좌/통장 거래 내역이 아니라 명백히 다른 종류(예: 카드 사용 내역, 일반 사진)면 응답 JSON 최상위에 "imageKindMismatch": true 를 포함해라. 일치하거나 판단이 애매하면 생략하거나 false.`
+        : `
+[이미지 분류 — 신용/체크카드 사용 내역]
+첨부된 이미지는 신용/체크카드 사용(승인) 내역이어야 한다. 화면에 보이는 카드 사용 한 건마다 개별 entry로 추출한다.
+
+[이미지 종류 검증]
+첨부 이미지가 카드 사용 내역이 아니라 명백히 다른 종류(예: 계좌/통장 거래 내역, 일반 사진)면 응답 JSON 최상위에 "imageKindMismatch": true 를 포함해라. 일치하거나 판단이 애매하면 생략하거나 false.`
+      : '';
 
   const systemPrompt = `너는 자연어와 영수증 이미지를 구조화된 JSON으로 변환하는 가계부 파서야.
 
@@ -157,7 +191,7 @@ ${categories.join(', ')}
 - date가 명시되지 않으면 반드시 오늘 날짜(${today})를 사용
 - category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택
 - confidence는 파싱 확실도 (영수증이 흐리거나 정보가 불명확할수록 낮게)
-- 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정`;
+- 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정${imageKindSection}`;
 
   try {
     const client = getOpenAIClient();
@@ -210,7 +244,10 @@ ${categories.join(', ')}
       return entry;
     });
 
-    return NextResponse.json({ entries: normalizedEntries });
+    return NextResponse.json({
+      entries: normalizedEntries,
+      imageKindMismatch: result.imageKindMismatch ?? false,
+    });
   } catch (error) {
     console.error('[parse-entries] AI 호출 실패:', error);
     return NextResponse.json(

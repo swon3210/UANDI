@@ -257,6 +257,48 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await expect(page.getByTestId('settlement-attachment-0')).toBeVisible({ timeout: 15000 });
   });
 
+  test('계좌/카드 분류 토글이 보이고, 카드 분류에서 카드 내역이 아니면 경고 후 진행한다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    await page.goto('/inner/cashbook/settlement');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    await page.getByTestId('settlement-entries-link').click();
+    await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
+    await page.getByTestId('settlement-add-btn').click();
+    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
+
+    // 토글 노출 + 기본값은 계좌
+    await expect(page.getByTestId('settlement-image-kind-toggle')).toBeVisible();
+    await expect(page.getByTestId('settlement-image-kind-account')).toHaveAttribute(
+      'data-state',
+      'active'
+    );
+
+    // 카드 분류로 전환
+    await page.getByTestId('settlement-image-kind-card').click();
+    await expect(page.getByTestId('settlement-image-kind-card')).toHaveAttribute(
+      'data-state',
+      'active'
+    );
+
+    // 카드 분류인데 카드 내역이 아닌 입력(mock 신호: 텍스트에 'mismatch')
+    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    await fileInput.setInputFiles([{ name: 'not-card.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
+    await page.getByTestId('ai-parse-input').fill('mismatch');
+    await page.getByTestId('ai-parse-submit').click();
+
+    // 경고 토스트 노출 + 그래도 미리보기로 진행(warn-but-allow)
+    await expect(
+      page.getByText('첨부한 이미지가 카드 내역이 아닌 것 같아요. 결과를 확인해 주세요.')
+    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+  });
+
   test('다시 결산하기를 누르면 작업 화면으로 돌아간다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     const cur = curMonthKey();
