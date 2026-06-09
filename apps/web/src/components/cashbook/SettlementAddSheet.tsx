@@ -127,7 +127,7 @@ export function SettlementAddSheet({
           // 스크롤 시트 안에서 포커스 링이 잘리지 않도록 inset 링 사용
           textareaClassName="focus-visible:ring-inset focus-visible:ring-offset-0"
           onImagePersist={({ file }) => {
-            if (coupleId) addAttachment.mutate({ year, month, file });
+            if (coupleId) addAttachment.mutate({ year, month, file, kind: imageKind });
           }}
           onParsed={(results) =>
             setParsed(

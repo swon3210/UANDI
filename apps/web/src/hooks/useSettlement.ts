@@ -13,7 +13,11 @@ import {
   uploadSettlementAttachment,
   deleteSettlementAttachment,
 } from '@/lib/firebase/storage';
-import type { SettlementAttachment, SettlementReportSnapshot } from '@/types';
+import type {
+  SettlementAttachment,
+  SettlementImageKind,
+  SettlementReportSnapshot,
+} from '@/types';
 
 const QUERY_KEY = 'cashbookSettlement';
 
@@ -38,11 +42,13 @@ export function useAddSettlementAttachment(coupleId: string | null) {
       year,
       month,
       file,
+      kind,
       onProgress,
     }: {
       year: number;
       month: number;
       file: File;
+      kind: SettlementImageKind;
       onProgress?: (percent: number) => void;
     }): Promise<SettlementAttachment> => {
       const monthKey = monthKeyOf(year, month);
@@ -59,6 +65,7 @@ export function useAddSettlementAttachment(coupleId: string | null) {
         storagePath,
         url,
         name: file.name,
+        kind,
         createdAt: Timestamp.now(),
       };
       await addAttachment(coupleId!, year, month, attachment);

@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2, X, ImageIcon } from 'lucide-react';
-import type { SettlementAttachment } from '@/types';
+import { Loader2, X, ImageIcon, Landmark, CreditCard } from 'lucide-react';
+import type { SettlementAttachment, SettlementImageKind } from '@/types';
 
 export type SettlementAttachmentGalleryProps = {
   attachments: SettlementAttachment[];
@@ -10,8 +10,27 @@ export type SettlementAttachmentGalleryProps = {
   removingId?: string | null;
 };
 
+// 첨부에 분류가 없으면(구버전 데이터) 계좌로 취급한다.
+function kindOf(att: SettlementAttachment): SettlementImageKind {
+  return att.kind === 'card' ? 'card' : 'account';
+}
+
+type IndexedAttachment = { att: SettlementAttachment; index: number };
+
+type SectionConfig = {
+  key: SettlementImageKind;
+  label: string;
+  icon: typeof Landmark;
+};
+
+const SECTIONS: SectionConfig[] = [
+  { key: 'account', label: '계좌 내역', icon: Landmark },
+  { key: 'card', label: '카드 내역', icon: CreditCard },
+];
+
 /**
  * 결산 작업 중 첨부한 영수증·스크린샷 갤러리.
+ * 계좌 내역 / 카드 내역으로 분리해 노출한다.
  * 첨부는 Firestore + Storage에 유지돼 결산 완료 전까지 새로고침에도 남는다.
  */
 export function SettlementAttachmentGallery({
@@ -19,6 +38,9 @@ export function SettlementAttachmentGallery({
   onRemove,
   removingId,
 }: SettlementAttachmentGalleryProps) {
+  // 전역 인덱스를 유지해 분류와 무관하게 썸네일 testid가 안정적이도록 한다.
+  const indexed: IndexedAttachment[] = attachments.map((att, index) => ({ att, index }));
+
   return (
     <div data-testid="settlement-attachment-gallery">
       <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -34,27 +56,45 @@ export function SettlementAttachmentGallery({
           아직 첨부한 이미지가 없어요. 결산을 완료하면 첨부 이미지는 삭제돼요.
         </p>
       ) : (
-        <div className="flex gap-2 overflow-x-auto py-1">
-          {attachments.map((att, index) => {
-            const isRemoving = removingId === att.id;
+        <div className="space-y-3">
+          {SECTIONS.map(({ key, label, icon: Icon }) => {
+            const items = indexed.filter(({ att }) => kindOf(att) === key);
+            if (items.length === 0) return null;
             return (
-              <div
-                key={att.id}
-                data-testid={`settlement-attachment-${index}`}
-                className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-border"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={att.url} alt={att.name} className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  data-testid={`settlement-attachment-remove-${index}`}
-                  aria-label={`${att.name} 제거`}
-                  onClick={() => onRemove(att)}
-                  disabled={isRemoving}
-                  className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background disabled:opacity-60"
-                >
-                  {isRemoving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
-                </button>
+              <div key={key} data-testid={`settlement-attachment-section-${key}`}>
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                  <Icon size={12} />
+                  {label} ({items.length})
+                </p>
+                <div className="flex gap-2 overflow-x-auto py-1">
+                  {items.map(({ att, index }) => {
+                    const isRemoving = removingId === att.id;
+                    return (
+                      <div
+                        key={att.id}
+                        data-testid={`settlement-attachment-${index}`}
+                        className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-border"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={att.url} alt={att.name} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          data-testid={`settlement-attachment-remove-${index}`}
+                          aria-label={`${att.name} 제거`}
+                          onClick={() => onRemove(att)}
+                          disabled={isRemoving}
+                          className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background disabled:opacity-60"
+                        >
+                          {isRemoving ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <X size={12} />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
