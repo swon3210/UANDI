@@ -144,12 +144,16 @@ export type MonthlyBudgetItem = {
 
 export type SettlementStatus = 'draft' | 'completed';
 
+// 첨부 이미지 분류 (계좌 내역 / 카드 내역)
+export type SettlementImageKind = 'account' | 'card';
+
 // 결산 작업 중 첨부한 영수증·스크린샷 (완료 시 Storage에서 삭제)
 export type SettlementAttachment = {
   id: string;
   storagePath: string; // couples/{coupleId}/cashbookSettlements/{YYYY-MM}/{id}.{ext}
   url: string; // downloadURL
   name: string; // 원본 파일명
+  kind?: SettlementImageKind; // 첨부 분류 (구버전 데이터엔 없을 수 있어 optional — 없으면 계좌로 취급)
   createdAt: Timestamp;
 };
 

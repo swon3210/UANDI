@@ -299,6 +299,37 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
   });
 
+  test('첨부 이미지가 분류(계좌/카드)별로 나뉘어 노출된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    await page.goto('/inner/cashbook/settlement');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    await page.getByTestId('settlement-entries-link').click();
+    await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
+    await page.getByTestId('settlement-add-btn').click();
+    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
+
+    // 카드 분류로 첨부
+    await page.getByTestId('settlement-image-kind-card').click();
+    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    await fileInput.setInputFiles([{ name: 'card.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
+    await page.getByTestId('ai-parse-submit').click();
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    // 갤러리: 카드 섹션에 노출, 계좌 섹션은 없음
+    await expect(page.getByTestId('settlement-attachment-section-card')).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(
+      page.getByTestId('settlement-attachment-section-card').getByTestId('settlement-attachment-0')
+    ).toBeVisible();
+    await expect(page.getByTestId('settlement-attachment-section-account')).toHaveCount(0);
+  });
+
   test('다시 결산하기를 누르면 작업 화면으로 돌아간다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     const cur = curMonthKey();
