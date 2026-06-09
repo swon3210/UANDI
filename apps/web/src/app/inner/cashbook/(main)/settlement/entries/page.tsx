@@ -27,7 +27,7 @@ import { SettlementAddSheet } from '@/components/cashbook/SettlementAddSheet';
 import { EntryList } from '@/components/cashbook/EntryList';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { parseEntriesFromText } from '@/services/ai';
-import type { CashbookEntry } from '@/types';
+import type { CashbookEntry, SettlementImageKind } from '@/types';
 
 function parseMonthParam(value: string | null): Date {
   if (value && /^\d{4}-\d{2}$/.test(value)) {
@@ -76,7 +76,7 @@ export default function SettlementEntriesPage() {
     return { income: i, expense: e, flex: f };
   }, [entries]);
 
-  const openAdd = () => {
+  const openAdd = (kind: SettlementImageKind) => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <SettlementAddSheet
@@ -85,6 +85,7 @@ export default function SettlementEntriesPage() {
           createdBy={uid}
           year={year}
           month={month1}
+          imageKind={kind}
           parseFn={parseEntriesFromText}
           onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
           onClose={() => {
@@ -159,22 +160,12 @@ export default function SettlementEntriesPage() {
             <SettlementSummaryHeader income={income} expense={expense} flex={flex} />
           </div>
 
-          {/* 내역 추가 (영수증·스크린샷 첨부 권장) */}
-          <Button
-            data-testid="settlement-add-btn"
-            variant="outline"
-            className="mt-4 w-full justify-start gap-2"
-            onClick={openAdd}
-          >
-            <Plus size={16} className="text-primary" />
-            영수증·스크린샷 첨부하고 내역 추가
-          </Button>
-
-          {/* 첨부 갤러리 */}
-          <div className="mt-3">
+          {/* 첨부 갤러리 — 계좌/카드 목록별로 "이미지 추가" 버튼 제공 */}
+          <div className="mt-4">
             <SettlementAttachmentGallery
               attachments={settlement?.attachments ?? []}
               onRemove={(att) => removeAttachment.mutate({ monthKey, attachment: att })}
+              onAdd={openAdd}
               removingId={
                 removeAttachment.isPending ? removeAttachment.variables?.attachment.id : null
               }
@@ -195,7 +186,7 @@ export default function SettlementEntriesPage() {
                 title="이번 달 내역이 없어요"
                 description="영수증·스크린샷을 첨부하거나 직접 내역을 추가해보세요"
                 action={
-                  <Button size="sm" onClick={openAdd}>
+                  <Button size="sm" onClick={() => openAdd('account')}>
                     <Plus size={16} className="mr-1.5" />
                     내역 추가
                   </Button>

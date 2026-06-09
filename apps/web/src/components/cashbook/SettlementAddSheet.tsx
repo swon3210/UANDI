@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Landmark, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
-import { SheetContent, SheetHeader, SheetTitle, Tabs, TabsList, TabsTrigger } from '@uandi/ui';
-import type { CashbookCategory, CashbookEntryType } from '@/types';
+import { SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
+import type { CashbookCategory, CashbookEntryType, SettlementImageKind } from '@/types';
 import type { ParseEntriesOptions } from '@/services/ai';
 import { useAddSettlementAttachment } from '@/hooks/useSettlement';
 import { AiParseInput } from './AiParseInput';
@@ -30,21 +30,37 @@ type ParseFn = (
   }[]
 >;
 
-type ImageKind = 'account' | 'card';
-
 type SettlementAddSheetProps = {
   categories: CashbookCategory[];
   coupleId: string | null;
   createdBy: string;
   year: number;
   month: number; // 1-indexed
+  /** 어떤 목록(계좌/카드)에서 추가를 시작했는지 — 첨부 분류와 파싱 모드를 결정한다. */
+  imageKind: SettlementImageKind;
   parseFn: ParseFn;
   onConfirm: (entries: ConfirmedEntry[]) => void;
   onClose: () => void;
 };
 
+const KIND_META: Record<
+  SettlementImageKind,
+  { title: string; icon: typeof Landmark; hint: string }
+> = {
+  account: {
+    title: '계좌 내역 추가',
+    icon: Landmark,
+    hint: '통장·계좌 거래내역 캡처를 올리면 자동으로 내역을 추가해요. 카드대금처럼 한 번에 빠져나가는 출금은 카드 내역과 겹치지 않도록 제외돼요. 첨부 이미지는 결산 완료 전까지 보관돼요.',
+  },
+  card: {
+    title: '카드 내역 추가',
+    icon: CreditCard,
+    hint: '카드 사용내역 캡처를 올리면 자동으로 내역을 추가해요. 카드 내역이 아닌 이미지를 올리면 알려드려요. 첨부 이미지는 결산 완료 전까지 보관돼요.',
+  },
+};
+
 /**
- * 월 결산의 통합 내역 추가 시트.
+ * 월 결산의 내역 추가 시트. 추가를 시작한 목록(계좌/카드)에 따라 분류가 고정된다.
  * 1단계: 영수증·스크린샷 첨부(즉시 Storage 영속) + AI 파싱
  * 2단계: 내역 페이지와 동일한 중복 검사(AiBulkPreviewSheet)로 추가
  */
@@ -54,15 +70,18 @@ export function SettlementAddSheet({
   createdBy,
   year,
   month,
+  imageKind,
   parseFn,
   onConfirm,
   onClose,
 }: SettlementAddSheetProps) {
   const [parsed, setParsed] = useState<InitialParsedEntry[] | null>(null);
-  const [imageKind, setImageKind] = useState<ImageKind>('account');
   const addAttachment = useAddSettlementAttachment(coupleId);
 
-  // 토글 분류와 카드 검증 경고를 주입해 AiParseInput에 넘긴다.
+  const meta = KIND_META[imageKind];
+  const Icon = meta.icon;
+
+  // 고정된 분류와 카드 검증 경고를 주입해 AiParseInput에 넘긴다.
   // AiParseInput의 계약(3인자 호출 + 배열 반환)은 그대로 유지된다.
   const handleParse: ParseFn = (text, cats, images) =>
     parseFn(text, cats, images, {
@@ -92,34 +111,13 @@ export function SettlementAddSheet({
     >
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2">
-          <Plus size={16} className="text-primary" />
-          내역 추가
+          <Icon size={16} className="text-primary" />
+          {meta.title}
         </SheetTitle>
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto py-4">
-        <p className="mb-3 text-xs text-muted-foreground">
-          영수증 사진이나 카드·계좌 거래내역 스크린샷을 올리면 자동으로 내역을 추가해요. 텍스트로
-          직접 입력할 수도 있어요. 첨부한 이미지는 결산을 완료할 때까지 보관돼요.
-        </p>
-
-        <div className="mb-3">
-          <Tabs value={imageKind} onValueChange={(v) => setImageKind(v as ImageKind)}>
-            <TabsList className="grid w-full grid-cols-2" data-testid="settlement-image-kind-toggle">
-              <TabsTrigger value="account" data-testid="settlement-image-kind-account">
-                계좌 내역
-              </TabsTrigger>
-              <TabsTrigger value="card" data-testid="settlement-image-kind-card">
-                카드 내역
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-            {imageKind === 'account'
-              ? '계좌(통장) 내역이에요. 카드대금처럼 한 번에 빠져나가는 출금은 카드 내역과 겹치지 않도록 제외돼요.'
-              : '카드 사용 내역이에요. 카드 내역이 아닌 이미지를 올리면 알려드려요.'}
-          </p>
-        </div>
+        <p className="mb-3 text-xs text-muted-foreground">{meta.hint}</p>
 
         <AiParseInput
           categories={categories.map((c) => c.name)}
