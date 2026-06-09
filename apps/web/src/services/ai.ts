@@ -24,16 +24,24 @@ export type ParsedEntry = {
   confidence: number;
 };
 
+export type ParseEntriesOptions = {
+  /** 첨부 이미지 분류. 'account'면 카드대금 일괄출금 제외, 'card'면 카드 내역 검증. */
+  imageKind?: 'account' | 'card';
+  /** imageKind='card'인데 첨부 이미지가 카드 내역이 아니라고 판단됐을 때 호출된다. */
+  onImageKindMismatch?: () => void;
+};
+
 export async function parseEntriesFromText(
   text: string,
   categories: string[],
-  images?: string[]
+  images?: string[],
+  options?: ParseEntriesOptions
 ): Promise<ParsedEntry[]> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/ai/parse-entries', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text, categories, images }),
+    body: JSON.stringify({ text, categories, images, imageKind: options?.imageKind }),
   });
 
   if (!res.ok) {
@@ -41,7 +49,11 @@ export async function parseEntriesFromText(
     throw new Error(error.error ?? 'AI 파싱에 실패했습니다');
   }
 
-  const { entries } = (await res.json()) as { entries: ParsedEntry[] };
+  const { entries, imageKindMismatch } = (await res.json()) as {
+    entries: ParsedEntry[];
+    imageKindMismatch?: boolean;
+  };
+  if (imageKindMismatch) options?.onImageKindMismatch?.();
   return entries;
 }
 
