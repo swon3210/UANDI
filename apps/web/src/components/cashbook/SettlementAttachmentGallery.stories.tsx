@@ -74,6 +74,22 @@ export const LegacyNoKind: Story = {
   ),
 };
 
+// 목록별 "이미지 추가" 버튼 노출 (계좌엔 첨부 있음, 카드는 빈 목록)
+export const WithAddButtons: Story = {
+  render: () => (
+    <div className="mx-auto max-w-md">
+      <SettlementAttachmentGallery
+        attachments={[
+          att('a1', '#e8837a', '통장내역1.png', 'account'),
+          att('a3', '#6366f1', '통장내역2.png', 'account'),
+        ]}
+        onRemove={() => {}}
+        onAdd={() => {}}
+      />
+    </div>
+  ),
+};
+
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
