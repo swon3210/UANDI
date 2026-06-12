@@ -45,3 +45,9 @@ app-example
 # Firebase native config (Cloud Messaging)
 google-services.json
 GoogleService-Info.plist
+
+# Google Play 제출용 서비스 계정 키 (절대 커밋 금지)
+play-service-account.json
+
+# 로컬 빌드 산출물 (AAB 등)
+/build
