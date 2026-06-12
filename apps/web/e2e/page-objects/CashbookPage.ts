@@ -9,7 +9,8 @@ export class CashbookPage {
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByTestId('cashbook-header');
-    this.addButton = page.getByTestId('add-entry-button');
+    // 헤더의 직접 추가 버튼은 제거됨. 빈 상태의 "추가하기" 버튼으로 폼을 연다.
+    this.addButton = page.getByTestId('empty-add-entry-button');
     this.monthlySummary = page.getByTestId('monthly-summary');
   }
 

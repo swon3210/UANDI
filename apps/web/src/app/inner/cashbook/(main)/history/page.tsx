@@ -349,7 +349,11 @@ export default function CashbookPage() {
       icon={<BookOpen size={48} className="text-muted-foreground" />}
       title="아직 내역이 없어요"
       description="가계부를 시작해보세요"
-      action={<Button onClick={() => handleAdd()}>추가하기</Button>}
+      action={
+        <Button onClick={() => handleAdd()} data-testid="empty-add-entry-button">
+          추가하기
+        </Button>
+      }
     />
   );
 
@@ -358,6 +362,7 @@ export default function CashbookPage() {
       <AiParseInput
         categories={(categories ?? []).map((c) => c.name)}
         parseFn={parseEntriesFromText}
+        onEmptySubmit={() => handleAdd()}
         onParsed={(results) => {
           const initialEntries = results.map((r) => ({
             type: r.type as CashbookEntryType,

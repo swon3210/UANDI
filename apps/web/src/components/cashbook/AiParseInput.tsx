@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, ArrowUp, Paperclip, X } from 'lucide-react';
+import { Sparkles, Loader2, ArrowUp, Paperclip, X, Plus } from 'lucide-react';
 import { Textarea, Button, cn } from '@uandi/ui';
 import { compressAndEncode } from '@/utils/image-compress';
 
@@ -34,6 +34,12 @@ type AiParseInputProps = {
    */
   onImagePersist?: (img: { id: string; dataUrl: string; name: string; file: File }) => void;
   /**
+   * 텍스트·이미지 입력이 없는 상태로 제출 버튼을 누르면 호출된다.
+   * 전달 시 제출 버튼은 빈 입력에서도 활성화되며, AI 파싱 대신 이 콜백(예: 직접 입력 폼 열기)을 실행한다.
+   * 미전달 시 기존 동작(빈 입력이면 제출 비활성화)을 유지한다.
+   */
+  onEmptySubmit?: () => void;
+  /**
    * 텍스트영역에 추가할 클래스. 스크롤 시트 안에서는 포커스 링이 잘리지 않도록
    * inset 링(`focus-visible:ring-inset focus-visible:ring-offset-0`)을 전달한다.
    */
@@ -48,6 +54,7 @@ export function AiParseInput({
   categories,
   parseFn,
   onImagePersist,
+  onEmptySubmit,
   textareaClassName,
 }: AiParseInputProps) {
   const [text, setText] = useState('');
@@ -67,7 +74,11 @@ export function AiParseInput({
 
   const handleSubmit = () => {
     if (mutation.isPending || isProcessingFiles) return;
-    if (!text.trim() && images.length === 0) return;
+    if (!text.trim() && images.length === 0) {
+      // 입력이 없으면 AI 파싱 대신 직접 입력 폼을 연다(전달된 경우).
+      onEmptySubmit?.();
+      return;
+    }
     // 영속 저장이 필요한 경우(월 결산): 제출 시점에 첨부 이미지를 업로드한다
     if (onImagePersist) {
       for (const img of images) onImagePersist(img);
@@ -141,8 +152,10 @@ export function AiParseInput({
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
-  const canSubmit =
-    !mutation.isPending && !isProcessingFiles && (text.trim().length > 0 || images.length > 0);
+  const hasInput = text.trim().length > 0 || images.length > 0;
+  // onEmptySubmit이 있으면 빈 입력에서도 버튼을 활성화(폼 열기 용도).
+  const canSubmit = !mutation.isPending && !isProcessingFiles && (hasInput || !!onEmptySubmit);
+  const isEmptyAddMode = !hasInput && !!onEmptySubmit;
 
   return (
     <div className="space-y-2">
@@ -220,10 +233,12 @@ export function AiParseInput({
             className="h-8 w-8 rounded-full"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            aria-label="AI 파싱"
+            aria-label={isEmptyAddMode ? '직접 입력' : 'AI 파싱'}
           >
             {mutation.isPending ? (
               <Loader2 size={16} className="animate-spin" />
+            ) : isEmptyAddMode ? (
+              <Plus size={16} />
             ) : (
               <ArrowUp size={16} />
             )}
