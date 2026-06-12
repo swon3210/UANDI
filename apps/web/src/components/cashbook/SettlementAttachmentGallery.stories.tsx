@@ -12,13 +12,15 @@ const att = (
   id: string,
   color: string,
   name: string,
-  kind?: SettlementImageKind
+  kind?: SettlementImageKind,
+  detectedMonths?: string[]
 ): SettlementAttachment => ({
   id,
   storagePath: `couples/c1/cashbookSettlements/2026-06/${id}.png`,
   url: swatch(color),
   name,
   kind,
+  detectedMonths,
   createdAt: Timestamp.fromDate(new Date('2026-06-15')),
 });
 
@@ -74,7 +76,7 @@ export const LegacyNoKind: Story = {
   ),
 };
 
-// 목록별 "이미지 추가" 버튼 노출 (계좌엔 첨부 있음, 카드는 빈 목록)
+// 목록별 "이미지 추가"(첨부 전용) 버튼 노출 (계좌엔 첨부 있음, 카드는 빈 목록)
 export const WithAddButtons: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
@@ -84,7 +86,38 @@ export const WithAddButtons: Story = {
           att('a3', '#6366f1', '통장내역2.png', 'account'),
         ]}
         onRemove={() => {}}
-        onAdd={() => {}}
+        onAttach={() => {}}
+      />
+    </div>
+  ),
+};
+
+// 업로드 진행 중 (계좌 섹션 스피너)
+export const Attaching: Story = {
+  render: () => (
+    <div className="mx-auto max-w-md">
+      <SettlementAttachmentGallery
+        attachments={[att('a1', '#e8837a', '통장내역1.png', 'account')]}
+        onRemove={() => {}}
+        onAttach={() => {}}
+        attachingKind="account"
+      />
+    </div>
+  ),
+};
+
+// 분석 후 월 칩 표시 + 월 순 정렬 (한 장에 여러 달이 섞이면 칩 다중)
+export const WithDetectedMonths: Story = {
+  render: () => (
+    <div className="mx-auto max-w-md">
+      <SettlementAttachmentGallery
+        attachments={[
+          att('a1', '#e8837a', '통장7월.png', 'account', ['2026-07']),
+          att('a2', '#6366f1', '통장6-7월.png', 'account', ['2026-06', '2026-07']),
+          att('a3', '#4caf86', '카드6월.png', 'card', ['2026-06']),
+        ]}
+        onRemove={() => {}}
+        onAttach={() => {}}
       />
     </div>
   ),

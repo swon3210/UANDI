@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
+import { ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -18,16 +19,20 @@ import {
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import {
   useSettlement,
+  useAddSettlementAttachment,
   useRemoveSettlementAttachment,
   monthKeyOf,
 } from '@/hooks/useSettlement';
 import { SettlementSummaryHeader } from '@/components/cashbook/SettlementSummaryHeader';
 import { SettlementAttachmentGallery } from '@/components/cashbook/SettlementAttachmentGallery';
-import { SettlementAddSheet } from '@/components/cashbook/SettlementAddSheet';
+import { SettlementBulkSyncSheet } from '@/components/cashbook/SettlementBulkSyncSheet';
 import { EntryList } from '@/components/cashbook/EntryList';
 import { EntryForm } from '@/components/cashbook/EntryForm';
-import { parseEntriesFromText } from '@/services/ai';
+import { compressImage } from '@/utils/image-compress';
 import type { CashbookEntry, SettlementImageKind } from '@/types';
+
+const MAX_ATTACHMENTS = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function parseMonthParam(value: string | null): Date {
   if (value && /^\d{4}-\d{2}$/.test(value)) {
@@ -59,10 +64,14 @@ export default function SettlementEntriesPage() {
   const addManyMutation = useAddEntries(coupleId);
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
+  const addAttachment = useAddSettlementAttachment(coupleId);
   const removeAttachment = useRemoveSettlementAttachment(coupleId);
+
+  const [attachingKind, setAttachingKind] = useState<SettlementImageKind | null>(null);
 
   const isLoading = entriesLoading || categoriesLoading;
   const groups = useGroupedEntries(entries, 'latest');
+  const attachments = settlement?.attachments ?? [];
 
   const { income, expense, flex } = useMemo(() => {
     let i = 0;
@@ -76,17 +85,46 @@ export default function SettlementEntriesPage() {
     return { income: i, expense: e, flex: f };
   }, [entries]);
 
-  const openAdd = (kind: SettlementImageKind) => {
+  // 첨부 전용: 파일 선택 → 압축 → Storage 업로드 (파싱은 "전체 분석 & 동기화"에서만)
+  const handleAttach = async (kind: SettlementImageKind, files: File[]) => {
+    if (!coupleId) return;
+    const remaining = MAX_ATTACHMENTS - attachments.length;
+    if (remaining <= 0) {
+      toast.error(`이미지는 최대 ${MAX_ATTACHMENTS}장까지 첨부할 수 있어요`);
+      return;
+    }
+    const sized = files.filter((f) => f.size <= MAX_FILE_SIZE);
+    if (sized.length < files.length) {
+      toast.error('10MB를 초과하는 파일은 제외했어요');
+    }
+    const accepted = sized.slice(0, remaining);
+    if (sized.length > remaining) {
+      toast.warning(`최대 ${MAX_ATTACHMENTS}장까지만 첨부돼요. 앞 ${remaining}장만 추가했어요`);
+    }
+    if (accepted.length === 0) return;
+
+    setAttachingKind(kind);
+    try {
+      for (const file of accepted) {
+        const compressed = await compressImage(file);
+        await addAttachment.mutateAsync({ year, month: month1, file: compressed, kind });
+      }
+    } catch {
+      // 개별 실패 토스트는 훅에서 처리
+    } finally {
+      setAttachingKind(null);
+    }
+  };
+
+  const openBulkSync = () => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <SettlementAddSheet
-          categories={categories ?? []}
+        <SettlementBulkSyncSheet
           coupleId={coupleId}
           createdBy={uid}
-          year={year}
-          month={month1}
-          imageKind={kind}
-          parseFn={parseEntriesFromText}
+          monthKey={monthKey}
+          attachments={attachments}
+          categories={categories ?? []}
           onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
           onClose={() => {
             close();
@@ -160,17 +198,29 @@ export default function SettlementEntriesPage() {
             <SettlementSummaryHeader income={income} expense={expense} flex={flex} />
           </div>
 
-          {/* 첨부 갤러리 — 계좌/카드 목록별로 "이미지 추가" 버튼 제공 */}
+          {/* 첨부 갤러리 — 계좌/카드 목록별 "이미지 추가"(첨부 전용) */}
           <div className="mt-4">
             <SettlementAttachmentGallery
-              attachments={settlement?.attachments ?? []}
+              attachments={attachments}
+              onAttach={handleAttach}
+              attachingKind={attachingKind}
               onRemove={(att) => removeAttachment.mutate({ monthKey, attachment: att })}
-              onAdd={openAdd}
               removingId={
                 removeAttachment.isPending ? removeAttachment.variables?.attachment.id : null
               }
             />
           </div>
+
+          {/* 전체 분석 & 동기화 — 첨부한 이미지 전체를 한 번에 분석해 누락 내역 추가 */}
+          <Button
+            className="mt-3 w-full"
+            data-testid="settlement-analyze-all"
+            disabled={attachments.length === 0 || attachingKind !== null}
+            onClick={openBulkSync}
+          >
+            <Sparkles size={16} className="mr-1.5" />
+            전체 분석 &amp; 동기화 ({attachments.length})
+          </Button>
 
           {/* 내역 리스트 */}
           <div className="mt-6">
@@ -184,13 +234,7 @@ export default function SettlementEntriesPage() {
               <EmptyState
                 icon={<BookOpen size={48} className="text-muted-foreground" />}
                 title="이번 달 내역이 없어요"
-                description="영수증·스크린샷을 첨부하거나 직접 내역을 추가해보세요"
-                action={
-                  <Button size="sm" onClick={() => openAdd('account')}>
-                    <Plus size={16} className="mr-1.5" />
-                    내역 추가
-                  </Button>
-                }
+                description="위에서 계좌·카드 캡처를 첨부하고 '전체 분석 & 동기화'를 눌러 누락 내역을 채워보세요"
               />
             )}
           </div>

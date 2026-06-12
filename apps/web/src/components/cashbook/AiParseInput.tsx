@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Sparkles, Loader2, ArrowUp, Paperclip, X } from 'lucide-react';
 import { Textarea, Button, cn } from '@uandi/ui';
+import { compressAndEncode } from '@/utils/image-compress';
 
 type ParseResult = {
   type: string;
@@ -41,26 +42,6 @@ type AiParseInputProps = {
 
 const MAX_IMAGES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-async function compressAndEncode(file: File): Promise<{ dataUrl: string; file: File }> {
-  const imageCompression = (await import('browser-image-compression')).default;
-  const compressed = await imageCompression(file, {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
-    initialQuality: 0.85,
-    useWebWorker: true,
-  });
-  return { dataUrl: await readFileAsDataUrl(compressed), file: compressed };
-}
 
 export function AiParseInput({
   onParsed,

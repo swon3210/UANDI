@@ -80,6 +80,25 @@ export async function removeAttachment(
   await updateDoc(ref, { attachments: next, updatedAt: Timestamp.now() });
 }
 
+/**
+ * 일괄 분석 후 각 첨부의 detectedMonths(거래 월 집합)를 갱신한다.
+ * read-modify-write로 attachments 배열을 다시 쓴다(Timestamp 동등성 이슈 회피).
+ */
+export async function updateAttachmentMonths(
+  coupleId: string,
+  monthKey: string,
+  monthsByAttachmentId: Record<string, string[]>
+): Promise<void> {
+  const ref = settlementRef(coupleId, monthKey);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const data = snap.data() as Omit<CashbookSettlement, 'id'>;
+  const next = (data.attachments ?? []).map((a) =>
+    monthsByAttachmentId[a.id] ? { ...a, detectedMonths: monthsByAttachmentId[a.id] } : a
+  );
+  await updateDoc(ref, { attachments: next, updatedAt: Timestamp.now() });
+}
+
 /** 결산 완료 — 보고서 스냅샷 박제 + 첨부 비움 + status=completed. */
 export async function completeSettlement(
   coupleId: string,
