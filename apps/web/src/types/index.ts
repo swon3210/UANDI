@@ -154,6 +154,9 @@ export type SettlementAttachment = {
   url: string; // downloadURL
   name: string; // 원본 파일명
   kind?: SettlementImageKind; // 첨부 분류 (구버전 데이터엔 없을 수 있어 optional — 없으면 계좌로 취급)
+  // 일괄 분석 후 채워지는, 이 이미지가 담고 있는 거래의 월 집합 (YYYY-MM, 정렬됨).
+  // 한 장에 6·7월이 섞여 있으면 ['2026-06','2026-07']. 갤러리 정렬·월 칩 표시에 사용.
+  detectedMonths?: string[];
   createdAt: Timestamp;
 };
 

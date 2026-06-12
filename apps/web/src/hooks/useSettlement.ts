@@ -5,10 +5,12 @@ import {
   getSettlement,
   addAttachment,
   removeAttachment,
+  updateAttachmentMonths,
   completeSettlement,
   redoSettlement,
   monthKeyOf,
 } from '@/services/cashbook-settlement';
+import { syncAttachments, type AttachmentSyncResult } from '@/services/ai';
 import {
   uploadSettlementAttachment,
   deleteSettlementAttachment,
@@ -100,6 +102,46 @@ export function useRemoveSettlementAttachment(coupleId: string | null) {
     onSuccess: (_d, vars) =>
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId, vars.monthKey] }),
     onError: () => toast.error('첨부 삭제에 실패했어요. 다시 시도해주세요.'),
+  });
+}
+
+const ANALYZE_KEY = 'cashbookSettlementAnalyze';
+
+/**
+ * 첨부 이미지 전체를 한 번에 분석한다(시트 오픈 시 1회 자동 실행).
+ * 분석 후 각 첨부의 detectedMonths(거래 월 집합)를 Firestore에 영속하고 결산 쿼리를 무효화한다.
+ * gcTime/staleTime 0 + 별도 키 네임스페이스로 결산 쿼리 무효화와 충돌하지 않는다.
+ */
+export function useAnalyzeAttachments(
+  coupleId: string | null,
+  monthKey: string,
+  attachments: SettlementAttachment[],
+  categories: string[]
+) {
+  const qc = useQueryClient();
+  const ids = attachments.map((a) => a.id).join(',');
+  return useQuery({
+    queryKey: [ANALYZE_KEY, coupleId, monthKey, ids],
+    queryFn: async (): Promise<AttachmentSyncResult[]> => {
+      const results = await syncAttachments(
+        attachments.map((a) => ({
+          id: a.id,
+          url: a.url,
+          kind: a.kind === 'card' ? 'card' : 'account',
+        })),
+        categories
+      );
+      const monthsById: Record<string, string[]> = {};
+      for (const r of results) monthsById[r.attachmentId] = r.detectedMonths;
+      await updateAttachmentMonths(coupleId!, monthKey, monthsById);
+      qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId, monthKey] });
+      return results;
+    },
+    enabled: !!coupleId && attachments.length > 0,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 }
 

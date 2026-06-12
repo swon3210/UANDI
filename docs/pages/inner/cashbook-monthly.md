@@ -197,60 +197,84 @@
 
 ---
 
-## 영수증 내역 점검 (대조 추가)
+## 영수증 내역 점검 — 첨부 전용 + 일괄 분석·동기화
 
-월 결산 화면에서 영수증·거래내역 스크린샷을 올려 **그 달 가계부와 대조**한다.
-영수증에는 있는데 가계부에 없는 항목(**누락**)을 찾아 일괄 추가하고, 이미 기록된
-항목은 **중복 추가하지 않도록** 분리해서 보여주는 흐름이다.
+월 결산 내역 페이지(`/inner/cashbook/settlement/entries`)에서 계좌·카드 캡처를 **첨부만** 해두고,
+**"전체 분석 & 동기화"** 한 번으로 모든 첨부를 같이 분석해 **그 달 가계부와 대조**한다.
+누락 항목은 일괄 추가하고, 이미 기록된 항목은 중복 추가하지 않도록 분리한다.
+거래는 **거래일(date) 기준으로 월별 분류·정렬**되고, 단순 송금은 별도 확인 그룹으로 분리된다.
 
-> 영수증/스크린샷 첨부 + AI 파싱 인프라는 내역 추가(history) 흐름과 동일한 것을
-> 재사용한다. 차이는 결과를 "추가" 관점이 아니라 "**누락 점검**" 관점으로 프레이밍하는 부분뿐이다.
+> 첨부 인프라는 결산 첨부(Storage 영속)를 재사용한다. 차이는 (1) 첨부 시점에 파싱하지 않고
+> (2) 여러 이미지를 한 번에 분석하며 (3) 결과를 거래 단위 **월별 분류 + 송금 확인** 관점으로 보여주는 점이다.
 
-### 진입점
+### 1) 첨부 (파싱 없음)
 
-- 월 선택기(MonthSelector) 바로 아래에 **"영수증으로 내역 점검"** 버튼
-  (`data-testid="settlement-reconcile-btn"`). 탭하면 바텀 시트가 열린다.
-- 내역·예산 유무와 무관하게 항상 노출한다(빈 달에도 영수증으로 내역을 채울 수 있어야 한다).
+- 갤러리(`settlement-attachment-gallery`)의 계좌/카드 섹션마다 **"이미지 추가"**
+  (`settlement-attachment-add-account` / `-card`) 버튼 → 파일 선택 시 **압축 후 Storage 업로드만** 한다.
+- 첨부는 결산 완료 전까지 유지(새로고침에도 남음). 최대 10장.
+- 분석을 마치면 각 첨부 썸네일에 **포함된 거래 월 칩**(`settlement-attachment-months-{i}`)이 붙고,
+  섹션 내에서 가장 이른 월 순으로 정렬된다. 한 장에 6·7월이 섞여 있으면 칩이 다중(`6월`,`7월`).
 
-### 흐름
+### 2) 전체 분석 & 동기화
+
+- 갤러리 아래 **"전체 분석 & 동기화"** 버튼(`settlement-analyze-all`), 첨부 1장 이상일 때 활성.
+- 탭하면 바텀시트(`bulk-sync-loading` → `bulk-sync-result`)가 열리고, `sync-attachments` API가
+  첨부 **전체를 한 번에** 분석한다(이미지 URL을 OpenAI vision에 직접 전달, 사용량 1회 카운트).
 
 ```
-① [입력]  영수증 사진 / 카드·계좌 거래내역 스크린샷 첨부 (최대 10장) + 선택적 텍스트
-        ↓ AI 파싱 (parse-entries)
-② [대조]  파싱된 각 항목을 그 달 가계부 기존 내역과 금액·날짜로 대조
+① [첨부]  계좌/카드 캡처 업로드만 (최대 10장)
         ↓
-③ [결과]  · 누락 의심 N건  → 토글(기본 ON)·편집 가능, "N건 추가"
-         · 이미 기록됨 K건 → 읽기 전용으로만 표시
+② [분석]  "전체 분석 & 동기화" → sync-attachments (이미지별 파싱 + 월·송금 감지)
         ↓
-④ 누락분만 일괄 추가 → 쿼리 무효화로 차트·보고서 자동 갱신
+③ [대조]  모든 파싱 항목을 그 달 가계부와 금액·날짜로 대조 (findDuplicate, 다월 범위)
+        ↓
+④ [결과]  · 월별 그룹(오름차순, 선택 결산월 강조 / 다른 달은 "이 달이 아니에요" 배지·기본 OFF)
+         · 송금(확인 필요) 그룹 — 기본 OFF
+         · 이미 기록됨 — 중복 톤·기본 OFF (토글로 추가 가능)
+        ↓
+⑤ 선택 항목만 일괄 추가 → 쿼리 무효화로 차트·보고서 자동 갱신
 ```
+
+### 월 분류 규칙 (거래 단위)
+
+- 분류 단위는 **이미지가 아니라 거래 한 건**이다. 각 entry의 `date`(YYYY-MM)가 그 거래의 월.
+- 한 이미지에 6·7월이 섞여 있으면 6월 행은 6월 그룹, 7월 행은 7월 그룹으로 흩뿌린다.
+- 이미지(attachment)에는 포함된 월 집합 `detectedMonths: string[]`(정렬)을 영속 → 갤러리 칩·정렬에 사용.
 
 ### 대조(매칭) 규칙
 
-- **금액 + 날짜(YYYY-MM-DD)가 모두 같으면** "이미 기록됨"으로 간주한다.
-  (내역 추가 흐름의 중복 감지와 동일한 `findDuplicate` 규칙 — 카테고리·메모는 비교하지 않음)
-- 대조 대상 범위는 파싱된 항목 날짜의 (최소-1일) ~ (최대+1일) 구간 내역이다.
-- 기존 내역 조회가 비동기로 도착하면 결과 화면을 새 초기 상태로 다시 그린다(누락/기록됨 분류 갱신).
+- **금액 + 날짜(YYYY-MM-DD)가 모두 같으면** "이미 기록됨"으로 간주(`findDuplicate` — 카테고리·메모 미비교).
+- 대조 범위는 파싱 항목 날짜의 (최소-1일)~(최대+1일) 구간(`useDuplicateScopeEntries`). 다월도 지원.
+- 기존 내역이 비동기로 도착하면 결과 화면을 새 초기 상태로 리마운트한다.
 
-### 결과 화면 규칙
+### 송금 확인 규칙
 
-| 분류 | 표시 | 동작 |
-|------|------|------|
-| 누락 의심 | 빨강/주황 카드(낮은 신뢰도 경고 포함) | 토글로 추가 여부 선택(기본 ON), 탭하면 편집 |
-| 이미 기록됨 | 초록 톤 읽기 전용 행 (`reconcile-matched-card`) | 동작 없음 |
+- 계좌 내역 중 **단순 자금 이동**(사람 이름 이체/"이체"/"송금"/카카오·토스 송금/ATM 출금)으로 판단된 항목은
+  AI가 `isTransfer: true`로 표시한다(여전히 entry로 추출). 카드 내역은 항상 false.
+- 결과 화면에서 "**확인 필요 · 송금**"(`bulk-sync-transfer-section`) 그룹으로 분리, 토글 **기본 OFF**.
+  사용자가 켠 항목만 추가된다.
+- 계좌의 카드대금 일괄출금은 (기존 규칙대로) 아예 entry로 만들지 않는다(카드 내역과 이중 집계 방지).
 
-- 요약 배너(`reconcile-summary`): 누락이 있으면 "영수증 N건 중 M건이 가계부에 없어요",
-  모두 기록돼 있으면 "영수증의 N건이 모두 가계부에 기록되어 있어요".
-- 누락이 1건 이상이면 하단에 **취소 / "M건 추가"**(`reconcile-confirm`) 버튼.
-- 누락이 0건이면 추가 버튼 없이 **확인**(`reconcile-close`) 버튼만 노출한다.
+### 결과 화면 testid
+
+| 영역 | testid |
+|------|--------|
+| 시트(로딩/결과) | `bulk-sync-loading`, `bulk-sync-result` |
+| 요약 배너 | `bulk-sync-summary` |
+| 분류 불일치 경고 | `bulk-sync-mismatch-banner` |
+| 월 그룹 | `bulk-sync-month-{YYYY-MM}` / 다른 달 배지 `bulk-sync-other-month-{YYYY-MM}` |
+| 송금 그룹 | `bulk-sync-transfer-section` |
+| 항목 카드/토글 | `parsed-entry-card` / `parsed-entry-toggle` (중복 `parsed-entry-duplicate-badge`) |
+| 하단 버튼 | `bulk-sync-cancel`, `bulk-sync-confirm` |
 
 ### 구현 메모
 
-- 점검 시트: `components/cashbook/ReceiptReconcileSheet.tsx`
-  (입력 단계 + `useDuplicateScopeEntries` + `findDuplicate` 대조 컨테이너)
-- 결과 화면(프레젠테이션): `components/cashbook/ReconcileResultView.tsx`
+- 첨부 전용 업로더: 갤러리(`SettlementAttachmentGallery`) 내 file input → 페이지에서 `compressImage` + `useAddSettlementAttachment`
+- 일괄 분석 API: `app/api/ai/sync-attachments/route.ts` (공유 코어 `lib/ai/parse-entries-core.ts`)
+- 분석 훅: `useAnalyzeAttachments`(시트 오픈 시 1회) → `detectedMonths` 영속(`updateAttachmentMonths`)
+- 컨테이너/프레젠테이션: `components/cashbook/SettlementBulkSyncSheet.tsx` → `BulkSyncResultView.tsx`
 - 추가 반영: `useAddEntries`(일괄 추가) → `[cashbook, coupleId]` 무효화
-- E2E: `e2e/specs/cashbook-reconcile.spec.ts`
+- E2E: `e2e/specs/cashbook-bulk-sync.spec.ts` (+ `cashbook-settlement-flow.spec.ts` 갱신)
 
 ---
 

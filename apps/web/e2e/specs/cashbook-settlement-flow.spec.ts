@@ -80,43 +80,6 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await expect(pie).toContainText('FLEX');
   });
 
-  test('이미지 첨부로 내역 추가 시 내역 페이지와 동일한 중복 검사가 동작한다', async ({
-    authedContext,
-  }) => {
-    const { page, coupleId, uid } = authedContext;
-    await seedDefaultCategories(coupleId);
-    // mock templates[0](식비 9,000 오늘)과 동일 내역 시드 → 중복으로 잡혀야 함
-    await seedCashbookEntry(coupleId, uid, {
-      type: 'expense',
-      amount: 9000,
-      category: '식비',
-      description: '김치찌개',
-      date: new Date().toISOString(),
-    });
-
-    await page.goto('/inner/cashbook/settlement');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
-
-    // 내역 추가는 별도 내역 페이지에서 수행
-    await page.getByTestId('settlement-entries-link').click();
-    await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
-    await page.getByTestId('settlement-attachment-add-account').click();
-    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
-
-    // 이미지 1장 첨부 → mock은 이미지 수(1)만큼 entries 반환
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([{ name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-    await page.getByTestId('ai-parse-submit').click();
-
-    // 중복 검사 결과: 같은 컴포넌트(AiBulkPreviewSheet)로 중복 배너 + 자동 제외
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
-    await expect(page.getByTestId('ai-bulk-duplicate-banner')).toBeVisible();
-    await expect(page.getByTestId('parsed-entry-duplicate-badge')).toBeVisible();
-    // 모두 중복이라 선택 0건 → 추가 버튼 비활성
-    await expect(page.getByTestId('ai-bulk-confirm')).toBeDisabled();
-  });
-
   test('첨부한 이미지는 새로고침 후에도 유지된다(결산 완료 전까지)', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
@@ -126,18 +89,14 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
 
     await page.getByTestId('settlement-entries-link').click();
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
-    await page.getByTestId('settlement-attachment-add-account').click();
-    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
 
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([{ name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-
-    // 제출 시점에 첨부가 Storage+Firestore에 업로드된다
-    await page.getByTestId('ai-parse-submit').click();
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
-    // 미리보기를 닫아도(내역 미추가) 첨부는 유지된다
-    await page.keyboard.press('Escape');
+    // 첨부 전용: 파일 선택 시 즉시 업로드(파싱 없음)
+    const fileInput = page.locator(
+      'input[type="file"][data-testid="settlement-attachment-file-input-account"]'
+    );
+    await fileInput.setInputFiles([
+      { name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG },
+    ]);
 
     // 페이지 갤러리에 썸네일 등장 (Storage 업로드 + Firestore 반영 대기)
     await expect(page.getByTestId('settlement-attachment-0')).toBeVisible({ timeout: 15000 });
@@ -167,17 +126,15 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await page.goto('/inner/cashbook/settlement');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
-    // 내역 페이지에서 첨부 1장 추가 → 워크스페이스로 돌아오면 갤러리에 노출
+    // 내역 페이지에서 첨부 1장 추가(첨부 전용) → 워크스페이스로 돌아오면 갤러리에 노출
     await page.getByTestId('settlement-entries-link').click();
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
-    await page.getByTestId('settlement-attachment-add-account').click();
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([{ name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-    // 제출 시점에 업로드 → 미리보기 닫기
-    await page.getByTestId('ai-parse-submit').click();
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
-    await page.keyboard.press('Escape');
+    const fileInput = page.locator(
+      'input[type="file"][data-testid="settlement-attachment-file-input-account"]'
+    );
+    await fileInput.setInputFiles([
+      { name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG },
+    ]);
     await expect(page.getByTestId('settlement-attachment-0')).toBeVisible({ timeout: 15000 });
 
     // 워크스페이스로 복귀
@@ -245,45 +202,14 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await expect(page.locator('[data-testid^="entry-card-"]')).toHaveCount(2);
     await expect(page.getByText('점심 외식')).toBeVisible();
 
-    // 내역 페이지에서도 영수증 첨부로 추가 가능 (제출 시 업로드)
-    await page.getByTestId('settlement-attachment-add-account').click();
-    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([{ name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-    await page.getByTestId('ai-parse-submit').click();
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
-    await page.keyboard.press('Escape');
+    // 내역 페이지에서도 영수증 첨부 가능 (첨부 전용 — 즉시 업로드)
+    const fileInput = page.locator(
+      'input[type="file"][data-testid="settlement-attachment-file-input-account"]'
+    );
+    await fileInput.setInputFiles([
+      { name: 'receipt.png', mimeType: 'image/png', buffer: ONE_PX_PNG },
+    ]);
     await expect(page.getByTestId('settlement-attachment-0')).toBeVisible({ timeout: 15000 });
-  });
-
-  test('카드 목록에서 추가 시, 카드 내역이 아니면 경고 후 진행한다', async ({ authedContext }) => {
-    const { page, coupleId } = authedContext;
-    await seedDefaultCategories(coupleId);
-
-    await page.goto('/inner/cashbook/settlement');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
-
-    await page.getByTestId('settlement-entries-link').click();
-    await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
-
-    // 카드 목록의 "이미지 추가" → 카드 분류로 고정된 시트
-    await page.getByTestId('settlement-attachment-add-card').click();
-    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
-    await expect(page.getByText('카드 내역 추가')).toBeVisible();
-
-    // 카드 분류인데 카드 내역이 아닌 입력(mock 신호: 텍스트에 'mismatch')
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([{ name: 'not-card.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-    await page.getByTestId('ai-parse-input').fill('mismatch');
-    await page.getByTestId('ai-parse-submit').click();
-
-    // 경고 토스트 노출 + 그래도 미리보기로 진행(warn-but-allow)
-    await expect(
-      page.getByText('첨부한 이미지가 카드 내역이 아닌 것 같아요. 결과를 확인해 주세요.')
-    ).toBeVisible({ timeout: 5000 });
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
   });
 
   test('카드 목록에서 추가한 첨부는 카드 섹션에 노출된다', async ({ authedContext }) => {
@@ -296,15 +222,11 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await page.getByTestId('settlement-entries-link').click();
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
 
-    // 카드 목록의 추가 버튼으로 첨부 → 카드 분류로 저장된다
-    await page.getByTestId('settlement-attachment-add-card').click();
-    await expect(page.getByTestId('settlement-add-sheet')).toBeVisible();
-    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    // 카드 목록의 추가 버튼(첨부 전용)으로 첨부 → 카드 분류로 저장된다
+    const fileInput = page.locator(
+      'input[type="file"][data-testid="settlement-attachment-file-input-card"]'
+    );
     await fileInput.setInputFiles([{ name: 'card.png', mimeType: 'image/png', buffer: ONE_PX_PNG }]);
-    await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
-    await page.getByTestId('ai-parse-submit').click();
-    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
-    await page.keyboard.press('Escape');
 
     // 카드 섹션에 썸네일 노출, 계좌 섹션은 빈 상태 안내
     await expect(
