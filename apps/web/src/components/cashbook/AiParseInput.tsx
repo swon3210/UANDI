@@ -170,35 +170,41 @@ export function AiParseInput({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
-        <div className="relative flex-1">
-          <Sparkles size={16} className="absolute left-3 top-3 text-muted-foreground" />
-          <Textarea
-            data-testid="ai-parse-input"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={'예: 점심 김밥 5천원\n어제 택시 15000원'}
-            className={cn('pl-9 pr-10 min-h-[100px] max-h-40', textareaClassName)}
-            rows={1}
-            disabled={mutation.isPending}
-          />
-          <input
-            ref={fileInputRef}
-            data-testid="ai-parse-file-input"
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-          />
+      <div className="relative rounded-md border border-input bg-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+        <Sparkles
+          size={16}
+          className="pointer-events-none absolute left-3 top-3 text-muted-foreground"
+        />
+        <Textarea
+          data-testid="ai-parse-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={'예: 점심 김밥 5천원\n어제 택시 15000원'}
+          className={cn(
+            'min-h-[100px] max-h-40 resize-none border-0 bg-transparent pb-12 pl-9 pr-3 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0',
+            textareaClassName
+          )}
+          rows={1}
+          disabled={mutation.isPending}
+        />
+        <input
+          ref={fileInputRef}
+          data-testid="ai-parse-file-input"
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <div className="absolute bottom-2 right-2 flex items-center gap-1">
           <Button
             type="button"
             data-testid="ai-parse-attach"
             variant="ghost"
             size="icon"
             aria-label="영수증 첨부"
-            className="absolute right-1.5 bottom-1.5 h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
             disabled={mutation.isPending || isProcessingFiles || images.length >= MAX_IMAGES}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -208,20 +214,21 @@ export function AiParseInput({
               <Paperclip size={16} />
             )}
           </Button>
+          <Button
+            data-testid="ai-parse-submit"
+            size="icon"
+            className="h-8 w-8 rounded-full"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            aria-label="AI 파싱"
+          >
+            {mutation.isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <ArrowUp size={16} />
+            )}
+          </Button>
         </div>
-        <Button
-          data-testid="ai-parse-submit"
-          size="icon"
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          aria-label="AI 파싱"
-        >
-          {mutation.isPending ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <ArrowUp size={16} />
-          )}
-        </Button>
       </div>
       {mutation.error && (
         <p className="text-xs text-destructive">
