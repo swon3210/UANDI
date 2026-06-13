@@ -1,5 +1,12 @@
 import dayjs, { type Dayjs } from 'dayjs';
-import type { CashbookEntryType, CashflowPayday, CashflowPaydayType, PredictionSource } from '@/types';
+import { occurrenceDateInMonth } from '@uandi/cashbook-core/utils/recurrence';
+import type {
+  CashbookCategory,
+  CashbookEntryType,
+  CashflowPayday,
+  CashflowPaydayType,
+  PredictionSource,
+} from '@/types';
 
 // 현금흐름 캘린더 순수 계산 유틸 (firebase 비의존 — Storybook/테스트에서 그대로 사용 가능).
 // 명세: Spec §9 (결제일·잔액 계산), §4-3 (카드 표시).
@@ -213,4 +220,149 @@ export function buildCashflowCards(
 /** 가장 이른(다음) 잔액 음수 카드. 없으면 null(§10 음수 경고 배너용). */
 export function firstNegativeCard(cards: CashflowCardData[]): CashflowCardData | null {
   return cards.find((c) => c.isNegative) ?? null;
+}
+
+/** `${categoryName}|${YYYY-MM}` — 같은 달·같은 카테고리 중복(이중계산) 판정 키. */
+export function recurrenceMonthKey(categoryName: string, date: Date): string {
+  return `${categoryName}|${dayjs(date).format('YYYY-MM')}`;
+}
+
+/** recurrence가 설정된 고정 카테고리의 호라이즌 내 발생 인스턴스(게이트 미적용). 경계·거래 공통 입력. */
+export type RecurrenceOccurrence = {
+  categoryId: string;
+  categoryName: string;
+  type: 'income' | 'expense';
+  amount: number;
+  date: Date;
+};
+
+/**
+ * recurrence가 설정된 고정 지출/수입 카테고리 → 호라이즌 내 발생 인스턴스.
+ * docs/pages/inner/cashflow-recurrence-integration.md 참고.
+ * - 포함 조건: `recurrence.enabled` && `expectedAmount > 0` && group ∈ {income, expense}.
+ * - 발생일은 `occurrenceDateInMonth`(알림 cron과 동일 primitive)로 계산 → 판정 일치.
+ * - 이중계산 게이트(G1/G2)는 적용하지 않는다. 경계(체크포인트)는 항상 만들고, 거래 합성에서만
+ *   `recurrenceTransactions`로 걸러낸다(실거래가 있는 달은 그 카드에 실거래가 들어가면 된다).
+ */
+export function buildRecurrenceOccurrences(
+  categories: CashbookCategory[],
+  opts: { from: Dayjs; months: number }
+): RecurrenceOccurrence[] {
+  const start = opts.from.startOf('day');
+  const end = start.add(opts.months, 'month').endOf('day');
+  const out: RecurrenceOccurrence[] = [];
+
+  for (const cat of categories) {
+    const r = cat.recurrence;
+    if (!r || !r.enabled) continue;
+    if (cat.group !== 'income' && cat.group !== 'expense') continue;
+    const amount = r.expectedAmount;
+    if (amount == null || amount <= 0) continue;
+
+    // 호라이즌이 걸치는 각 달의 발생일을 계산(buildPaydayInstances와 동일한 월 커서 패턴).
+    let monthCursor = start.startOf('month');
+    while (monthCursor.isBefore(end) || monthCursor.isSame(end, 'month')) {
+      const occ = occurrenceDateInMonth(r, monthCursor);
+      monthCursor = monthCursor.add(1, 'month');
+      if (!occ) continue;
+
+      const inRange = (occ.isSame(start, 'day') || occ.isAfter(start)) && occ.isBefore(end);
+      if (!inRange) continue;
+
+      out.push({
+        categoryId: cat.id,
+        categoryName: cat.name,
+        type: cat.group, // 'income' | 'expense'
+        amount,
+        date: occ.toDate(),
+      });
+    }
+  }
+
+  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+export type RecurrenceTxnGate = {
+  /** G1: 같은 달 실거래가 있는 `${categoryName}|${YYYY-MM}` 집합 → 그 달 발생분 제외. */
+  actualKeys: Set<string>;
+  /** G2: 같은 달 활성 예측이 있는 `${categoryName}|${YYYY-MM}` 집합 → 그 달 발생분 제외. */
+  activePredictionKeys?: Set<string>;
+};
+
+/**
+ * 발생 인스턴스 → 합성 예측 거래(◇). G1/G2로 같은 달 실거래·활성 예측이 있으면 제외(이중계산 방지).
+ * persist하지 않는 읽기 시점 파생물이라, 실제 기록 시 G1로 자연히 사라진다.
+ */
+export function recurrenceTransactions(
+  occurrences: RecurrenceOccurrence[],
+  gate: RecurrenceTxnGate
+): CashflowTransaction[] {
+  const out: CashflowTransaction[] = [];
+  for (const o of occurrences) {
+    const monthKey = recurrenceMonthKey(o.categoryName, o.date);
+    if (gate.actualKeys.has(monthKey)) continue; // G1: 이미 기록된 달
+    if (gate.activePredictionKeys?.has(monthKey)) continue; // G2: 이미 예측이 잡힌 달
+    out.push({
+      id: `recurrence-${o.categoryId}-${dayjs(o.date).format('YYYY-MM-DD')}`,
+      kind: 'predicted',
+      type: o.type,
+      amount: o.amount,
+      category: o.categoryName,
+      description: '',
+      date: o.date,
+      source: 'calendar',
+    });
+  }
+  return out;
+}
+
+/**
+ * 발생 인스턴스 → 카드 경계(체크포인트). 같은 날짜 발생은 한 카드로 묶고 카테고리명을 ' · '로 합친다.
+ * paydayBoundaries와 동일한 형태(key=YYYY-MM-DD, subLabel=날짜)라 mergeBoundariesByDate로 합칠 수 있다.
+ */
+export function recurrenceBoundaries(occurrences: RecurrenceOccurrence[]): CardBoundary[] {
+  const byDate = new Map<string, RecurrenceOccurrence[]>();
+  for (const o of occurrences) {
+    const key = dayjs(o.date).format('YYYY-MM-DD');
+    const arr = byDate.get(key);
+    if (arr) arr.push(o);
+    else byDate.set(key, [o]);
+  }
+
+  return [...byDate.values()]
+    .map((occs) => {
+      const date = occs[0].date;
+      return {
+        key: dayjs(date).format('YYYY-MM-DD'),
+        label: [...new Set(occs.map((o) => o.categoryName))].join(' · '),
+        endDate: dayjs(date).endOf('day').toDate(),
+        subLabel: dayjs(date).format('M월 D일 (ddd)'),
+      };
+    })
+    .sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+}
+
+/**
+ * 여러 경계 목록(결제일·recurrence)을 같은 날짜(key) 기준으로 병합한다(Phase 2).
+ * 같은 날짜면 라벨을 ' · '로 합치고, subLabel/paydayType은 먼저 정의된 값을 유지한다.
+ */
+export function mergeBoundariesByDate(...lists: CardBoundary[][]): CardBoundary[] {
+  const byKey = new Map<string, CardBoundary>();
+  for (const list of lists) {
+    for (const b of list) {
+      const existing = byKey.get(b.key);
+      if (!existing) {
+        byKey.set(b.key, { ...b });
+        continue;
+      }
+      const labels = [...new Set([...existing.label.split(' · '), ...b.label.split(' · ')])];
+      byKey.set(b.key, {
+        ...existing,
+        label: labels.join(' · '),
+        subLabel: existing.subLabel ?? b.subLabel,
+        paydayType: existing.paydayType ?? b.paydayType,
+      });
+    }
+  }
+  return [...byKey.values()].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 }

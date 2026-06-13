@@ -66,6 +66,8 @@ export type CashbookCategory = {
   examples: string[];
   /** 정기 발생 주기. fixed_expense / regular_income에서만 설정. 미설정이면 정기 알림 없음. */
   recurrence?: RecurringSchedule | null;
+  /** 정기 발생 등록 제안을 닫았는지(읽기 시점 제안 재노출 방지). Phase 6. */
+  recurrenceSuggestionDismissed?: boolean;
   createdAt: Timestamp;
 };
 

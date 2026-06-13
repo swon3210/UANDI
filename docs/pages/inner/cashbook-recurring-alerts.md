@@ -17,10 +17,10 @@
 
 ## 용어 정리 (기존 모델과의 매핑)
 
-| 사용자 표현 | 코드상 subGroup | 비고 |
-| ----------- | --------------- | ---- |
-| 고정 지출 | `fixed_expense` | 월세·금융비용·보험·공과금·구독 등 (이미 존재) |
-| 고정 수입 | `regular_income` | 정기 급여 등 (이미 존재) |
+| 사용자 표현 | 코드상 subGroup  | 비고                                          |
+| ----------- | ---------------- | --------------------------------------------- |
+| 고정 지출   | `fixed_expense`  | 월세·금융비용·보험·공과금·구독 등 (이미 존재) |
+| 고정 수입   | `regular_income` | 정기 급여 등 (이미 존재)                      |
 
 `recurrence` 필드 자체는 모든 카테고리에 둘 수 있지만, **편집 UI는 위 두 subGroup에서만 노출**한다.
 (변동 지출/유연 지출에 정기 알림을 거는 것은 의미가 약하므로.)
@@ -166,7 +166,9 @@ export const recurringTransactionReminder = onSchedule(
     timeZone: 'Asia/Seoul',
     region: 'asia-northeast3',
   },
-  async () => { /* ... */ }
+  async () => {
+    /* ... */
+  }
 );
 ```
 
@@ -195,12 +197,12 @@ export { recurringTransactionReminder } from './notifications/recurringReminder'
 
 ### 푸시 메시지 형식
 
-| 종류 | 제목 | 본문 (expectedAmount 있음) | 본문 (없음) |
-| ---- | ---- | -------------------------- | ----------- |
-| 고정 지출 당일 | UANDI 가계부 | 오늘은 {카테고리} 낼 날이에요 · 약 {금액}원 💸 | 오늘은 {카테고리} 낼 날이에요 💸 |
-| 고정 지출 N일 전 | UANDI 가계부 | {N}일 후 {카테고리} 예정 · 약 {금액}원 💸 | {N}일 후 {카테고리} 예정이에요 💸 |
-| 고정 수입 당일 | UANDI 가계부 | 오늘은 {카테고리} 들어오는 날이에요 · 약 {금액}원 💰 | 오늘은 {카테고리} 들어오는 날이에요 💰 |
-| 고정 수입 N일 전 | UANDI 가계부 | {N}일 후 {카테고리} 예정 · 약 {금액}원 💰 | {N}일 후 {카테고리} 예정이에요 💰 |
+| 종류             | 제목         | 본문 (expectedAmount 있음)                           | 본문 (없음)                            |
+| ---------------- | ------------ | ---------------------------------------------------- | -------------------------------------- |
+| 고정 지출 당일   | UANDI 가계부 | 오늘은 {카테고리} 낼 날이에요 · 약 {금액}원 💸       | 오늘은 {카테고리} 낼 날이에요 💸       |
+| 고정 지출 N일 전 | UANDI 가계부 | {N}일 후 {카테고리} 예정 · 약 {금액}원 💸            | {N}일 후 {카테고리} 예정이에요 💸      |
+| 고정 수입 당일   | UANDI 가계부 | 오늘은 {카테고리} 들어오는 날이에요 · 약 {금액}원 💰 | 오늘은 {카테고리} 들어오는 날이에요 💰 |
+| 고정 수입 N일 전 | UANDI 가계부 | {N}일 후 {카테고리} 예정 · 약 {금액}원 💰            | {N}일 후 {카테고리} 예정이에요 💰      |
 
 ### 푸시 클릭 시 동작
 
@@ -286,11 +288,13 @@ export { recurringTransactionReminder } from './notifications/recurringReminder'
 ## 구현 위치 요약
 
 ### 공유 (cashbook-core)
+
 - `packages/cashbook-core/src/types.ts` — `RecurringSchedule`, `RecurringScheduleKind`, `CashbookCategory.recurrence`
 - `packages/cashbook-core/src/utils/recurrence.ts` (신규) — `shouldFireOn`, `formatRecurrence`, 발생일 계산
 - `packages/cashbook-core/src/index.ts` — export 추가
 
 ### 클라이언트 (web)
+
 - `apps/web/src/types/index.ts` — `NotificationSettings.recurringTransaction`
 - `apps/web/src/components/cashbook/CategoryForm.tsx` — 정기 발생 섹션
 - `apps/web/src/components/cashbook/RecurringScheduleFields.tsx` (신규) + 스토리
@@ -299,10 +303,12 @@ export { recurringTransactionReminder } from './notifications/recurringReminder'
 - 카테고리 생성/수정 서비스 — `recurrence` 필드 저장 (cashbook-categories 서비스)
 
 ### Cloud Functions
+
 - `functions/src/notifications/recurringReminder.ts` (신규) — `recurringTransactionReminder`
 - `functions/src/index.ts` — export 추가
 
 ### 인프라
+
 - Firestore 필드 인덱스(COLLECTION_GROUP): `cashbookCategories` collectionGroup `recurrence.enabled` (`firestore.indexes.json` fieldOverrides에 추가됨)
 - (배포 후 검증) Cloud Scheduler 매일 09:00 KST 발화 확인
 
@@ -310,6 +316,7 @@ export { recurringTransactionReminder } from './notifications/recurringReminder'
 
 ## 후속 사이클 (이번 작업 제외)
 
+- **현금흐름 캘린더 통합**: `recurrence`를 현금흐름 잔액 예측의 단일 선언 출처로 사용 → [`cashflow-recurrence-integration.md`](./cashflow-recurrence-integration.md)
 - **알림에서 퀵 입력**: 알림 클릭/액션으로 `expectedAmount` 기반 거래 자동 생성
 - **소유자 한정 발송 옵션**: 개인 고정 지출은 본인에게만
 - **다회 발생**: 주 2회·격주 등 월 1회 외 주기
