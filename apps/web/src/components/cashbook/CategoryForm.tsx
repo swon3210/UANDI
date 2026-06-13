@@ -163,7 +163,7 @@ export function CategoryForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex flex-col gap-5 overflow-y-auto px-1 pb-6 pt-4"
+          className="flex flex-col gap-5 overflow-y-auto overflow-x-hidden px-1 pb-6 pt-4"
         >
           {isChildMode && parentCategory && (
             <div className="flex flex-col gap-1.5">

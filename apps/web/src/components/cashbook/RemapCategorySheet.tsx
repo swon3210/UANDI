@@ -57,7 +57,7 @@ export function RemapCategorySheet({
         <SheetTitle>&ldquo;{fromName}&rdquo; 재매칭</SheetTitle>
       </SheetHeader>
 
-      <div className="flex flex-col gap-4 overflow-y-auto px-1 pb-4 pt-3">
+      <div className="flex flex-col gap-4 overflow-y-auto overflow-x-hidden px-1 pb-4 pt-3">
         <p className="text-xs text-muted-foreground">{targetText}</p>
 
         <Tabs

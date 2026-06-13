@@ -136,7 +136,7 @@ export function CashbookFilterSheet({
         <SheetTitle>필터</SheetTitle>
       </SheetHeader>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-1 py-4">
+      <div className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-1 py-4">
         {/* 키워드 */}
         <div className="space-y-2">
           <Label>키워드</Label>
