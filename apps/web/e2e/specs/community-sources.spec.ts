@@ -106,6 +106,58 @@ test.describe('커뮤니티 크롤 소스 관리 (/community/admin · 소스 관
     await expect(admin.pendingCards).toHaveCount(2);
   });
 
+  test('빈 피드(차단/0건)를 수집하면 소스에 사유가 표시되고 승인 대기는 0건이다', async ({
+    adminAuthedContext,
+    baseURL,
+  }) => {
+    const { page } = adminAuthedContext;
+    // 네이버 블로그 등 서버 IP 차단 재현: 정상 200이지만 <item>이 0개인 피드.
+    await seedCommunitySource({
+      siteName: '차단된 신혼 피드',
+      feedUrl: `${baseURL}/test-fixtures/empty-feed.xml`,
+      enabled: true,
+    });
+
+    const admin = new CommunityAdminPage(page);
+    await admin.goto();
+    await admin.sourcesTab.click();
+    await admin.crawlNowButton.click();
+
+    // 소스 목록에 빈 피드 사유가 노출된다(조용한 0건 방지)
+    const item = admin.sourceItems.first();
+    await expect(item.getByTestId('source-error')).toContainText('빈 피드');
+
+    // 승인 대기로 수집된 글은 없다
+    await admin.pendingTab.click();
+    await expect(admin.pendingCards).toHaveCount(0);
+  });
+
+  test('피드 요청이 실패하면(404 등) 소스에 사람이 읽을 사유가 표시된다', async ({
+    adminAuthedContext,
+    baseURL,
+  }) => {
+    const { page } = adminAuthedContext;
+    // 존재하지 않는 피드 URL → 서버가 404 반환 → 친화적 사유로 분류돼 표시돼야 한다.
+    // (네이버 한정이 아니라 차단·오류 전반에 대한 소스 무관 피드백 검증)
+    await seedCommunitySource({
+      siteName: '응답 없는 피드',
+      feedUrl: `${baseURL}/test-fixtures/does-not-exist.xml`,
+      enabled: true,
+    });
+
+    const admin = new CommunityAdminPage(page);
+    await admin.goto();
+    await admin.sourcesTab.click();
+    await admin.crawlNowButton.click();
+
+    // raw "Status code 404"가 아니라 분류된 한글 사유가 노출된다
+    const item = admin.sourceItems.first();
+    await expect(item.getByTestId('source-error')).toContainText('찾을 수 없어요');
+
+    await admin.pendingTab.click();
+    await expect(admin.pendingCards).toHaveCount(0);
+  });
+
   test('링크로 RSS 자동 탐지하면 피드 URL이 자동으로 채워진다', async ({
     adminAuthedContext,
     baseURL,

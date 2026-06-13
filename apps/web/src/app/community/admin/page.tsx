@@ -248,7 +248,16 @@ function SourcesPanel({ enabled }: { enabled: boolean }) {
   const handleCrawl = async () => {
     try {
       const result = await crawl.mutateAsync();
-      toast.success(`수집 완료 — 새 글 ${result.created}건`);
+      // 수집 실패(빈 피드·차단·오류 등)는 소스 무관하게 조용한 0건이 아니라 사유와 함께 알린다.
+      // 구체적 원인은 '소스 관리' 목록의 각 소스 '수집 오류'에 표시된다.
+      const failed = result.sources.filter((s) => s.emptyFeed || s.error).map((s) => s.siteName);
+      if (failed.length > 0) {
+        toast.warning(
+          `새 글 ${result.created}건 · 수집 실패: ${failed.join(', ')} — '소스 관리'에서 사유를 확인하세요.`
+        );
+      } else {
+        toast.success(`수집 완료 — 새 글 ${result.created}건`);
+      }
     } catch {
       toast.error('수집에 실패했어요. 잠시 후 다시 시도해주세요.');
     }
