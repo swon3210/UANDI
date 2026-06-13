@@ -56,6 +56,15 @@ test.describe('전역 하단탭 네비게이션 (AppNav)', () => {
     await expect(nav.tabCashbook).toHaveAttribute('aria-current', 'page');
   });
 
+  test('풀스크린(standalone) 플로우에서는 자체 하단 CTA가 가려지지 않도록 전역 하단탭이 숨겨진다', async ({
+    authedPage,
+  }) => {
+    const nav = new AppNavPage(authedPage);
+    await authedPage.goto('/inner/cashbook/settings');
+    await expect(authedPage).toHaveURL(/\/inner\/cashbook\/settings$/);
+    await expect(nav.root).toHaveCount(0);
+  });
+
   test('재테크 탭으로 진입하면 indigo 톤(data-space=outer)이 적용된다', async ({ authedPage }) => {
     const nav = new AppNavPage(authedPage);
     await nav.tabOuter.click();

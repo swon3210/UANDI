@@ -90,7 +90,7 @@ export function PlanWizardShell({
           className="fixed inset-x-0 bottom-0 z-10 border-t border-stone-200 bg-white/95 backdrop-blur"
           data-testid="wizard-footer"
         >
-          <div className="mx-auto flex w-full max-w-md items-center gap-2 px-4 py-3">
+          <div className="mx-auto flex w-full max-w-md items-center gap-2 px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))]">
             <Button
               type="button"
               variant="outline"
