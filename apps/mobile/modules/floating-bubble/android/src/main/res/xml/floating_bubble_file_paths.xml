@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+  <!-- FileChooserActivity가 카메라 촬영 임시 파일을 저장하는 캐시 하위 폴더 -->
+  <cache-path name="bubble-capture" path="bubble-capture/" />
+</paths>

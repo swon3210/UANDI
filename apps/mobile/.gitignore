@@ -42,6 +42,10 @@ app-example
 /ios
 /android
 
+# local build artifacts
+*.apk
+*.aab
+
 # Firebase native config (Cloud Messaging)
 google-services.json
 GoogleService-Info.plist

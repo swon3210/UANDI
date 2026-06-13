@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { AppWebView, type PendingDeeplink } from '@/components/app-webview';
 import { useFcmRegistration } from '@/hooks/use-fcm-registration';
 import { useDeepLink } from '@/hooks/use-deep-link';
+import { useFloatingBubble } from '@/hooks/use-floating-bubble';
 
 export default function HomeScreen() {
   const [pendingDeeplink, setPendingDeeplink] = useState<PendingDeeplink | null>(null);
@@ -22,6 +23,8 @@ export default function HomeScreen() {
 
   const tokenInfo = useFcmRegistration({ onNotificationTap: handleNotificationTap });
   useDeepLink(handleDeeplink);
+  // 다른 앱 위에 떠 있는 MOA 플로팅 버블(앱이 백그라운드일 때 표시, 탭하면 그 자리에서 빠른 추가 패널 확장).
+  useFloatingBubble();
 
   return (
     <AppWebView

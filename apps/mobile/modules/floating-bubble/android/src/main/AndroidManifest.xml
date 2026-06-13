@@ -1,0 +1,36 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- 다른 앱 위에 플로팅 버블을 그리기 위한 권한. 사용자가 설정에서 직접 허용해야 한다. -->
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+  <!-- Android 11+ 패키지 가시성: 카메라/갤러리 선택 인텐트 resolve용 -->
+  <queries>
+    <intent>
+      <action android:name="android.media.action.IMAGE_CAPTURE" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.GET_CONTENT" />
+      <data android:mimeType="image/*" />
+    </intent>
+  </queries>
+
+  <application>
+    <!-- 오버레이 WebView 파일 입력을 처리하는 투명 프록시 Activity -->
+    <activity
+      android:name=".FileChooserActivity"
+      android:exported="false"
+      android:excludeFromRecents="true"
+      android:taskAffinity=""
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+    <!-- 카메라 촬영 임시 파일을 WebView로 넘기기 위한 FileProvider -->
+    <provider
+      android:name="androidx.core.content.FileProvider"
+      android:authorities="${applicationId}.floatingbubble.fileprovider"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/floating_bubble_file_paths" />
+    </provider>
+  </application>
+</manifest>
