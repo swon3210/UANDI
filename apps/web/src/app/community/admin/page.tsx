@@ -248,12 +248,20 @@ function SourcesPanel({ enabled }: { enabled: boolean }) {
   const handleCrawl = async () => {
     try {
       const result = await crawl.mutateAsync();
-      // 수집 실패(빈 피드·차단·오류 등)는 소스 무관하게 조용한 0건이 아니라 사유와 함께 알린다.
-      // 구체적 원인은 '소스 관리' 목록의 각 소스 '수집 오류'에 표시된다.
+      // 0건이 나오는 모든 경우를 설명한다 — 조용한 "0건"으로 끝내지 않는다.
+      // 구체적 실패 사유는 '소스 관리' 목록의 각 소스 '수집 오류'에 표시된다.
       const failed = result.sources.filter((s) => s.emptyFeed || s.error).map((s) => s.siteName);
-      if (failed.length > 0) {
+      if (result.sources.length === 0) {
+        // 활성화된 소스가 하나도 없으면 크롤할 대상 자체가 없다.
+        toast.warning('활성화된 소스가 없어요. 소스를 추가하거나 활성화한 뒤 다시 시도하세요.');
+      } else if (failed.length > 0) {
         toast.warning(
           `새 글 ${result.created}건 · 수집 실패: ${failed.join(', ')} — '소스 관리'에서 사유를 확인하세요.`
+        );
+      } else if (result.created === 0 && result.skipped > 0) {
+        // 피드는 정상이지만 전부 이미 수집된 글이라 새로 추가된 게 없다(중복 스킵).
+        toast.info(
+          `새 글 0건 — 이미 수집된 ${result.skipped}건을 건너뛰었어요. '승인 대기' 탭에서 확인하세요.`
         );
       } else {
         toast.success(`수집 완료 — 새 글 ${result.created}건`);
