@@ -10,7 +10,9 @@
     "test:e2e": "playwright test",
     "test:e2e:visible": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "screenshots": "playwright test --config playwright.screenshots.config.ts",
+    "screenshots:visible": "playwright test --config playwright.screenshots.config.ts --headed"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
