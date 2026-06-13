@@ -39,7 +39,7 @@ export function BulkEditSummaryBar({
       className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 backdrop-blur"
       data-testid="bulk-edit-summary-bar"
     >
-      <div className="mx-auto w-full max-w-3xl px-4 py-3">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))]">
         <ValidationLine validation={validation} hasChanges={hasChanges} />
         <div className="mt-2 grid grid-cols-3 gap-2">
           <DeltaPill

@@ -9,6 +9,7 @@ import { createQueryClient } from '@/lib/query-client';
 import { AuthInit } from '@/components/AuthInit';
 import { FcmForegroundListener } from '@/components/FcmForegroundListener';
 import { NativeFcmBridge } from '@/components/NativeFcmBridge';
+import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -21,6 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AuthInit />
             <FcmForegroundListener />
             <NativeFcmBridge />
+            <NativeSafeAreaFix />
             {children}
             <Toaster />
           </OverlayProvider>

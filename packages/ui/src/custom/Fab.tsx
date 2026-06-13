@@ -24,7 +24,7 @@ export function Fab({ icon, label, showLabel = false, className, ...rest }: FabP
         'transition-transform hover:brightness-95 active:scale-95',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         // 모바일: 하단탭(h-16) + safe-area 위로 / 데스크톱: 하단바 없으니 아래로
-        'bottom-[calc(4rem+env(safe-area-inset-bottom)+1rem)] md:bottom-6',
+        'bottom-[calc(4rem+var(--safe-bottom)+1rem)] md:bottom-6',
         showLabel ? 'px-4' : 'w-12 justify-center',
         className
       )}

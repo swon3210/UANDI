@@ -60,7 +60,7 @@ export function AppNav({ items, activePath, LinkComponent = DefaultLink, classNa
         'md:inset-x-auto md:left-0 md:top-0 md:h-full md:w-20 md:border-r md:border-t-0',
         className
       )}
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
       <ul className="mx-auto flex h-16 max-w-md items-stretch md:mx-0 md:h-full md:max-w-none md:flex-col md:items-stretch md:gap-1 md:py-3">
         {items.map((item) => {

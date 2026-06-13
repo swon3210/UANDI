@@ -142,6 +142,11 @@
    시맨틱 토큰 값 정의
    ───────────────────────────────────────────────────────────────── */
 :root {
+  /* 하단 safe-area. 기본은 env() 값이지만, native Android 앱처럼
+     OS가 시스템 바 영역을 webview 밖에서 별도로 처리하는 경우
+     불필요한 패딩이 생기므로 NativeSafeAreaFix가 0px로 덮어쓴다. */
+  --safe-bottom: env(safe-area-inset-bottom);
+
   /* 배경 */
   --background: 30 20% 98%; /* stone-50  ≈ #FAFAF8 */
   --foreground: 20 6% 10%; /* stone-900 = #1C1917 */
