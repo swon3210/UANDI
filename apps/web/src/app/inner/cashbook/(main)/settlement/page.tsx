@@ -33,6 +33,7 @@ import {
   monthKeyOf,
 } from '@/hooks/useSettlement';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
+import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
 import { SettlementReport, type SettlementChart } from '@/components/cashbook/SettlementReport';
 import { SettlementSummaryHeader } from '@/components/cashbook/SettlementSummaryHeader';
 import { SettlementAttachmentGallery } from '@/components/cashbook/SettlementAttachmentGallery';
@@ -82,8 +83,7 @@ export default function CashbookSettlementPage() {
   const redoMutation = useRedoSettlement(coupleId);
   const removeAttachment = useRemoveSettlementAttachment(coupleId);
 
-  const isLoading =
-    entriesPending || categoriesPending || budgetPending || settlementPending;
+  const isLoading = entriesPending || categoriesPending || budgetPending || settlementPending;
 
   const budgetItems = budget?.items;
   const hasBudget = !!budgetItems && budgetItems.length > 0;
@@ -169,8 +169,7 @@ export default function CashbookSettlementPage() {
     return slices;
   }, [incomeActual, expenseActual, flexActual]);
 
-  const spentPct =
-    spendingBudget > 0 ? Math.round((spendingActual / spendingBudget) * 100) : null;
+  const spentPct = spendingBudget > 0 ? Math.round((spendingActual / spendingBudget) * 100) : null;
 
   const showBudgetChart = hasBudget && barData.length > 0;
   const hasEntries = (entries ?? []).length > 0;
@@ -293,156 +292,159 @@ export default function CashbookSettlementPage() {
   );
 
   return (
-    <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-      <MonthSelector selectedDate={selectedDate} onChange={handleMonthChange} />
+    <>
+      <CashbookTabs />
+      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
+        <MonthSelector selectedDate={selectedDate} onChange={handleMonthChange} />
 
-      {isCompleted ? (
-        <div className="mt-2">
-          <SettlementReportView
-            report={settlement.report!}
-            monthLabel={monthLabel}
-            onRedo={() => redoMutation.mutate(monthKey)}
-            isRedoing={redoMutation.isPending}
-          />
-        </div>
-      ) : (
-        <>
-          {/* 수입 · 지출 · FLEX 요약 */}
+        {isCompleted ? (
           <div className="mt-2">
-            <SettlementSummaryHeader
-              income={incomeActual}
-              expense={expenseActual}
-              flex={flexActual}
+            <SettlementReportView
+              report={settlement.report!}
+              monthLabel={monthLabel}
+              onRedo={() => redoMutation.mutate(monthKey)}
+              isRedoing={redoMutation.isPending}
             />
           </div>
-
-          {/* 이번 달 내역 확인·추가 (별도 페이지에서 영수증 첨부·내역 추가) */}
-          <Button
-            data-testid="settlement-entries-link"
-            variant="outline"
-            className="mt-4 w-full justify-start gap-2"
-            onClick={() => router.push(`/inner/cashbook/settlement/entries?month=${monthKey}`)}
-          >
-            <ListChecks size={16} className="text-primary" />
-            이번 달 내역 확인·추가
-          </Button>
-
-          {/* 첨부 갤러리 (결산 완료 전까지 유지) */}
-          <div className="mt-3">
-            <SettlementAttachmentGallery
-              attachments={settlement?.attachments ?? []}
-              onRemove={(att) => removeAttachment.mutate({ monthKey, attachment: att })}
-              removingId={
-                removeAttachment.isPending ? removeAttachment.variables?.attachment.id : null
-              }
-            />
-          </div>
-
-          {/* 차트 영역 */}
-          <section className="mt-6 space-y-6">
-            {/* 예산 vs 실적 */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-semibold">카테고리별 예산 vs 실적</h2>
-                {showBudgetChart && pngButton('budget', 'budget', () => budgetChartRef.current)}
-              </div>
-              {showBudgetChart ? (
-                <div ref={budgetChartRef} className="rounded-xl bg-card p-2">
-                  <BudgetVsActualChart data={barData} />
-                </div>
-              ) : (
-                <div data-testid="settlement-budget-empty">
-                  <EmptyState
-                    icon={<CalendarDays size={40} className="text-muted-foreground" />}
-                    title="예산 정보가 없어요"
-                    description="연간 계획을 설정하면 예산 대비 분석을 볼 수 있어요"
-                    action={
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push('/inner/cashbook/plan/annual')}
-                      >
-                        연간 계획 설정
-                      </Button>
-                    }
-                  />
-                </div>
-              )}
+        ) : (
+          <>
+            {/* 수입 · 지출 · FLEX 요약 */}
+            <div className="mt-2">
+              <SettlementSummaryHeader
+                income={incomeActual}
+                expense={expenseActual}
+                flex={flexActual}
+              />
             </div>
 
-            {/* 수입 · 지출 · FLEX */}
-            {pieData.length > 0 && (
+            {/* 이번 달 내역 확인·추가 (별도 페이지에서 영수증 첨부·내역 추가) */}
+            <Button
+              data-testid="settlement-entries-link"
+              variant="outline"
+              className="mt-4 w-full justify-start gap-2"
+              onClick={() => router.push(`/inner/cashbook/settlement/entries?month=${monthKey}`)}
+            >
+              <ListChecks size={16} className="text-primary" />
+              이번 달 내역 확인·추가
+            </Button>
+
+            {/* 첨부 갤러리 (결산 완료 전까지 유지) */}
+            <div className="mt-3">
+              <SettlementAttachmentGallery
+                attachments={settlement?.attachments ?? []}
+                onRemove={(att) => removeAttachment.mutate({ monthKey, attachment: att })}
+                removingId={
+                  removeAttachment.isPending ? removeAttachment.variables?.attachment.id : null
+                }
+              />
+            </div>
+
+            {/* 차트 영역 */}
+            <section className="mt-6 space-y-6">
+              {/* 예산 vs 실적 */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold">수입 · 지출 · FLEX 구성</h2>
-                  {pngButton('pie', 'income-expense', () => pieChartRef.current)}
+                  <h2 className="text-sm font-semibold">카테고리별 예산 vs 실적</h2>
+                  {showBudgetChart && pngButton('budget', 'budget', () => budgetChartRef.current)}
                 </div>
-                <div ref={pieChartRef} className="rounded-xl bg-card p-2">
-                  <IncomeExpensePieChart data={pieData} />
-                </div>
+                {showBudgetChart ? (
+                  <div ref={budgetChartRef} className="rounded-xl bg-card p-2">
+                    <BudgetVsActualChart data={barData} />
+                  </div>
+                ) : (
+                  <div data-testid="settlement-budget-empty">
+                    <EmptyState
+                      icon={<CalendarDays size={40} className="text-muted-foreground" />}
+                      title="예산 정보가 없어요"
+                      description="연간 계획을 설정하면 예산 대비 분석을 볼 수 있어요"
+                      action={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push('/inner/cashbook/plan/annual')}
+                        >
+                          연간 계획 설정
+                        </Button>
+                      }
+                    />
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* 일별 누적 지출 + 예산 천장 */}
-            {hasEntries && (
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold">일별 누적 지출</h2>
-                  {pngButton('daily', 'daily', () => dailyChartRef.current)}
+              {/* 수입 · 지출 · FLEX */}
+              {pieData.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold">수입 · 지출 · FLEX 구성</h2>
+                    {pngButton('pie', 'income-expense', () => pieChartRef.current)}
+                  </div>
+                  <div ref={pieChartRef} className="rounded-xl bg-card p-2">
+                    <IncomeExpensePieChart data={pieData} />
+                  </div>
                 </div>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  {spentPct !== null
-                    ? `오늘까지 이번 달 예산의 ${spentPct}%를 썼어요. 선이 예산선에 닿을수록 예산을 다 쓴 거예요.`
-                    : '쓴 돈이 쌓이는 추이예요. 예산을 설정하면 천장선이 함께 표시돼요.'}
-                </p>
-                <div ref={dailyChartRef} className="rounded-xl bg-card p-2">
-                  <DailyCumulativeChart data={dailyData} budgetCeiling={spendingBudget} />
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* AI 결산 보고서 */}
-          <section className="mt-8 border-t pt-6">
-            <h2 className="mb-3 text-sm font-semibold">AI 결산 보고서</h2>
-            {hasEntries ? (
-              <SettlementReport
-                key={monthLabel}
-                params={aiParams}
-                analyzeFn={analyzeSpending}
-                monthLabel={monthLabel}
-                charts={reportCharts}
-                onContentChange={setAiAnalysis}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                이번 달 내역이 없어요. 내역을 추가하면 보고서를 만들 수 있어요.
-              </p>
-            )}
-          </section>
-
-          {/* 결산 완료 */}
-          <div className="mt-8">
-            <Button
-              data-testid="settlement-complete-btn"
-              size="lg"
-              className="w-full gap-2"
-              onClick={handleComplete}
-              disabled={completeMutation.isPending}
-            >
-              {completeMutation.isPending ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <CheckCircle2 size={16} />
               )}
-              결산 완료
-            </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              완료하면 첨부 이미지는 삭제되고 보고서가 저장돼요.
-            </p>
-          </div>
-        </>
-      )}
-    </main>
+
+              {/* 일별 누적 지출 + 예산 천장 */}
+              {hasEntries && (
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold">일별 누적 지출</h2>
+                    {pngButton('daily', 'daily', () => dailyChartRef.current)}
+                  </div>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    {spentPct !== null
+                      ? `오늘까지 이번 달 예산의 ${spentPct}%를 썼어요. 선이 예산선에 닿을수록 예산을 다 쓴 거예요.`
+                      : '쓴 돈이 쌓이는 추이예요. 예산을 설정하면 천장선이 함께 표시돼요.'}
+                  </p>
+                  <div ref={dailyChartRef} className="rounded-xl bg-card p-2">
+                    <DailyCumulativeChart data={dailyData} budgetCeiling={spendingBudget} />
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* AI 결산 보고서 */}
+            <section className="mt-8 border-t pt-6">
+              <h2 className="mb-3 text-sm font-semibold">AI 결산 보고서</h2>
+              {hasEntries ? (
+                <SettlementReport
+                  key={monthLabel}
+                  params={aiParams}
+                  analyzeFn={analyzeSpending}
+                  monthLabel={monthLabel}
+                  charts={reportCharts}
+                  onContentChange={setAiAnalysis}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  이번 달 내역이 없어요. 내역을 추가하면 보고서를 만들 수 있어요.
+                </p>
+              )}
+            </section>
+
+            {/* 결산 완료 */}
+            <div className="mt-8">
+              <Button
+                data-testid="settlement-complete-btn"
+                size="lg"
+                className="w-full gap-2"
+                onClick={handleComplete}
+                disabled={completeMutation.isPending}
+              >
+                {completeMutation.isPending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <CheckCircle2 size={16} />
+                )}
+                결산 완료
+              </Button>
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                완료하면 첨부 이미지는 삭제되고 보고서가 저장돼요.
+              </p>
+            </div>
+          </>
+        )}
+      </main>
+    </>
   );
 }

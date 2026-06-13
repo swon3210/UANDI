@@ -3,8 +3,6 @@ import { type Page, type Locator } from '@playwright/test';
 export class DashboardPage {
   readonly page: Page;
   readonly header: Locator;
-  readonly sidebarTrigger: Locator;
-  readonly sidebar: Locator;
 
   // 가계부 대시보드
   readonly periodSelector: Locator;
@@ -30,9 +28,6 @@ export class DashboardPage {
   readonly emptyState: Locator;
   readonly categorySelector: Locator;
 
-  // 진입점
-  readonly entryBudget: Locator;
-
   categoryChip(name: string): Locator {
     return this.page.getByTestId(`category-chip-${name}`);
   }
@@ -44,8 +39,6 @@ export class DashboardPage {
   constructor(page: Page) {
     this.page = page;
     this.header = page.getByTestId('dashboard-header');
-    this.sidebarTrigger = page.getByTestId('sidebar-trigger');
-    this.sidebar = page.getByTestId('app-sidebar');
 
     this.periodSelector = page.getByTestId('period-selector');
     this.periodTabWeekly = this.periodSelector.getByRole('tab', { name: '주간' });
@@ -69,8 +62,6 @@ export class DashboardPage {
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
     this.categorySelector = page.getByTestId('category-selector');
-
-    this.entryBudget = page.getByTestId('dashboard-entry-budget');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

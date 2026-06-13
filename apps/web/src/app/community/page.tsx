@@ -5,10 +5,10 @@ import { MessageCircle, Pencil } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import {
-  Button,
   CommunityComposer,
   CommunityPostCard,
   EmptyState,
+  Fab,
   ReportMenu,
   Sheet,
   Skeleton,
@@ -199,21 +199,12 @@ export default function CommunityFeedPage() {
 
   return (
     <>
-      <PageHeader
-        title="커뮤니티"
-        data-testid="community-header"
-        rightSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label="글쓰기"
-            data-testid="community-write"
-            onClick={openComposer}
-          >
-            <Pencil size={18} />
-          </Button>
-        }
+      <PageHeader title="커뮤니티" data-testid="community-header" />
+      <Fab
+        icon={<Pencil size={20} />}
+        label="글쓰기"
+        data-testid="community-write"
+        onClick={openComposer}
       />
       <main className="mx-auto max-w-md px-4 pb-8 pt-4">
         {isLoading ? (
@@ -229,8 +220,7 @@ export default function CommunityFeedPage() {
         ) : (
           <div className="space-y-4">
             {posts.map((post) => {
-              const isOwner =
-                post.type === 'user' && !!user && post.author?.uid === user.uid;
+              const isOwner = post.type === 'user' && !!user && post.author?.uid === user.uid;
               // 본인 글: 수정+삭제, 타인 글/스크랩: 신고만. (community-feed.md 액션 메뉴)
               const actionSlot = isOwner ? (
                 <ReportMenu

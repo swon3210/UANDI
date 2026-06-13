@@ -4,10 +4,7 @@ import { CashbookSubNav } from './CashbookSubNav';
 const meta: Meta<typeof CashbookSubNav> = {
   title: 'cashbook/CashbookSubNav',
   component: CashbookSubNav,
-  parameters: {
-    layout: 'fullscreen',
-    nextjs: { appDirectory: true },
-  },
+  parameters: { layout: 'fullscreen' },
   decorators: [
     (Story) => (
       <div className="max-w-md mx-auto">
@@ -21,19 +18,16 @@ export default meta;
 type Story = StoryObj<typeof CashbookSubNav>;
 
 export const Default: Story = {
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/inner/cashbook/history' } },
-  },
-};
-
-export const MonthlyActive: Story = {
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/inner/cashbook/history/monthly' } },
-  },
+  name: '내역 활성',
+  args: { activePath: '/inner/cashbook/history' },
 };
 
 export const WeeklyActive: Story = {
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/inner/cashbook/history/weekly' } },
-  },
+  name: '주간 활성',
+  args: { activePath: '/inner/cashbook/history/weekly' },
+};
+
+export const MonthlyActive: Story = {
+  name: '월간 활성',
+  args: { activePath: '/inner/cashbook/history/monthly' },
 };

@@ -10,6 +10,7 @@ import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
+import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
 
 const WIZARD_INTRO = '/inner/cashbook/plan/annual/wizard?step=intro';
@@ -95,6 +96,8 @@ export default function AnnualPlanPage() {
           </div>
         }
       />
+
+      <CashbookTabs />
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-20">
         {items && <GoalsMainView items={items} onSelectCategory={goToCategory} />}

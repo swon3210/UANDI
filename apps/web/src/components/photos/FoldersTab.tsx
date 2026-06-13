@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
+import { FolderPlus } from 'lucide-react';
 import { Button, EmptyState, Skeleton } from '@uandi/ui';
 import { useFolders } from '@/hooks/useFolders';
 import { FolderCard } from '@/components/photos/FolderCard';
@@ -61,6 +62,17 @@ export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
         sortBy={sortBy}
         onSortByChange={setSortBy}
       />
+      <div className="px-4 pb-1 pt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onCreateFolder}
+          data-testid="create-folder-btn"
+          className="w-full justify-center"
+        >
+          <FolderPlus size={16} className="mr-1.5" />새 폴더
+        </Button>
+      </div>
       {folders.length === 0 ? (
         isSearching ? (
           <EmptyState
@@ -72,8 +84,7 @@ export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
           <EmptyState
             icon="📁"
             title="폴더를 만들어 사진을 정리해보세요"
-            description="여행, 일상 등 주제별로 사진을 분류할 수 있어요"
-            action={<Button onClick={onCreateFolder}>새 폴더 만들기</Button>}
+            description="위 ‘새 폴더’ 버튼으로 여행·일상 등 주제별로 분류할 수 있어요"
           />
         )
       ) : (

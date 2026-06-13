@@ -10,14 +10,16 @@ const TABS = [
   { label: '월간', href: '/inner/cashbook/history/monthly', exact: false },
 ] as const;
 
-export function CashbookSubNav() {
+export function CashbookSubNav({ activePath }: { activePath?: string }) {
   const pathname = usePathname();
+  // 앱에서는 usePathname, 스토리/테스트에서는 activePath로 활성 탭을 주입한다.
+  const current = activePath ?? pathname ?? '';
 
   return (
     <div className="max-w-md mx-auto w-full px-4 pt-2">
       <nav className="flex h-10 items-center bg-muted rounded-md">
         {TABS.map(({ label, href, exact }) => {
-          const isActive = exact ? pathname === href : pathname.startsWith(href);
+          const isActive = exact ? current === href : current.startsWith(href);
           return (
             <Link
               key={href}

@@ -23,13 +23,6 @@ test.describe('사진 갤러리', () => {
       await expect(photos.getPhotoThumbnails()).toHaveCount(2, { timeout: 10000 });
     });
 
-    test('메뉴 버튼으로 사이드바를 열 수 있다', async ({ authedContext }) => {
-      const photos = new PhotosPage(authedContext.page);
-      await photos.goto();
-      await photos.sidebarTrigger.click();
-      await expect(photos.sidebar).toBeVisible();
-      await expect(photos.sidebar).toContainText('사진');
-    });
   });
 
   test.describe('폴더 탭', () => {

@@ -1,34 +1,25 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-import { Menu } from 'lucide-react';
-import { Button, Header } from '@uandi/ui';
-import { openAppSidebar } from '@/components/shell/AppSidebar';
+import { Header } from '@uandi/ui';
+import { ProfileMenu } from '@/components/shell/ProfileMenu';
 
 type HeaderProps = ComponentProps<typeof Header>;
 
 /**
- * AppShell 안에서 사용하는 페이지 헤더. shadcn Header 좌측에 사이드바 토글
- * 메뉴 버튼을 자동 prepend하여 어디서나 공간/페이지 이동이 가능하게 한다.
+ * AppShell 안에서 사용하는 페이지 헤더. 우측에 전역 프로필 메뉴(설정·로그아웃)를
+ * 자동으로 붙여, BottomNav로 이동하는 모든 페이지에서 계정 메뉴에 접근할 수 있게 한다.
+ * 페이지별 액션은 rightSlot으로 넘기면 프로필 왼쪽에 배치된다.
  */
-export function PageHeader({ leftSlot, ...rest }: HeaderProps) {
+export function PageHeader({ rightSlot, ...rest }: HeaderProps) {
   return (
     <Header
       {...rest}
-      leftSlot={
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={openAppSidebar}
-            aria-label="메뉴 열기"
-            data-testid="sidebar-trigger"
-          >
-            <Menu size={20} />
-          </Button>
-          {leftSlot}
-        </>
+      rightSlot={
+        <div className="flex items-center gap-1">
+          {rightSlot}
+          <ProfileMenu />
+        </div>
       }
     />
   );

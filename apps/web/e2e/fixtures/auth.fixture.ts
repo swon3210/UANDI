@@ -54,8 +54,10 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
-  noCoupleAuthedPage: async ({ page }, use) => {
+  noCoupleAuthedPage: async ({ page, context }, use) => {
     await clearEmulatorData();
+    // 이전 테스트에서 남은 쿠키 제거 (미들웨어가 잘못 리다이렉트하지 않도록)
+    await context.clearCookies();
     const uid = await createTestUser(EMAIL_1, PASSWORD);
     await seedUserDocument(uid, EMAIL_1, null);
 

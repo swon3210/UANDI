@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, ChevronRight, User as UserIcon } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { Header, Button, Avatar, AvatarImage, AvatarFallback, Separator } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,6 +65,17 @@ export default function SettingsPage() {
               {user.email}
             </span>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Link
+            href="/inner/cashbook/settings"
+            data-testid="settings-cashbook"
+            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
+          >
+            가계부 설정
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
         </div>
 
         <Separator />

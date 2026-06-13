@@ -14,6 +14,7 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAddPrediction, useDeletePrediction } from '@/hooks/usePredictions';
 import { CashflowCardList } from '@/components/cashbook/CashflowCardList';
 import { CashflowNegativeBanner } from '@/components/cashbook/CashflowNegativeBanner';
+import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
 import {
   CashflowSettingsForm,
   type CashflowSettingsFormValue,
@@ -166,6 +167,8 @@ export default function CashflowCalendarPage() {
           </Button>
         }
       />
+
+      <CashbookTabs />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         {isLoading ? (
