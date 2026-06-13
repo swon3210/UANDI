@@ -99,9 +99,10 @@ test.describe('커뮤니티 크롤 소스 관리 (/community/admin · 소스 관
     await expect(admin.pendingCards).toHaveCount(2);
     await expect(admin.pendingCards.first()).toContainText('설거지');
 
-    // 같은 피드를 다시 수집해도 중복 생성되지 않는다
+    // 같은 피드를 다시 수집하면 새 글 0건이지만, 조용히 끝내지 않고 중복 스킵을 알린다
     await admin.sourcesTab.click();
     await admin.crawlNowButton.click();
+    await expect(page.getByText(/이미 수집된 .*건을 건너뛰었어요/)).toBeVisible();
     await admin.pendingTab.click();
     await expect(admin.pendingCards).toHaveCount(2);
   });
