@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { FullScreenSpinner, type Space } from '@uandi/ui';
 import { authStatusAtom } from '@/stores/auth.store';
+import { AppNav } from '@/components/shell/AppNav';
 
 type AppShellProps = {
   space: Space;
@@ -32,8 +33,12 @@ export function AppShell({ space, children }: AppShellProps) {
   }
 
   return (
-    <div data-space={space} className="min-h-screen">
+    <div
+      data-space={space}
+      className="min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 md:pl-20"
+    >
       {children}
+      <AppNav />
     </div>
   );
 }

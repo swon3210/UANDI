@@ -15,7 +15,7 @@ export default function HomePage() {
     if (authStatus === 'authenticated_no_couple') {
       router.replace('/onboarding');
     } else if (authStatus === 'authenticated_with_couple') {
-      router.replace('/inner');
+      router.replace('/inner/cashbook');
     }
   }, [authStatus, router]);
 

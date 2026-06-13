@@ -2,13 +2,14 @@
 
 import { useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FolderPlus, ImagePlus } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import {
   EmptyState,
   Button,
+  Fab,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -209,34 +210,7 @@ export function PhotosGallery() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader
-        title="갤러리"
-        rightSlot={
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleUpload}
-              aria-label="사진 업로드"
-              data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
-            >
-              <ImagePlus size={20} />
-            </Button>
-            {activeTab === 'folders' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCreateFolder}
-                aria-label="새 폴더"
-                data-testid="create-folder-btn"
-                data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
-              >
-                <FolderPlus size={20} />
-              </Button>
-            )}
-          </div>
-        }
-      />
+      <PageHeader title="갤러리" />
       <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
           <TabsList className="w-full rounded-none bg-background h-11">
@@ -261,6 +235,12 @@ export function PhotosGallery() {
           </TabsContent>
         </Tabs>
       </div>
+      <Fab
+        icon={<ImagePlus size={22} />}
+        label="사진 업로드"
+        onClick={handleUpload}
+        data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
+      />
     </div>
   );
 }

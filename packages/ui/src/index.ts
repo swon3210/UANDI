@@ -17,6 +17,10 @@ export type {
   SidebarLinkProps,
   AppSidebarProps,
 } from './custom/AppSidebar';
+export { AppNav, getActiveNavId } from './custom/AppNav';
+export type { AppNavItem, AppNavLinkProps, AppNavProps } from './custom/AppNav';
+export { Fab } from './custom/Fab';
+export type { FabProps } from './custom/Fab';
 
 // 커뮤니티 카드 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { PostAuthor } from './custom/community/PostAuthor';

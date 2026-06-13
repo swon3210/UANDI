@@ -1,22 +1,12 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { CommunityPage } from '../page-objects/CommunityPage';
-import { DashboardPage } from '../page-objects/DashboardPage';
+import { AppNavPage } from '../page-objects/AppNavPage';
 
 test.describe('커뮤니티 셸·네비게이션', () => {
-  test('사이드바를 열면 커뮤니티 섹션과 피드 항목이 표시된다', async ({ authedPage }) => {
-    const dashboard = new DashboardPage(authedPage);
-    await dashboard.sidebarTrigger.click();
-    await expect(dashboard.sidebar).toBeVisible();
-    await expect(dashboard.sidebar).toContainText('커뮤니티');
-    await expect(dashboard.sidebar.getByRole('link', { name: '피드' })).toBeVisible();
-  });
-
-  test('사이드바에서 피드를 누르면 /community로 이동한다', async ({ authedPage }) => {
-    const community = new CommunityPage(authedPage);
-    await community.sidebarTrigger.click();
-    await expect(community.sidebar).toBeVisible();
-    await community.feedLink().click();
+  test('하단탭의 커뮤니티 탭을 누르면 /community로 이동한다', async ({ authedPage }) => {
+    const nav = new AppNavPage(authedPage);
+    await nav.tabCommunity.click();
     await expect(authedPage).toHaveURL(/\/community$/, { timeout: 30000 });
   });
 

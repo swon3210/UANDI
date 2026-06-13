@@ -45,18 +45,15 @@ async function seedSettlementData(coupleId: string, uid: string) {
 }
 
 test.describe('월 결산 페이지', () => {
-  test('더보기 메뉴 → 결산 페이지로 이동하면 예산 vs 실적 차트가 표시된다', async ({
-    authedContext,
-  }) => {
+  test('결산 탭으로 이동하면 예산 vs 실적 차트가 표시된다', async ({ authedContext }) => {
     const { page, coupleId, uid } = authedContext;
     await seedSettlementData(coupleId, uid);
 
     await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
-    // 더보기 메뉴에서 "월 결산" 진입
-    await page.getByTestId('cashbook-more-menu').click();
-    await page.getByTestId('menu-settlement').click();
+    // 상단 탭에서 "결산" 진입
+    await page.getByTestId('cashbook-tab-settlement').click();
 
     await expect(page).toHaveURL(/\/inner\/cashbook\/settlement/);
 

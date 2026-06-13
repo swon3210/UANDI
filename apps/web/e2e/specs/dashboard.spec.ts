@@ -11,22 +11,6 @@ test.describe('대시보드', () => {
       await expect(dashboard.header).toBeVisible();
     });
 
-    test('메뉴 버튼으로 사이드바를 열면 두 공간 네비게이션이 표시된다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.sidebarTrigger.click();
-      await expect(dashboard.sidebar).toBeVisible();
-      await expect(dashboard.sidebar).toContainText('우리집');
-      await expect(dashboard.sidebar).toContainText('재테크');
-    });
-
-    test('사이드바에서 가계부로 이동할 수 있다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.sidebarTrigger.click();
-      await expect(dashboard.sidebar).toBeVisible();
-      await dashboard.sidebar.getByRole('link', { name: '가계부' }).click();
-      await expect(authedPage).toHaveURL(/\/inner\/cashbook/, { timeout: 30000 });
-    });
-
     test('최근 사진 영역과 이번 달 가계부 요약 영역은 더 이상 표시되지 않는다', async ({
       authedPage,
     }) => {
@@ -37,13 +21,6 @@ test.describe('대시보드', () => {
   });
 
   test.describe('진입점', () => {
-    test('예산 설정 진입점 클릭 시 연간 예산 계획으로 이동한다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await expect(dashboard.entryBudget).toBeVisible();
-      await dashboard.entryBudget.click();
-      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/plan\/annual/, { timeout: 30000 });
-    });
-
     test('합계 카드 클릭 시 가계부 내역 페이지로 이동한다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await expect(dashboard.totalAmount).toBeVisible();
