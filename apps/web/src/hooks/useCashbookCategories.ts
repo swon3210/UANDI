@@ -56,6 +56,7 @@ export function useUpdateCategory(coupleId: string | null) {
           | 'description'
           | 'examples'
           | 'recurrence'
+          | 'recurrenceSuggestionDismissed'
         >
       >;
     }) => updateCategory(coupleId!, categoryId, data),

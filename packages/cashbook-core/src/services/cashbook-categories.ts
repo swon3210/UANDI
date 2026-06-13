@@ -20,10 +20,7 @@ function categoriesCol(db: Firestore, coupleId: string) {
   return collection(db, `couples/${coupleId}/cashbookCategories`);
 }
 
-export async function getCategories(
-  db: Firestore,
-  coupleId: string
-): Promise<CashbookCategory[]> {
+export async function getCategories(db: Firestore, coupleId: string): Promise<CashbookCategory[]> {
   const q = query(categoriesCol(db, coupleId), orderBy('group'), orderBy('sortOrder'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashbookCategory);
@@ -45,10 +42,7 @@ async function getChildCategories(
   coupleId: string,
   parentCategoryId: string
 ): Promise<CashbookCategory[]> {
-  const q = query(
-    categoriesCol(db, coupleId),
-    where('parentCategoryId', '==', parentCategoryId)
-  );
+  const q = query(categoriesCol(db, coupleId), where('parentCategoryId', '==', parentCategoryId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashbookCategory);
 }
@@ -134,6 +128,7 @@ export async function updateCategory(
       | 'description'
       | 'examples'
       | 'recurrence'
+      | 'recurrenceSuggestionDismissed'
     >
   >
 ): Promise<void> {
@@ -181,10 +176,7 @@ export async function deleteCategory(
   await batch.commit();
 }
 
-export async function initDefaultCategories(
-  db: Firestore,
-  coupleId: string
-): Promise<void> {
+export async function initDefaultCategories(db: Firestore, coupleId: string): Promise<void> {
   const batch = writeBatch(db);
 
   for (const cat of DEFAULT_CATEGORIES) {

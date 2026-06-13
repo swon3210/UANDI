@@ -5,12 +5,18 @@ import dayjs from 'dayjs';
 import { useCashflowSettings } from './useCashflowSettings';
 import { useCashbookEntriesInRange } from './useCashbook';
 import { useActivePredictions } from './usePredictions';
+import { useCashbookCategories } from './useCashbookCategories';
 import {
   buildPaydayInstances,
   buildWeeklyBuckets,
   paydayBoundaries,
   weeklyBoundaries,
   buildCashflowCards,
+  buildRecurrenceOccurrences,
+  recurrenceTransactions,
+  recurrenceBoundaries,
+  mergeBoundariesByDate,
+  recurrenceMonthKey,
   type CashflowCardData,
   type CashflowTransaction,
 } from '@/utils/cashflow';
@@ -37,10 +43,7 @@ export type CashflowCalendarResult = {
  */
 export function useCashflowCalendar(coupleId: string | null): CashflowCalendarResult {
   const from = useMemo(() => dayjs().startOf('day'), []);
-  const horizonEnd = useMemo(
-    () => from.add(CASHFLOW_HORIZON_MONTHS, 'month').endOf('day'),
-    [from]
-  );
+  const horizonEnd = useMemo(() => from.add(CASHFLOW_HORIZON_MONTHS, 'month').endOf('day'), [from]);
 
   const { data: settings, isLoading: settingsLoading } = useCashflowSettings(coupleId);
   const { data: entries, isLoading: entriesLoading } = useCashbookEntriesInRange(
@@ -52,6 +55,7 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
     coupleId,
     from.toDate()
   );
+  const { data: categories } = useCashbookCategories(coupleId);
 
   // §7-2 변동지출 추정용 과거 내역 (variableMode개월)
   const variableMode = settings?.variableMode ?? DEFAULT_CASHFLOW_VARIABLE_MODE;
@@ -69,9 +73,21 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
     const currentCash = settings?.currentCash ?? 0;
     const paydays = settings?.paydays ?? [];
 
-    const boundaries =
+    // Phase 2: 카드 경계 = recurrence 발생일(체크포인트) + 레거시 결제일(있으면) 병합.
+    // 둘 다 없으면 주 단위 폴백. (수동 결제일 입력 UI는 폐지됐고, 기존 데이터는 경계로만 잔존.)
+    const occurrences = buildRecurrenceOccurrences(categories ?? [], {
+      from,
+      months: CASHFLOW_HORIZON_MONTHS,
+    });
+    const recurB = recurrenceBoundaries(occurrences);
+    const paydayB =
       paydays.length > 0
         ? paydayBoundaries(buildPaydayInstances(paydays, from, CASHFLOW_HORIZON_MONTHS))
+        : [];
+    const merged = mergeBoundariesByDate(paydayB, recurB);
+    const boundaries =
+      merged.length > 0
+        ? merged
         : weeklyBoundaries(buildWeeklyBuckets(from, CASHFLOW_HORIZON_MONTHS));
 
     const txns: CashflowTransaction[] = [];
@@ -99,11 +115,26 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
       });
     }
 
+    // recurrence(고정 지출/수입 정기 발생)를 합성 예측으로 합친다(이중계산 방지 게이트 적용).
+    // - G1: 실거래(미래 horizon + 최근 과거)가 있는 달은 제외 → 그 달은 실거래로만 계산.
+    // - G2: 이미 활성 예측이 잡힌 달은 제외 → 캘린더/자동감지 예측과 중복 방지.
+    const actualKeys = new Set<string>();
+    for (const e of entries ?? []) actualKeys.add(recurrenceMonthKey(e.category, e.date.toDate()));
+    for (const e of pastEntries ?? [])
+      actualKeys.add(recurrenceMonthKey(e.category, e.date.toDate()));
+    const activePredictionKeys = new Set<string>();
+    for (const p of predictions ?? [])
+      activePredictionKeys.add(recurrenceMonthKey(p.category, p.date.toDate()));
+
+    for (const t of recurrenceTransactions(occurrences, { actualKeys, activePredictionKeys })) {
+      txns.push(t);
+    }
+
     return buildCashflowCards(boundaries, txns, currentCash, {
       from: from.toDate(),
       estimatedDailyVariable,
     });
-  }, [settings, entries, predictions, from, estimatedDailyVariable]);
+  }, [settings, entries, predictions, pastEntries, categories, from, estimatedDailyVariable]);
 
   return {
     cards,

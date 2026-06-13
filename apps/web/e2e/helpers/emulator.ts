@@ -98,9 +98,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
           coupleId: { stringValue: coupleId },
           createdBy: { stringValue: uid },
           expiresAt: { timestampValue: expiresAt },
-          consumedBy: secondMemberUid
-            ? { stringValue: secondMemberUid }
-            : { nullValue: null },
+          consumedBy: secondMemberUid ? { stringValue: secondMemberUid } : { nullValue: null },
           createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
@@ -192,6 +190,16 @@ export async function seedFolder(
   return folderId;
 }
 
+type SeedRecurrence = {
+  enabled: boolean;
+  kind: 'dayOfMonth' | 'nthWeekday';
+  dayOfMonth?: number;
+  week?: number;
+  weekday?: number;
+  leadDays?: number;
+  expectedAmount?: number | null;
+};
+
 export async function seedCashbookCategory(
   coupleId: string,
   options: {
@@ -205,39 +213,54 @@ export async function seedCashbookCategory(
     parentCategoryId?: string | null;
     description?: string;
     examples?: string[];
+    recurrence?: SeedRecurrence;
   }
 ): Promise<string> {
   const categoryId = `cat-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const parentCategoryId = options.parentCategoryId ?? null;
   const examples = options.examples ?? [];
 
+  const fields: Record<string, unknown> = {
+    id: { stringValue: categoryId },
+    coupleId: { stringValue: coupleId },
+    group: { stringValue: options.group },
+    subGroup: { stringValue: options.subGroup },
+    name: { stringValue: options.name },
+    icon: { stringValue: options.icon },
+    color: { stringValue: options.color ?? '#D8635A' },
+    isDefault: { booleanValue: options.isDefault ?? true },
+    sortOrder: { integerValue: String(options.sortOrder ?? 0) },
+    parentCategoryId:
+      parentCategoryId === null ? { nullValue: null } : { stringValue: parentCategoryId },
+    description: { stringValue: options.description ?? '' },
+    examples: {
+      arrayValue: {
+        values: examples.map((v) => ({ stringValue: v })),
+      },
+    },
+    createdAt: { timestampValue: new Date().toISOString() },
+  };
+
+  if (options.recurrence) {
+    const r = options.recurrence;
+    const rf: Record<string, unknown> = {
+      enabled: { booleanValue: r.enabled },
+      kind: { stringValue: r.kind },
+    };
+    if (r.dayOfMonth != null) rf.dayOfMonth = { integerValue: String(r.dayOfMonth) };
+    if (r.week != null) rf.week = { integerValue: String(r.week) };
+    if (r.weekday != null) rf.weekday = { integerValue: String(r.weekday) };
+    if (r.leadDays != null) rf.leadDays = { integerValue: String(r.leadDays) };
+    if (r.expectedAmount != null) rf.expectedAmount = { integerValue: String(r.expectedAmount) };
+    fields.recurrence = { mapValue: { fields: rf } };
+  }
+
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookCategories/${categoryId}`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
-      body: JSON.stringify({
-        fields: {
-          id: { stringValue: categoryId },
-          coupleId: { stringValue: coupleId },
-          group: { stringValue: options.group },
-          subGroup: { stringValue: options.subGroup },
-          name: { stringValue: options.name },
-          icon: { stringValue: options.icon },
-          color: { stringValue: options.color ?? '#D8635A' },
-          isDefault: { booleanValue: options.isDefault ?? true },
-          sortOrder: { integerValue: String(options.sortOrder ?? 0) },
-          parentCategoryId:
-            parentCategoryId === null ? { nullValue: null } : { stringValue: parentCategoryId },
-          description: { stringValue: options.description ?? '' },
-          examples: {
-            arrayValue: {
-              values: examples.map((v) => ({ stringValue: v })),
-            },
-          },
-          createdAt: { timestampValue: new Date().toISOString() },
-        },
-      }),
+      body: JSON.stringify({ fields }),
     }
   );
 

@@ -39,14 +39,6 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-current-cash');
   }
 
-  get addPaydayButton(): Locator {
-    return this.page.getByTestId('cashflow-add-payday');
-  }
-
-  get paydayRows(): Locator {
-    return this.page.getByTestId('cashflow-payday-row');
-  }
-
   get saveButton(): Locator {
     return this.page.getByTestId('cashflow-settings-save');
   }
@@ -64,15 +56,9 @@ export class CashflowPage {
     await this.settingsSheet.waitFor({ state: 'visible' });
   }
 
-  /** 설정 시트에서 현재 보유 현금 + (선택) 결제일 1개를 입력하고 저장한다. */
-  async fillSettings(options: { currentCash: number; payday?: { label: string; day: number } }) {
+  /** 설정 시트에서 현재 보유 현금을 입력하고 저장한다(Phase 2: 결제일 수동 입력 폐지). */
+  async fillSettings(options: { currentCash: number }) {
     await this.currentCashInput.fill(String(options.currentCash));
-    if (options.payday) {
-      await this.addPaydayButton.click();
-      const row = this.paydayRows.last();
-      await row.getByPlaceholder('예: 월세, 관리비, 대출이자').fill(options.payday.label);
-      await row.getByLabel('매월 지출일').fill(String(options.payday.day));
-    }
     await this.saveButton.click();
     await this.settingsSheet.waitFor({ state: 'hidden' });
   }

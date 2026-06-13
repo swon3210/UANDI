@@ -13,10 +13,9 @@ export async function getCashflowSettings(coupleId: string): Promise<CashflowSet
   return snap.data() as CashflowSettings;
 }
 
-export type CashflowSettingsInput = Pick<
-  CashflowSettings,
-  'currentCash' | 'paydays' | 'variableMode'
->;
+// paydays는 Phase 2에서 수동 입력 UI가 폐지돼 선택적이다(미전달 시 setDoc merge로 기존 값 보존).
+export type CashflowSettingsInput = Pick<CashflowSettings, 'currentCash' | 'variableMode'> &
+  Partial<Pick<CashflowSettings, 'paydays'>>;
 
 export async function updateCashflowSettings(
   coupleId: string,
