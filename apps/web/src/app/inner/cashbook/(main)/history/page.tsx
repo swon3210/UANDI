@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
+import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import { BookOpen } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
@@ -29,7 +30,7 @@ import {
   useRejectPrediction,
   useDismissPrompt,
 } from '@/hooks/usePredictions';
-import { useAutoPredictions } from '@/hooks/useAutoPredictions';
+import { useRecurrencePrompts } from '@/hooks/useRecurrencePrompts';
 import { resolvePeriod, formatDay } from '@/utils/date';
 import { CashbookFilterBar } from '@/components/cashbook/CashbookFilterBar';
 import { CashbookFilterSheet } from '@/components/cashbook/CashbookFilterSheet';
@@ -157,11 +158,10 @@ export default function CashbookPage() {
   const rejectPredictionMutation = useRejectPrediction(coupleId);
   const dismissPromptMutation = useDismissPrompt(coupleId);
 
-  // 가계부 진입 시 1회 고정지출 자동 감지(§7-1)
-  useAutoPredictions(coupleId);
-
   // 표시 기간의 '오늘 이후' 미확정 예측을 날짜별로 묶는다(SYNC-02).
   const promptsByDate = useDayPredictions(coupleId, range.start, range.end);
+  // 카테고리 정기 발생을 같은 화면의 "예상 수입/지출" 프롬프트로 읽기 시점에 파생(Phase 4).
+  const recurrencePromptsByDate = useRecurrencePrompts(coupleId, range);
   const predictionById = useMemo(() => {
     const m = new Map<string, CashbookPrediction>();
     for (const list of promptsByDate.values()) for (const p of list) m.set(p.id, p);
@@ -173,28 +173,30 @@ export default function CashbookPage() {
     [categories]
   );
 
-  // 날짜 정렬 모드에서 거래 그룹 + 예측 프롬프트를 같은 날짜로 합친다.
+  // 날짜 정렬 모드에서 거래 그룹 + 예측 프롬프트(doc 기반 + 정기 발생 파생)를 같은 날짜로 합친다.
   const daySections = useMemo(() => {
     if (!isDateSort(filter.sort)) return [];
     const map = new Map<
       string,
-      { date: Date; entries: CashbookEntry[]; prompts: CashbookPrediction[] }
+      { date: Date; entries: CashbookEntry[]; promptViews: PredictionPromptView[] }
     >();
     for (const g of groups) {
       map.set(dayjs(g.date).format('YYYY-MM-DD'), {
         date: g.date,
         entries: g.entries,
-        prompts: [],
+        promptViews: [],
       });
     }
-    for (const [key, preds] of promptsByDate) {
+    const pushViews = (key: string, views: PredictionPromptView[]) => {
       const existing = map.get(key);
-      if (existing) existing.prompts = preds;
-      else map.set(key, { date: dayjs(key).toDate(), entries: [], prompts: preds });
-    }
+      if (existing) existing.promptViews.push(...views);
+      else map.set(key, { date: dayjs(key).toDate(), entries: [], promptViews: views });
+    };
+    for (const [key, preds] of promptsByDate) pushViews(key, preds.map(toPromptView));
+    for (const [key, views] of recurrencePromptsByDate) pushViews(key, views);
     const dir = filter.sort === 'latest' ? -1 : 1;
     return [...map.values()].sort((a, b) => (a.date.getTime() - b.date.getTime()) * dir);
-  }, [groups, promptsByDate, filter.sort]);
+  }, [groups, promptsByDate, recurrencePromptsByDate, filter.sort]);
 
   const handleAdd = (prefill?: {
     type?: CashbookEntryType;
@@ -232,11 +234,9 @@ export default function CashbookPage() {
     quickAddHandledRef.current = true;
 
     const qaType = searchParams.get('qaType');
-    const type: CashbookEntryType =
-      qaType === 'income' || qaType === 'flex' ? qaType : 'expense';
+    const type: CashbookEntryType = qaType === 'income' || qaType === 'flex' ? qaType : 'expense';
     const amountRaw = searchParams.get('qaAmount');
-    const amount =
-      amountRaw && Number.isFinite(Number(amountRaw)) ? Number(amountRaw) : undefined;
+    const amount = amountRaw && Number.isFinite(Number(amountRaw)) ? Number(amountRaw) : undefined;
 
     handleAdd({
       type,
@@ -280,22 +280,57 @@ export default function CashbookPage() {
     ));
   };
 
-  // ✓ 추가: 예측을 정식 거래로 확정(SYNC-03)
+  // ✓ 추가: doc 예측은 정식 거래로 확정(SYNC-03). 정기 발생 파생은 "기록하기"=예상값 그대로 원탭 기록.
   const handlePromptConfirm = (view: PredictionPromptView) => {
+    if (view.kind === 'recurrence') {
+      const date = Timestamp.fromDate(view.date);
+      addMutation.mutate(
+        {
+          createdBy: uid,
+          type: view.type,
+          amount: view.amount,
+          category: view.category,
+          description: '',
+          date,
+        },
+        {
+          onSuccess: () =>
+            notifyTransition({
+              type: view.type,
+              amount: view.amount,
+              category: view.category,
+              date,
+            }),
+        }
+      );
+      return;
+    }
     const p = predictionById.get(view.id);
     if (p) confirmPredictionMutation.mutate({ prediction: p });
   };
 
-  // ✗ 아니오: calendar 출처는 프롬프트만 닫고(캘린더 잔존, SYNC-04), auto 출처는 거절(양쪽 제거)
+  // ✗ 아니오: calendar 출처는 프롬프트만 닫고(캘린더 잔존, SYNC-04), auto 출처는 거절(양쪽 제거).
+  // 정기 발생 파생엔 ✗ 버튼이 없으므로 호출되지 않는다.
   const handlePromptReject = (view: PredictionPromptView) => {
+    if (view.kind === 'recurrence') return;
     const p = predictionById.get(view.id);
     if (!p) return;
     if (p.source === 'calendar') dismissPromptMutation.mutate(p.id);
     else rejectPredictionMutation.mutate(p.id);
   };
 
-  // ✎ 수정 후 추가: EntryForm을 prefill로 열어 수정값으로 확정(시나리오 E)
+  // ✎ 수정 후 추가/기록: EntryForm을 prefill로 열어 수정값으로 저장.
+  // - doc 예측: 수정값으로 확정(시나리오 E). - 정기 발생 파생: prefill 추가 시트로 금액 등 조정 후 기록.
   const handlePromptEdit = (view: PredictionPromptView) => {
+    if (view.kind === 'recurrence') {
+      handleAdd({
+        type: view.type,
+        amount: view.amount,
+        category: view.category,
+        date: dayjs(view.date).format('YYYY-MM-DD'),
+      });
+      return;
+    }
     const p = predictionById.get(view.id);
     if (!p) return;
     overlay.open(({ isOpen, close, unmount }) => (
@@ -451,10 +486,10 @@ export default function CashbookPage() {
                       <div className="mb-2 px-1 text-xs font-medium text-muted-foreground">
                         {formatDay(s.date)}
                       </div>
-                      {s.prompts.length > 0 && (
+                      {s.promptViews.length > 0 && (
                         <div className="mb-2">
                           <PredictionPromptList
-                            prompts={s.prompts.map(toPromptView)}
+                            prompts={s.promptViews}
                             onConfirm={handlePromptConfirm}
                             onReject={handlePromptReject}
                             onEdit={handlePromptEdit}

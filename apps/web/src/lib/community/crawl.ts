@@ -34,8 +34,76 @@ type ParsedFeed = { items: FeedItem[] };
 export type CrawlResult = {
   created: number;
   skipped: number;
-  sources: { id: string; siteName: string; created: number; skipped: number; error?: string }[];
+  sources: {
+    id: string;
+    siteName: string;
+    created: number;
+    skipped: number;
+    // 피드는 정상 응답했지만 항목이 0개인 경우(네이버 블로그 등 서버 IP 차단 포함).
+    emptyFeed?: boolean;
+    error?: string;
+  }[];
 };
+
+// 빈 피드일 때 소스에 기록·어드민에 노출할 사유. 일부 사이트는 RSS가 정상 200을 주면서도
+// 데이터센터(서버) IP에는 항목을 비워 사실상 차단하므로(네이버 블로그 등), 조용한 0건 대신 명시한다.
+const EMPTY_FEED_NOTE =
+  '빈 피드 — 응답은 정상이지만 수집할 항목이 0개예요. 일부 사이트(예: 네이버 블로그)는 서버(데이터센터) IP의 RSS 접근을 빈 피드로 막습니다.';
+
+// 크롤 실패 원인은 사이트마다 다른 형태로 나타난다(차단은 네이버 전용이 아니다):
+//   403/401 거부, 429 빈도제한, 5xx 장애, 타임아웃, 연결 실패, RSS 대신 차단 페이지(HTML) 반환 등.
+// rss-parser의 raw 에러 메시지를 어드민이 이해할 친화적 사유로 분류한다(원문은 괄호로 보존).
+export function describeFeedError(rawMessage: string): string {
+  const m = rawMessage.toLowerCase();
+  const status = rawMessage.match(/status code (\d{3})/i)?.[1];
+
+  if (status === '403' || status === '401') {
+    return `접근 거부(${status}) — 사이트가 서버 IP의 접근을 차단했을 수 있어요. (${rawMessage})`;
+  }
+  if (status === '429') {
+    return `요청 제한(429) — 수집 빈도가 제한됐어요. 잠시 후 다시 시도해주세요. (${rawMessage})`;
+  }
+  if (status === '500' || status === '502' || status === '503') {
+    return `사이트 응답 오류(${status}) — 일시적 장애이거나 봇 차단일 수 있어요. (${rawMessage})`;
+  }
+  if (status === '404' || status === '410') {
+    return `피드 주소를 찾을 수 없어요(${status}) — 피드 URL이 바뀌었는지 확인해주세요. (${rawMessage})`;
+  }
+  if (
+    m.includes('timeout') ||
+    m.includes('timed out') ||
+    m.includes('etimedout') ||
+    m.includes('aborted') ||
+    m.includes('abort')
+  ) {
+    return `응답 시간 초과 — 사이트가 느리거나 서버 IP를 막고 응답을 주지 않을 수 있어요. (${rawMessage})`;
+  }
+  if (
+    m.includes('enotfound') ||
+    m.includes('econnrefused') ||
+    m.includes('econnreset') ||
+    m.includes('eai_again') ||
+    m.includes('socket hang up') ||
+    m.includes('epipe') ||
+    m.includes('certificate') ||
+    m.includes('ssl')
+  ) {
+    return `사이트에 연결하지 못했어요 — 주소 오류이거나 네트워크/차단 문제일 수 있어요. (${rawMessage})`;
+  }
+  // rss-parser가 본문을 RSS/Atom으로 인식 못함 → 차단 페이지·캡차 등 HTML을 받았을 가능성.
+  if (
+    m.includes('not recognized') ||
+    m.includes('non-whitespace before first tag') ||
+    m.includes('unexpected') ||
+    m.includes('unclosed') ||
+    m.includes('invalid character') ||
+    m.includes('attribute') ||
+    m.includes('parse')
+  ) {
+    return `피드 형식이 아니에요 — 사이트가 RSS 대신 차단/안내 페이지(HTML)를 돌려줬을 수 있어요. (${rawMessage})`;
+  }
+  return rawMessage;
+}
 
 type CommunitySourceDoc = {
   siteName: string;
@@ -217,11 +285,20 @@ async function crawlSource(
   source: CommunitySourceDoc,
   parseFeed: (feedUrl: string) => Promise<ParsedFeed>,
   fetchHtml: FetchHtml
-): Promise<{ created: number; skipped: number; error?: string }> {
+): Promise<{ created: number; skipped: number; emptyFeed?: boolean; error?: string }> {
   const sourceRef = db.collection('communitySources').doc(sourceId);
   try {
     const feed = await parseFeed(source.feedUrl);
     const items = feed.items.slice(0, MAX_ITEMS_PER_SOURCE);
+
+    // 피드는 정상 응답했으나 항목이 0개 → 차단/빈 피드 신호로 소스에 사유를 남겨 어드민에 알린다.
+    if (items.length === 0) {
+      await sourceRef.update({
+        lastCrawledAt: FieldValue.serverTimestamp(),
+        lastError: EMPTY_FEED_NOTE,
+      });
+      return { created: 0, skipped: 0, emptyFeed: true };
+    }
 
     let created = 0;
     let skipped = 0;
@@ -278,7 +355,8 @@ async function crawlSource(
 
     return { created, skipped };
   } catch (err) {
-    const message = err instanceof Error ? err.message : '알 수 없는 오류';
+    const raw = err instanceof Error ? err.message : '알 수 없는 오류';
+    const message = describeFeedError(raw);
     await sourceRef.update({
       lastCrawledAt: FieldValue.serverTimestamp(),
       lastError: message.slice(0, 300),
@@ -298,10 +376,16 @@ export async function runCrawl(db: Firestore, options: RunCrawlOptions = {}): Pr
 
   for (const doc of snap.docs) {
     const source = doc.data() as CommunitySourceDoc;
-    const { created, skipped, error } = await crawlSource(db, doc.id, source, parseFeed, fetchHtml);
+    const { created, skipped, emptyFeed, error } = await crawlSource(
+      db,
+      doc.id,
+      source,
+      parseFeed,
+      fetchHtml
+    );
     result.created += created;
     result.skipped += skipped;
-    result.sources.push({ id: doc.id, siteName: source.siteName, created, skipped, error });
+    result.sources.push({ id: doc.id, siteName: source.siteName, created, skipped, emptyFeed, error });
   }
 
   return result;

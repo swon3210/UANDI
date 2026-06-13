@@ -1,10 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import {
-  seedCashflowSettings,
-  seedPrediction,
-  seedCashbookEntry,
-} from '../helpers/emulator';
+import { seedCashflowSettings, seedPrediction, seedCashbookEntry } from '../helpers/emulator';
 import { CashflowPage } from '../page-objects/CashflowPage';
 
 // dayOfMonth의 다음 발생일(오늘 포함)을 정오로 만들어 타임존 경계를 피한다.
@@ -152,13 +148,12 @@ test.describe('현금흐름 캘린더', () => {
 
     await cashflow.setupButton.click();
     await cashflow.settingsSheet.waitFor({ state: 'visible' });
-    await cashflow.fillSettings({
-      currentCash: 1500000,
-      payday: { label: '월세', day: PAYDAY },
-    });
+    // Phase 2: 결제일 수동 입력이 폐지돼 현재 보유 현금만 저장한다.
+    await cashflow.fillSettings({ currentCash: 1500000 });
 
+    // 결제일/정기 발생이 없으면 주 단위 카드로 폴백해 카드가 나타난다.
     await expect(cashflow.cardList).toBeVisible();
-    await expect(cashflow.cards.first()).toContainText('월세');
+    await expect(cashflow.cards.first()).toBeVisible();
   });
 
   test('가계부 더보기 메뉴에서 현금흐름 캘린더로 이동할 수 있다', async ({ authedContext }) => {

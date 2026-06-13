@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>차단된 신혼 피드</title>
+    <link>https://example.com</link>
+    <description>항목이 비어 있는 피드 (네이버 블로그 등 서버 IP 차단 재현용)</description>
+  </channel>
+</rss>

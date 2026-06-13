@@ -3,6 +3,7 @@ import { StyleSheet, BackHandler, Platform, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
+import * as SplashScreen from 'expo-splash-screen';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import type { FcmTokenInfo } from '@/lib/fcm';
 
@@ -42,6 +43,8 @@ export function AppWebView({
   const canGoBackRef = useRef(false);
   // 대시보드 로드가 끝나면 이동할 최종 목적지. 2단계 이동의 두 번째 단계용.
   const pendingTargetRef = useRef<string | null>(null);
+  // 최초 웹 로드 시 스플래시를 단 한 번만 내리기 위한 가드.
+  const splashHiddenRef = useRef(false);
   const insets = useSafeAreaInsets();
 
   // 경로(`/community/123`)면 호스트를 붙이고, 전체 웹 URL이면 그대로 이동한다.
@@ -108,13 +111,23 @@ export function AppWebView({
     onDeeplinkConsumed?.();
   }, [pendingDeeplink, onDeeplinkConsumed, navigateWebView]);
 
+  // 최초 웹 로드가 끝나면 네이티브 스플래시를 내린다(단 한 번만).
+  // 스플래시 → 웹(분홍색) 로더로 바로 전환되어 초록색 로더가 보이지 않는다.
+  const hideSplashOnce = useCallback(() => {
+    if (splashHiddenRef.current) return;
+    splashHiddenRef.current = true;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
   // 대시보드 로드가 끝나면 대기 중인 목적지로 이동(2단계 이동의 두 번째 단계).
   const handleLoadEnd = useCallback(() => {
+    hideSplashOnce();
+
     const target = pendingTargetRef.current;
     if (!target) return;
     pendingTargetRef.current = null;
     navigateWebView(target);
-  }, [navigateWebView]);
+  }, [hideSplashOnce, navigateWebView]);
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -124,12 +137,13 @@ export function AppWebView({
         source={{ uri: `https://${UANDI_HOST}${path}` }}
         onNavigationStateChange={handleNavigationStateChange}
         onLoadEnd={handleLoadEnd}
+        onError={hideSplashOnce}
+        onHttpError={hideSplashOnce}
         originWhitelist={['*']}
         userAgent="Mozilla/5.0 (Linux; Android 13; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         javaScriptEnabled
         domStorageEnabled
         thirdPartyCookiesEnabled
-        startInLoadingState
         allowsBackForwardNavigationGestures
         sharedCookiesEnabled
         injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}

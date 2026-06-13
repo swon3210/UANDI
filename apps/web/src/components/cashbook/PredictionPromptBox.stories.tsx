@@ -71,6 +71,42 @@ export const AutoDetected: Story = {
   },
 };
 
+export const RecurrenceIncome: Story = {
+  args: {
+    prompt: {
+      id: 'recurrence-cat1-2026-06-25',
+      kind: 'recurrence',
+      type: 'income',
+      amount: 3000000,
+      category: '정기급여',
+      description: '',
+      source: 'calendar',
+      date: new Date(2026, 5, 25),
+      recurrenceLabel: '매월 25일',
+    },
+    onConfirm: noop,
+    onEdit: noop,
+  },
+};
+
+export const RecurrenceExpense: Story = {
+  args: {
+    prompt: {
+      id: 'recurrence-cat2-2026-06-05',
+      kind: 'recurrence',
+      type: 'expense',
+      amount: 500000,
+      category: '월세',
+      description: '',
+      source: 'calendar',
+      date: new Date(2026, 5, 5),
+      recurrenceLabel: '매월 5일',
+    },
+    onConfirm: noop,
+    onEdit: noop,
+  },
+};
+
 export const LongText: Story = {
   args: {
     prompt: {

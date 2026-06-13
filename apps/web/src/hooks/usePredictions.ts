@@ -16,11 +16,21 @@ const QUERY_KEY = 'cashbookPredictions';
 // useCashbook.ts의 QUERY_KEY와 동일해야 한다(✓ 확정이 cashbookEntries 캐시에 영향).
 const CASHBOOK_ENTRIES_KEY = 'cashbookEntries';
 
+/**
+ * 자동감지(source: 'auto') 예측은 제거됐다(단일 출처 = 카테고리 정기 발생).
+ * 기존에 생성된 auto doc은 삭제하지 않고 조회 단계에서 비활성화한다 — 화면·잔액·dedup(G2)에서 일괄 제외.
+ * (남는 예측은 사용자가 캘린더에서 직접 만든 'calendar' 출처뿐.)
+ */
+function excludeAutoPredictions(predictions: CashbookPrediction[]): CashbookPrediction[] {
+  return predictions.filter((p) => p.source !== 'auto');
+}
+
 export function usePredictionsInRange(coupleId: string | null, start: Date, end: Date) {
   return useQuery({
     queryKey: [QUERY_KEY, coupleId, 'range', start.toISOString(), end.toISOString()],
     queryFn: () => getPredictionsInRange(coupleId!, start, end),
     enabled: !!coupleId,
+    select: excludeAutoPredictions,
   });
 }
 
@@ -29,6 +39,7 @@ export function useActivePredictions(coupleId: string | null, from: Date) {
     queryKey: [QUERY_KEY, coupleId, 'active', from.toISOString()],
     queryFn: () => getActivePredictions(coupleId!, from),
     enabled: !!coupleId,
+    select: excludeAutoPredictions,
   });
 }
 

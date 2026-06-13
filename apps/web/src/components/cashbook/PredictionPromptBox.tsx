@@ -17,6 +17,12 @@ export type PredictionPromptView = {
   date: Date;
   /** 반복 주기 표기(자동감지 등). 없으면 미표시. 예: "매월 25일". */
   recurrenceLabel?: string | null;
+  /**
+   * 'recurrence'이면 카테고리 정기 발생에서 읽기 시점 파생된 프롬프트(doc 없음).
+   * "기록하기"(예상값 원탭) + "수정 후 기록"(폼)만 노출하고 ✗(아니오)는 숨긴다.
+   * 미지정(doc 기반)은 ✓/✎/✗ 모두 노출.
+   */
+  kind?: 'recurrence';
 };
 
 const SOURCE_LABEL: Record<PredictionSource, string> = {
@@ -26,17 +32,25 @@ const SOURCE_LABEL: Record<PredictionSource, string> = {
 
 type PredictionPromptBoxProps = {
   prompt: PredictionPromptView;
-  onConfirm: () => void; // ✓ 추가
-  onReject: () => void; // ✗ 아니오
-  onEdit: () => void; // ✎ 수정 후 추가
+  onConfirm: () => void; // ✓ 추가 / 기록하기
+  onReject?: () => void; // ✗ 아니오 (doc 기반만)
+  onEdit?: () => void; // ✎ 수정 후 추가 (doc 기반만)
 };
 
-/** 오늘 이후 날짜에 뜨는 예측 V/X 프롬프트(점선 박스). */
-export function PredictionPromptBox({ prompt, onConfirm, onReject, onEdit }: PredictionPromptBoxProps) {
+/** 오늘 이후 날짜에 뜨는 예측 프롬프트(점선 박스). doc 기반은 추가/수정/아니오, recurrence는 기록하기/수정 후 기록. */
+export function PredictionPromptBox({
+  prompt,
+  onConfirm,
+  onReject,
+  onEdit,
+}: PredictionPromptBoxProps) {
+  const isRecurrence = prompt.kind === 'recurrence';
+  const sourceLabel = isRecurrence ? '정기' : SOURCE_LABEL[prompt.source];
+
   return (
     <div
       data-testid="prediction-prompt-box"
-      data-source={prompt.source}
+      data-source={isRecurrence ? 'recurrence' : prompt.source}
       className="space-y-2.5 rounded-xl border border-dashed border-coral-300 bg-coral-50/50 p-3"
     >
       <div className="flex items-start gap-2">
@@ -64,38 +78,57 @@ export function PredictionPromptBox({ prompt, onConfirm, onReject, onEdit }: Pre
             </span>
           </div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {SOURCE_LABEL[prompt.source]} · {formatDay(prompt.date)}
+            {sourceLabel} · {formatDay(prompt.date)}
             {prompt.recurrenceLabel ? ` · ${prompt.recurrenceLabel}` : ''}
           </p>
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
-          <Check size={14} className="mr-1" />
-          추가
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1"
-          onClick={onEdit}
-          data-testid="prediction-edit"
-        >
-          <Pencil size={14} className="mr-1" />
-          수정 후 추가
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onReject}
-          data-testid="prediction-reject"
-          aria-label="아니오"
-        >
-          <X size={14} className="mr-1" />
-          아니오
-        </Button>
-      </div>
+      {isRecurrence ? (
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
+            <Check size={14} className="mr-1" />
+            기록하기
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={onEdit}
+            data-testid="prediction-edit"
+          >
+            <Pencil size={14} className="mr-1" />
+            수정 후 기록
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
+            <Check size={14} className="mr-1" />
+            추가
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={onEdit}
+            data-testid="prediction-edit"
+          >
+            <Pencil size={14} className="mr-1" />
+            수정 후 추가
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onReject}
+            data-testid="prediction-reject"
+            aria-label="아니오"
+          >
+            <X size={14} className="mr-1" />
+            아니오
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

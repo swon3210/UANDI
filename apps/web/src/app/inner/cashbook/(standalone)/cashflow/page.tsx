@@ -9,12 +9,14 @@ import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
 import { useCashflowNegativeAlert } from '@/hooks/useCashflowNegativeAlert';
+import { useRecurrenceSuggestions } from '@/hooks/useRecurrenceSuggestions';
 import { useCashflowSettings, useUpdateCashflowSettings } from '@/hooks/useCashflowSettings';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAddPrediction, useDeletePrediction } from '@/hooks/usePredictions';
 import { CashflowCardList } from '@/components/cashbook/CashflowCardList';
 import { CashflowNegativeBanner } from '@/components/cashbook/CashflowNegativeBanner';
 import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
+import { RecurrenceSuggestionCard } from '@/components/cashbook/RecurrenceSuggestionCard';
 import {
   CashflowSettingsForm,
   type CashflowSettingsFormValue,
@@ -43,7 +45,6 @@ function SettingsSheetContent({
         settings
           ? {
               currentCash: settings.currentCash,
-              paydays: settings.paydays,
               variableMode: settings.variableMode,
             }
           : undefined
@@ -109,6 +110,11 @@ export default function CashflowCalendarPage() {
 
   const { cards, isConfigured, isLoading } = useCashflowCalendar(coupleId);
   const { negativeCard, dismiss } = useCashflowNegativeAlert(coupleId, cards);
+  const {
+    suggestions,
+    accept: acceptSuggestion,
+    dismiss: dismissSuggestion,
+  } = useRecurrenceSuggestions(coupleId);
   const deletePredictionMutation = useDeletePrediction(coupleId);
 
   const handleAddPrediction = (card: CashflowCardData) => {
@@ -197,6 +203,18 @@ export default function CashflowCalendarPage() {
                 subLabel={formatDay(negativeCard.endDate)}
                 onDismiss={dismiss}
               />
+            )}
+            {suggestions.length > 0 && (
+              <div className="space-y-2" data-testid="recurrence-suggestion-list">
+                {suggestions.map((s) => (
+                  <RecurrenceSuggestionCard
+                    key={s.categoryId}
+                    suggestion={s}
+                    onAccept={() => acceptSuggestion(s)}
+                    onDismiss={() => dismissSuggestion(s)}
+                  />
+                ))}
+              </div>
             )}
             <CashflowCardList
               cards={cards}

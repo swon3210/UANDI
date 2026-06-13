@@ -17,7 +17,14 @@ export type CommunitySourceView = {
 export type CrawlSummary = {
   created: number;
   skipped: number;
-  sources: { id: string; siteName: string; created: number; skipped: number; error?: string }[];
+  sources: {
+    id: string;
+    siteName: string;
+    created: number;
+    skipped: number;
+    emptyFeed?: boolean;
+    error?: string;
+  }[];
 };
 
 async function parseError(res: Response, fallback: string): Promise<never> {
