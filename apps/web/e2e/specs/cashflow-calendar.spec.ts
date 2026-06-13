@@ -156,12 +156,11 @@ test.describe('현금흐름 캘린더', () => {
     await expect(cashflow.cards.first()).toBeVisible();
   });
 
-  test('가계부 더보기 메뉴에서 현금흐름 캘린더로 이동할 수 있다', async ({ authedContext }) => {
+  test('가계부 캘린더 탭으로 현금흐름 캘린더에 진입할 수 있다', async ({ authedContext }) => {
     const { page } = authedContext;
 
     await page.goto('/inner/cashbook/history');
-    await page.getByTestId('cashbook-more-menu').click();
-    await page.getByTestId('menu-cashflow').click();
+    await page.getByTestId('cashbook-tab-cashflow').click();
 
     await page.waitForURL('**/inner/cashbook/cashflow');
     await expect(page.getByText('현금흐름 캘린더')).toBeVisible();
