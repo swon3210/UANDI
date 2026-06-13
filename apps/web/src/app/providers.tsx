@@ -10,6 +10,7 @@ import { AuthInit } from '@/components/AuthInit';
 import { FcmForegroundListener } from '@/components/FcmForegroundListener';
 import { NativeFcmBridge } from '@/components/NativeFcmBridge';
 import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
+import { QuickAddBridge } from '@/components/QuickAddBridge';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <FcmForegroundListener />
             <NativeFcmBridge />
             <NativeSafeAreaFix />
+            <QuickAddBridge />
             {children}
             <Toaster />
           </OverlayProvider>
