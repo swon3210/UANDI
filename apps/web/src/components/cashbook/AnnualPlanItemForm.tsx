@@ -87,7 +87,7 @@ export function AnnualPlanItemForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex flex-col gap-5 overflow-y-auto px-1 pb-6 pt-4"
+          className="flex flex-col gap-5 overflow-y-auto overflow-x-hidden px-1 pb-6 pt-4"
         >
           {isEditing ? (
             <div className="rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
