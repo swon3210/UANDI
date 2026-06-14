@@ -1,0 +1,23 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.floatingbubble'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.floatingbubble"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // FileProvider(카메라 임시 파일 → WebView 전달)용. 앱과 동일 버전으로 정렬된다.
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

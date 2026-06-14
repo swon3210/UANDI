@@ -146,6 +146,8 @@ export function AppWebView({
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
         sharedCookiesEnabled
+        allowsInlineMediaPlayback
+        mediaCapturePermissionGrantType="grant"
         injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}
       />
     </View>
