@@ -27,7 +27,7 @@ export type AppNavProps = {
 
 const DefaultLink: ComponentType<AppNavLinkProps> = (props) => <a {...props} />;
 
-/** 활성 탭 id를 가장 긴 prefix 매칭으로 결정. (예: /inner/cashbook/settlement → 가계부 탭) */
+/** 활성 탭 id를 가장 긴 prefix 매칭으로 결정. (예: /inner/cashbook/history → 가계부 탭) */
 export function getActiveNavId(items: AppNavItem[], activePath: string): string {
   let bestId = '';
   let bestLen = -1;

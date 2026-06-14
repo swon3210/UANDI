@@ -17,8 +17,8 @@ const meta: Meta<typeof CashbookTabs> = {
 export default meta;
 type Story = StoryObj<typeof CashbookTabs>;
 
-export const SummaryRoot_NoActive: Story = {
-  name: '요약 루트 — 활성 탭 없음',
+export const DashboardActive: Story = {
+  name: '대시보드 활성 (루트)',
   args: { activePath: '/inner/cashbook' },
 };
 
@@ -28,16 +28,16 @@ export const HistoryActive: Story = {
 };
 
 export const CashflowActive: Story = {
-  name: '캘린더 활성',
+  name: '현금흐름 활성',
   args: { activePath: '/inner/cashbook/cashflow' },
 };
 
-export const SettlementActive: Story = {
-  name: '결산 활성',
-  args: { activePath: '/inner/cashbook/settlement' },
+export const ReviewDetail_NoActive: Story = {
+  name: '점검 상세 — 활성 탭 없음',
+  args: { activePath: '/inner/cashbook/review' },
 };
 
 export const PlanActive_DeepPath: Story = {
-  name: '계획 활성 (하위 경로도 유지)',
+  name: '목표 활성 (하위 경로도 유지)',
   args: { activePath: '/inner/cashbook/plan/annual/items' },
 };

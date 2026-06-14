@@ -76,7 +76,7 @@ export function SettlementAttachmentGallery({
           className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground"
           data-testid="settlement-attachment-empty"
         >
-          아직 첨부한 이미지가 없어요. 결산을 완료하면 첨부 이미지는 삭제돼요.
+          아직 첨부한 이미지가 없어요. 점검을 완료하면 첨부 이미지는 삭제돼요.
         </p>
       ) : (
         <div className="space-y-3">

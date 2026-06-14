@@ -8,7 +8,7 @@ import {
 } from '../helpers/emulator';
 
 /**
- * 월 결산 페이지: 예산 vs 실적 차트 + AI 보고서 + 다운로드.
+ * 월 점검 페이지: 예산 vs 실적 차트 + AI 보고서 + 다운로드.
  * 차트가 그려지려면 연간 계획(예산) + 카테고리 + 내역이 모두 필요하므로 함께 시드한다.
  */
 async function seedSettlementData(coupleId: string, uid: string) {
@@ -44,18 +44,19 @@ async function seedSettlementData(coupleId: string, uid: string) {
   });
 }
 
-test.describe('월 결산 페이지', () => {
-  test('결산 탭으로 이동하면 예산 vs 실적 차트가 표시된다', async ({ authedContext }) => {
+test.describe('월 점검 페이지', () => {
+  test('대시보드 헤더의 점검 버튼으로 진입하면 예산 vs 실적 차트가 표시된다', async ({
+    authedContext,
+  }) => {
     const { page, coupleId, uid } = authedContext;
     await seedSettlementData(coupleId, uid);
 
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    // 대시보드 헤더의 "점검" 진입점
+    await page.goto('/inner/cashbook');
+    await expect(page.getByTestId('dashboard-header')).toBeVisible();
+    await page.getByTestId('dashboard-review-link').click();
 
-    // 상단 탭에서 "결산" 진입
-    await page.getByTestId('cashbook-tab-settlement').click();
-
-    await expect(page).toHaveURL(/\/inner\/cashbook\/settlement/);
+    await expect(page).toHaveURL(/\/inner\/cashbook\/review/);
 
     // 차트 2종 노출
     await expect(page.getByTestId('budget-vs-actual-chart')).toBeVisible({ timeout: 5000 });
@@ -68,7 +69,7 @@ test.describe('월 결산 페이지', () => {
     const { page, coupleId, uid } = authedContext;
     await seedSettlementData(coupleId, uid);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // AI 분석 실행
@@ -113,7 +114,7 @@ test.describe('월 결산 페이지', () => {
       description: '외식',
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await expect(page.getByTestId('settlement-budget-empty')).toBeVisible({ timeout: 5000 });

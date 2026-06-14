@@ -169,9 +169,9 @@ export function useCompleteSettlement(coupleId: string | null) {
       qc.invalidateQueries({
         queryKey: [QUERY_KEY, coupleId, monthKeyOf(vars.year, vars.month)],
       });
-      toast.success('결산을 완료했어요');
+      toast.success('점검을 완료했어요');
     },
-    onError: () => toast.error('결산 완료에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error('점검 완료에 실패했어요. 다시 시도해주세요.'),
   });
 }
 
@@ -181,6 +181,6 @@ export function useRedoSettlement(coupleId: string | null) {
     mutationFn: (monthKey: string) => redoSettlement(coupleId!, monthKey),
     onSuccess: (_d, monthKey) =>
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId, monthKey] }),
-    onError: () => toast.error('다시 결산하기에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error('다시 점검하기에 실패했어요. 다시 시도해주세요.'),
   });
 }

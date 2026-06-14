@@ -154,7 +154,7 @@ export default function CashflowCalendarPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        title="현금흐름 캘린더"
+        title="현금흐름"
         leftSlot={
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
             <ChevronLeft size={20} />

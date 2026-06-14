@@ -170,19 +170,19 @@ export default function SettlementEntriesPage() {
       className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20"
       data-testid="settlement-entries-page"
     >
-      {/* 헤더: 월 + 결산으로 돌아가기 */}
+      {/* 헤더: 월 + 점검으로 돌아가기 */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8 shrink-0"
-          aria-label="결산으로"
+          aria-label="점검으로"
           data-testid="settlement-entries-back"
-          onClick={() => router.push(`/inner/cashbook/settlement?month=${monthKey}`)}
+          onClick={() => router.push(`/inner/cashbook/review?month=${monthKey}`)}
         >
           <ArrowLeft size={18} />
         </Button>
-        <h1 className="text-base font-semibold">{monthLabel} 결산 내역</h1>
+        <h1 className="text-base font-semibold">{monthLabel} 점검 내역</h1>
       </div>
 
       {isLoading ? (

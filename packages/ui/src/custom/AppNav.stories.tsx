@@ -61,7 +61,7 @@ export const Cashbook_Inner: Story = {
 
 export const CashbookDeep_PrefixMatch: Story = {
   name: '가계부 하위 경로에서도 가계부 활성 (prefix 매칭)',
-  render: () => <Demo activePath="/inner/cashbook/settlement" space="inner" />,
+  render: () => <Demo activePath="/inner/cashbook/review" space="inner" />,
 };
 
 export const Photos_Inner: Story = {

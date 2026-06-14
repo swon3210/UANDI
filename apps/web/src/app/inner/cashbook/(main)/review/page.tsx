@@ -242,10 +242,10 @@ export default function CashbookSettlementPage() {
         <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
           <DialogContent data-testid="settlement-complete-dialog">
             <DialogHeader>
-              <DialogTitle>이번 달 결산을 완료할까요?</DialogTitle>
+              <DialogTitle>이번 달 점검을 완료할까요?</DialogTitle>
               <DialogDescription>
-                완료하면 첨부한 영수증·스크린샷은 삭제되고 결산 보고서가 저장돼요. 보고서는 “다시
-                결산하기”로 언제든 수정할 수 있어요.
+                완료하면 첨부한 영수증·스크린샷은 삭제되고 점검 보고서가 저장돼요. 보고서는 “다시
+                점검하기”로 언제든 수정할 수 있어요.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:gap-2">
@@ -264,7 +264,7 @@ export default function CashbookSettlementPage() {
                   dismiss();
                 }}
               >
-                결산 완료
+                점검 완료
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -322,13 +322,13 @@ export default function CashbookSettlementPage() {
               data-testid="settlement-entries-link"
               variant="outline"
               className="mt-4 w-full justify-start gap-2"
-              onClick={() => router.push(`/inner/cashbook/settlement/entries?month=${monthKey}`)}
+              onClick={() => router.push(`/inner/cashbook/review/entries?month=${monthKey}`)}
             >
               <ListChecks size={16} className="text-primary" />
               이번 달 내역 확인·추가
             </Button>
 
-            {/* 첨부 갤러리 (결산 완료 전까지 유지) */}
+            {/* 첨부 갤러리 (점검 완료 전까지 유지) */}
             <div className="mt-3">
               <SettlementAttachmentGallery
                 attachments={settlement?.attachments ?? []}
@@ -403,9 +403,9 @@ export default function CashbookSettlementPage() {
               )}
             </section>
 
-            {/* AI 결산 보고서 */}
+            {/* AI 점검 보고서 */}
             <section className="mt-8 border-t pt-6">
-              <h2 className="mb-3 text-sm font-semibold">AI 결산 보고서</h2>
+              <h2 className="mb-3 text-sm font-semibold">AI 점검 보고서</h2>
               {hasEntries ? (
                 <SettlementReport
                   key={monthLabel}
@@ -422,7 +422,7 @@ export default function CashbookSettlementPage() {
               )}
             </section>
 
-            {/* 결산 완료 */}
+            {/* 점검 완료 */}
             <div className="mt-8">
               <Button
                 data-testid="settlement-complete-btn"
@@ -436,7 +436,7 @@ export default function CashbookSettlementPage() {
                 ) : (
                   <CheckCircle2 size={16} />
                 )}
-                결산 완료
+                점검 완료
               </Button>
               <p className="mt-2 text-center text-xs text-muted-foreground">
                 완료하면 첨부 이미지는 삭제되고 보고서가 저장돼요.

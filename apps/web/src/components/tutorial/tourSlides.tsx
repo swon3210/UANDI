@@ -7,7 +7,7 @@ import { cn } from '@uandi/ui';
 
 /**
  * MOA 온보딩 투어 슬라이드 정의.
- * 핵심 서비스인 가계부(내역/예산/현금흐름/결산)는 실제 화면 스크린샷으로 안내하고,
+ * 핵심 서비스인 가계부(내역/예산/현금흐름/점검)는 실제 화면 스크린샷으로 안내하고,
  * 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장에 일괄 소개한다.
  * 가계부 스크린샷은 `pnpm --filter web screenshots:tour`(에뮬레이터 필요)로 갱신한다 →
  * apps/web/public/tour/*.webp. 환영(하단탭)·그 외는 실제 데이터에 의존하지 않는 표현이다.
@@ -71,10 +71,10 @@ const BudgetPreview: FC = () => (
   <ScreenshotPreview src="/tour/cashbook-budget.webp" alt="연간 예산 계획 화면 — 수입·지출·Flex 목표" />
 );
 const CashflowPreview: FC = () => (
-  <ScreenshotPreview src="/tour/cashbook-cashflow.webp" alt="현금흐름 캘린더 화면 — 날짜별 들어올 돈·나갈 돈" />
+  <ScreenshotPreview src="/tour/cashbook-cashflow.webp" alt="현금흐름 화면 — 날짜별 들어올 돈·나갈 돈" />
 );
 const SettlementPreview: FC = () => (
-  <ScreenshotPreview src="/tour/cashbook-settlement.webp" alt="월 결산 화면 — 수입·지출·Flex 요약과 카테고리별 예산 대비 실적" />
+  <ScreenshotPreview src="/tour/cashbook-settlement.webp" alt="점검 화면 — 수입·지출·Flex 요약과 카테고리별 예산 대비 실적" />
 );
 
 /** 슬라이드 6 — 그 외 기능(갤러리·재테크·커뮤니티 일괄) */
@@ -130,7 +130,7 @@ export const TOUR_SLIDES: TourSlide[] = [
   },
   {
     id: 'cashbook-settlement',
-    title: '한 달을 결산으로 마무리',
+    title: '한 달을 점검으로 마무리',
     description: '예산 대비 실제를 비교하고, 영수증·내역 스크린샷을 올리면 빠진 내역까지 찾아줘요.',
     Preview: SettlementPreview,
   },

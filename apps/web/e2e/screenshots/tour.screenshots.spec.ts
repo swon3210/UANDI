@@ -34,7 +34,7 @@ const SCREENS: Screen[] = [
   },
   { path: '/inner/cashbook/plan/annual', file: 'cashbook-budget', label: '예산(연간계획)' },
   { path: '/inner/cashbook/cashflow', file: 'cashbook-cashflow', label: '현금흐름' },
-  { path: '/inner/cashbook/settlement', file: 'cashbook-settlement', label: '월 결산' },
+  { path: '/inner/cashbook/review', file: 'cashbook-settlement', label: '점검' },
 ];
 
 // 시드된 기본 카테고리의 이름 → 문서 ID 맵을 조회한다.

@@ -51,7 +51,7 @@ test.describe('전역 하단탭 네비게이션 (AppNav)', () => {
 
   test('가계부 하위 페이지에서도 가계부 탭이 활성 상태로 유지된다', async ({ authedPage }) => {
     const nav = new AppNavPage(authedPage);
-    await authedPage.goto('/inner/cashbook/settlement');
+    await authedPage.goto('/inner/cashbook/review');
     await expect(nav.root).toBeVisible();
     await expect(nav.tabCashbook).toHaveAttribute('aria-current', 'page');
   });

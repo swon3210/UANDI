@@ -96,7 +96,7 @@ export function SettlementReportView({
           /* 이 차트만 건너뜀 */
         }
       }
-      const header = `# 월 결산 보고서 (${monthLabel})`;
+      const header = `# 월 점검 보고서 (${monthLabel})`;
       const chartsMd = imageBlocks.length > 0 ? `\n\n## 차트\n\n${imageBlocks.join('\n\n')}` : '';
       const body = report.aiAnalysis ? `\n\n## 분석\n\n${report.aiAnalysis}` : '';
       downloadMarkdown(`settlement-${monthLabel}.md`, `${header}${chartsMd}${body}\n`);
@@ -125,7 +125,7 @@ export function SettlementReportView({
       <div className="flex items-center justify-between rounded-xl border border-income/30 bg-income/5 px-4 py-3">
         <span className="flex items-center gap-2 text-sm font-medium text-income">
           <CheckCircle2 size={16} />
-          결산 완료
+          점검 완료
         </span>
         <span className="text-xs text-muted-foreground">
           {dayjs(report.completedAt.toDate()).format('YYYY.MM.DD HH:mm')}
@@ -178,7 +178,7 @@ export function SettlementReportView({
       {/* AI 분석 */}
       {report.aiAnalysis && (
         <div>
-          <h2 className="mb-2 text-sm font-semibold">AI 결산 보고서</h2>
+          <h2 className="mb-2 text-sm font-semibold">AI 점검 보고서</h2>
           <div
             ref={reportTextRef}
             data-testid="settlement-report-ai"
@@ -189,7 +189,7 @@ export function SettlementReportView({
         </div>
       )}
 
-      {/* 내보내기 + 다시 결산하기 */}
+      {/* 내보내기 + 다시 점검하기 */}
       <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-4">
         <Button
           data-testid="settlement-md-download"
@@ -222,7 +222,7 @@ export function SettlementReportView({
           className="ml-auto gap-1.5"
         >
           {isRedoing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-          다시 결산하기
+          다시 점검하기
         </Button>
       </div>
     </div>
