@@ -87,6 +87,7 @@ export default function OverlayQuickAddPage() {
                 categories={categories ?? []}
                 coupleId={coupleId}
                 createdBy={uid}
+                fullScreen
                 onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
                 onClose={() => {
                   close();

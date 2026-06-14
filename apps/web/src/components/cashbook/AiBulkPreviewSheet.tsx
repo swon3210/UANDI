@@ -31,6 +31,8 @@ type AiBulkPreviewSheetProps = {
   createdBy: string;
   onConfirm: (entries: ConfirmedEntry[]) => void;
   onClose: () => void;
+  /** 작은 오버레이 패널 등에서 바텀시트 대신 전체 화면을 덮는 형태로 렌더한다. */
+  fullScreen?: boolean;
 };
 
 export function AiBulkPreviewSheet(props: AiBulkPreviewSheetProps) {
@@ -62,6 +64,7 @@ export function AiBulkPreviewSheet(props: AiBulkPreviewSheetProps) {
       createdBy={props.createdBy}
       onConfirm={props.onConfirm}
       onClose={props.onClose}
+      fullScreen={props.fullScreen}
     />
   );
 }
@@ -73,6 +76,7 @@ type AiBulkPreviewSheetBodyProps = {
   createdBy: string;
   onConfirm: (entries: ConfirmedEntry[]) => void;
   onClose: () => void;
+  fullScreen?: boolean;
 };
 
 function AiBulkPreviewSheetBody({
@@ -82,6 +86,7 @@ function AiBulkPreviewSheetBody({
   createdBy,
   onConfirm,
   onClose,
+  fullScreen,
 }: AiBulkPreviewSheetBodyProps) {
   const [entries, setEntries] = useState<ParsedEntryCardData[]>(initialAnnotatedEntries);
 
@@ -152,7 +157,11 @@ function AiBulkPreviewSheetBody({
   return (
     <SheetContent
       side="bottom"
-      className="rounded-t-[20px] max-h-[90vh] flex flex-col"
+      className={
+        fullScreen
+          ? 'h-full max-h-none rounded-none flex flex-col'
+          : 'rounded-t-[20px] max-h-[90vh] flex flex-col'
+      }
       data-testid="ai-bulk-preview-sheet"
     >
       <SheetHeader>
