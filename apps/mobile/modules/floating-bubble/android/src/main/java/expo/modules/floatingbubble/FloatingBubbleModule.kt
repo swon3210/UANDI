@@ -10,12 +10,14 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -291,6 +293,15 @@ class FloatingBubbleModule : Module() {
         FileChooserBridge.start(context, filePathCallback, allowCamera) {
           mainHandler.post { setChooserMode(false) }
         }
+        return true
+      }
+
+      // WebView 콘솔(에러 포함)을 logcat으로 — 이미지 처리 실패 등 진단용.
+      override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+        Log.d(
+          "FloatingBubbleWeb",
+          "${message.message()} @${message.sourceId()}:${message.lineNumber()}"
+        )
         return true
       }
     }

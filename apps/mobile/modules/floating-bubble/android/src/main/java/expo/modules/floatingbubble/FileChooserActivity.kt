@@ -21,6 +21,7 @@ class FileChooserActivity : Activity() {
   }
 
   private var cameraUri: Uri? = null
+  private var cameraFile: File? = null
   private var allowCamera = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,6 +100,7 @@ class FileChooserActivity : Activity() {
     return try {
       val dir = File(cacheDir, "bubble-capture").apply { mkdirs() }
       val file = File(dir, "capture_${System.nanoTime()}.jpg")
+      cameraFile = file
       FileProvider.getUriForFile(this, "$packageName.floatingbubble.fileprovider", file)
     } catch (e: Exception) {
       null
@@ -114,18 +116,42 @@ class FileChooserActivity : Activity() {
     finishWith(extractUris(data))
   }
 
+  // 선택 결과를 WebView가 나중에도 읽을 수 있는 URI로 변환한다.
+  // 갤러리/문서의 외부 앱 소유 content URI는 이 Activity가 끝나면 읽기 권한이 회수돼
+  // WebView가 파일을 읽지 못하므로, 우리 앱 캐시로 복사해 우리 FileProvider URI로 넘긴다.
+  // (카메라 촬영분은 이미 우리 FileProvider(cameraUri)에 저장됨.)
   private fun extractUris(data: Intent?): Array<Uri>? {
-    // 갤러리 다중 선택
+    val sources = ArrayList<Uri>()
     data?.clipData?.let { clip ->
-      val list = ArrayList<Uri>()
-      for (i in 0 until clip.itemCount) list.add(clip.getItemAt(i).uri)
-      if (list.isNotEmpty()) return list.toTypedArray()
+      for (i in 0 until clip.itemCount) sources.add(clip.getItemAt(i).uri)
     }
-    // 갤러리 단일 선택
-    data?.data?.let { return arrayOf(it) }
-    // 카메라 촬영: data가 비어 있고 EXTRA_OUTPUT에 저장됨
-    cameraUri?.let { return arrayOf(it) }
+    if (sources.isEmpty()) data?.data?.let { sources.add(it) }
+
+    if (sources.isNotEmpty()) {
+      val copied = sources.mapNotNull { copyToCache(it) }
+      return if (copied.isEmpty()) null else copied.toTypedArray()
+    }
+
+    // 카메라 촬영: data가 비어 있고 EXTRA_OUTPUT(cameraUri)에 저장됨
+    cameraFile?.let { if (it.exists() && it.length() > 0) return arrayOf(cameraUri!!) }
     return null
+  }
+
+  // 외부 content URI를 우리 앱 캐시 파일로 복사하고, 우리 FileProvider URI를 반환한다.
+  private fun copyToCache(uri: Uri): Uri? {
+    return try {
+      val dir = File(cacheDir, "bubble-capture").apply { mkdirs() }
+      val ext = contentResolver.getType(uri)?.substringAfterLast('/')
+        ?.takeIf { it.isNotBlank() && it.length <= 5 } ?: "jpg"
+      val file = File(dir, "pick_${System.nanoTime()}.$ext")
+      contentResolver.openInputStream(uri)?.use { input ->
+        file.outputStream().use { output -> input.copyTo(output) }
+      } ?: return null
+      if (file.length() == 0L) return null
+      FileProvider.getUriForFile(this, "$packageName.floatingbubble.fileprovider", file)
+    } catch (e: Exception) {
+      null
+    }
   }
 
   private fun finishWith(uris: Array<Uri>?) {
