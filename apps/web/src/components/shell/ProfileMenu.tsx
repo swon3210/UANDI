@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { User as UserIcon, Settings, LogOut } from 'lucide-react';
+import { User as UserIcon, Settings, LogOut, GraduationCap } from 'lucide-react';
 import {
   Avatar,
   AvatarImage,
@@ -13,6 +13,7 @@ import {
 } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
+import { openServiceTour } from '@/components/tutorial/openServiceTour';
 
 /**
  * 전역 프로필 메뉴. PageHeader 우측에 자동으로 붙어 모든 AppShell 페이지에서
@@ -41,6 +42,10 @@ export function ProfileMenu() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => openServiceTour()} data-testid="menu-tour">
+          <GraduationCap size={16} className="mr-2" />
+          튜토리얼 다시 보기
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings')} data-testid="menu-settings">
           <Settings size={16} className="mr-2" />
           설정

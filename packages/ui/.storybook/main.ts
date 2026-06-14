@@ -7,6 +7,9 @@ const config: StorybookConfig = {
     '../../../apps/web/src/**/*.stories.@(ts|tsx)',
   ],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
+  // apps/web/public 을 정적 루트로 서빙 — 투어 스크린샷(/tour/*.webp) 등 web 앱 자산을
+  // 사용하는 스토리가 Storybook 에서도 동일 경로로 로드되게 한다.
+  staticDirs: ['../../../apps/web/public'],
   framework: {
     name: '@storybook/react-vite',
     options: {},
