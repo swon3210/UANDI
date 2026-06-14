@@ -65,7 +65,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       description: '주말 나들이',
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 3지표 요약
@@ -84,7 +84,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('settlement-entries-link').click();
@@ -123,7 +123,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       description: '카페',
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     // 내역 페이지에서 첨부 1장 추가(첨부 전용) → 워크스페이스로 돌아오면 갤러리에 노출
@@ -148,7 +148,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
 
     // 보고서 뷰 전환 + 첨부 갤러리 제거
     await expect(page.getByTestId('settlement-report-view')).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('결산 완료')).toBeVisible();
+    await expect(page.getByText('점검 완료')).toBeVisible();
     await expect(page.getByTestId('settlement-attachment-gallery')).toHaveCount(0);
   });
 
@@ -164,7 +164,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       aiAnalysis: '## 지난 달 결산\n\n전반적으로 예산 내에서 잘 관리됐어요.',
     });
 
-    await page.goto(`/inner/cashbook/settlement?month=${prev.key}`);
+    await page.goto(`/inner/cashbook/review?month=${prev.key}`);
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await expect(page.getByTestId('settlement-report-view')).toBeVisible({ timeout: 5000 });
@@ -190,13 +190,13 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       description: '월급',
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('settlement-entries-link').click();
 
     // 내역 페이지로 이동 + 리스트 노출
-    await expect(page).toHaveURL(/\/inner\/cashbook\/settlement\/entries/);
+    await expect(page).toHaveURL(/\/inner\/cashbook\/review\/entries/);
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
     await expect(page.getByTestId('settlement-summary-header')).toBeVisible();
     await expect(page.locator('[data-testid^="entry-card-"]')).toHaveCount(2);
@@ -216,7 +216,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await page.getByTestId('settlement-entries-link').click();
@@ -246,7 +246,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       totals: { income: 2_000_000, expense: 800_000, flex: 100_000 },
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
     await expect(page.getByTestId('settlement-report-view')).toBeVisible({ timeout: 5000 });

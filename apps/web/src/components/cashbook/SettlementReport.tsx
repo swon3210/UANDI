@@ -94,7 +94,7 @@ export function SettlementReport({
         }
       }
 
-      const header = `# 월 결산 보고서 (${monthLabel})`;
+      const header = `# 월 점검 보고서 (${monthLabel})`;
       const charts_md = imageBlocks.length > 0 ? `\n\n## 차트\n\n${imageBlocks.join('\n\n')}` : '';
       const body = `\n\n## 분석\n\n${content}`;
       downloadMarkdown(`settlement-${monthLabel}.md`, `${header}${charts_md}${body}\n`);
@@ -114,7 +114,7 @@ export function SettlementReport({
         className="gap-1.5"
       >
         <Sparkles size={14} />
-        AI 결산 보고서
+        AI 점검 보고서
       </Button>
     );
   }

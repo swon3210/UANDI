@@ -48,7 +48,7 @@ test.describe('월 결산 — 첨부 전용 + 일괄 분석·동기화', () => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
     await page.getByTestId('settlement-entries-link').click();
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
@@ -66,7 +66,7 @@ test.describe('월 결산 — 첨부 전용 + 일괄 분석·동기화', () => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
     await page.getByTestId('settlement-entries-link').click();
     await expect(page.getByTestId('settlement-entries-page')).toBeVisible();
@@ -98,7 +98,7 @@ test.describe('월 결산 — 첨부 전용 + 일괄 분석·동기화', () => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
     await page.getByTestId('settlement-entries-link').click();
     await attachAccountImage(page);
@@ -127,7 +127,7 @@ test.describe('월 결산 — 첨부 전용 + 일괄 분석·동기화', () => {
       date: new Date().toISOString(),
     });
 
-    await page.goto('/inner/cashbook/settlement');
+    await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
     await page.getByTestId('settlement-entries-link').click();
     await attachAccountImage(page);

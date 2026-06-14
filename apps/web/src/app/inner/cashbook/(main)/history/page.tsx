@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, FileBarChart } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -424,6 +425,21 @@ export default function CashbookPage() {
           ));
         }}
       />
+
+      <div className="mt-3 flex justify-end">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1 px-2 text-xs text-muted-foreground"
+          data-testid="history-review-link"
+        >
+          <Link href="/inner/cashbook/review">
+            <FileBarChart size={14} />
+            점검
+          </Link>
+        </Button>
+      </div>
 
       <div className="mt-4">
         <CashbookFilterBar

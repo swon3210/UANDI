@@ -11,7 +11,7 @@ const meta: Meta<typeof ServiceTourOverlay> = {
     docs: {
       description: {
         component:
-          'MOA 온보딩 투어. 핵심인 가계부(내역·예산·현금흐름·결산)를 기능별로 풍부하게 안내하고, 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장으로 묶는다. 모바일은 전체 화면, 데스크톱은 가운데 카드. 로그인 후 대시보드 첫 진입 시 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
+          'MOA 온보딩 투어. 핵심인 가계부(내역·예산·현금흐름·점검)를 기능별로 풍부하게 안내하고, 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장으로 묶는다. 모바일은 전체 화면, 데스크톱은 가운데 카드. 로그인 후 대시보드 첫 진입 시 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
       },
     },
   },
@@ -43,12 +43,12 @@ export const CashbookBudget: Story = {
 };
 
 export const CashbookCashflow: Story = {
-  name: '4. 가계부 — 현금흐름 캘린더',
+  name: '4. 가계부 — 현금흐름',
   args: { defaultStep: 3, onClose: () => {} },
 };
 
 export const CashbookSettlement: Story = {
-  name: '5. 가계부 — 월 결산',
+  name: '5. 가계부 — 점검',
   args: { defaultStep: 4, onClose: () => {} },
 };
 
