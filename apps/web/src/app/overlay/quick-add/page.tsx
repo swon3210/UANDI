@@ -2,8 +2,8 @@
 
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
-import { Sparkles } from 'lucide-react';
-import { Sheet, FullScreenSpinner } from '@uandi/ui';
+import { Sparkles, BookOpen } from 'lucide-react';
+import { Sheet, FullScreenSpinner, Button } from '@uandi/ui';
 import { authStatusAtom, userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAddEntry, useAddEntries } from '@/hooks/useCashbook';
@@ -101,6 +101,18 @@ export default function OverlayQuickAddPage() {
       <p className="mt-3 text-xs text-muted-foreground">
         자연어로 입력하거나 영수증 사진을 첨부하면 AI가 내역을 정리해드려요.
       </p>
+
+      {/* 하단: MOA 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}
+      <Button
+        variant="outline"
+        className="mt-auto w-full"
+        onClick={() => {
+          window.location.href = 'uandi://inner/cashbook/history';
+        }}
+      >
+        <BookOpen size={16} />
+        앱에서 내역 보기
+      </Button>
     </main>
   );
 }
