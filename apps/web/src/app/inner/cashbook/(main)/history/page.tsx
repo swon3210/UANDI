@@ -7,7 +7,7 @@ import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
-import { BookOpen, FileBarChart } from 'lucide-react';
+import { BookOpen, FileBarChart, ChevronRight } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -426,20 +426,25 @@ export default function CashbookPage() {
         }}
       />
 
-      <div className="mt-3 flex justify-end">
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1 px-2 text-xs text-muted-foreground"
-          data-testid="history-review-link"
-        >
-          <Link href="/inner/cashbook/review">
-            <FileBarChart size={14} />
-            점검
-          </Link>
-        </Button>
-      </div>
+      <Button
+        asChild
+        variant="outline"
+        className="mt-4 h-auto w-full justify-start gap-3 py-3"
+        data-testid="history-review-link"
+      >
+        <Link href="/inner/cashbook/review">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <FileBarChart size={18} aria-hidden />
+          </span>
+          <span className="flex min-w-0 flex-col items-start">
+            <span className="text-sm font-medium text-foreground">내역 점검</span>
+            <span className="whitespace-normal text-left text-xs leading-snug text-muted-foreground">
+              누락·중복된 내역이 없는지 확인하고 채우기
+            </span>
+          </span>
+          <ChevronRight size={18} aria-hidden className="ml-auto shrink-0 text-muted-foreground" />
+        </Link>
+      </Button>
 
       <div className="mt-4">
         <CashbookFilterBar
