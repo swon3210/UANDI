@@ -17,7 +17,7 @@ const TABS = [
  * "다른 영역으로 전환"이 분명히 드러나도록 아이콘+라벨 칩으로 표현하고,
  * 활성 섹션은 공간 톤(coral)으로 채워 하단 네비·기간 토글과 시각적으로 구분한다.
  * 대시보드는 정확 경로 매칭(루트에서만 활성), 나머지는 prefix 매칭이다.
- * 점검(/inner/cashbook/review)은 탭이 아니라 대시보드·내역의 진입점으로 들어간다.
+ * 점검(/inner/cashbook/review)은 탭이 아니라 내역 페이지의 진입점으로 들어간다.
  */
 export function CashbookTabs({ activePath }: { activePath?: string }) {
   const pathname = usePathname();

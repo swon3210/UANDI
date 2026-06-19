@@ -5,7 +5,7 @@ import { CashbookTabsPage } from '../page-objects/CashbookTabsPage';
 /**
  * Phase 2 — 가계부 ⋮ 해체 → 상단 탭 + ⚙ 설정.
  * 가계부 진입(랜딩) = 대시보드, 상단 탭 4개 = 대시보드/내역/현금흐름/목표.
- * 점검은 탭이 아니라 대시보드 헤더·내역 페이지의 진입점으로 들어간다.
+ * 점검은 탭이 아니라 내역 페이지의 진입점으로 들어간다.
  */
 test.describe('가계부 상단 탭 (CashbookTabs)', () => {
   test('가계부 진입 시 요약(대시보드)이 기본 화면이고 상단 탭 4개가 표시된다', async ({
