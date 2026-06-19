@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-const EFFECTIVE_DATE = '2026년 5월 25일';
+const EFFECTIVE_DATE = '2026년 6월 19일';
 const CONTACT_EMAIL = 'swon3210@gmail.com';
 const OPERATOR_NAME = '이송원';
 
@@ -72,6 +72,13 @@ export default function PrivacyPolicyPage() {
               작성자 식별자
             </li>
             <li>
+              <strong>가계부 점검용 거래 명세 이미지</strong>: 가계부 점검(결산) 기능에서 이용자가
+              직접 첨부하는 카드·계좌 거래 명세 캡처 이미지. 해당 이미지에는 가맹점명, 거래금액,
+              거래일시, 일부 마스킹된 카드·계좌 번호 등 금융거래 정보가 포함될 수 있습니다. 이
+              이미지는 내역 자동 인식(OCR)·분석 목적으로만 처리되며, 점검 완료 시 즉시
+              삭제됩니다(아래 3조·6조 참고).
+            </li>
+            <li>
               <strong>푸시 알림 토큰</strong>: 푸시 알림 수신 동의 시 발급되는 기기 식별 토큰(FCM
               토큰)
             </li>
@@ -93,7 +100,10 @@ export default function PrivacyPolicyPage() {
             <li>회원 식별 및 로그인 상태 유지</li>
             <li>커플 연결 기능 제공 (초대 코드 발급·검증)</li>
             <li>사진 갤러리, 가계부 등 핵심 서비스 기능 제공</li>
-            <li>AI 기반 부가 기능 제공 (가계부 자동 분류, 태그 추천, 지출 분석 등)</li>
+            <li>
+              AI 기반 부가 기능 제공 (가계부 자동 분류, 태그 추천, 지출 분석, 점검 시 첨부한 거래
+              명세 이미지의 자동 인식(OCR)·내역 추출 등)
+            </li>
             <li>푸시 알림 발송 (이용자가 동의한 경우에 한함)</li>
             <li>서비스 운영 및 오류 대응, 보안 위협 대응</li>
             <li>이용자 문의 응대</li>
@@ -102,6 +112,13 @@ export default function PrivacyPolicyPage() {
           <h2 className="mt-8 text-lg font-semibold">3. 개인정보의 보유 및 이용기간</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>회원이 서비스를 이용하는 동안 또는 회원 탈퇴 시까지 보유합니다.</li>
+            <li>
+              <strong>가계부 점검용 거래 명세 이미지</strong>는 해당 월의 점검을 완료하는 즉시 파일
+              저장소(Storage)에서 삭제합니다. 점검을 완료하지 않아 방치된 이미지도 최대 30일 이내에
+              자동으로 삭제되며, 이용자가 직접 삭제하거나 회원 탈퇴 시에도 함께 파기됩니다.
+              인식(OCR)으로 추출된 가계부 내역(텍스트)은 이용자가 저장을 확정한 경우에 한해 일반
+              가계부 정보로 보관됩니다.
+            </li>
             <li>
               회원 탈퇴 시 이용자의 계정 정보는 지체 없이 파기합니다. 단, 커플로 연결된 상대방이
               함께 이용 중인 콘텐츠(사진·가계부 등)는 상대방의 이용에 영향을 주지 않는 범위 내에서
@@ -154,7 +171,10 @@ export default function PrivacyPolicyPage() {
                 </tr>
                 <tr>
                   <td className="px-3 py-2">OpenAI, L.L.C.</td>
-                  <td className="px-3 py-2">AI 기반 가계부 분류·태그 추천·지출 분석 기능 처리</td>
+                  <td className="px-3 py-2">
+                    AI 기반 가계부 분류·태그 추천·지출 분석 및 점검 시 첨부한 거래 명세 이미지의
+                    자동 인식(OCR)·내역 추출 처리
+                  </td>
                   <td className="px-3 py-2">미국</td>
                 </tr>
               </tbody>
@@ -163,9 +183,10 @@ export default function PrivacyPolicyPage() {
 
           <p className="mt-3">
             위 수탁업체는 위탁받은 업무 수행에 필요한 최소한의 정보만 처리하며, 각 사업자의 약관 및
-            개인정보 보호정책에 따라 안전하게 관리됩니다. OpenAI API의 경우 운영자가 일부 텍스트
-            정보(가계부 항목, 분석 요청 등)를 전송하며, OpenAI의 정책상 API 호출 데이터는 모델
-            학습에 이용되지 않습니다.
+            개인정보 보호정책에 따라 안전하게 관리됩니다. OpenAI API의 경우 운영자가 가계부 텍스트
+            정보(가계부 항목, 분석 요청 등)와 함께{' '}
+            <strong>이용자가 점검 기능에서 첨부한 거래 명세 이미지</strong>를 자동 인식(OCR)·분석
+            목적으로 전송하며, OpenAI의 정책상 API 호출 데이터는 모델 학습에 이용되지 않습니다.
           </p>
 
           <h2 className="mt-8 text-lg font-semibold">5. 국외 이전에 관한 사항</h2>
@@ -199,12 +220,20 @@ export default function PrivacyPolicyPage() {
               위해 이용자가 입력한 가계부 텍스트의 일부를 OpenAI API로 전송할 수 있습니다.
             </li>
             <li>
-              OpenAI의 정책에 따라 API 호출로 전달된 데이터는 모델 학습에 이용되지 않으며, OpenAI
-              측에서도 일정 기간 후 파기됩니다.
+              또한 가계부 점검(결산) 기능에서 이용자가 카드·계좌 거래 명세 이미지를 첨부하면, 해당
+              이미지에 포함된 내역을 자동으로 인식(OCR)·분류하기 위해 이미지를 OpenAI API로
+              전송합니다. 전송된 이미지는 내역 추출·분석 목적으로만 사용되며, 점검 완료 시 서비스의
+              파일 저장소에서 즉시 삭제됩니다.
             </li>
             <li>
-              민감한 개인 식별 정보(주민등록번호, 카드번호 등)는 가계부 입력 필드에 입력하지 않을
-              것을 권장하며, 서비스는 이러한 정보를 별도로 수집하지 않습니다.
+              OpenAI의 정책에 따라 API 호출로 전달된 데이터(텍스트 및 이미지)는 모델 학습에 이용되지
+              않으며, OpenAI 측에서도 일정 기간 후 파기됩니다.
+            </li>
+            <li>
+              거래 명세 이미지에는 가맹점명·거래금액·일부 마스킹된 카드/계좌 번호 등 금융거래 정보가
+              포함될 수 있으며, 서비스는 이를 가계부 점검이라는 명시된 목적 외로 이용하지 않습니다.
+              주민등록번호 등 고유식별정보는 수집하지 않으며, 이용자께서도 점검에 불필요한
+              민감정보가 노출되지 않도록 주의해 주시기를 권장합니다.
             </li>
           </ul>
 
@@ -212,8 +241,8 @@ export default function PrivacyPolicyPage() {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               <strong>공유 범위</strong>: 커플 연결이 완료되면 양측 이용자가 업로드·입력한
-              사진(원본, 썸네일, 캡션, 태그, 폴더), 가계부 내역(금액, 카테고리, 메모, 거래일자)이
-              커플 구성원 간 공유됩니다.
+              사진(원본, 썸네일, 캡션, 태그, 폴더), 가계부 내역(금액, 카테고리, 메모, 거래일자),
+              점검 완료 전까지 첨부된 거래 명세 이미지가 커플 구성원 간 공유됩니다.
             </li>
             <li>
               <strong>접근 제한</strong>: 공유된 정보는 Firestore 보안 규칙에 의해 동일 커플
@@ -320,7 +349,9 @@ export default function PrivacyPolicyPage() {
                 </tr>
                 <tr>
                   <td className="px-3 py-2 border-b border-border">사진·파일 접근</td>
-                  <td className="px-3 py-2 border-b border-border">사진 갤러리에 이미지 업로드</td>
+                  <td className="px-3 py-2 border-b border-border">
+                    사진 갤러리 업로드 및 가계부 점검용 거래 명세 이미지 첨부
+                  </td>
                   <td className="px-3 py-2 border-b border-border">선택</td>
                 </tr>
                 <tr>

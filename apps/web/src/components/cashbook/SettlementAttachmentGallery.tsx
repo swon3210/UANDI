@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import dayjs from 'dayjs';
-import { Loader2, X, ImageIcon, Landmark, CreditCard, Plus } from 'lucide-react';
+import { Loader2, X, ImageIcon, Landmark, CreditCard, Plus, ShieldCheck } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import type { SettlementAttachment, SettlementImageKind } from '@/types';
 
@@ -70,6 +70,20 @@ export function SettlementAttachmentGallery({
         <ImageIcon size={13} />
         첨부한 영수증·스크린샷 ({attachments.length})
       </p>
+
+      {onAttach && (
+        <p
+          className="mb-2 flex items-start gap-1.5 rounded-lg bg-muted/60 px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground"
+          data-testid="settlement-attachment-privacy-notice"
+        >
+          <ShieldCheck size={13} className="mt-px shrink-0 text-primary" />
+          <span>
+            첨부한 카드·계좌 명세 이미지는 내역을 자동으로 읽어오기 위해 AI(OpenAI)로 전송돼요.
+            <strong className="font-medium text-foreground"> 점검을 완료하면 즉시 삭제</strong>되며,
+            자세한 처리 내용은 개인정보처리방침에서 확인할 수 있어요.
+          </span>
+        </p>
+      )}
 
       {attachments.length === 0 && !onAttach ? (
         <p
@@ -211,11 +225,7 @@ function SettlementAttachmentSection({
                   disabled={isRemoving}
                   className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background disabled:opacity-60"
                 >
-                  {isRemoving ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    <X size={12} />
-                  )}
+                  {isRemoving ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
                 </button>
               </div>
             );
