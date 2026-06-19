@@ -45,8 +45,8 @@ apps/mobile/store/listings/
     video.txt                   # 프로모션 영상 URL (선택)
     images/
       phoneScreenshots/         # 1.png, 2.png ... (2~8장, 파일명 숫자순 정렬)
-      sevenInchScreenshots/     # 7" 태블릿 (선택)
-      tenInchScreenshots/       # 10" 태블릿 (선택)
+      sevenInchScreenshots/     # 7" 태블릿 (2~8장, 16:9 또는 9:16)
+      tenInchScreenshots/       # 10" 태블릿 (2~8장, 16:9 또는 9:16)
       featureGraphic/           # 1024x500 1장
       icon/                     # 512x512 1장
 ```
@@ -62,8 +62,9 @@ apps/mobile/store/listings/
 
 ### 스크린샷 자동 생성
 
-폰 스크린샷은 Playwright로 웹 앱(= WebView 콘텐츠)을 실제 폰 뷰포트에서 캡처해
-`images/phoneScreenshots/` 로 바로 떨군다. 데모 데이터를 시드한 뒤 로그인 상태로 찍는다.
+폰·태블릿 스크린샷을 Playwright로 웹 앱(= WebView 콘텐츠)을 각 뷰포트에서 캡처해
+`images/phoneScreenshots/`, `images/sevenInchScreenshots/`, `images/tenInchScreenshots/`
+로 바로 떨군다. 데모 데이터를 시드한 뒤 로그인 상태로 한 번에 세 디바이스를 모두 찍는다.
 
 ```bash
 # 1) 별도 터미널에서 Firebase 에뮬레이터 기동
@@ -84,7 +85,13 @@ pnpm play:listing:push -- --images-only
   기본 5종: 대시보드 / 가계부 / 현금흐름 / 자산배분 / 커뮤니티.
 - 데모 데이터(가계부/현금흐름/자산배분/커뮤니티)는
   `apps/web/e2e/screenshots/seed-demo.ts` 에서 조정한다.
-- 출력 규격: 1236×2400 PNG (세로:가로 ≈ 1.94:1 — Play의 2:1 비율 한도 이내).
+- 출력 규격:
+  - 폰: 1236×2400 PNG (세로형 모바일 레이아웃, 세로:가로 ≈ 1.94:1 — Play의 2:1 비율 한도 이내).
+  - 7" 태블릿: 3072×1728 PNG (가로형 16:9).
+  - 10" 태블릿: 3456×1944 PNG (가로형 16:9, 각 변 ≤ 3840).
+  - 캡처 디바이스/뷰포트는 같은 spec 의 `DEVICES` 배열에서 조정한다. 태블릿은
+    실제 태블릿처럼 보이도록 CSS 너비를 md 브레이크포인트(768px) 이상으로 잡아
+    데스크톱 레이아웃(좌측 네비 레일)을 캡처한다.
 - dev 서버의 Next.js 배지·온디맨드 컴파일 등은 스크립트가 자동으로 처리한다
   (배지 숨김 + 라우트 사전 컴파일). 별도 설정 불필요.
 - **갤러리(사진)** 화면은 실제 이미지 파일이 있어야 썸네일이 보이므로 기본 캡처

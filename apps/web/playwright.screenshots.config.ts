@@ -36,7 +36,7 @@ export default defineConfig({
   timeout: 180000,
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
-    // Play 폰 스크린샷 규격을 만족하는 세로형 뷰포트.
+    // 시작(폰) 뷰포트. 태블릿 캡처는 spec 의 DEVICES 배열에서 setViewportSize 로 전환한다.
     //   디바이스 픽셀 = CSS 크기 × deviceScaleFactor = 1236×2400
     //   (각 변 320~3840px, 세로:가로 비율 ≤ 2:1 — 2400/1236 ≈ 1.94 만족)
     // CSS 너비 412 는 일반 폰과 같아 웹의 모바일 레이아웃이 그대로 렌더된다.
