@@ -13,6 +13,8 @@
     "emulators": "npm --prefix functions run build && firebase emulators:start --only auth,firestore,storage,functions",
     "play:listing:pull": "node scripts/play-listing.mjs pull",
     "play:listing:push": "node scripts/play-listing.mjs push",
+    "play:notes:pull": "node scripts/play-release-notes.mjs pull",
+    "play:notes:push": "node scripts/play-release-notes.mjs push",
     "screenshots": "pnpm --filter web screenshots"
   },
   "devDependencies": {
