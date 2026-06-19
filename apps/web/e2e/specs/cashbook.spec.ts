@@ -80,6 +80,24 @@ test.describe('가계부', () => {
 
       await expect(cashbook.monthlySummary.getByText('+3,000,000원')).toBeVisible();
     });
+
+    test('내역 추가 폼이 열린 상태에서 뒤로가기를 누르면 폼만 닫히고 페이지에 머문다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const cashbook = new CashbookPage(page);
+      await cashbook.goto();
+
+      await cashbook.addButton.click();
+      await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
+
+      // 뒤로가기 → 페이지 이동 대신 폼만 닫힌다.
+      await page.goBack();
+      await expect(page.getByTestId('entry-form-sheet')).not.toBeVisible();
+      await expect(page).toHaveURL(/\/inner\/cashbook\/history$/);
+    });
   });
 
   test.describe('날짜별 그룹', () => {

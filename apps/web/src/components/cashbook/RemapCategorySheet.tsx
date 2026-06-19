@@ -77,6 +77,7 @@ export function RemapCategorySheet({
         </Tabs>
 
         <CategoryChips
+          key={activeType}
           categories={typeCategories}
           activeType={activeType}
           value={selected}

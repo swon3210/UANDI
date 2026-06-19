@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import type { CashbookCategory } from '@/types';
+import { SUB_GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryChips } from './CategoryChips';
 
 const ts = Timestamp.fromDate(new Date());
@@ -84,6 +85,54 @@ const expenseCategories: CashbookCategory[] = [
   },
 ];
 
+// 카테고리가 많을 때 드릴다운 + 검색이 스크롤을 어떻게 줄이는지 확인하기 위한 데이터.
+const manyCategories: CashbookCategory[] = (() => {
+  const subGroups = ['fixed_expense', 'variable_common', 'variable_personal'] as const;
+  const out: CashbookCategory[] = [];
+  let n = 0;
+  for (const sg of subGroups) {
+    for (let p = 0; p < 6; p++) {
+      const parentId = `m-${sg}-${p}`;
+      out.push({
+        id: parentId,
+        coupleId: 'c1',
+        group: 'expense',
+        subGroup: sg,
+        name: `${SUB_GROUP_LABELS[sg]}${p + 1}`,
+        icon: 'tag',
+        color: '#FFA726',
+        isDefault: false,
+        sortOrder: p,
+        parentCategoryId: null,
+        description: '',
+        examples: [],
+        createdAt: ts,
+      });
+      // 일부 부모에만 자식을 둔다.
+      if (p % 2 === 0) {
+        for (let c = 0; c < 4; c++) {
+          out.push({
+            id: `${parentId}-c${c}`,
+            coupleId: 'c1',
+            group: 'expense',
+            subGroup: sg,
+            name: `세부${(n += 1)}`,
+            icon: 'tag',
+            color: '#FFA726',
+            isDefault: false,
+            sortOrder: c,
+            parentCategoryId: parentId,
+            description: '',
+            examples: [],
+            createdAt: ts,
+          });
+        }
+      }
+    }
+  }
+  return out;
+})();
+
 function Wrapper({
   categories,
   initialValue = '',
@@ -154,6 +203,13 @@ export const OrphanedValue: Story = {
 export const NoCategories: Story = {
   args: {
     categories: [],
+  },
+};
+
+// 카테고리가 많을 때: 검색창 + 대분류만 가로 wrap, 자식은 드릴다운으로 노출되어 스크롤이 짧다.
+export const ManyCategories: Story = {
+  args: {
+    categories: manyCategories,
   },
 };
 
