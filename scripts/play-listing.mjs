@@ -233,8 +233,8 @@ async function pushImages(client, packageName, editId, language, langDir) {
       console.log(`  ⚠ ${imageType}: 1장만 허용되는데 ${files.length}장 있음 → 첫 번째만 사용`);
       files.length = 1;
     }
-    if (imageType === 'phoneScreenshots' && (files.length < 2 || files.length > 8)) {
-      console.log(`  ⚠ phoneScreenshots: Play는 2~8장 필요 (현재 ${files.length}장)`);
+    if (imageType.endsWith('Screenshots') && (files.length < 2 || files.length > 8)) {
+      console.log(`  ⚠ ${imageType}: Play는 2~8장 필요 (현재 ${files.length}장)`);
     }
 
     console.log(`  ${imageType}: ${files.length}장 교체`);
