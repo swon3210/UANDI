@@ -30,8 +30,10 @@ import type { CashbookEntry, CashbookEntryType, CashbookCategory, CategoryGroup 
 import { GROUP_LABELS } from '@/constants/default-categories';
 import { useAddCategory } from '@/hooks/useCashbookCategories';
 import { useBackButtonClose } from '@/hooks/useBackButtonClose';
+import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { CategoryChips } from './CategoryChips';
 import { CategoryForm } from './CategoryForm';
+import { AuthorAvatar } from './AuthorAvatar';
 
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
@@ -86,6 +88,12 @@ export function EntryForm({
   );
   const addCategoryMutation = useAddCategory(coupleId);
 
+  // 편집 모드에서만 작성자 표시 (신규 추가 시 작성자는 본인이고 아직 저장 전).
+  const { data: members } = useCoupleMembers(coupleId);
+  const author = editingEntry
+    ? members?.find((m) => m.uid === editingEntry.createdBy)
+    : undefined;
+
   // 안드로이드 하드웨어/브라우저 뒤로가기를 페이지 이동 대신 폼 닫기로 처리.
   useBackButtonClose(onClose);
 
@@ -137,6 +145,12 @@ export function EntryForm({
         <SheetTitle className="min-w-0 flex-1 truncate text-base">
           {title ?? (editingEntry ? '내역 수정' : '내역 추가')}
         </SheetTitle>
+        {author && (
+          <div className="flex shrink-0 items-center gap-1.5 pr-1 text-xs text-muted-foreground">
+            <AuthorAvatar author={author} />
+            <span className="max-w-[88px] truncate">{author.displayName}</span>
+          </div>
+        )}
       </SheetHeader>
 
       <Form {...form}>

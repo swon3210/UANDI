@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDay } from '@/utils/date';
-import type { CashbookEntry, CashbookCategory } from '@/types';
+import type { CashbookEntry, CashbookCategory, User } from '@/types';
 import type { GroupedEntries } from '@/hooks/useCashbook';
 import { EntryCard } from './EntryCard';
 
@@ -11,6 +11,8 @@ type EntryListProps = {
   onEntryClick: (entry: CashbookEntry) => void;
   /** 날짜 헤더 노출 여부. 금액순 등 평면 목록일 땐 false(카드에 날짜 표기). */
   showDateHeaders?: boolean;
+  /** uid → 멤버. 전달되면 각 카드에 작성자 아바타를 표시한다. */
+  members?: Map<string, User>;
 };
 
 export function EntryList({
@@ -18,6 +20,7 @@ export function EntryList({
   categories,
   onEntryClick,
   showDateHeaders = true,
+  members,
 }: EntryListProps) {
   const categoryMap = new Map(categories.map((c) => [c.name, c]));
 
@@ -38,6 +41,7 @@ export function EntryList({
                 category={categoryMap.get(entry.category)}
                 onClick={onEntryClick}
                 showDate={!showDateHeaders}
+                author={members?.get(entry.createdBy)}
               />
             ))}
           </div>
