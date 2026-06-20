@@ -129,8 +129,7 @@ export const TOUR_SLIDES: TourSlide[] = [
   {
     id: 'welcome',
     title: 'MOA에 오신 걸 환영해요',
-    description:
-      '둘이 함께 쓰는 가계부로 내역 입력·결산·예측 기능을 제공해요.\n위 버튼으로 오가요.',
+    description: '둘이 함께 쓰는 가계부로 내역 입력·결산·예측 기능을 제공해요.',
     Preview: WelcomePreview,
   },
   {
