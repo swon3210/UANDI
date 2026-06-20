@@ -9,7 +9,6 @@ import { CalendarDays, ImageDown, CheckCircle2, Loader2, ListChecks } from 'luci
 import {
   Button,
   EmptyState,
-  FullScreenSpinner,
   BudgetVsActualChart,
   IncomeExpensePieChart,
   DailyCumulativeChart,
@@ -22,6 +21,7 @@ import {
 } from '@uandi/ui';
 import { toast } from 'sonner';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookEntries } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget, useCategoryBudgetSummaries } from '@/hooks/useMonthlyBudget';
@@ -273,7 +273,7 @@ export default function CashbookSettlementPage() {
     });
   };
 
-  if (isLoading) return <FullScreenSpinner />;
+  if (isLoading) return <MascotLoader fullScreen />;
 
   const isCompleted = settlement?.status === 'completed' && !!settlement.report;
 

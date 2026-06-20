@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { Tabs, TabsList, TabsTrigger, TabsContent, Sheet, FullScreenSpinner } from '@uandi/ui';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Sheet } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import {
@@ -70,7 +71,7 @@ export default function CashbookMonthlyPage() {
     ));
   };
 
-  if (isLoading) return <FullScreenSpinner />;
+  if (isLoading) return <MascotLoader fullScreen />;
 
   const simplifiedCategories = (categories ?? []).map((c) => ({
     id: c.id,

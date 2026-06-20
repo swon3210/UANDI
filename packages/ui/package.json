@@ -12,7 +12,8 @@
     ".": "./src/index.ts",
     "./globals.css": "./src/globals.css",
     "./lib/utils": "./src/lib/utils.ts",
-    "./components/*": "./src/components/*.tsx"
+    "./components/*": "./src/components/*.tsx",
+    "./assets/*": "./src/assets/*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

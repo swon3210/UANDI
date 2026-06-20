@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  FullScreenSpinner,
   Sheet,
   SourceForm,
   SourceListItem,
@@ -23,6 +22,7 @@ import {
   TabsTrigger,
 } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useIsAdmin, useModerationLists, useModeratePost } from '@/hooks/useCommunityAdmin';
 import {
   useCommunitySources,
@@ -77,19 +77,10 @@ function PendingCard({
         <p className="whitespace-pre-wrap text-sm text-foreground">{post.body}</p>
       ) : null}
       <div className="flex gap-2">
-        <Button
-          size="sm"
-          onClick={() => onAction('approve')}
-          disabled={isPending}
-        >
+        <Button size="sm" onClick={() => onAction('approve')} disabled={isPending}>
           승인
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onAction('reject')}
-          disabled={isPending}
-        >
+        <Button size="sm" variant="outline" onClick={() => onAction('reject')} disabled={isPending}>
           반려
         </Button>
       </div>
@@ -141,12 +132,7 @@ function ReportedCard({
         >
           숨김
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onAction('keep')}
-          disabled={isPending}
-        >
+        <Button size="sm" variant="outline" onClick={() => onAction('keep')} disabled={isPending}>
           유지
         </Button>
       </div>
@@ -271,8 +257,7 @@ function SourcesPanel({ enabled }: { enabled: boolean }) {
     }
   };
 
-  const isMutating =
-    createSource.isPending || updateSource.isPending || deleteSource.isPending;
+  const isMutating = createSource.isPending || updateSource.isPending || deleteSource.isPending;
 
   return (
     <div className="space-y-4 pt-4">
@@ -329,10 +314,10 @@ export default function CommunityAdminPage() {
   }, [isAdmin, isAdminLoading, router]);
 
   if (isAdminLoading || isAdmin === undefined) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
   if (isAdmin === false) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   const handleAction = async (postId: string, action: ModerateAction) => {
@@ -353,10 +338,7 @@ export default function CommunityAdminPage() {
   return (
     <>
       <PageHeader title="모더레이션" />
-      <main
-        data-testid="community-admin"
-        className="mx-auto max-w-md px-4 pb-8 pt-4"
-      >
+      <main data-testid="community-admin" className="mx-auto max-w-md px-4 pb-8 pt-4">
         <Tabs defaultValue="pending" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending">승인 대기</TabsTrigger>

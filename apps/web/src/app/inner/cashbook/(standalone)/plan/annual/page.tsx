@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { Pencil, RotateCcw } from 'lucide-react';
-import { Header, FullScreenSpinner } from '@uandi/ui';
+import { Header } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
@@ -64,7 +65,7 @@ export default function AnnualPlanPage() {
     router.push('/inner/cashbook/plan/annual/bulk-edit');
   }, [router]);
 
-  if (isLoading) return <FullScreenSpinner />;
+  if (isLoading) return <MascotLoader fullScreen />;
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-50">

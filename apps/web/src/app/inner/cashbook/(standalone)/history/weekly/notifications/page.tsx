@@ -6,7 +6,7 @@ import { ChevronLeft, Smartphone } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
-import { Header, Button, FullScreenSpinner, Separator } from '@uandi/ui';
+import { Header, Button, Separator } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
   useNotificationSettings,
@@ -15,6 +15,7 @@ import {
 import { useFcmToken, type FcmEnableState } from '@/hooks/useFcmToken';
 import { NotificationSettingsForm } from '@/components/cashbook/NotificationSettingsForm';
 import { InstallPwaBanner } from '@/components/InstallPwaBanner';
+import { MascotLoader } from '@/components/MascotLoader';
 import { sendTestPush } from '@/services/test-push';
 
 function reportFcmResult(result: FcmEnableState) {
@@ -108,7 +109,7 @@ export default function NotificationSettingsPage() {
     void enableFcm({ skipPermissionPrompt: true });
   }, [shouldAutoEnable, enableFcm]);
 
-  if (isPending) return <FullScreenSpinner />;
+  if (isPending) return <MascotLoader fullScreen />;
 
   const formValues = settings
     ? {
