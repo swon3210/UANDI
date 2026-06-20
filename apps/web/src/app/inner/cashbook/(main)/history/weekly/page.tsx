@@ -8,8 +8,9 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/ko';
 import { CalendarX2, AlertCircle } from 'lucide-react';
-import { Button, Sheet, FullScreenSpinner, EmptyState } from '@uandi/ui';
+import { Button, Sheet, EmptyState } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookEntries, useAddEntry } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useMonthlyBudget } from '@/hooks/useMonthlyBudget';
@@ -132,7 +133,7 @@ export default function CashbookWeeklyPage() {
     ));
   };
 
-  if (isLoading) return <FullScreenSpinner />;
+  if (isLoading) return <MascotLoader fullScreen />;
 
   if (isError) {
     return (

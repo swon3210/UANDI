@@ -3,10 +3,11 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { FullScreenSpinner, cn, type Space } from '@uandi/ui';
+import { cn, type Space } from '@uandi/ui';
 import { authStatusAtom } from '@/stores/auth.store';
 import { AppNav } from '@/components/shell/AppNav';
 import { isChromelessRoute } from '@/components/shell/chromeless-routes';
+import { MascotLoader } from '@/components/MascotLoader';
 
 type AppShellProps = {
   space: Space;
@@ -33,7 +34,7 @@ export function AppShell({ space, children }: AppShellProps) {
     authStatus === 'unauthenticated' ||
     authStatus === 'authenticated_no_couple'
   ) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   return (

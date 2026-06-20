@@ -6,8 +6,9 @@ import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { FullScreenSpinner, cn } from '@uandi/ui';
+import { cn } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import {
   useAnnualPlan,
@@ -58,7 +59,7 @@ export default function AnnualPlanBulkEditPage() {
   }, [coupleId, plan, planPending, items, itemsPending, router]);
 
   return isLoading ? (
-    <FullScreenSpinner />
+    <MascotLoader fullScreen />
   ) : (
     <BulkEditPageInner
       coupleId={coupleId!}

@@ -7,8 +7,8 @@ import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { Timestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
-import { FullScreenSpinner } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import {
   useAnnualPlan,
@@ -39,7 +39,7 @@ const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
 
 export default function AnnualPlanWizardPage() {
   return (
-    <Suspense fallback={<FullScreenSpinner />}>
+    <Suspense fallback={<MascotLoader fullScreen />}>
       <WizardPageInner />
     </Suspense>
   );
@@ -264,7 +264,7 @@ function WizardPageInner() {
     (categories.length > 0 && items.length === 0) ||
     items.some((it) => !Array.isArray(it.monthlyAmounts) || it.monthlyAmounts.length !== 12);
 
-  if (isLoading) return <FullScreenSpinner />;
+  if (isLoading) return <MascotLoader fullScreen />;
 
   const counts = {
     income: wizard.itemsByGroup.income.length,

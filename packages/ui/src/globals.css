@@ -78,6 +78,18 @@
   --shadow-md: 0 2px 8px 0 hsl(20 6% 10% / 0.08);
   --shadow-lg: 0 4px 16px 0 hsl(20 6% 10% / 0.1);
   --shadow-xl: 0 8px 32px 0 hsl(20 6% 10% / 0.12);
+
+  /* 마스코트 로더 — 전체 이미지 부드러운 부유(bob) */
+  --animate-mascot-bob: mascot-bob 1.5s ease-in-out infinite;
+  @keyframes mascot-bob {
+    0%,
+    100% {
+      transform: translateY(-4px);
+    }
+    50% {
+      transform: translateY(4px);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────

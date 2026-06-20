@@ -4,14 +4,9 @@ import { notFound, useParams, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
-import {
-  CommunityComposer,
-  FullScreenSpinner,
-  PostAuthor,
-  ReportMenu,
-  Sheet,
-} from '@uandi/ui';
+import { CommunityComposer, PostAuthor, ReportMenu, Sheet } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
+import { MascotLoader } from '@/components/MascotLoader';
 import { CommunityDeleteConfirmDialog } from '@/components/community/CommunityDeleteConfirmDialog';
 import {
   useCommunityPost,
@@ -33,7 +28,7 @@ export default function CommunityPostDetailPage() {
   const deleteMutation = useDeleteCommunityPost();
 
   if (isLoading) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   // 스크랩 글은 상세 페이지가 없다(메타데이터+링크아웃만). user 글이 아니면 404.
@@ -111,9 +106,7 @@ export default function CommunityPostDetailPage() {
                 }
               />
             ) : null}
-            {isOwner ? (
-              <ReportMenu onEdit={openEditComposer} onDelete={openDeleteConfirm} />
-            ) : null}
+            {isOwner ? <ReportMenu onEdit={openEditComposer} onDelete={openDeleteConfirm} /> : null}
           </div>
           <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground">
             {userPost.body}

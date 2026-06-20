@@ -9,6 +9,8 @@ export type { LogoProps, LogoVariant } from './Logo';
 export { Header } from './custom/Header';
 export { EmptyState } from './custom/EmptyState';
 export { FullScreenSpinner } from './custom/FullScreenSpinner';
+export { MascotLoader } from './custom/MascotLoader';
+export type { MascotLoaderProps } from './custom/MascotLoader';
 export { AppSidebar } from './custom/AppSidebar';
 export type {
   Space,
@@ -47,10 +49,7 @@ export type { ReportDialogProps, ReportReason } from './custom/community/ReportD
 export { SourceForm } from './custom/community/SourceForm';
 export type { SourceFormProps, SourceFormSubmit } from './custom/community/SourceForm';
 export { SourceListItem } from './custom/community/SourceListItem';
-export type {
-  SourceListItemProps,
-  SourceListItemSource,
-} from './custom/community/SourceListItem';
+export type { SourceListItemProps, SourceListItemSource } from './custom/community/SourceListItem';
 
 // 재테크 자산 배분 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { AssetAllocationEditor } from './custom/outer/AssetAllocationEditor';

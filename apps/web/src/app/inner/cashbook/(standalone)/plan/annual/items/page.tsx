@@ -11,7 +11,6 @@ import { ChevronLeft, Plus, MoreVertical, FolderOpen } from 'lucide-react';
 import {
   Header,
   Button,
-  FullScreenSpinner,
   EmptyState,
   Sheet,
   Dialog,
@@ -42,6 +41,7 @@ import { SUB_GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
 import { AnnualPlanItemForm } from '@/components/cashbook/AnnualPlanItemForm';
 import { formatCurrencyMan } from '@/utils/currency';
+import { MascotLoader } from '@/components/MascotLoader';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
 
 const VALID_GROUPS: GoalCategoryKey[] = ['income', 'expense', 'flex'];
@@ -50,7 +50,7 @@ const WIZARD_INTRO = `${ANNUAL_MAIN}/wizard?step=intro`;
 
 export default function AnnualPlanItemsPage() {
   return (
-    <Suspense fallback={<FullScreenSpinner />}>
+    <Suspense fallback={<MascotLoader fullScreen />}>
       <ItemsPageInner />
     </Suspense>
   );
@@ -138,7 +138,7 @@ function ItemsPageInner() {
     !categories ||
     (!!plan && itemsPending)
   ) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   const theme = GOAL_CATEGORY_BY_KEY[groupKey];

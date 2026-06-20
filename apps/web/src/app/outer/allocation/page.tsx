@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { AssetAllocationEditor, type AssetAllocationValue, FullScreenSpinner } from '@uandi/ui';
+import { AssetAllocationEditor, type AssetAllocationValue } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { PageHeader } from '@/components/shell/PageHeader';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useAssetAllocation, useUpdateAssetAllocation } from '@/hooks/useAssetAllocation';
 import { AssetProjectionPanel } from '@/components/outer/AssetProjectionPanel';
 import { DEFAULT_ASSET_ALLOCATION } from '@/types';
@@ -62,7 +63,7 @@ export default function OuterAllocationPage() {
       <PageHeader data-testid="outer-allocation-header" title="자산 배분" />
       <main className="mx-auto max-w-md px-4 pb-20 pt-4">
         {isLoading || !uid || !coupleId ? (
-          <FullScreenSpinner />
+          <MascotLoader fullScreen />
         ) : (
           <AllocationForm
             // 저장된 값이 로드된 뒤 그 값으로 폼을 초기화 (useEffect 동기화 대신 key 리셋)

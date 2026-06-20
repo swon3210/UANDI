@@ -3,8 +3,9 @@
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Sparkles, BookOpen } from 'lucide-react';
-import { Sheet, FullScreenSpinner, Button } from '@uandi/ui';
+import { Sheet, Button } from '@uandi/ui';
 import { authStatusAtom, userAtom } from '@/stores/auth.store';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAddEntry, useAddEntries } from '@/hooks/useCashbook';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
@@ -29,7 +30,7 @@ export default function OverlayQuickAddPage() {
   const addManyMutation = useAddEntries(coupleId);
 
   if (status === 'loading') {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   if (status !== 'authenticated_with_couple') {

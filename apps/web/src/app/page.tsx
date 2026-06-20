@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { FullScreenSpinner } from '@uandi/ui';
 import { authStatusAtom } from '@/stores/auth.store';
 import { LandingPage } from '@/components/LandingPage';
+import { MascotLoader } from '@/components/MascotLoader';
 
 export default function HomePage() {
   const authStatus = useAtomValue(authStatusAtom);
@@ -24,7 +24,7 @@ export default function HomePage() {
     authStatus === 'authenticated_no_couple' ||
     authStatus === 'authenticated_with_couple'
   ) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   // unauthenticated → 랜딩

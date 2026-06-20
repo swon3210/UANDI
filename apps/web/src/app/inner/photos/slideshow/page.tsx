@@ -2,12 +2,12 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
-import { FullScreenSpinner } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useAllPhotos, useAllPhotosByFolder, useAllPhotosByTag } from '@/hooks/usePhotos';
 import { useFolder, useFolders } from '@/hooks/useFolders';
 import { findNextNonEmptySiblingFolderId } from '@/services/folders';
 import { SlideshowView } from '@/components/photos/SlideshowView';
+import { MascotLoader } from '@/components/MascotLoader';
 
 type Source = 'all' | 'folder' | 'tag';
 
@@ -76,7 +76,7 @@ function SlideshowContent() {
   }, [isFolderSource, coupleId, id, folders, router]);
 
   if (invalidParams || authStatus === 'loading' || !isFetched || photos.length === 0) {
-    return <FullScreenSpinner />;
+    return <MascotLoader fullScreen />;
   }
 
   return (
@@ -93,7 +93,7 @@ function SlideshowContent() {
 
 export default function SlideshowPage() {
   return (
-    <Suspense fallback={<FullScreenSpinner />}>
+    <Suspense fallback={<MascotLoader fullScreen />}>
       <SlideshowContent />
     </Suspense>
   );
