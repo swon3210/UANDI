@@ -8,6 +8,7 @@ import { CategoryLabel } from './CategoryLabel';
 import { ReadingTime } from './ReadingTime';
 import { SeriesBadge } from './SeriesBadge';
 import { RelatedPosts } from './RelatedPosts';
+import { TableOfContents } from './TableOfContents';
 import type { PostData, PostMeta } from '@/lib/posts';
 import type { SeriesContext } from '@/lib/posts';
 
@@ -97,6 +98,9 @@ export function PostContent({
           ))}
         </div>
       </header>
+
+      {/* 목차 — 데스크톱: 우측 플로팅 / 모바일: 상단 토글 드로어 */}
+      <TableOfContents items={post.toc} />
 
       {/* 본문 */}
       <article

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import dayjs from 'dayjs';
-import { markdownToHtml } from './markdown';
+import { markdownToHtml, type TocItem } from './markdown';
 import {
   type CategorySlug,
   type SeriesSlug,
@@ -33,6 +33,7 @@ export type PostMeta = PostFrontmatter & {
 
 export type PostData = PostMeta & {
   content: string;
+  toc: TocItem[];
 };
 
 export type SeriesContext = {
@@ -117,9 +118,9 @@ export async function getPostBySlug(slug: string): Promise<PostData | null> {
   if (!fileName) return null;
 
   const { meta, markdown } = readPostFile(fileName);
-  const content = await markdownToHtml(markdown);
+  const { html, toc } = await markdownToHtml(markdown);
 
-  return { ...meta, content };
+  return { ...meta, content: html, toc };
 }
 
 // generateStaticParams용

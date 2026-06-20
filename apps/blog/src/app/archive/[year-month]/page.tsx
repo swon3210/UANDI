@@ -20,10 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { 'year-month': yearMonth } = await params;
   const archive = getArchiveByMonth(yearMonth);
   if (!archive) {
-    return { title: '아카이브를 찾을 수 없습니다 | 독개의 개발블로그' };
+    return { title: '아카이브를 찾을 수 없습니다 | Doggae Log' };
   }
   return {
-    title: `${archive.label} 아카이브 | 독개의 개발블로그`,
+    title: `${archive.label} 아카이브 | Doggae Log`,
     description: `${archive.label}에 작성된 글 ${archive.posts.length}편`,
   };
 }
