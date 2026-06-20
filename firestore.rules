@@ -25,9 +25,16 @@ service cloud.firestore {
 
     // ── 사용자 본인 데이터 ───────────────────────────────────────
     match /users/{uid} {
-      allow read, write: if isAuthed() && request.auth.uid == uid;
+      // 본인은 항상 읽기 가능.
+      // 같은 커플의 상대 프로필(이름/사진)은 가계부 작성자·사진 업로더 표시 등에서
+      // 필요하므로 커플 멤버에 한해 읽기 허용. (쓰기는 본인만)
+      allow read: if isAuthed() && (
+        request.auth.uid == uid ||
+        (resource.data.coupleId != null && isCoupleMember(resource.data.coupleId))
+      );
+      allow write: if isAuthed() && request.auth.uid == uid;
 
-      // users/{uid}/fcmTokens 등 본인 하위
+      // users/{uid}/fcmTokens 등 본인 하위 (상대에게 비공개)
       match /{document=**} {
         allow read, write: if isAuthed() && request.auth.uid == uid;
       }
