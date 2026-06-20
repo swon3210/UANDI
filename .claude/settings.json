@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter web exec tsc --noEmit *)",
+      "Bash(pnpm --filter @uandi/ui exec tsc --noEmit *)",
+      "Bash(pnpm exec tsc --noEmit *)",
+      "Bash(pnpm --filter web lint *)",
+      "Bash(pnpm --filter @uandi/ui lint *)",
+      "Bash(pnpm exec playwright test *)",
+      "Bash(pnpm exec prettier --check *)",
+      "Bash(pnpm exec next lint *)",
+      "Bash(pnpm exec eslint *)",
+      "Bash(pnpm format:check *)",
+      "Bash(open *)"
+    ]
+  }
+}
