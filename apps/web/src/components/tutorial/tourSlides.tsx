@@ -35,8 +35,10 @@ function ScreenshotPreview({ src, alt }: { src: string; alt: string }) {
       <Image
         src={src}
         alt={alt}
+        // 실제 스크린샷 원본 크기(760×1253)와 일치시켜야 로드 전/후 종횡비가 같아 CLS가 없다.
+        // public/tour/*.webp를 재생성하면 이 값도 함께 맞춘다.
         width={760}
-        height={1476}
+        height={1253}
         sizes="200px"
         className="h-auto w-[190px] rounded-2xl border border-border shadow-sm sm:w-[200px]"
       />
