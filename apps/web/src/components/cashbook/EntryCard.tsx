@@ -4,15 +4,18 @@ import type { CashbookEntry, CashbookCategory } from '@/types';
 import { formatAmount } from '@/utils/currency';
 import { formatDay } from '@/utils/date';
 import { CategoryIcon } from './CategoryIcon';
+import { AuthorAvatar, type EntryAuthor } from './AuthorAvatar';
 
 type EntryCardProps = {
   entry: CashbookEntry;
   category?: CashbookCategory;
   onClick: (entry: CashbookEntry) => void;
   showDate?: boolean;
+  /** 내역 작성자. 전달되면 금액 옆에 작은 아바타로 표시한다. */
+  author?: EntryAuthor;
 };
 
-export function EntryCard({ entry, category, onClick, showDate = false }: EntryCardProps) {
+export function EntryCard({ entry, category, onClick, showDate = false, author }: EntryCardProps) {
   const icon = category?.icon ?? '';
   const color = category?.color ?? '#78909C';
 
@@ -36,6 +39,7 @@ export function EntryCard({ entry, category, onClick, showDate = false }: EntryC
         )}
         {showDate && <p className="text-xs text-muted-foreground">{formatDay(entry.date)}</p>}
       </div>
+      <AuthorAvatar author={author} />
       <span
         className={`text-sm font-semibold tabular-nums shrink-0 ${
           entry.type === 'income' ? 'text-income' : 'text-expense'

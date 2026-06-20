@@ -17,6 +17,7 @@ import {
   useDeleteEntry,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCoupleMemberMap } from '@/hooks/useCoupleMembers';
 import {
   useSettlement,
   useAddSettlementAttachment,
@@ -59,6 +60,7 @@ export default function SettlementEntriesPage() {
 
   const { data: entries, isLoading: entriesLoading } = useCashbookEntries(coupleId, year, month0);
   const { data: categories, isLoading: categoriesLoading } = useCashbookCategories(coupleId);
+  const memberMap = useCoupleMemberMap(coupleId);
   const { data: settlement } = useSettlement(coupleId, monthKey);
 
   const addManyMutation = useAddEntries(coupleId);
@@ -229,6 +231,7 @@ export default function SettlementEntriesPage() {
                 groups={groups}
                 categories={categories ?? []}
                 onEntryClick={handleEntryClick}
+                members={memberMap}
               />
             ) : (
               <EmptyState

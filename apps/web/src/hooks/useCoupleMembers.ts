@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDoc, doc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
@@ -25,6 +26,17 @@ export function useCoupleMembers(coupleId: string | null) {
     enabled: !!coupleId,
     staleTime: 5 * 60 * 1000, // 멤버 정보는 자주 변하지 않음
   });
+}
+
+/** uid → User 매핑을 반환. 작성자 이름/사진 표시 등 uid를 멤버 정보로 변환할 때 사용. */
+export function useCoupleMemberMap(coupleId: string | null) {
+  const { data: members } = useCoupleMembers(coupleId);
+
+  return useMemo(() => {
+    const map = new Map<string, User>();
+    members?.forEach((m) => map.set(m.uid, m));
+    return map;
+  }, [members]);
 }
 
 /** uid → photoURL 매핑을 반환 */

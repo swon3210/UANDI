@@ -24,6 +24,7 @@ import {
   type CashbookFilterState,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCoupleMemberMap } from '@/hooks/useCoupleMembers';
 import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
 import { useDayPredictions, toPromptView } from '@/hooks/useDayPredictions';
 import {
@@ -98,6 +99,7 @@ export default function CashbookPage() {
     range.end
   );
   const { data: categories, isLoading: categoriesLoading } = useCashbookCategories(coupleId);
+  const memberMap = useCoupleMemberMap(coupleId);
   const isLoading = entriesLoading || categoriesLoading;
   const summary = useMonthlySummary(entries);
   const filteredEntries = useFilteredEntries(
@@ -524,6 +526,7 @@ export default function CashbookPage() {
                             entry={entry}
                             category={categoryMap.get(entry.category)}
                             onClick={handleEntryClick}
+                            author={memberMap.get(entry.createdBy)}
                           />
                         ))}
                       </div>
@@ -539,6 +542,7 @@ export default function CashbookPage() {
                 categories={categories ?? []}
                 onEntryClick={handleEntryClick}
                 showDateHeaders={false}
+                members={memberMap}
               />
             ) : (
               listEmptyState
