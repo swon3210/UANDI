@@ -65,7 +65,9 @@ export function ServiceTourOverlay({ onClose, defaultStep = 0 }: ServiceTourOver
         </div>
         <Progress value={progressValue} className="h-1.5" />
         <DialogTitle className="pt-1 text-xl">{current.title}</DialogTitle>
-        <DialogDescription className="text-sm">{current.description}</DialogDescription>
+        <DialogDescription className="whitespace-pre-line text-sm">
+          {current.description}
+        </DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-1 items-center justify-center overflow-y-auto py-6 sm:min-h-[220px]">

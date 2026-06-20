@@ -11,7 +11,7 @@ const meta: Meta<typeof ServiceTourOverlay> = {
     docs: {
       description: {
         component:
-          'MOA 온보딩 투어. 핵심인 가계부(내역·예산·현금흐름·점검)를 기능별로 풍부하게 안내하고, 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장으로 묶는다. 모바일은 전체 화면, 데스크톱은 가운데 카드. 로그인 후 대시보드 첫 진입 시 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
+          'MOA 온보딩 투어. 1장에서 가계부 상단 탭(대시보드·내역·현금흐름·목표)을 안내하고, 가계부 핵심 기능(내역·목표·현금흐름·점검)을 기능별로 풍부하게 보여준 뒤, 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장으로 묶는다. 모바일은 전체 화면, 데스크톱은 가운데 카드. 로그인 후 대시보드 첫 진입 시 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
       },
     },
   },
@@ -28,7 +28,7 @@ export default meta;
 type Story = StoryObj<typeof ServiceTourOverlay>;
 
 export const Welcome: Story = {
-  name: '1. 환영 + 하단탭 안내',
+  name: '1. 가계부 소개 + 상단 탭 안내',
   args: { defaultStep: 0, onClose: () => {} },
 };
 
@@ -38,21 +38,21 @@ export const CashbookRecord: Story = {
 };
 
 export const CashbookBudget: Story = {
-  name: '3. 가계부 — 예산 설정',
+  name: '3. 가계부 — 목표 세우기',
   args: { defaultStep: 2, onClose: () => {} },
 };
 
 export const CashbookCashflow: Story = {
-  name: '4. 가계부 — 현금흐름',
+  name: '4. 가계부 — 현금흐름 예측',
   args: { defaultStep: 3, onClose: () => {} },
 };
 
 export const CashbookSettlement: Story = {
-  name: '5. 가계부 — 점검',
+  name: '5. 가계부 — 점검하기',
   args: { defaultStep: 4, onClose: () => {} },
 };
 
 export const MoreFeatures: Story = {
-  name: '6. 그 외 기능 (시작하기)',
+  name: '6. 그 외 기능 — 베타 (시작하기)',
   args: { defaultStep: 5, onClose: () => {} },
 };
