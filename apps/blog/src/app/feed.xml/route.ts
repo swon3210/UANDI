@@ -27,7 +27,7 @@ ${tagCategories}
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>독개의 개발블로그</title>
+    <title>Doggae Log</title>
     <link>${siteUrl}</link>
     <description>MOA 서비스를 만들어가는 과정을 기록합니다.</description>
     <language>ko</language>

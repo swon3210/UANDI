@@ -6,7 +6,7 @@ import { CategoryLabel } from '@/components/CategoryLabel';
 import { ReadingTime } from '@/components/ReadingTime';
 
 export const metadata: Metadata = {
-  title: '아카이브 | 독개의 개발블로그',
+  title: '아카이브 | Doggae Log',
   description: '월별로 정리된 글 목록',
 };
 

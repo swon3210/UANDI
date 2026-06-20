@@ -18,3 +18,31 @@
 .prose pre code {
   color: inherit;
 }
+
+/* 목차 클릭/앵커 점프 시 부드럽게 스크롤 + 헤딩 상단 여백 확보 */
+html {
+  scroll-behavior: smooth;
+}
+.prose :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 6rem;
+}
+
+/* 본문 속 폰 스크린샷 — 작게, 가운데, 카드처럼 */
+.prose figure.phone-shot {
+  margin: 2rem auto;
+  text-align: center;
+}
+.prose figure.phone-shot img {
+  display: inline-block;
+  width: 300px;
+  max-width: 78%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.08);
+}
+.prose figure.phone-shot figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}

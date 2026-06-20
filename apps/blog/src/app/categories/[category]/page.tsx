@@ -21,11 +21,11 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
   if (!isCategorySlug(category)) {
-    return { title: '카테고리를 찾을 수 없습니다 | 독개의 개발블로그' };
+    return { title: '카테고리를 찾을 수 없습니다 | Doggae Log' };
   }
   const meta = CATEGORIES[category];
   return {
-    title: `${meta.label} | 독개의 개발블로그`,
+    title: `${meta.label} | Doggae Log`,
     description: meta.description,
   };
 }

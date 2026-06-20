@@ -77,7 +77,8 @@ user_invocable: true
 title: '<한글 제목>'
 date: 'YYYY-MM-DD'
 summary: '<1~2문장 한글 요약>'
-tags: ['<관련 태그들>']
+category: '<tech-how | product-how | tech-decision | product-decision | essay — 필수>'
+tags: ['<2~4개>']
 draft: true
 ---
 ```
@@ -151,6 +152,7 @@ draft: true
 title: '사진 갤러리에 무한 스크롤 붙이기'
 date: '2026-03-21'
 summary: 'Intersection Observer와 TanStack Query의 useInfiniteQuery로 사진 무한 스크롤을 구현한 과정.'
+category: 'tech-how'
 tags: ['photos', 'performance', 'infinite-scroll']
 draft: true
 ---

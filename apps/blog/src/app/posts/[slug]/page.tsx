@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: 'Post Not Found' };
 
   return {
-    title: `${post.title} | 독개의 개발블로그`,
+    title: `${post.title} | Doggae Log`,
     description: post.summary,
     openGraph: {
       title: post.title,

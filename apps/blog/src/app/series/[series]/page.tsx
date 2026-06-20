@@ -15,10 +15,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { series } = await params;
   if (!isSeriesSlug(series)) {
-    return { title: '시리즈를 찾을 수 없습니다 | 독개의 개발블로그' };
+    return { title: '시리즈를 찾을 수 없습니다 | Doggae Log' };
   }
   return {
-    title: `${SERIES[series].title} | 독개의 개발블로그`,
+    title: `${SERIES[series].title} | Doggae Log`,
     description: `${SERIES[series].title} 시리즈 목차`,
   };
 }
