@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_SLUGS } from '@/lib/taxonomy';
 export const metadata: Metadata = {
   title: '소개 | Doggae Log',
   description:
-    '"프론트엔드 개발자"라는 이름표를 버리고 프로덕트 엔지니어로 다시 포지셔닝하는 5년차의 기록',
+    '프론트엔드 개발자로 일하면서, 프로덕트 엔지니어로 일의 범위를 넓혀가는 5년차의 기록',
 };
 
 export default function AboutPage() {
@@ -17,9 +17,9 @@ export default function AboutPage() {
           About
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-snug text-gray-900">
-          &ldquo;프론트엔드 개발자&rdquo;라는 이름표를 버리고,
+          &ldquo;프론트엔드 개발자&rdquo;로 일하면서,
           <br />
-          프로덕트 엔지니어로 다시 포지셔닝하는 5년차{' '}
+          프로덕트 엔지니어로 일을 넓혀가는 5년차{' '}
           <span className="text-[var(--color-primary)]">독개</span>입니다.
         </h1>
         <p className="mt-4 text-base leading-relaxed text-gray-600">
