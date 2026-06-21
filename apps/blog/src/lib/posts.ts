@@ -28,7 +28,6 @@ export type PostFrontmatter = {
 
 export type PostMeta = PostFrontmatter & {
   slug: string;
-  readingTimeMinutes: number;
 };
 
 export type PostData = PostMeta & {
@@ -51,12 +50,6 @@ function findFileBySlug(slug: string): string | null {
   if (!fs.existsSync(POSTS_ROOT)) return null;
   const files = fs.readdirSync(POSTS_ROOT).filter((f) => f.endsWith('.md'));
   return files.find((f) => fileNameToSlug(f) === slug) ?? null;
-}
-
-// 한국어 기준 500자/분, 최소 1분
-export function getReadingTimeMinutes(content: string): number {
-  const charCount = content.replace(/\s+/g, '').length;
-  return Math.max(1, Math.ceil(charCount / 500));
 }
 
 function readPostFile(fileName: string): { meta: PostMeta; markdown: string } {
@@ -91,7 +84,6 @@ function readPostFile(fileName: string): { meta: PostMeta; markdown: string } {
     seriesOrder: data.seriesOrder as number | undefined,
     featured: (data.featured as boolean) ?? false,
     draft: (data.draft as boolean) ?? false,
-    readingTimeMinutes: getReadingTimeMinutes(content),
   };
 
   return { meta, markdown: content };
@@ -112,6 +104,13 @@ export function getAllPosts(): PostMeta[] {
   return filtered.sort((a, b) => dayjs(b.date).unix() - dayjs(a.date).unix());
 }
 
+// 발행된 글만. 카테고리·태그·시리즈 같은 네비게이션 집계는 draft를 세지 않는다.
+// production에서는 getAllPosts가 이미 draft를 거르므로 이 필터는 no-op이고,
+// dev 미리보기에서도 "아직 발행 안 된(=글이 없는) 태그"가 필터에 노출되지 않게 한다.
+function getPublishedPosts(): PostMeta[] {
+  return getAllPosts().filter((post) => !post.draft);
+}
+
 // slug로 개별 포스트 조회 (HTML 렌더링 포함)
 export async function getPostBySlug(slug: string): Promise<PostData | null> {
   const fileName = findFileBySlug(slug);
@@ -130,7 +129,7 @@ export function getAllSlugs(): string[] {
 
 // 전체 고유 태그 목록 (가나다순)
 export function getAllTags(): string[] {
-  const posts = getAllPosts();
+  const posts = getPublishedPosts();
   const tagSet = new Set<string>();
   posts.forEach((post) => post.tags.forEach((tag) => tagSet.add(tag)));
   return Array.from(tagSet).sort((a, b) => a.localeCompare(b, 'ko'));
@@ -144,7 +143,7 @@ export function getPostsByTag(tag: string): PostMeta[] {
 // 사용 중인 카테고리 목록 (CATEGORY_SLUGS의 정의 순서 보존)
 export function getAllCategories(): CategorySlug[] {
   const used = new Set<CategorySlug>();
-  getAllPosts().forEach((post) => used.add(post.category));
+  getPublishedPosts().forEach((post) => used.add(post.category));
   return CATEGORY_SLUGS.filter((slug) => used.has(slug));
 }
 
@@ -155,7 +154,7 @@ export function getPostsByCategory(category: CategorySlug): PostMeta[] {
 
 // 사용 중인 시리즈 목록
 export function getAllSeries(): { slug: SeriesSlug; title: string; count: number }[] {
-  const posts = getAllPosts();
+  const posts = getPublishedPosts();
   const counts = new Map<SeriesSlug, number>();
 
   posts.forEach((post) => {
