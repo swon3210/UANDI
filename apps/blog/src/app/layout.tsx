@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import { BlogHeader } from '@/components/BlogHeader';
 import './globals.css';
 
+const siteUrl = process.env.SITE_URL ?? 'https://blog.uandi.app';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Doggae Log',
   description: 'MOA 서비스를 만들어가는 과정을 기록합니다.',
   alternates: {

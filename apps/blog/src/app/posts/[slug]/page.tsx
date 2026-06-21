@@ -22,6 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPostBySlug(slug);
   if (!post) return { title: 'Post Not Found' };
 
+  const images = post.cover ? [{ url: post.cover }] : undefined;
+
   return {
     title: `${post.title} | Doggae Log`,
     description: post.summary,
@@ -32,6 +34,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       section: CATEGORIES[post.category].label,
       tags: post.tags,
       publishedTime: post.date,
+      images,
+    },
+    twitter: {
+      card: post.cover ? 'summary_large_image' : 'summary',
+      title: post.title,
+      description: post.summary,
+      images,
     },
   };
 }
