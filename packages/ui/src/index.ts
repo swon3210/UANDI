@@ -11,6 +11,8 @@ export { EmptyState } from './custom/EmptyState';
 export { FullScreenSpinner } from './custom/FullScreenSpinner';
 export { MascotLoader } from './custom/MascotLoader';
 export type { MascotLoaderProps } from './custom/MascotLoader';
+export { MascotState } from './custom/MascotState';
+export type { MascotStateProps } from './custom/MascotState';
 export { AppSidebar } from './custom/AppSidebar';
 export type {
   Space,
