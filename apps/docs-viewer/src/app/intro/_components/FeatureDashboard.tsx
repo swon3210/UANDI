@@ -1,6 +1,6 @@
 'use client';
 
-import { PhoneMockup, DashboardMock } from './PhoneMockup';
+import { PhoneMockup } from './PhoneMockup';
 import { Tag } from './Tag';
 import { useReveal } from './useReveal';
 
@@ -36,9 +36,7 @@ export function FeatureDashboard() {
       </div>
       <div ref={phoneRef} className="landing-fade-up landing-fade-up-d1 flex justify-center">
         <div className="landing-float-slow landing-float-delay-500ms">
-          <PhoneMockup scale={1.1}>
-            <DashboardMock />
-          </PhoneMockup>
+          <PhoneMockup scale={1.1} screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
         </div>
       </div>
     </section>

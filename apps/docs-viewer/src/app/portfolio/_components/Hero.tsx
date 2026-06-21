@@ -1,7 +1,7 @@
 'use client';
 
 import { Github, ExternalLink } from 'lucide-react';
-import { Phone, GalleryMock, DashMock } from './Phone';
+import { Phone } from './Phone';
 import { useReveal } from './useReveal';
 
 const REPO_URL = 'https://github.com/swon3210/UANDI';
@@ -43,8 +43,9 @@ export function Hero() {
           className="mb-7 text-[15px] text-stone-600"
           style={{ lineHeight: 1.75, textWrap: 'pretty' }}
         >
-          사진 갤러리 + 가계부를 하나로 통합한 커플 전용 웹앱. 초대 코드 기반 1:1 페어링, AI 자동
-          분류·분석, 자연어 입력을 Next.js 14 + Firebase로 구현했습니다.
+          사진 갤러리·가계부·재테크·신혼 커뮤니티를 하나로 묶은 커플 전용 서비스. 초대 코드 기반 1:1
+          페어링, AI 자동 분류·분석, 자연어 입력을 Next.js 15 + Firebase로 구현하고 Expo로 네이티브
+          앱까지 출시했습니다.
         </p>
         <div className="flex flex-wrap gap-2.5">
           <a
@@ -69,14 +70,10 @@ export function Hero() {
       </div>
       <div className="flex shrink-0 items-end gap-4">
         <div className="landing-float-slow mb-5">
-          <Phone scale={0.9}>
-            <GalleryMock />
-          </Phone>
+          <Phone scale={0.9} screenshot="/screenshots/community.png" alt="MOA 커뮤니티 화면" />
         </div>
         <div className="landing-float-slow landing-float-delay-1500ms">
-          <Phone>
-            <DashMock />
-          </Phone>
+          <Phone screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
         </div>
       </div>
     </section>

@@ -1,33 +1,30 @@
 'use client';
 
-import { Image as ImageIcon, Mic, Sparkles, BarChart3 } from 'lucide-react';
+import { PieChart, Users, Coins, Target } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PhoneMockup } from './PhoneMockup';
 import { Tag } from './Tag';
 import { useReveal } from './useReveal';
 
 const FEATURES: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: ImageIcon, label: '영수증 사진 캡처 한 장으로 금액·항목 자동 인식' },
-  { icon: Mic, label: '자연어 입력 — 여러 건을 한 문장으로 동시 등록' },
-  { icon: Sparkles, label: 'AI 소비 패턴 분석 및 맞춤 절약 조언' },
-  { icon: BarChart3, label: '수입 / 지출 / 투자 / 플렉스 카테고리 통계' },
+  { icon: PieChart, label: '자산 종류별 배분 비율을 시각화' },
+  { icon: Users, label: '개인 소유 + 커플 합산 자산을 분리 관리' },
+  { icon: Coins, label: '예적금·투자·환테크 현황을 한 곳에' },
+  { icon: Target, label: '함께 세우는 자산 목표' },
 ];
 
-export function FeatureCashbook() {
+export function FeatureFinance() {
   const textRef = useReveal();
   const phoneRef = useReveal();
 
   return (
-    <section
-      className="bg-white"
-      style={{ padding: 'clamp(60px,10vh,120px) clamp(20px,5vw,80px)' }}
-    >
+    <section className="bg-white" style={{ padding: 'clamp(60px,10vh,120px) clamp(20px,5vw,80px)' }}>
       <div
         className="mx-auto flex max-w-[1100px] flex-wrap-reverse items-center justify-center"
         style={{ gap: 'clamp(40px,6vw,80px)' }}
       >
         <div ref={textRef} className="landing-fade-up flex-[1_1_300px]" style={{ maxWidth: 460 }}>
-          <Tag color="sage">함께 쓰는 가계부</Tag>
+          <Tag color="sage">재테크</Tag>
           <h2
             className="mb-4 text-stone-900"
             style={{
@@ -38,16 +35,16 @@ export function FeatureCashbook() {
               textWrap: 'pretty',
             }}
           >
-            영수증 캡처 한 번으로
+            우리 자산,
             <br />
-            내역이 완성돼요
+            한눈에 모아봐요
           </h2>
           <p
             className="mb-7 text-[15px] text-stone-600"
             style={{ lineHeight: 1.7, textWrap: 'pretty' }}
           >
-            엑셀에 직접 입력하거나 카드 문자를 복붙하던 시간은 끝. 영수증을 찍거나 &ldquo;점심
-            9천원, 어제 택시 15000원&rdquo; 하고 말하듯 쓰면 AI가 알아서 분류하고 등록해요.
+            흩어진 예적금·투자·환테크를 한 곳으로. 개인 자산과 커플 합산 자산배분을 비율로 확인하고
+            둘이 함께 목표를 세워요.
           </p>
           <ul className="flex flex-col gap-2.5">
             {FEATURES.map((f) => {
@@ -69,7 +66,7 @@ export function FeatureCashbook() {
           ref={phoneRef}
           className="landing-fade-up landing-fade-up-d1 landing-float-slow landing-float-delay-1500ms"
         >
-          <PhoneMockup scale={1.05} screenshot="/screenshots/cashbook.png" alt="MOA 가계부 화면" />
+          <PhoneMockup scale={1.05} screenshot="/screenshots/allocation.png" alt="MOA 자산배분 화면" />
         </div>
       </div>
     </section>

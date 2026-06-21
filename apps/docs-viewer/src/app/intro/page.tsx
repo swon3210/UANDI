@@ -4,6 +4,9 @@ import { Hero } from './_components/Hero';
 import { Values } from './_components/Values';
 import { FeatureGallery } from './_components/FeatureGallery';
 import { FeatureCashbook } from './_components/FeatureCashbook';
+import { FeatureCashflow } from './_components/FeatureCashflow';
+import { FeatureFinance } from './_components/FeatureFinance';
+import { FeatureCommunity } from './_components/FeatureCommunity';
 import { FeatureDashboard } from './_components/FeatureDashboard';
 import { Diff } from './_components/Diff';
 import { CTA } from './_components/CTA';
@@ -23,6 +26,9 @@ export default function IntroPage() {
       <Values />
       <FeatureGallery />
       <FeatureCashbook />
+      <FeatureCashflow />
+      <FeatureFinance />
+      <FeatureCommunity />
       <FeatureDashboard />
       <Diff />
       <CTA />

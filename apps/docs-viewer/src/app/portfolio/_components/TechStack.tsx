@@ -6,20 +6,28 @@ import { useReveal } from './useReveal';
 type Badge = { label: string; color: string; bg: string };
 
 const TECH: Badge[] = [
-  { label: 'Next.js 14', color: '#000000', bg: '#f5f5f5' },
-  { label: 'React', color: '#087ea4', bg: '#e8f4fd' },
+  { label: 'Next.js 15', color: '#000000', bg: '#f5f5f5' },
+  { label: 'React 19', color: '#087ea4', bg: '#e8f4fd' },
   { label: 'TypeScript', color: '#2f74c0', bg: '#e8f0fb' },
   { label: 'TailwindCSS v4', color: '#0ea5e9', bg: '#e0f7ff' },
   { label: 'Firebase', color: '#e37400', bg: '#fff4e0' },
   { label: 'Firestore', color: '#e37400', bg: '#fff4e0' },
+  { label: 'React Native', color: '#087ea4', bg: '#e8f4fd' },
+  { label: 'Expo · EAS', color: '#18181b', bg: '#f4f4f5' },
   { label: 'shadcn/ui', color: '#18181b', bg: '#f4f4f5' },
+  { label: 'Jotai', color: '#0b7285', bg: '#e3fafc' },
+  { label: 'TanStack Query', color: '#ef4444', bg: '#fdecec' },
+  { label: 'Playwright', color: '#2d8a3e', bg: '#e9f7ec' },
   { label: 'Turborepo', color: '#e84393', bg: '#fde8f3' },
   { label: 'pnpm', color: '#f69220', bg: '#fff3e0' },
 ];
 
 const NOTES = [
-  { label: '모노레포 구조', desc: 'Turborepo + pnpm workspace로 앱·UI 패키지·도메인 로직 분리' },
-  { label: '모바일 퍼스트', desc: 'max-w-md(448px) 기준 모바일 레이아웃, 데스크탑 보조 지원' },
+  { label: '모노레포 구조', desc: 'Turborepo + pnpm workspace로 웹·모바일·UI 패키지·도메인 로직 분리' },
+  {
+    label: '웹 + 네이티브 모바일',
+    desc: 'Next.js 웹앱을 Expo WebView로 감싸 EAS로 안드로이드 앱 출시',
+  },
   { label: '실시간 동기화', desc: 'Firestore 실시간 리스너로 커플 간 즉시 반영' },
   { label: 'AI 파이프라인', desc: '영수증 OCR + 자연어 파싱 + 지출 패턴 분석 자동화' },
 ];

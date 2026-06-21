@@ -4,12 +4,13 @@ import { Hero } from './_components/Hero';
 import { TechStack } from './_components/TechStack';
 import { Features } from './_components/Features';
 import { KeyDecisions } from './_components/KeyDecisions';
+import { MascotShowcase } from './_components/MascotShowcase';
 import { Footer } from './_components/Footer';
 
 export const metadata: Metadata = {
   title: 'MOA — Portfolio',
   description:
-    'MOA 개발자 포트폴리오 — Next.js 14, Firebase, 모노레포 기반 신혼부부 라이프 매니지먼트 앱.',
+    'MOA 개발자 포트폴리오 — Next.js 15, Firebase, Expo 모노레포 기반 신혼부부 라이프 매니지먼트 웹·모바일 앱.',
 };
 
 export default function PortfolioPage() {
@@ -23,6 +24,7 @@ export default function PortfolioPage() {
       <TechStack />
       <Features />
       <KeyDecisions />
+      <MascotShowcase />
       <Footer />
     </div>
   );
