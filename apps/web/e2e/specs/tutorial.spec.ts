@@ -4,12 +4,12 @@ import { test } from '../fixtures/auth.fixture';
 /**
  * MOA 온보딩 투어.
  * - 로그인 후 대시보드(/inner/cashbook) 첫 진입 시 1회 자동 노출
- * - 가계부(내역·예산·현금흐름·결산) + 그 외 기능을 6장으로 안내, "시작하기"로 종료
+ * - 환영(마스코트) + 가계부(내역·예산·현금흐름·결산) + 그 외 기능 + 마무리(마스코트)를 7장으로 안내, "시작하기"로 종료
  * - 종료 후에는 재방문해도 자동 노출되지 않음(localStorage seen 플래그)
  * - 프로필 메뉴 "튜토리얼 다시 보기"로 언제든 재생
  */
 const OVERLAY = 'service-tour-overlay';
-const TOTAL = 6;
+const TOTAL = 7;
 
 test.describe('MOA 온보딩 투어', () => {
   test.describe('첫 진입 자동 노출', () => {

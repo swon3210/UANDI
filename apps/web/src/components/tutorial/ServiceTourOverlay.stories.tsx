@@ -53,6 +53,11 @@ export const CashbookSettlement: Story = {
 };
 
 export const MoreFeatures: Story = {
-  name: '6. 그 외 기능 — 베타 (시작하기)',
+  name: '6. 그 외 기능 — 베타',
   args: { defaultStep: 5, onClose: () => {} },
+};
+
+export const Ready: Story = {
+  name: '7. 마무리 — 성공 마스코트 (시작하기)',
+  args: { defaultStep: 6, onClose: () => {} },
 };
