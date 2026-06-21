@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Phone, GalleryMock, DashMock } from './Phone';
+import { Phone, GalleryMock } from './Phone';
 import { useReveal } from './useReveal';
 
 type FeatureRowProps = {
@@ -117,11 +117,47 @@ export function Features() {
           'AI 소비 패턴 분석 + 커플 맞춤 절약 조언',
           '수입 / 지출 / 투자 / 플렉스 4-카테고리 월별 통계',
         ]}
-        mockup={
-          <Phone>
-            <DashMock />
-          </Phone>
-        }
+        mockup={<Phone screenshot="/screenshots/cashbook.png" alt="MOA 가계부 화면" />}
+      />
+      <FeatureRow
+        tag="현금흐름"
+        tagAccent="coral"
+        title="월급날 잔액까지 미리 예측"
+        desc="고정 수입·지출을 반영해 통장 잔액 흐름을 달력으로 시뮬레이션. 다가올 월급날과 카드값 시점의 잔액을 미리 보여줍니다."
+        bullets={[
+          '반복 수입·지출 규칙 기반 잔액 프로젝션',
+          '월급날·결제일 단위 예상 잔액 캘린더',
+          '지출이 몰리는 날을 사전에 경고',
+          'dayjs 기반 날짜 연산 — date-fns 미사용',
+        ]}
+        mockup={<Phone screenshot="/screenshots/cashflow.png" alt="MOA 현금흐름 달력 화면" />}
+      />
+      <FeatureRow
+        reverse
+        tag="재테크"
+        tagAccent="sage"
+        title="개인 + 커플 자산을 한눈에"
+        desc="우리집(공동)과 재테크(개인 소유)를 분리한 소유 모델. 예적금·투자·환테크를 모아 개인 자산과 커플 합산 배분을 함께 봅니다."
+        bullets={[
+          '개인 소유 + 커플 합산 이중 집계 모델',
+          '자산 종류별 배분 비율 시각화',
+          '환테크(외화) 자산 통합 관리',
+          '우리집 / 재테크 공간 분리 (소유권 격리)',
+        ]}
+        mockup={<Phone screenshot="/screenshots/allocation.png" alt="MOA 자산배분 화면" />}
+      />
+      <FeatureRow
+        tag="커뮤니티"
+        tagAccent="coral"
+        title="커플을 넘어, 신혼부부끼리"
+        desc="UANDI의 첫 전역(비커플) 공간. 유저 글과 외부 정보 큐레이션을 함께 다루며, 메타데이터 + 링크아웃으로 법적 가드레일을 둔 설계입니다."
+        bullets={[
+          '커플 격리 밖 첫 전역 Firestore 컬렉션',
+          '유저 작성 글 + 외부 콘텐츠 큐레이션 혼합',
+          '저작권 가드레일 — 메타데이터만 저장 + 링크아웃',
+          '주제별 탐색 / 공감 인터랙션',
+        ]}
+        mockup={<Phone screenshot="/screenshots/community.png" alt="MOA 커뮤니티 화면" />}
       />
     </section>
   );

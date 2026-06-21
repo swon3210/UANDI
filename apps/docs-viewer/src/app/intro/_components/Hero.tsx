@@ -1,6 +1,7 @@
+import Image from 'next/image';
 import { Logo } from '@uandi/ui';
 import { ArrowRight } from 'lucide-react';
-import { PhoneMockup, DashboardMock, GalleryMock } from './PhoneMockup';
+import { PhoneMockup, GalleryMock } from './PhoneMockup';
 import { GoogleIcon } from './GoogleIcon';
 
 export function Hero() {
@@ -47,7 +48,7 @@ export function Hero() {
               textWrap: 'pretty',
             }}
           >
-            데이트 기록부터 추억 사진, 매달 씀씀이까지.
+            추억 사진과 가계부부터 자산 관리, 신혼 커뮤니티까지.
             <br />
             신혼부부의 가정생활을 MOA 하나로 책임져요.
           </p>
@@ -70,14 +71,14 @@ export function Hero() {
             </a>
           </div>
           <p className="mt-5 text-[12px] text-stone-400">
-            초대 코드로 파트너와 연결 — 완전히 프라이빗
+            초대 코드로 파트너와 연결 — 웹 · 모바일 앱에서 완전히 프라이빗
           </p>
         </div>
 
         {/* right: stacked phones */}
         <div className="flex flex-[1_1_300px] items-center justify-center">
           <div className="relative" style={{ width: 300, height: 530 }}>
-            {/* back phone */}
+            {/* back phone — 갤러리 (CSS 목업) */}
             <div
               className="landing-float landing-float-delay-1s absolute"
               style={{ top: 20, right: -30 }}
@@ -86,11 +87,22 @@ export function Hero() {
                 <GalleryMock />
               </PhoneMockup>
             </div>
-            {/* front phone */}
+            {/* front phone — 실제 대시보드 스크린샷 */}
             <div className="landing-float absolute" style={{ top: 0, left: -20 }}>
-              <PhoneMockup>
-                <DashboardMock />
-              </PhoneMockup>
+              <PhoneMockup screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
+            </div>
+            {/* 마스코트 커플 — 가계부 쓰는 장면 */}
+            <div
+              className="landing-float landing-float-delay-1500ms pointer-events-none absolute"
+              style={{ bottom: -26, left: -84, width: 188, zIndex: 3 }}
+            >
+              <Image
+                src="/mascot/splash.png"
+                alt=""
+                width={789}
+                height={602}
+                className="h-auto w-full drop-shadow-xl"
+              />
             </div>
           </div>
         </div>

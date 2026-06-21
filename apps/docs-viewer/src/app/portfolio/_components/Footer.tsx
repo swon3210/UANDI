@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Logo } from '@uandi/ui';
 import { Github, ExternalLink } from 'lucide-react';
 import { useReveal } from './useReveal';
@@ -15,7 +16,16 @@ export function Footer() {
       className="landing-fade-up flex flex-wrap items-center justify-between gap-5 border-t border-stone-200 pt-10 pb-15"
     >
       <div>
-        <Logo variant="full" height={34} />
+        <div className="flex items-center gap-2.5">
+          <Image
+            src="/mascot/face.png"
+            alt=""
+            width={865}
+            height={905}
+            className="h-8 w-8 object-contain"
+          />
+          <Logo variant="full" height={34} />
+        </div>
         <p className="mt-2 text-[12.5px] text-stone-400">
           신혼부부를 위한 프라이빗 라이프 매니지먼트
         </p>

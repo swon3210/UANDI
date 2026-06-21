@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Logo } from '@uandi/ui';
 import { GoogleIcon } from './GoogleIcon';
 import { useReveal } from './useReveal';
@@ -24,7 +25,16 @@ export function CTA() {
       </div>
       <div ref={ref} className="landing-fade-up relative mx-auto max-w-[560px] text-center">
         <div className="flex justify-center">
-          <Logo variant="icon" width={64} height={64} />
+          <Image
+            src="/mascot/splash.png"
+            alt=""
+            width={789}
+            height={602}
+            className="landing-float h-auto w-[200px] drop-shadow-xl"
+          />
+        </div>
+        <div className="mt-2 flex justify-center">
+          <Logo variant="icon" width={48} height={48} />
         </div>
         <h2
           className="mt-5 mb-4 text-stone-900"
@@ -56,7 +66,9 @@ export function CTA() {
           <GoogleIcon size={20} />
           구글로 시작하기
         </a>
-        <p className="mt-4 text-[12px] text-stone-400">무료 · 광고 없음 · 완전 프라이빗</p>
+        <p className="mt-4 text-[12px] text-stone-400">
+          무료 · 광고 없음 · 웹 &amp; 모바일 앱 · 완전 프라이빗
+        </p>
       </div>
     </section>
   );
