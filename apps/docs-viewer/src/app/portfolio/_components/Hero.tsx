@@ -68,12 +68,19 @@ export function Hero() {
           </a>
         </div>
       </div>
-      <div className="flex shrink-0 items-end gap-4">
-        <div className="landing-float-slow mb-5">
-          <Phone scale={0.9} screenshot="/screenshots/community.png" alt="MOA 커뮤니티 화면" />
-        </div>
-        <div className="landing-float-slow landing-float-delay-1500ms">
-          <Phone screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
+      <div className="flex flex-[1_1_260px] items-center justify-center">
+        <div className="relative" style={{ width: 260, height: 470 }}>
+          {/* back phone — 가계부 내역 */}
+          <div
+            className="landing-float-slow landing-float-delay-1500ms absolute"
+            style={{ top: 26, right: -22 }}
+          >
+            <Phone scale={0.86} screenshot="/screenshots/cashbook.png" alt="MOA 가계부 내역 화면" />
+          </div>
+          {/* front phone — 가계부 대시보드 */}
+          <div className="landing-float-slow absolute" style={{ top: 0, left: -14 }}>
+            <Phone screenshot="/screenshots/dashboard.png" alt="MOA 가계부 대시보드 화면" />
+          </div>
         </div>
       </div>
     </section>
