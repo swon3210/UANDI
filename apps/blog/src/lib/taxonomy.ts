@@ -1,19 +1,19 @@
 export const CATEGORIES = {
   'tech-how': {
-    label: '기술 How',
-    description: '기술 구현 노트',
+    label: '기술 구현',
+    description: '이걸 어떻게 만들었나',
   },
   'product-how': {
-    label: '프로덕트 How',
-    description: '프로덕트 맥락 안의 기술',
+    label: '프로덕트 구현',
+    description: '이 기능을 어떻게 풀었나',
   },
   'tech-decision': {
-    label: '기술 의사결정',
-    description: '왜 이 스택을 골랐는가',
+    label: '기술 선택',
+    description: '왜 이 스택·구조였나',
   },
   'product-decision': {
-    label: '프로덕트 의사결정',
-    description: '사용자에게 배운 것',
+    label: '프로덕트 회고',
+    description: '사용자에게서 배운 것',
   },
   essay: {
     label: '에세이',

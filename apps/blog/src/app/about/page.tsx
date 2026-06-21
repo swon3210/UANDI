@@ -55,16 +55,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 콘텐츠 4분면 */}
+      {/* 콘텐츠 분류 */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900">
-          여기서 다루는 4가지 글
+          여기서 다루는 글
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
-          블로그의 모든 글은 아래 4가지 카테고리 중 하나에 속합니다.
+        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+          글은 두 축으로 나눕니다 —{' '}
+          <strong className="text-gray-900">기술 / 프로덕트</strong>, 그리고{' '}
+          <strong className="text-gray-900">
+            어떻게 만들었나(구현) / 왜 그렇게 했나(선택)
+          </strong>
+          . 여기에 가끔 짧은 에세이를 더합니다.
         </p>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-          {CATEGORY_SLUGS.map((slug) => {
+          {CATEGORY_SLUGS.filter((slug) => slug !== 'essay').map((slug) => {
             const meta = CATEGORIES[slug];
             return (
               <li key={slug}>
@@ -83,6 +88,17 @@ export default function AboutPage() {
             );
           })}
         </ul>
+        <Link
+          href="/categories/essay"
+          className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-100 p-4 transition-colors hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/5"
+        >
+          <span className="text-sm font-semibold text-gray-900">
+            {CATEGORIES.essay.label}
+          </span>
+          <span className="text-xs text-gray-500">
+            {CATEGORIES.essay.description}
+          </span>
+        </Link>
       </section>
 
       {/* 이전 블로그 안내 */}

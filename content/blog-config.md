@@ -96,11 +96,11 @@ draft: true
 ```
 
 - `category`는 반드시 다음 중 하나 (파서가 검증, 틀리면 빌드가 throw):
-  - `tech-how` — 기술 구현 노트
-  - `product-how` — 프로덕트 맥락 안의 기술
-  - `tech-decision` — 왜 이 스택을 골랐는가
-  - `product-decision` — 사용자/실사용에서 배운 것
-  - `essay` — 개발자로서의 생각
+  - `tech-how` — 기술 구현: 이걸 어떻게 만들었나
+  - `product-how` — 프로덕트 구현: 이 기능을 어떻게 풀었나
+  - `tech-decision` — 기술 선택: 왜 이 스택·구조였나
+  - `product-decision` — 프로덕트 회고: 사용자에게서 배운 것
+  - `essay` — 에세이: 개발자로서의 생각
 - 선택 필드: `featured`(홈 대표글), `series` + `seriesOrder`(등록된 시리즈 키에 속할 때만)
 
 ---
