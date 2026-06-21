@@ -27,6 +27,18 @@ html {
   scroll-margin-top: 6rem;
 }
 
+/* 글 상단 커버 이미지 (frontmatter cover) */
+.post-cover {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.post-cover img {
+  display: inline-block;
+  width: 220px;
+  max-width: 60%;
+  height: auto;
+}
+
 /* 본문 속 폰 스크린샷 — 작게, 가운데, 카드처럼 */
 .prose figure.phone-shot {
   margin: 2rem auto;

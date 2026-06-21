@@ -73,6 +73,14 @@ export function PostContent({
 
   return (
     <div>
+      {/* 커버 이미지 (frontmatter cover) */}
+      {post.cover ? (
+        <div className="post-cover">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={post.cover} alt="" aria-hidden="true" />
+        </div>
+      ) : null}
+
       {/* 메타데이터 */}
       <header className="mb-8 border-b border-gray-100 pb-8">
         <div className="mb-2">

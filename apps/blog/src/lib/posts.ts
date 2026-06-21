@@ -20,6 +20,7 @@ export type PostFrontmatter = {
   summary: string;
   category: CategorySlug;
   tags: string[];
+  cover?: string;
   series?: SeriesSlug;
   seriesOrder?: number;
   featured?: boolean;
@@ -80,6 +81,7 @@ function readPostFile(fileName: string): { meta: PostMeta; markdown: string } {
     summary: data.summary as string,
     category,
     tags: (data.tags as string[]) ?? [],
+    cover: data.cover as string | undefined,
     series: series as SeriesSlug | undefined,
     seriesOrder: data.seriesOrder as number | undefined,
     featured: (data.featured as boolean) ?? false,

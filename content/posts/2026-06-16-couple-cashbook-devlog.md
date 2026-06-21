@@ -4,6 +4,7 @@ date: '2026-06-16'
 summary: '신혼여행을 다녀오니 통장에 한 푼도 없었다. 그런데 어디에 썼는지 둘 다 설명하지 못했다. 그래서 우리가 쓸 가계부를 직접 만들기 시작했다 — 3개월의 삽질과, 빠름보다 정확함이 먼저였다는 뒤늦은 깨달음에 대한 기록.'
 category: 'product-decision'
 tags: ['가계부', 'AI', '회고']
+cover: '/mascot/splash.png'
 featured: true
 draft: false
 ---
