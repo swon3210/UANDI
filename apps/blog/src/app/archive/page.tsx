@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import dayjs from 'dayjs';
 import { getArchiveMonths } from '@/lib/posts';
 import { CategoryLabel } from '@/components/CategoryLabel';
-import { ReadingTime } from '@/components/ReadingTime';
 
 export const metadata: Metadata = {
   title: '아카이브 | Doggae Log',
@@ -49,8 +48,6 @@ export default function ArchivePage() {
                     </Link>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
                       <span>{dayjs(post.date).format('YYYY년 M월 D일')}</span>
-                      <span>·</span>
-                      <ReadingTime minutes={post.readingTimeMinutes} />
                     </div>
                   </li>
                 ))}

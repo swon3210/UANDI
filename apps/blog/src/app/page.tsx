@@ -36,23 +36,30 @@ export default function BlogHomePage() {
     <>
       {featured ? <FeaturedPostHero post={featured} /> : null}
 
-      {/* 카테고리 — 거를 카테고리가 2종류 이상일 때만 */}
-      {categories.length > 1 ? (
-        <section className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            카테고리
-          </h2>
-          <CategoryNav categories={categories} />
-        </section>
-      ) : null}
+      {/* 둘러보기 — 카테고리(세그먼트)·태그(칩)를 한 패널로 묶는다 */}
+      {categories.length > 1 || tags.length > 1 ? (
+        <section className="mt-8 rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-5">
+          {categories.length > 1 ? (
+            <div>
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                카테고리
+              </h2>
+              <CategoryNav categories={categories} />
+            </div>
+          ) : null}
 
-      {/* 태그 — 거를 태그가 2개 이상일 때만 */}
-      {tags.length > 1 ? (
-        <section className="mt-6 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            태그
-          </h2>
-          <TagFilter tags={tags} />
+          {categories.length > 1 && tags.length > 1 ? (
+            <div className="my-4 border-t border-gray-100" />
+          ) : null}
+
+          {tags.length > 1 ? (
+            <div>
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                태그
+              </h2>
+              <TagFilter tags={tags} />
+            </div>
+          ) : null}
         </section>
       ) : null}
 

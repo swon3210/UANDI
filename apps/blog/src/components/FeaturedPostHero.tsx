@@ -2,7 +2,6 @@ import Link from 'next/link';
 import dayjs from 'dayjs';
 import type { PostMeta } from '@/lib/posts';
 import { CategoryLabel } from './CategoryLabel';
-import { ReadingTime } from './ReadingTime';
 
 export function FeaturedPostHero({ post }: { post: PostMeta }) {
   return (
@@ -22,8 +21,6 @@ export function FeaturedPostHero({ post }: { post: PostMeta }) {
         </p>
         <div className="mt-4 flex items-center gap-3 text-xs text-gray-400">
           <span>{dayjs(post.date).format('YYYY년 M월 D일')}</span>
-          <span>·</span>
-          <ReadingTime minutes={post.readingTimeMinutes} />
         </div>
       </Link>
     </section>

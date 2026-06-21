@@ -5,7 +5,6 @@ import Link from 'next/link';
 import dayjs from 'dayjs';
 import { TagBadge } from './TagBadge';
 import { CategoryLabel } from './CategoryLabel';
-import { ReadingTime } from './ReadingTime';
 import { SeriesBadge } from './SeriesBadge';
 import { RelatedPosts } from './RelatedPosts';
 import { TableOfContents } from './TableOfContents';
@@ -82,8 +81,6 @@ export function PostContent({
         <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-400">
           <span>{dayjs(post.date).format('YYYY년 M월 D일')}</span>
-          <span>·</span>
-          <ReadingTime minutes={post.readingTimeMinutes} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {post.series ? (
