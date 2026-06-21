@@ -13,12 +13,6 @@ export default function AboutPage() {
     <article className="space-y-12">
       {/* 정체성 */}
       <section>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/mascot/face.png"
-          alt="Doggae Log 마스코트"
-          className="mb-5 h-20 w-20 rounded-full bg-[var(--color-primary)]/10 p-1"
-        />
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-primary)]">
           About
         </p>
@@ -89,6 +83,44 @@ export default function AboutPage() {
             );
           })}
         </ul>
+      </section>
+
+      {/* 이전 블로그 안내 */}
+      <section className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
+        <div className="sm:flex sm:items-center sm:gap-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mascot/sticker-wink.png"
+            alt="윙크하는 마스코트"
+            className="mx-auto w-28 shrink-0 sm:mx-0"
+          />
+          <div className="min-w-0 flex-1">
+            <h2 className="mt-4 text-lg font-semibold text-gray-900 sm:mt-0">
+              티스토리에서 이사 왔어요
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              원래는 티스토리에 글을 써왔습니다. AI를 도구화하는 실험을 제대로
+              기록하고 싶어서, 레이아웃부터 내 손으로 만든 이 공간으로
+              옮겼어요. 예전 글들은 따로 옮기지 않고 티스토리에 그대로 두었으니,
+              지난 기록이 궁금하면 거기서 볼 수 있습니다.
+            </p>
+            <a
+              href="https://codingmoondoll.tistory.com"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/old-blog-favicon.png"
+                alt=""
+                aria-hidden="true"
+                className="h-4 w-4 rounded-sm"
+              />
+              이전 블로그 보러 가기
+            </a>
+          </div>
+        </div>
       </section>
 
       {/* 연락처 */}
