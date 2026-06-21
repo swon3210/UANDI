@@ -27,15 +27,6 @@ html {
   scroll-margin-top: 6rem;
 }
 
-/* 본문 속 인라인 마스코트 스티커 — 감정 비트에 작게 끼워 넣는다 */
-.prose img.mascot-inline {
-  display: inline-block;
-  width: 72px;
-  height: auto;
-  margin: 0 0.15em;
-  vertical-align: middle;
-}
-
 /* 글 상단 커버 이미지 (frontmatter cover) */
 .post-cover {
   margin-bottom: 2rem;

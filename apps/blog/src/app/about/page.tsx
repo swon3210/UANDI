@@ -13,6 +13,12 @@ export default function AboutPage() {
     <article className="space-y-12">
       {/* 정체성 */}
       <section>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/mascot/face.png"
+          alt="Doggae Log 마스코트"
+          className="mb-5 h-20 w-20 rounded-full bg-[var(--color-primary)]/10 p-1"
+        />
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-primary)]">
           About
         </p>
@@ -34,15 +40,25 @@ export default function AboutPage() {
 
       {/* MOA 프로젝트 소개 */}
       <section className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
-        <h2 className="text-lg font-semibold text-gray-900">
-          지금 만들고 있는 것 — MOA
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-gray-600">
-          신혼부부를 위한 사진 갤러리 + 가계부 앱입니다. 아내와 둘이서 직접
-          사용자가 되어 만들고 있고, AI를 어떻게 도구화하면 작은 팀이 빠르게
-          제품을 검증할 수 있는지를 검증하는 실험장이기도 합니다. 이 블로그의
-          많은 글은 MOA를 만들면서 마주친 문제들에서 나옵니다.
-        </p>
+        <div className="sm:flex sm:items-center sm:gap-6">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold text-gray-900">
+              지금 만들고 있는 것 — MOA
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              신혼부부를 위한 사진 갤러리 + 가계부 앱입니다. 아내와 둘이서 직접
+              사용자가 되어 만들고 있고, AI를 어떻게 도구화하면 작은 팀이 빠르게
+              제품을 검증할 수 있는지를 검증하는 실험장이기도 합니다. 이 블로그의
+              많은 글은 MOA를 만들면서 마주친 문제들에서 나옵니다.
+            </p>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mascot/splash.png"
+            alt="둘이 함께 가계부를 쓰는 마스코트 커플"
+            className="mx-auto mt-4 w-40 shrink-0 sm:mx-0 sm:mt-0"
+          />
+        </div>
       </section>
 
       {/* 콘텐츠 4분면 */}
