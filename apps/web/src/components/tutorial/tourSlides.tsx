@@ -1,7 +1,7 @@
 'use client';
 
 import type { FC } from 'react';
-import Image from 'next/image';
+import Image, { type StaticImageData } from 'next/image';
 import {
   LayoutDashboard,
   Receipt,
@@ -12,10 +12,14 @@ import {
   Users,
 } from 'lucide-react';
 import { cn } from '@uandi/ui';
+// 둘이 함께 가계부 쓰는 마스코트(환영) / 성공 마스코트(마무리). 정적 PNG라 screenshots:tour와 무관하다.
+import mascotSplash from '@uandi/ui/assets/mascot-splash.png';
+import mascotSuccess from '@uandi/ui/assets/mascot-success.png';
 
 /**
  * MOA 온보딩 투어 슬라이드 정의.
- * 핵심 서비스인 가계부(내역/예산/현금흐름/점검)는 실제 화면 스크린샷으로 안내하고,
+ * 환영(1장)·마무리(마지막 장)는 마스코트 일러스트로 톤을 잡고,
+ * 핵심 서비스인 가계부(내역/예산/현금흐름/점검)는 실제 화면 스크린샷으로 안내하며,
  * 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장에 일괄 소개한다.
  * 가계부 스크린샷은 `pnpm --filter web screenshots:tour`(에뮬레이터 필요)로 갱신한다 →
  * apps/web/public/tour/*.webp. 환영(가계부 상단 탭)·그 외는 실제 데이터에 의존하지 않는 표현이다.
@@ -46,6 +50,22 @@ function ScreenshotPreview({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+/** 마스코트 일러스트 미리보기(환영·마무리 슬라이드). 의미는 슬라이드 제목/설명이 전달하므로 alt는 비운다. */
+function MascotPreview({ src, widthClassName }: { src: StaticImageData; widthClassName: string }) {
+  return (
+    <div className="flex justify-center">
+      <Image
+        src={src}
+        alt=""
+        sizes="240px"
+        draggable={false}
+        // 정적 import라 next/image가 종횡비를 알고 있어 CLS가 없다. 표시 폭만 클래스로 지정한다.
+        className={cn('h-auto select-none', widthClassName)}
+      />
+    </div>
+  );
+}
+
 /** 슬라이드 1 — 환영 + 가계부 상단 탭 4개 안내(실제 CashbookTabs와 동일한 구성) */
 const CASHBOOK_TABS = [
   { label: '대시보드', Icon: LayoutDashboard },
@@ -55,22 +75,25 @@ const CASHBOOK_TABS = [
 ] as const;
 
 const WelcomePreview: FC = () => (
-  <nav className="flex items-stretch gap-1.5" aria-label="가계부 메뉴 미리보기">
-    {CASHBOOK_TABS.map((t, i) => (
-      <div
-        key={t.label}
-        className={cn(
-          'flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 py-2.5 text-sm font-medium',
-          i === 0
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'bg-muted text-muted-foreground'
-        )}
-      >
-        <t.Icon size={15} aria-hidden className="shrink-0" />
-        {t.label}
-      </div>
-    ))}
-  </nav>
+  <div className="space-y-4">
+    <MascotPreview src={mascotSplash} widthClassName="w-[200px] sm:w-[220px]" />
+    <nav className="flex items-stretch gap-1.5" aria-label="가계부 메뉴 미리보기">
+      {CASHBOOK_TABS.map((t, i) => (
+        <div
+          key={t.label}
+          className={cn(
+            'flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 py-2.5 text-sm font-medium',
+            i === 0
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-muted text-muted-foreground'
+          )}
+        >
+          <t.Icon size={15} aria-hidden className="shrink-0" />
+          {t.label}
+        </div>
+      ))}
+    </nav>
+  </div>
 );
 
 /** 슬라이드 2~5 — 가계부 실제 화면 스크린샷 */
@@ -125,6 +148,11 @@ const MorePreview: FC = () => (
   </div>
 );
 
+/** 슬라이드 7 — 마무리. 성공 마스코트로 투어를 축하하며 닫는다(시작하기). */
+const ReadyPreview: FC = () => (
+  <MascotPreview src={mascotSuccess} widthClassName="w-[150px] sm:w-[160px]" />
+);
+
 export const TOUR_SLIDES: TourSlide[] = [
   {
     id: 'welcome',
@@ -163,5 +191,11 @@ export const TOUR_SLIDES: TourSlide[] = [
     title: '이런 기능도 있어요 (베타)',
     description: '갤러리·재테크·커뮤니티로 둘의 일상을 더 풍성하게 채워보세요.',
     Preview: MorePreview,
+  },
+  {
+    id: 'ready',
+    title: '이제 시작해볼까요?',
+    description: '둘이 함께 채워갈 가계부, 지금부터 시작이에요.',
+    Preview: ReadyPreview,
   },
 ];
