@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function PortfolioPage() {
   return (
     <div
-      className="mx-auto scroll-smooth"
+      className="mx-auto scroll-smooth overflow-x-clip"
       style={{ maxWidth: 960, padding: '0 clamp(20px,5vw,48px)' }}
     >
       <Header />

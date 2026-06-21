@@ -91,10 +91,10 @@ export function Hero() {
             <div className="landing-float absolute" style={{ top: 0, left: -20 }}>
               <PhoneMockup screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
             </div>
-            {/* 마스코트 커플 — 가계부 쓰는 장면 */}
+            {/* 마스코트 커플 — 가계부 쓰는 장면 (모바일에서 잘리지 않도록 안쪽에 배치) */}
             <div
               className="landing-float landing-float-delay-1500ms pointer-events-none absolute"
-              style={{ bottom: -26, left: -84, width: 188, zIndex: 3 }}
+              style={{ bottom: -22, left: -8, width: 168, zIndex: 3 }}
             >
               <Image
                 src="/mascot/splash.png"
