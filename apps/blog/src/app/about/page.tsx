@@ -13,12 +13,6 @@ export default function AboutPage() {
     <article className="space-y-12">
       {/* 정체성 */}
       <section>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/mascot/face.png"
-          alt="Doggae Log 마스코트"
-          className="mb-5 h-20 w-20 rounded-full bg-[var(--color-primary)]/10 p-1"
-        />
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-primary)]">
           About
         </p>
@@ -61,16 +55,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 콘텐츠 4분면 */}
+      {/* 콘텐츠 분류 */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900">
-          여기서 다루는 4가지 글
+          여기서 다루는 글
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
-          블로그의 모든 글은 아래 4가지 카테고리 중 하나에 속합니다.
+        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+          글은 두 축으로 나눕니다 —{' '}
+          <strong className="text-gray-900">기술 / 프로덕트</strong>, 그리고{' '}
+          <strong className="text-gray-900">
+            어떻게 만들었나(구현) / 왜 그렇게 했나(선택)
+          </strong>
+          . 여기에 가끔 짧은 에세이를 더합니다.
         </p>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-          {CATEGORY_SLUGS.map((slug) => {
+          {CATEGORY_SLUGS.filter((slug) => slug !== 'essay').map((slug) => {
             const meta = CATEGORIES[slug];
             return (
               <li key={slug}>
@@ -89,6 +88,55 @@ export default function AboutPage() {
             );
           })}
         </ul>
+        <Link
+          href="/categories/essay"
+          className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-100 p-4 transition-colors hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/5"
+        >
+          <span className="text-sm font-semibold text-gray-900">
+            {CATEGORIES.essay.label}
+          </span>
+          <span className="text-xs text-gray-500">
+            {CATEGORIES.essay.description}
+          </span>
+        </Link>
+      </section>
+
+      {/* 이전 블로그 안내 */}
+      <section className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
+        <div className="sm:flex sm:items-center sm:gap-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mascot/sticker-wink.png"
+            alt="윙크하는 마스코트"
+            className="mx-auto w-28 shrink-0 sm:mx-0"
+          />
+          <div className="min-w-0 flex-1">
+            <h2 className="mt-4 text-lg font-semibold text-gray-900 sm:mt-0">
+              티스토리에서 이사 왔어요
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              원래는 티스토리에 글을 써왔습니다. AI를 도구화하는 실험을 제대로
+              기록하고 싶어서, 레이아웃부터 내 손으로 만든 이 공간으로
+              옮겼어요. 예전 글들은 따로 옮기지 않고 티스토리에 그대로 두었으니,
+              지난 기록이 궁금하면 거기서 볼 수 있습니다.
+            </p>
+            <a
+              href="https://codingmoondoll.tistory.com"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/old-blog-favicon.png"
+                alt=""
+                aria-hidden="true"
+                className="h-4 w-4 rounded-sm"
+              />
+              이전 블로그 보러 가기
+            </a>
+          </div>
+        </div>
       </section>
 
       {/* 연락처 */}

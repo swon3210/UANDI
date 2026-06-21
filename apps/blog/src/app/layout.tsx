@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { BlogHeader } from '@/components/BlogHeader';
+import { BlogFooter } from '@/components/BlogFooter';
 import './globals.css';
 
 const siteUrl = process.env.SITE_URL ?? 'https://blog.uandi.app';
@@ -22,9 +23,12 @@ export default function BlogLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-white font-sans antialiased">
+      <body className="flex min-h-screen flex-col bg-white font-sans antialiased">
         <BlogHeader />
-        <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+          {children}
+        </main>
+        <BlogFooter />
       </body>
     </html>
   );
