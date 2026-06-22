@@ -10,11 +10,14 @@ type NativeBridge = {
   fcmToken?: string;
   platform?: FcmTokenPlatform;
   userAgent?: string;
+  // 안드로이드 플로팅 버블 on/off 상태(네이티브가 주입, 설정 토글에서 사용).
+  bubbleEnabled?: boolean;
 };
 
 declare global {
   interface Window {
     __UANDI_NATIVE__?: NativeBridge;
+    ReactNativeWebView?: { postMessage(message: string): void };
   }
 }
 

@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Alert, AppState, type AppStateStatus, Platform } from 'react-native';
 import FloatingBubble from '@/modules/floating-bubble';
+import { bubblePicker } from '@/lib/bubble-picker';
+
+// 다른 앱으로 진짜 전환했을 때와, 인앱 피커 때문에 잠깐 백그라운드로 간 것을 구분하기 위한 지연.
+// 백그라운드 진입 직후 'file-picker-open' 메시지가 도착할 시간을 준다(클릭 → 메시지 → 백그라운드 순서 보장).
+const SHOW_DELAY_MS = 350;
 
 // 다른 앱 위에 떠 있는 MOA 플로팅 버블을 앱 생명주기에 맞춰 제어한다.
 //  - 앱이 포그라운드(active)면 버블을 숨긴다(앱 안에서는 불필요).
@@ -34,6 +39,19 @@ export function useFloatingBubble() {
 
     promptPermission();
 
+    // 사용자가 휴지통으로 버블을 끄면 한 번 안내(다시 켜는 경로를 알려준다).
+    const dismissSub = bubble.addListener?.('onDismiss', () => {
+      Alert.alert('플로팅 버블을 제거했어요', '가계부 설정에서 다시 켤 수 있어요.');
+    });
+
+    let showTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearShowTimer = () => {
+      if (showTimer) {
+        clearTimeout(showTimer);
+        showTimer = null;
+      }
+    };
+
     const sync = (state: AppStateStatus) => {
       const granted = bubble.hasOverlayPermission();
 
@@ -50,14 +68,30 @@ export function useFloatingBubble() {
         return;
       }
 
-      if (state === 'active') bubble.hide();
-      else bubble.show();
+      if (state === 'active') {
+        // 앱으로 복귀 → 피커가 닫혔다고 보고 신호를 비운다.
+        bubblePicker.clear();
+        clearShowTimer();
+        bubble.hide();
+        return;
+      }
+
+      // 인앱 피커 때문에 잠깐 백그라운드로 간 경우엔 버블을 띄우지 않는다.
+      if (bubblePicker.isActive()) return;
+      // 약간 지연시켜 'file-picker-open' 메시지가 도착할 여지를 준다(끄기 상태면 네이티브가 무시).
+      clearShowTimer();
+      showTimer = setTimeout(() => {
+        showTimer = null;
+        if (!bubblePicker.isActive()) bubble.show();
+      }, SHOW_DELAY_MS);
     };
 
     const sub = AppState.addEventListener('change', sync);
 
     return () => {
       sub.remove();
+      dismissSub?.remove();
+      clearShowTimer();
       bubble.hide();
     };
   }, []);

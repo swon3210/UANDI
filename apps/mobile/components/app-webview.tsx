@@ -6,10 +6,38 @@ import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react-native-webview';
 import type { FcmTokenInfo } from '@/lib/fcm';
+import FloatingBubble from '@/modules/floating-bubble';
+import { bubblePicker } from '@/lib/bubble-picker';
 
 const UANDI_HOST = 'uandi-web.vercel.app';
 // 딥링크 진입 시 항상 대시보드를 거쳐 목적지로 이동한다(synthetic back stack).
 const DASHBOARD_PATH = '/inner';
+
+// 웹의 <input type=file>(이미지 첨부 등)이 활성화되면 네이티브로 알린다.
+// 캡처 단계 리스너라 프로그래매틱 .click()까지 잡혀, 첨부 호출부를 수정하지 않고 모든 첨부 지점을 커버한다.
+// 네이티브는 이 신호를 받으면 OS 피커가 뜨는 동안 플로팅 버블을 띄우지 않는다.
+const FILE_PICKER_HOOK = `
+(function(){
+  if (window.__uandiFilePickerHook) return;
+  window.__uandiFilePickerHook = true;
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (t && t.tagName === 'INPUT' && t.type === 'file' && window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'file-picker-open' }));
+    }
+  }, true);
+})();
+`;
+
+// 안드로이드에서만 버블 on/off 상태를 읽는다(웹 설정 토글의 초기값/동기화용). 그 외엔 null.
+function readBubbleEnabled(): boolean | null {
+  if (Platform.OS !== 'android' || !FloatingBubble) return null;
+  try {
+    return FloatingBubble.isEnabled();
+  } catch {
+    return null;
+  }
+}
 
 // path: 이동할 경로(`/community/123`) 또는 전체 웹 URL.
 // viaDashboard: true면 대시보드를 거쳐 이동(커스텀 스킴), false면 직행(FCM 알림 탭).
@@ -85,25 +113,60 @@ export function AppWebView({
     canGoBackRef.current = navState.canGoBack;
   };
 
-  // 웹 → 네이티브 메시지. 현재는 오버레이 열림 상태 통지에만 사용한다.
-  const handleMessage = useCallback((event: WebViewMessageEvent) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data) as { type?: string; open?: boolean };
-      if (data?.type === 'overlay-state') {
-        overlayOpenRef.current = !!data.open;
-      }
-    } catch {
-      // 다른 형식의 메시지는 무시한다.
-    }
+  // 버블 enabled 상태를 __UANDI_NATIVE__에 다시 주입하고 ready 이벤트로 웹 설정 UI에 알린다.
+  const reinjectBubbleEnabled = useCallback((enabled: boolean) => {
+    webViewRef.current?.injectJavaScript(
+      `window.__UANDI_NATIVE__ = window.__UANDI_NATIVE__ || {};` +
+        `window.__UANDI_NATIVE__.bubbleEnabled = ${enabled};` +
+        `window.dispatchEvent(new Event('uandi:native-ready')); true;`
+    );
   }, []);
 
   // 페이지 로드 직전에 window.__UANDI_NATIVE__를 주입 — full reload 시에도 매번 실행된다.
   const injectedJavaScriptBeforeContentLoaded = useMemo(() => {
-    if (!tokenInfo) {
-      return 'window.__UANDI_NATIVE__ = window.__UANDI_NATIVE__ || {}; true;';
-    }
-    return `window.__UANDI_NATIVE__ = ${buildBridgePayload(tokenInfo)}; true;`;
+    const base = tokenInfo
+      ? `window.__UANDI_NATIVE__ = ${buildBridgePayload(tokenInfo)};`
+      : 'window.__UANDI_NATIVE__ = window.__UANDI_NATIVE__ || {};';
+    const enabled = readBubbleEnabled();
+    const bubbleLine = enabled === null ? '' : `window.__UANDI_NATIVE__.bubbleEnabled = ${enabled};`;
+    return `${base} ${bubbleLine} ${FILE_PICKER_HOOK} true;`;
   }, [tokenInfo]);
+
+  // 웹 → 네이티브 메시지 처리.
+  const handleMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      let data: { type?: string; open?: boolean; value?: unknown } | null = null;
+      try {
+        data = JSON.parse(event.nativeEvent.data);
+      } catch {
+        return;
+      }
+      if (!data || typeof data !== 'object') return;
+
+      if (data.type === 'overlay-state') {
+        // 웹 오버레이(바텀시트/다이얼로그) 열림 상태 — 뒤로가기 닫기 위임에 사용.
+        overlayOpenRef.current = !!data.open;
+      } else if (data.type === 'file-picker-open') {
+        // 인앱 이미지/파일 피커가 뜬다 → 잠깐 백그라운드로 가도 버블을 띄우지 않는다.
+        bubblePicker.markOpen();
+      } else if (data.type === 'bubble-set-enabled') {
+        // 가계부 설정의 플로팅 버블 토글 → 네이티브 on/off + 상태 재주입.
+        const value = Boolean(data.value);
+        FloatingBubble?.setEnabled(value);
+        reinjectBubbleEnabled(value);
+      }
+    },
+    [reinjectBubbleEnabled]
+  );
+
+  // 사용자가 휴지통으로 버블을 끄면(네이티브 이벤트) 웹 설정 토글 상태를 동기화한다.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !FloatingBubble) return;
+    const sub = FloatingBubble.addListener('onDismiss', () => {
+      reinjectBubbleEnabled(false);
+    });
+    return () => sub.remove();
+  }, [reinjectBubbleEnabled]);
 
   // 토큰이 WebView 로드 이후에 도착하면 다시 주입하고 ready 이벤트로 알린다.
   useEffect(() => {
