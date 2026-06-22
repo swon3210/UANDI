@@ -2,8 +2,14 @@ package expo.modules.floatingbubble
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
@@ -207,13 +213,46 @@ class FloatingBubbleModule : Module() {
       setPadding(pad, pad, pad, pad)
       elevation = dp(6).toFloat()
     }
+    val iconSize = dp(48)
     val icon = ImageView(context).apply {
-      setImageDrawable(context.packageManager.getApplicationIcon(context.packageName))
+      // 런처 어댑티브 아이콘은 기기마다 다른 시스템 마스크가 적용돼 원형 버블과 모양이 어긋난다.
+      // 시스템 마스크를 무시하고 배경+전경을 직접 그린 뒤 우리가 만든 원형으로 잘라 넣는다.
+      setImageBitmap(appIconCircularBitmap(iconSize))
       scaleType = ImageView.ScaleType.FIT_CENTER
     }
-    val iconSize = dp(48)
     container.addView(icon, FrameLayout.LayoutParams(iconSize, iconSize))
     return container
+  }
+
+  // 앱 아이콘을 깔끔한 원형 비트맵으로 렌더링한다.
+  // 어댑티브 아이콘이면 시스템 마스크 대신 배경+전경 레이어만 그려 원형으로 클립한다.
+  private fun appIconCircularBitmap(sizePx: Int): Bitmap {
+    val drawable = context.packageManager.getApplicationIcon(context.packageName)
+
+    val source = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val sc = Canvas(source)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && drawable is AdaptiveIconDrawable) {
+      drawable.background?.apply {
+        setBounds(0, 0, sizePx, sizePx)
+        draw(sc)
+      }
+      drawable.foreground?.apply {
+        setBounds(0, 0, sizePx, sizePx)
+        draw(sc)
+      }
+    } else {
+      drawable.setBounds(0, 0, sizePx, sizePx)
+      drawable.draw(sc)
+    }
+
+    val output = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val oc = Canvas(output)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val radius = sizePx / 2f
+    oc.drawCircle(radius, radius, radius, paint)
+    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+    oc.drawBitmap(source, 0f, 0f, paint)
+    return output
   }
 
   private fun buildPanel(web: WebView): View {
