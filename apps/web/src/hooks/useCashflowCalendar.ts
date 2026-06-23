@@ -135,7 +135,8 @@ export function useCashflowCalendar(
       txns.push(t);
     }
 
-    // LLM 예측(표시 전용, 잔액 미반영). 정기 발생 선언 카테고리는 제외(이미 ◇로 노출), G1로 실거래 달 제외.
+    // LLM 예측(표시 전용, 잔액 미반영). 정기 발생 선언 카테고리만 제외(이미 ◇로 노출).
+    // 표시 전용이라 잔액 이중계산 우려가 없어 "같은 달 실거래" 게이트(G1)는 적용하지 않는다.
     const declaredCategories = new Set<string>();
     for (const c of categories ?? []) {
       if (c.recurrence?.enabled) declaredCategories.add(c.name);
@@ -143,7 +144,6 @@ export function useCashflowCalendar(
     for (const t of llmTransactions(llmPredictions, {
       from,
       months: CASHFLOW_HORIZON_MONTHS,
-      actualKeys,
       declaredCategories,
     })) {
       txns.push(t);

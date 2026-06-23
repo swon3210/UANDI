@@ -376,17 +376,16 @@ export type LlmPrediction = {
 /**
  * LLM 예측 → 표시 전용 합성 거래(◇, source='llm', displayOnly=true).
  * - 호라이즌(from ~ from+months) 안의 예측만.
- * - 같은 달 실거래가 있으면(G1) 제외 — 실거래가 더 정확.
  * - 정기 발생으로 이미 선언된 카테고리는 통째로 제외(선언이 단일 출처, 캘린더 ◇로 이미 노출됨).
  * - displayOnly라 잔액엔 반영되지 않고 "AI 예상 내역"으로만 보인다.
+ *   → 잔액 이중계산 우려가 없으므로 "같은 달 실거래 존재" 게이트(G1)는 적용하지 않는다.
+ *     (실거래가 있어도 앞으로 더 쓸 변동 카테고리는 예상으로 계속 보여주는 게 유용하다.)
  */
 export function llmTransactions(
   predictions: LlmPrediction[],
   opts: {
     from: Dayjs;
     months: number;
-    /** G1: 같은 달 실거래가 있는 `${categoryName}|${YYYY-MM}` 집합. */
-    actualKeys: Set<string>;
     /** 정기 발생 선언된 카테고리 이름 집합(통째 제외). */
     declaredCategories: Set<string>;
   }
@@ -394,6 +393,7 @@ export function llmTransactions(
   const start = opts.from.startOf('day');
   const end = start.add(opts.months, 'month').endOf('day');
   const out: CashflowTransaction[] = [];
+  const seenIds = new Set<string>();
 
   for (const p of predictions) {
     if (!p.category || !(p.amount > 0)) continue;
@@ -405,10 +405,12 @@ export function llmTransactions(
     const inRange = (occ.isSame(start, 'day') || occ.isAfter(start)) && occ.isBefore(end);
     if (!inRange) continue;
 
-    if (opts.actualKeys.has(recurrenceMonthKey(p.category, occ.toDate()))) continue; // G1
+    const id = `llm-${p.category}-${occ.format('YYYY-MM-DD')}`;
+    if (seenIds.has(id)) continue; // 같은 카테고리·같은 날 중복 방지(React key 충돌 회피)
+    seenIds.add(id);
 
     out.push({
-      id: `llm-${p.category}-${occ.format('YYYY-MM-DD')}`,
+      id,
       kind: 'predicted',
       type: p.type,
       amount: Math.round(p.amount),
