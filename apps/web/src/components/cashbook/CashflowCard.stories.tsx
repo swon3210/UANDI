@@ -100,11 +100,35 @@ export const Empty: Story = {
   },
 };
 
-export const WithAddPrediction: Story = {
+export const WithLlmPredictions: Story = {
   args: {
-    card: card(),
+    card: card({
+      displayPredictions: [
+        {
+          id: 'llm-외식-2026-06-20',
+          kind: 'predicted',
+          type: 'expense',
+          amount: 120000,
+          category: '외식',
+          description: '최근 3개월 매월 외식 지출 반복',
+          date: new Date(2026, 5, 20),
+          source: 'llm',
+          displayOnly: true,
+        },
+        {
+          id: 'llm-부수입-2026-06-22',
+          kind: 'predicted',
+          type: 'income',
+          amount: 200000,
+          category: '부수입',
+          description: '분기마다 들어온 부수입 패턴',
+          date: new Date(2026, 5, 22),
+          source: 'llm',
+          displayOnly: true,
+        },
+      ],
+    }),
     defaultOpen: true,
-    onAddPrediction: () => alert('예측 추가'),
   },
 };
 

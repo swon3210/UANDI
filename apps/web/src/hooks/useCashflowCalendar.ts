@@ -17,8 +17,10 @@ import {
   recurrenceBoundaries,
   mergeBoundariesByDate,
   recurrenceMonthKey,
+  llmTransactions,
   type CashflowCardData,
   type CashflowTransaction,
+  type LlmPrediction,
 } from '@/utils/cashflow';
 import { estimateVariableDaily } from '@/utils/auto-detect';
 import { DEFAULT_CASHFLOW_VARIABLE_MODE, type CashflowSettings } from '@/types';
@@ -41,7 +43,10 @@ export type CashflowCalendarResult = {
  * 결제일별 카드(들어올/나갈/남는 돈 누적)를 만든다.
  * - 캘린더 잔액은 actual entry + 'predicted' prediction만 합산(confirmed/rejected 제외) → 이중계산 방지.
  */
-export function useCashflowCalendar(coupleId: string | null): CashflowCalendarResult {
+export function useCashflowCalendar(
+  coupleId: string | null,
+  llmPredictions: LlmPrediction[] = []
+): CashflowCalendarResult {
   const from = useMemo(() => dayjs().startOf('day'), []);
   const horizonEnd = useMemo(() => from.add(CASHFLOW_HORIZON_MONTHS, 'month').endOf('day'), [from]);
 
@@ -130,11 +135,34 @@ export function useCashflowCalendar(coupleId: string | null): CashflowCalendarRe
       txns.push(t);
     }
 
+    // LLM 예측(표시 전용, 잔액 미반영). 정기 발생 선언 카테고리는 제외(이미 ◇로 노출), G1로 실거래 달 제외.
+    const declaredCategories = new Set<string>();
+    for (const c of categories ?? []) {
+      if (c.recurrence?.enabled) declaredCategories.add(c.name);
+    }
+    for (const t of llmTransactions(llmPredictions, {
+      from,
+      months: CASHFLOW_HORIZON_MONTHS,
+      actualKeys,
+      declaredCategories,
+    })) {
+      txns.push(t);
+    }
+
     return buildCashflowCards(boundaries, txns, currentCash, {
       from: from.toDate(),
       estimatedDailyVariable,
     });
-  }, [settings, entries, predictions, pastEntries, categories, from, estimatedDailyVariable]);
+  }, [
+    settings,
+    entries,
+    predictions,
+    pastEntries,
+    categories,
+    from,
+    estimatedDailyVariable,
+    llmPredictions,
+  ]);
 
   return {
     cards,

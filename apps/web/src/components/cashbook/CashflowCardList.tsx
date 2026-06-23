@@ -7,16 +7,11 @@ import type { CashflowCardData } from '@/utils/cashflow';
 
 type CashflowCardListProps = {
   cards: CashflowCardData[];
-  onAddPrediction?: (card: CashflowCardData) => void;
   onDeletePrediction?: (txnId: string) => void;
 };
 
 /** 다음 결제일부터 시간순으로 쌓인 카드 목록(§4-3). 첫 카드는 펼친 상태로 시작. */
-export function CashflowCardList({
-  cards,
-  onAddPrediction,
-  onDeletePrediction,
-}: CashflowCardListProps) {
+export function CashflowCardList({ cards, onDeletePrediction }: CashflowCardListProps) {
   if (cards.length === 0) {
     return (
       <EmptyState
@@ -34,7 +29,6 @@ export function CashflowCardList({
           key={card.key}
           card={card}
           defaultOpen={i === 0}
-          onAddPrediction={onAddPrediction ? () => onAddPrediction(card) : undefined}
           onDeletePrediction={onDeletePrediction}
         />
       ))}

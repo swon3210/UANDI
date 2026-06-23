@@ -83,8 +83,13 @@ export type CashbookCategory = {
  */
 export type PredictionStatus = 'predicted' | 'rejected' | 'confirmed';
 
-/** 예측 출처. calendar=사용자가 캘린더에서 직접 생성, auto=고정지출 자동감지(§7-1). */
-export type PredictionSource = 'calendar' | 'auto';
+/**
+ * 예측 출처.
+ * - calendar: 사용자가 캘린더에서 직접 생성(레거시 — 수동 추가 UI는 폐지됨).
+ * - auto: 고정지출 자동감지(§7-1, Phase 5에서 제거됨 — 잔존 doc은 조회 단계 비활성).
+ * - llm: 과거 소비/수입 패턴 기반 LLM 예측(읽기 시점 파생, 표시 전용·잔액 미반영).
+ */
+export type PredictionSource = 'calendar' | 'auto' | 'llm';
 
 export type CashbookPrediction = {
   id: string;

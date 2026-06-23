@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import {
-  seedDefaultCategories,
   seedCashflowSettings,
   seedPrediction,
   seedCashbookEntry,
@@ -14,8 +13,6 @@ function todayNoonISO(): string {
   const n = new Date();
   return new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12, 0, 0).toISOString();
 }
-const TODAY_DAY = new Date().getDate();
-
 test.describe('현금흐름 양방향 동기화', () => {
   test('SYNC-02: 예측이 있으면 가계부 해당 날짜에 점선 박스가 뜬다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
@@ -160,34 +157,6 @@ test.describe('현금흐름 양방향 동기화', () => {
     await expect(cashbook.predictionPrompt).toHaveCount(0);
   });
 
-  test('SYNC-02(생성): 캘린더에서 예측을 추가하면 가계부에 점선 박스가 생긴다', async ({
-    authedContext,
-  }) => {
-    const { page, coupleId } = authedContext;
-    await seedDefaultCategories(coupleId);
-    await seedCashflowSettings(coupleId, {
-      currentCash: 2000000,
-      paydays: [{ id: 'p1', label: '신한카드', type: 'card', dayOfMonth: TODAY_DAY }],
-    });
-
-    const cashflow = new CashflowPage(page);
-    await cashflow.goto();
-
-    // 첫 카드(오늘 결제일)는 기본 펼침 → "예측 추가"
-    await cashflow.addPredictionButton.first().click();
-    await page.getByTestId('entry-form-sheet').waitFor({ state: 'visible' });
-    await page.getByLabel('금액').fill('50000');
-    const chip = page.getByTestId('category-chip-식비');
-    await chip.waitFor({ state: 'attached', timeout: 10000 });
-    await chip.scrollIntoViewIfNeeded();
-    await chip.click();
-    await page.getByTestId('entry-form-sheet').getByRole('button', { name: '저장' }).click();
-
-    // 가계부에 점선 박스가 생긴다
-    const cashbook = new CashbookPage(page);
-    await cashbook.goto();
-    await expect(cashbook.predictionPrompt).toBeVisible();
-    await expect(cashbook.predictionPrompt).toContainText('식비');
-    await expect(cashbook.predictionPrompt).toContainText('50,000원');
-  });
+  // (제거됨) "캘린더에서 예측을 직접 추가" 흐름은 폐지됐다(수동 추가 UI 제거).
+  // 예측 생성은 이제 카테고리 정기 발생 선언 또는 LLM 예측(읽기 시점)으로 대체된다.
 });

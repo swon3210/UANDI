@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import dayjs from 'dayjs';
-import { ChevronDown, Plus, CalendarRange } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger, Button, cn } from '@uandi/ui';
+import { ChevronDown, CalendarRange, Sparkles } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
 import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
@@ -11,11 +11,17 @@ import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
 type CashflowCardProps = {
   card: CashflowCardData;
   defaultOpen?: boolean;
-  /** 있으면 펼친 카드 하단에 "예측 추가" 버튼을 노출(SYNC-02). */
-  onAddPrediction?: () => void;
-  /** 있으면 예측 거래 행에 삭제 버튼을 노출(SYNC-05). */
+  /**
+   * 있으면 예측 거래 행에 삭제 버튼을 노출(레거시 calendar 예측 doc 정리용).
+   * 합성 예측(recurrence-/llm- prefix)은 doc이 없어 삭제 대상이 아니다.
+   */
   onDeletePrediction?: (txnId: string) => void;
 };
+
+/** 합성 예측(읽기 시점 파생)이라 삭제할 doc이 없는지 — recurrence/llm 출처. */
+function isSyntheticPrediction(txn: CashflowTransaction): boolean {
+  return txn.id.startsWith('recurrence-') || txn.id.startsWith('llm-');
+}
 
 /** 펼친 카드 안 거래를 '실제 날짜'별로 묶는다(각 날짜를 분명히 보이게). */
 function groupByDate(txns: CashflowTransaction[]): { key: string; date: Date; items: CashflowTransaction[] }[] {
@@ -36,7 +42,6 @@ function groupByDate(txns: CashflowTransaction[]): { key: string; date: Date; it
 export function CashflowCard({
   card,
   defaultOpen = false,
-  onAddPrediction,
   onDeletePrediction,
 }: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -163,7 +168,7 @@ export function CashflowCard({
                         key={t.id}
                         txn={t}
                         onDelete={
-                          onDeletePrediction && t.kind === 'predicted'
+                          onDeletePrediction && t.kind === 'predicted' && !isSyntheticPrediction(t)
                             ? () => onDeletePrediction(t.id)
                             : undefined
                         }
@@ -174,17 +179,27 @@ export function CashflowCard({
               ))
             )}
 
-            {onAddPrediction && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={onAddPrediction}
-                data-testid="cashflow-add-prediction"
+            {(card.displayPredictions?.length ?? 0) > 0 && (
+              <div
+                className="space-y-1 rounded-lg border border-dashed border-coral-200 bg-coral-50/40 px-3 py-2"
+                data-testid="cashflow-llm-predictions"
               >
-                <Plus size={14} className="mr-1" />
-                예측 추가
-              </Button>
+                <p className="flex items-center gap-1 text-[11px] font-semibold text-coral-600">
+                  <Sparkles size={12} aria-hidden />
+                  AI 예상 내역
+                  <span className="font-normal text-muted-foreground">· 참고용, 잔액 미반영</span>
+                </p>
+                {groupByDate(card.displayPredictions ?? []).map((g) => (
+                  <div key={g.key} data-testid="cashflow-llm-day-group">
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {dayjs(g.date).format('M월 D일 (dd)')}
+                    </p>
+                    {g.items.map((t) => (
+                      <CashflowTransactionRow key={t.id} txn={t} />
+                    ))}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </CollapsibleContent>
