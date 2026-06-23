@@ -81,25 +81,6 @@ export function buildRecurrenceKey(p: {
   return `${p.type}|${p.category}|${p.dayOfMonth}`;
 }
 
-/**
- * §7-2: 최근 months개월의 일평균 변동지출 추정. 고정지출(감지된 패턴)·수입은 제외.
- * 캘린더 카드의 "예상 변동지출" 표시용(잔액 계산에는 미반영).
- */
-export function estimateVariableDaily(entries: CashbookEntry[], months: number): number {
-  if (entries.length === 0) return 0;
-  const fixed = new Set(detectRecurringPatterns(entries).map((p) => `${p.type}|${p.category}`));
-  const from = dayjs().subtract(months, 'month').startOf('day');
-  const days = Math.max(1, dayjs().startOf('day').diff(from, 'day'));
-
-  let sum = 0;
-  for (const e of entries) {
-    if (e.type === 'income') continue;
-    if (fixed.has(`${e.type}|${e.category}`)) continue;
-    sum += e.amount;
-  }
-  return Math.round(sum / days);
-}
-
 /** dayOfMonth의 다음 발생일(오늘 이후, 오늘 포함). 말일 clamp. */
 export function nextOccurrence(dayOfMonth: number, base: Dayjs = dayjs()): Date {
   const todayStart = base.startOf('day');
