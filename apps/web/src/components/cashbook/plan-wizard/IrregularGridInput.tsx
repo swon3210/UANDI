@@ -21,16 +21,16 @@ export function IrregularGridInput({
   onChange,
 }: IrregularGridInputProps) {
   const annual = monthlyAmounts.reduce((s, v) => s + v, 0);
-  /** 균등채우기 입력란의 draft. null = unfocused, 합계 자동 표시. */
-  const [spreadDraft, setSpreadDraft] = useState<string | null>(null);
-  const spreadDisplay = spreadDraft !== null ? spreadDraft : formatNumber(annual);
+  /**
+   * 균등채우기 입력란의 값(숫자만). 그리드 합계(annual)와 독립적으로 관리한다.
+   * 그리드 합계를 자동으로 끌어오지 않으므로 "내가 입력한 연 합계"만 분배된다.
+   */
+  const [spreadInput, setSpreadInput] = useState('');
 
   const handleSpread = () => {
-    const target = (spreadDraft ?? '').replace(/[^\d]/g, '');
-    const total = target === '' ? annual : Number(target);
-    setSpreadDraft(null);
+    const total = Number(spreadInput.replace(/[^\d]/g, ''));
     if (!Number.isFinite(total) || total <= 0) {
-      onChange(Array(12).fill(0));
+      setSpreadInput('');
       return;
     }
     const base = Math.floor(total / 12);
@@ -39,6 +39,7 @@ export function IrregularGridInput({
     // 나머지를 1월부터 채워 합계가 정확히 일치하도록
     for (let i = 0; i < remainder; i += 1) arr[i] += 1;
     onChange(arr);
+    setSpreadInput('');
   };
 
   return (
@@ -58,13 +59,10 @@ export function IrregularGridInput({
           <Input
             type="text"
             inputMode="numeric"
-            value={spreadDisplay}
+            value={spreadInput === '' ? '' : Number(spreadInput).toLocaleString('ko-KR')}
             data-testid="irregular-spread-input"
-            onFocus={() => setSpreadDraft(annual === 0 ? '' : String(annual))}
-            onBlur={() => setSpreadDraft(null)}
             onChange={(e) => {
-              const raw = e.target.value.replace(/[^\d]/g, '');
-              setSpreadDraft(raw);
+              setSpreadInput(e.target.value.replace(/[^\d]/g, ''));
             }}
             placeholder="연 합계 입력"
             className="h-10 flex-1 text-right tabular-nums"
@@ -73,6 +71,8 @@ export function IrregularGridInput({
             type="button"
             variant="outline"
             size="sm"
+            // blur가 click보다 먼저 발화해도 spreadInput은 유지되므로 입력값이 그대로 분배된다.
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleSpread}
             className="gap-1.5"
             data-testid="irregular-spread-apply"
@@ -105,9 +105,4 @@ export function IrregularGridInput({
       </section>
     </div>
   );
-}
-
-function formatNumber(n: number): string {
-  if (!Number.isFinite(n) || n === 0) return '';
-  return n.toLocaleString('ko-KR');
 }

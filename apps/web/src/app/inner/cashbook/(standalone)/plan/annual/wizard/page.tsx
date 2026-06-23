@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { Timestamp } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { userAtom } from '@/stores/auth.store';
 import { MascotLoader } from '@/components/MascotLoader';
@@ -20,7 +19,7 @@ import {
   useBulkUpdatePlanItems,
 } from '@/hooks/useAnnualPlan';
 import { usePlanWizard, type WizardStep } from '@/hooks/usePlanWizard';
-import { totalsFromItems, upsertPlanItem } from '@/services/annual-plan';
+import { totalsFromItems, ensurePlanItems } from '@/services/annual-plan';
 import { REGULAR_SUBGROUPS, WIZARD_GROUP_LABEL } from '@/constants/plan-wizard';
 import { PlanWizardShell } from '@/components/cashbook/plan-wizard/PlanWizardShell';
 import { PlanWizardIntro } from '@/components/cashbook/plan-wizard/PlanWizardIntro';
@@ -89,51 +88,9 @@ function WizardPageInner() {
   useEffect(() => {
     if (!plan || !categories || !items || itemsPending) return;
     if (itemsInitRef.current) return;
-    const categoriesById = new Map(categories.map((c) => [c.id, c]));
-    const existing = new Set(items.map((i) => i.categoryId));
-    const missing = categories.filter((c) => !existing.has(c.id));
-    const broken = items.filter(
-      (it) =>
-        categoriesById.has(it.categoryId) &&
-        (!Array.isArray(it.monthlyAmounts) || it.monthlyAmounts.length !== 12)
-    );
-    if (missing.length === 0 && broken.length === 0) return;
     itemsInitRef.current = true;
-    Promise.all([
-      ...missing.map((cat) => {
-        const itemId = `item-${plan.id}-${cat.id}`;
-        return upsertPlanItem(coupleId!, plan.id, itemId, {
-          planId: plan.id,
-          coupleId: coupleId!,
-          categoryId: cat.id,
-          group: cat.group,
-          subGroup: cat.subGroup,
-          monthlyAmounts: Array(12).fill(0),
-          inputMode: 'irregular',
-          baseMonthlyAmount: null,
-          annualAmount: 0,
-          ownerUid: null,
-          updatedAt: Timestamp.now(),
-        });
-      }),
-      ...broken.map((it) => {
-        const cat = categoriesById.get(it.categoryId)!;
-        return upsertPlanItem(coupleId!, plan.id, it.id, {
-          planId: plan.id,
-          coupleId: coupleId!,
-          categoryId: it.categoryId,
-          group: it.group ?? cat.group,
-          subGroup: it.subGroup ?? cat.subGroup,
-          monthlyAmounts: Array(12).fill(0),
-          inputMode: it.inputMode ?? 'irregular',
-          baseMonthlyAmount: typeof it.baseMonthlyAmount === 'number' ? it.baseMonthlyAmount : null,
-          annualAmount: 0,
-          ownerUid: it.ownerUid ?? null,
-          updatedAt: Timestamp.now(),
-        });
-      }),
-    ]).then(() => {
-      qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId, plan.id] });
+    ensurePlanItems(coupleId!, plan.id, categories, items).then((changed) => {
+      if (changed) qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId, plan.id] });
     });
   }, [plan, categories, items, itemsPending, coupleId, qc]);
 

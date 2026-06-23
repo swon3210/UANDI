@@ -98,8 +98,9 @@ function ValidationLine({
   validation: AnnualPlanValidation;
   hasChanges: boolean;
 }) {
-  const { ok, deficit, totals } = validation;
+  const { ok, deficit, totals, deficitMonths } = validation;
   const surplus = totals.income - totals.expense - totals.flex;
+  const monthlyOnlyIssue = deficit <= 0 && deficitMonths.length > 0;
 
   if (!hasChanges) {
     return (
@@ -128,7 +129,9 @@ function ValidationLine({
       <span>
         {ok
           ? `검증 통과 · 잉여 ${formatCurrencyMan(surplus)}원`
-          : `예산 부족 · ${formatCurrencyMan(deficit)}원 초과`}
+          : monthlyOnlyIssue
+            ? `${deficitMonths.length}개월 적자 · 매달 수입이 지출을 못 따라가요`
+            : `예산 부족 · ${formatCurrencyMan(deficit)}원 초과`}
       </span>
     </div>
   );
