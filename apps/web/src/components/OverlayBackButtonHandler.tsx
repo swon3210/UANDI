@@ -53,6 +53,18 @@ export function OverlayBackButtonHandler() {
     }
   }, [openCount]);
 
+  // 네이티브 앱(WebView)에 오버레이 열림 여부를 알린다.
+  // 네이티브 하드웨어 백버튼은 canGoBack(=RN WebView navState)으로 동작 여부를 판단하는데,
+  // pushState는 onNavigationStateChange를 발생시키지 않아 네이티브가 더미를 인지하지 못한다.
+  // 그래서 열림 상태를 직접 통지해, 네이티브가 "오버레이 닫기 vs 페이지 뒤로/앱 종료"를 고른다.
+  const hasOverlayOpen = openCount > 0;
+  useEffect(() => {
+    const rn = (
+      window as unknown as { ReactNativeWebView?: { postMessage: (msg: string) => void } }
+    ).ReactNativeWebView;
+    rn?.postMessage(JSON.stringify({ type: 'overlay-state', open: hasOverlayOpen }));
+  }, [hasOverlayOpen]);
+
   useEffect(() => {
     const handlePop = () => {
       // 뒤로가기로 더미가 이미 소비됐다.
