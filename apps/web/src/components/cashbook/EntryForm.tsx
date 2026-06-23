@@ -29,7 +29,6 @@ import {
 import type { CashbookEntry, CashbookEntryType, CashbookCategory, CategoryGroup } from '@/types';
 import { GROUP_LABELS } from '@/constants/default-categories';
 import { useAddCategory } from '@/hooks/useCashbookCategories';
-import { useBackButtonClose } from '@/hooks/useBackButtonClose';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { CategoryChips } from './CategoryChips';
 import { CategoryForm } from './CategoryForm';
@@ -94,8 +93,8 @@ export function EntryForm({
     ? members?.find((m) => m.uid === editingEntry.createdBy)
     : undefined;
 
-  // 안드로이드 하드웨어/브라우저 뒤로가기를 페이지 이동 대신 폼 닫기로 처리.
-  useBackButtonClose(onClose);
+  // 안드로이드 하드웨어/브라우저 뒤로가기는 전역 OverlayBackButtonHandler가
+  // (overlay-kit 오버레이 단위로) 페이지 이동 대신 닫기로 처리한다.
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

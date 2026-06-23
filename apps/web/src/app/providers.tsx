@@ -11,6 +11,7 @@ import { FcmForegroundListener } from '@/components/FcmForegroundListener';
 import { NativeFcmBridge } from '@/components/NativeFcmBridge';
 import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
 import { QuickAddBridge } from '@/components/QuickAddBridge';
+import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -25,6 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <NativeFcmBridge />
             <NativeSafeAreaFix />
             <QuickAddBridge />
+            <OverlayBackButtonHandler />
             {children}
             <Toaster />
           </OverlayProvider>
