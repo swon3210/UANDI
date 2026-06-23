@@ -142,18 +142,6 @@ export function CashflowCard({
 
         <CollapsibleContent>
           <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
-            {card.estimatedVariable != null && card.estimatedVariable > 0 && (
-              <div
-                className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm"
-                data-testid="cashflow-card-estimated-variable"
-              >
-                <span className="text-muted-foreground">예상 변동지출</span>
-                <span className="tabular-nums text-muted-foreground">
-                  -{formatCurrency(card.estimatedVariable)}
-                </span>
-              </div>
-            )}
-
             {card.transactions.length === 0 ? (
               <p className="py-1 text-sm text-muted-foreground">이 날짜까지 잡힌 거래가 없어요</p>
             ) : (

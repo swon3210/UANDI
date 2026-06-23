@@ -22,11 +22,13 @@ import {
   type CashflowTransaction,
   type LlmPrediction,
 } from '@/utils/cashflow';
-import { estimateVariableDaily } from '@/utils/auto-detect';
-import { DEFAULT_CASHFLOW_VARIABLE_MODE, type CashflowSettings } from '@/types';
+import { type CashflowSettings } from '@/types';
 
 /** 캘린더 표시 기간(개월). 다음 결제일부터 N개월. */
 export const CASHFLOW_HORIZON_MONTHS = 3;
+
+/** 이중계산 방지(G1)용 과거 실거래 조회 기간. 현재 달의 기존 실거래를 잡으면 충분하다. */
+const DEDUP_LOOKBACK_MONTHS = 1;
 
 export type CashflowCalendarResult = {
   cards: CashflowCardData[];
@@ -62,17 +64,9 @@ export function useCashflowCalendar(
   );
   const { data: categories } = useCashbookCategories(coupleId);
 
-  // §7-2 변동지출 추정용 과거 내역 (variableMode개월)
-  const variableMode = settings?.variableMode ?? DEFAULT_CASHFLOW_VARIABLE_MODE;
-  const pastFrom = useMemo(
-    () => from.subtract(variableMode, 'month').toDate(),
-    [from, variableMode]
-  );
+  // 이중계산 방지(G1)용 과거 실거래 — 현재 달의 기존 실거래를 잡아 같은 달 예측을 제외한다.
+  const pastFrom = useMemo(() => from.subtract(DEDUP_LOOKBACK_MONTHS, 'month').toDate(), [from]);
   const { data: pastEntries } = useCashbookEntriesInRange(coupleId, pastFrom, from.toDate());
-  const estimatedDailyVariable = useMemo(
-    () => estimateVariableDaily(pastEntries ?? [], variableMode),
-    [pastEntries, variableMode]
-  );
 
   const cards = useMemo<CashflowCardData[]>(() => {
     const currentCash = settings?.currentCash ?? 0;
@@ -150,20 +144,8 @@ export function useCashflowCalendar(
       txns.push(t);
     }
 
-    return buildCashflowCards(boundaries, txns, currentCash, {
-      from: from.toDate(),
-      estimatedDailyVariable,
-    });
-  }, [
-    settings,
-    entries,
-    predictions,
-    pastEntries,
-    categories,
-    from,
-    estimatedDailyVariable,
-    llmPredictions,
-  ]);
+    return buildCashflowCards(boundaries, txns, currentCash);
+  }, [settings, entries, predictions, pastEntries, categories, from, llmPredictions]);
 
   return {
     cards,

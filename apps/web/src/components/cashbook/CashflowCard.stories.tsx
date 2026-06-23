@@ -81,13 +81,6 @@ export const Negative: Story = {
   },
 };
 
-export const WithEstimatedVariable: Story = {
-  args: {
-    card: card({ estimatedVariable: 420000 }),
-    defaultOpen: true,
-  },
-};
-
 export const Empty: Story = {
   args: {
     card: card({

@@ -39,14 +39,7 @@ function SettingsSheetContent({
 
   return (
     <CashflowSettingsForm
-      initial={
-        settings
-          ? {
-              currentCash: settings.currentCash,
-              variableMode: settings.variableMode,
-            }
-          : undefined
-      }
+      initial={settings ? { currentCash: settings.currentCash } : undefined}
       onSubmit={(value: CashflowSettingsFormValue) => updateMutation.mutate(value)}
       onClose={onClose}
     />

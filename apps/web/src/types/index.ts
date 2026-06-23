@@ -252,12 +252,10 @@ export type CashflowSettings = {
   currentCash: number;
   /** 비어 있으면 캘린더는 주 단위로 묶어서 표시(§9-1). */
   paydays: CashflowPayday[];
-  /** §7-2 변동지출 평균 추정 기간(개월). */
-  variableMode: 1 | 3 | 6;
+  /** @deprecated 변동지출은 "AI 예상 내역"으로 일원화됨. 레거시 저장 문서 호환용으로만 잔존. */
+  variableMode?: 1 | 3 | 6;
   updatedAt: Timestamp;
 };
-
-export const DEFAULT_CASHFLOW_VARIABLE_MODE = 3 as const;
 
 // ── 재테크 자산 배분 목표 비율 (개인 소유) ──
 // 저장 경로: couples/{coupleId}/sideHustles/{uid}/config/assetAllocation

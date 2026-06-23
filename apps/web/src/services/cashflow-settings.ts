@@ -14,7 +14,8 @@ export async function getCashflowSettings(coupleId: string): Promise<CashflowSet
 }
 
 // paydays는 Phase 2에서 수동 입력 UI가 폐지돼 선택적이다(미전달 시 setDoc merge로 기존 값 보존).
-export type CashflowSettingsInput = Pick<CashflowSettings, 'currentCash' | 'variableMode'> &
+// variableMode도 폐지(레거시) — 입력으로 받지 않는다.
+export type CashflowSettingsInput = Pick<CashflowSettings, 'currentCash'> &
   Partial<Pick<CashflowSettings, 'paydays'>>;
 
 export async function updateCashflowSettings(
