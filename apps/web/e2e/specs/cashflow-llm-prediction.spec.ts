@@ -71,12 +71,13 @@ test.describe('현금흐름 LLM 예측', () => {
     await expect(cashflow.llmPredictions.filter({ hasText: '외식' })).toHaveCount(0);
   });
 
-  test('같은 달 실거래가 있는 카테고리의 LLM 예측은 가려진다(G1)', async ({ authedContext }) => {
+  test('같은 달 실거래가 있어도 LLM 예측은 그대로 표시된다(표시 전용 — G1 미적용)', async ({
+    authedContext,
+  }) => {
     const { coupleId, uid, page } = authedContext;
     await seedDefaultCategories(coupleId);
     await seedCashflowSettings(coupleId, { currentCash: 2000000, paydays: [] });
-    // mock 외식 예측일(호라이즌 시작 +10일)과 같은 달에 실거래가 있으면 외식 LLM 예측은
-    // 표시되지 않는다(중복 방지, G1). 월 경계 영향을 피하려 예측일과 같은 날짜에 실거래를 둔다.
+    // 예측은 잔액에 반영되지 않는 "참고용"이라, 같은 달 실거래가 있어도 가리지 않는다(앞으로 더 쓸 수 있음).
     const predDate = new Date();
     predDate.setDate(predDate.getDate() + 10);
     predDate.setHours(12, 0, 0, 0);
@@ -93,8 +94,8 @@ test.describe('현금흐름 LLM 예측', () => {
     await cashflow.runPrediction();
     await cashflow.expandAllCards();
 
-    // 부수입은 보이지만 외식 예측은 G1으로 가려진다.
+    // 실거래가 있어도 외식 LLM 예측이 그대로 노출된다.
     await expect(page.getByText('부수입')).toBeVisible();
-    await expect(cashflow.llmPredictions.filter({ hasText: '외식' })).toHaveCount(0);
+    await expect(cashflow.llmPredictions.filter({ hasText: '외식' }).first()).toBeVisible();
   });
 });

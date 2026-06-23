@@ -30,7 +30,7 @@ const requestSchema = z.object({
 });
 
 const MODEL = 'gpt-4o';
-const MAX_PREDICTIONS = 20;
+const MAX_PREDICTIONS = 30;
 
 const predictionSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -109,35 +109,41 @@ export async function POST(req: NextRequest) {
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
       model: MODEL,
-      max_tokens: 1500,
+      max_tokens: 3000,
       response_format: { type: 'json_object' },
       messages: [
         {
           role: 'system',
           content: `너는 커플 가계부 앱의 현금흐름 예측 AI야.
-과거 거래 패턴을 보고, 주어진 기간(호라이즌) 안에 발생할 "예상되는" 지출·수입을 추정해.
+과거 거래 패턴을 보고, 주어진 기간(호라이즌) 안에 발생할 "예상되는" 지출·수입을 **빠짐없이** 추정해.
+이 결과는 잔액에 반영되지 않는 "참고용 예상 내역"이라, 다소 불확실해도 폭넓게 뽑는 게 사용자에게 더 유용하다.
 
-규칙:
-- 출력은 JSON 객체 하나: { "predictions": [ { "type", "category", "amount", "date", "confidence", "reason" } ] }
+핵심 원칙:
+- **규칙적이든 비규칙적이든 모두 포함**한다. 매달 반복되는 지출(식비·교통·통신·구독·생활용품·데이트/외식 등)은
+  호라이즌 안의 **각 달마다 1건씩** 예측해라(예: 6/7/8월이면 식비를 3건). 비정기·계절성 항목도 함께.
+- 과거 N개월 중 **2개월 이상 등장한 카테고리는 앞으로도 발생한다고 보고** 기본적으로 모두 예측 대상에 넣는다.
+- 보통 **5~15건**을 만든다. 과거 내역이 풍부하면 더 많아도 된다(최대 ${MAX_PREDICTIONS}건).
+  과거 내역이 정말 거의 없을 때만 적게 낸다.
+
+출력 형식:
+- JSON 객체 하나: { "predictions": [ { "type", "category", "amount", "date", "confidence", "reason" } ] }
 - type: "income" 또는 "expense"
-- category: 가능하면 제공된 카테고리 목록에서 고르고, 과거 내역의 카테고리 이름을 그대로 사용
-- amount: 과거 평균에 근거한 양수 정수(원)
-- date: 호라이즌(${horizonStart} ~ ${horizonEnd}) 안의 YYYY-MM-DD
-- confidence: 0~1, 반복이 뚜렷할수록 높게. 불확실하면 낮게
-- reason: 왜 이렇게 예측했는지 한국어 한 줄(예: "최근 3개월 매월 반복")
-- **이미 정기 발생으로 선언된 카테고리는 제외**(중복): ${declaredCategories.join(', ') || '(없음)'}
-- 매월 고정된 정기 항목보다는, 비정기·계절성·반복되지만 들쭉날쭉한 패턴 위주로 추정
-- 근거가 약하면 적게 만들어도 된다. 최대 ${MAX_PREDICTIONS}건
-- 패턴이 거의 없으면 predictions: [] 로 반환`,
+- category: 과거 내역의 카테고리 이름을 그대로 사용(가능하면 제공된 카테고리 목록에서 매칭)
+- amount: 해당 카테고리의 과거 월평균에 근거한 양수 정수(원)
+- date: 호라이즌(${horizonStart} ~ ${horizonEnd}) 안의 YYYY-MM-DD. 과거에 그 카테고리가 주로 발생한 일자 근처로,
+  매달 반복 항목은 각 달에 하나씩 날짜를 배치
+- confidence: 0~1, 반복이 뚜렷할수록 높게(매달 반복≈0.8, 들쭉날쭉≈0.4~0.6)
+- reason: 왜 이렇게 예측했는지 한국어 한 줄(예: "최근 5개월 매월 평균 32만원 지출")
+- **이미 정기 발생으로 선언된 카테고리는 제외**(중복 표시 방지): ${declaredCategories.join(', ') || '(없음)'}`,
         },
         {
           role: 'user',
           content: `오늘: ${dayjs().format('YYYY-MM-DD')}
-호라이즌: ${horizonStart} ~ ${horizonEnd}
+호라이즌: ${horizonStart} ~ ${horizonEnd} (이 안에서 매달 반복 항목은 달마다 1건씩)
 사용 가능한 카테고리: ${categories.join(', ') || '(목록 없음)'}
 이미 선언된 정기 카테고리(예측 제외): ${declaredCategories.join(', ') || '(없음)'}
 
-과거 카테고리별 월별 거래 요약:
+과거 카테고리별 월별 거래 요약(2개월 이상 등장하면 앞으로도 발생한다고 보고 예측에 포함):
 ${summaryLines || '(과거 내역 없음)'}`,
         },
       ],
