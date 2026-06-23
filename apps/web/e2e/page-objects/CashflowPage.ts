@@ -47,21 +47,33 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-prediction-delete');
   }
 
+  /** "갱신" 버튼 — 누르면 LLM 예측을 다시 추론한다. */
   get predictButton(): Locator {
     return this.page.getByTestId('cashflow-predict-button');
   }
 
-  get predictResult(): Locator {
-    return this.page.getByTestId('cashflow-predict-result');
+  get predictStatus(): Locator {
+    return this.page.getByTestId('cashflow-predict-status');
   }
 
-  get llmPredictions(): Locator {
-    return this.page.getByTestId('cashflow-llm-predictions');
+  /** LLM 예측(◇ source='llm') 거래 행 — 펼친 카드 안에서 "AI 예측" 보조 라벨로 식별. */
+  get llmPredictionRows(): Locator {
+    return this.page.getByTestId('cashflow-txn-row').filter({ hasText: 'AI 예측' });
   }
 
-  async runPrediction() {
+  /** 진입 시 자동 로드(또는 갱신)가 끝날 때까지 대기 — 상태 텍스트가 종료 상태(반영/찾지 못함)가 될 때까지. */
+  async waitForPredictionDone() {
+    await this.page
+      .getByTestId('cashflow-predict-status')
+      .filter({ hasText: /반영|찾지 못했어요/ })
+      .first()
+      .waitFor({ state: 'visible' });
+  }
+
+  /** "갱신" 버튼을 눌러 재추론하고 완료를 기다린다. */
+  async refreshPrediction() {
     await this.predictButton.click();
-    await this.predictResult.waitFor({ state: 'visible' });
+    await this.waitForPredictionDone();
   }
 
   /** 닫혀 있는 카드를 모두 펼친다(예측 거래는 펼친 카드 안에서만 보임). */

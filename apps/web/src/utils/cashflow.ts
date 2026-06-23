@@ -24,11 +24,6 @@ export type CashflowTransaction = {
   date: Date;
   /** predicted일 때만: 출처(calendar/auto/llm). */
   source?: PredictionSource;
-  /**
-   * true면 표시 전용 — 들어올/나갈/남는 돈(잔액) 누적에 포함하지 않는다.
-   * LLM 예측(source==='llm')처럼 "참고용 예상"을 카드에 보여주되 잔액엔 반영하지 않을 때 사용.
-   */
-  displayOnly?: boolean;
 };
 
 /** 결제일의 구체적 발생 인스턴스(미래 N개월 내 실제 날짜). */
@@ -70,11 +65,6 @@ export type CashflowCardData = {
   balance: number; // 남는 돈 (누적)
   isNegative: boolean;
   transactions: CashflowTransaction[];
-  /**
-   * 표시 전용 예측(LLM 등). 잔액에 미반영이라 inflow/outflow/balance에서 빠지고,
-   * 카드 펼침 시 별도 "AI 예상 내역" 섹션으로만 노출된다. buildCashflowCards가 항상 채운다.
-   */
-  displayPredictions?: CashflowTransaction[];
   /** §7-2 예상 변동지출(있으면 카드에 한 줄 표시). PR5에서 채움. */
   estimatedVariable?: number;
 };
@@ -189,22 +179,18 @@ export function buildCashflowCards(
   const buckets = sorted.map((b) => ({
     boundary: b,
     txns: [] as CashflowTransaction[],
-    display: [] as CashflowTransaction[],
   }));
 
   for (const t of transactions) {
     const bucket = buckets.find((b) => t.date.getTime() <= b.boundary.endDate.getTime());
-    if (!bucket) continue;
-    // 표시 전용(LLM 예측 등)은 잔액 계산에서 빼고 별도 목록으로만 모은다.
-    if (t.displayOnly) bucket.display.push(t);
-    else bucket.txns.push(t);
+    if (bucket) bucket.txns.push(t);
   }
 
   const dailyVar = opts.estimatedDailyVariable ?? 0;
   let running = currentCash;
   let prevEnd = opts.from ? opts.from.getTime() : (sorted[0]?.endDate.getTime() ?? 0);
 
-  return buckets.map(({ boundary, txns, display }) => {
+  return buckets.map(({ boundary, txns }) => {
     let inflow = 0;
     let outflow = 0;
     for (const t of txns) {
@@ -229,7 +215,6 @@ export function buildCashflowCards(
       balance: running,
       isNegative: running < 0,
       transactions: [...txns].sort((a, b) => a.date.getTime() - b.date.getTime()),
-      displayPredictions: [...display].sort((a, b) => a.date.getTime() - b.date.getTime()),
       estimatedVariable,
     };
   });
@@ -360,7 +345,7 @@ export function recurrenceBoundaries(occurrences: RecurrenceOccurrence[]): CardB
     .sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
 }
 
-/** LLM이 과거 패턴에서 추정한 예상 거래 1건(API 응답 형태, 잔액 미반영 표시용). */
+/** LLM이 과거 패턴에서 추정한 예상 거래 1건(API 응답 형태). */
 export type LlmPrediction = {
   type: 'income' | 'expense';
   category: string;
@@ -374,12 +359,12 @@ export type LlmPrediction = {
 };
 
 /**
- * LLM 예측 → 표시 전용 합성 거래(◇, source='llm', displayOnly=true).
+ * LLM 예측 → 합성 예측 거래(◇, source='llm'). 현금흐름 카드의 들어올/나갈/남는 돈에 반영된다.
  * - 호라이즌(from ~ from+months) 안의 예측만.
  * - 정기 발생으로 이미 선언된 카테고리는 통째로 제외(선언이 단일 출처, 캘린더 ◇로 이미 노출됨).
- * - displayOnly라 잔액엔 반영되지 않고 "AI 예상 내역"으로만 보인다.
- *   → 잔액 이중계산 우려가 없으므로 "같은 달 실거래 존재" 게이트(G1)는 적용하지 않는다.
- *     (실거래가 있어도 앞으로 더 쓸 변동 카테고리는 예상으로 계속 보여주는 게 유용하다.)
+ * - **G1(같은 달 실거래 존재 → 제외)**: 잔액에 반영되므로 같은 달 실거래와의 이중계산을 막는다.
+ *   현재 달은 실거래로 잡히고, 실거래가 아직 없는 미래 달만 예측이 들어간다.
+ * - 같은 카테고리·같은 날 중복은 dedup(React key 충돌 회피).
  */
 export function llmTransactions(
   predictions: LlmPrediction[],
@@ -388,6 +373,8 @@ export function llmTransactions(
     months: number;
     /** 정기 발생 선언된 카테고리 이름 집합(통째 제외). */
     declaredCategories: Set<string>;
+    /** G1: 같은 달 실거래가 있는 `${categoryName}|${YYYY-MM}` 집합 → 그 달 예측 제외. */
+    actualKeys: Set<string>;
   }
 ): CashflowTransaction[] {
   const start = opts.from.startOf('day');
@@ -405,8 +392,10 @@ export function llmTransactions(
     const inRange = (occ.isSame(start, 'day') || occ.isAfter(start)) && occ.isBefore(end);
     if (!inRange) continue;
 
+    if (opts.actualKeys.has(recurrenceMonthKey(p.category, occ.toDate()))) continue; // G1
+
     const id = `llm-${p.category}-${occ.format('YYYY-MM-DD')}`;
-    if (seenIds.has(id)) continue; // 같은 카테고리·같은 날 중복 방지(React key 충돌 회피)
+    if (seenIds.has(id)) continue;
     seenIds.add(id);
 
     out.push({
@@ -418,7 +407,6 @@ export function llmTransactions(
       description: p.reason ?? '',
       date: occ.toDate(),
       source: 'llm',
-      displayOnly: true,
     });
   }
 

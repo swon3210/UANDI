@@ -103,28 +103,31 @@ export const Empty: Story = {
 export const WithLlmPredictions: Story = {
   args: {
     card: card({
-      displayPredictions: [
+      // LLM 예측(◇, source='llm')은 일반 예측처럼 거래 목록에 들어가 들어올/나갈/남는 돈에 반영된다.
+      inflow: 3200000,
+      outflow: 909000,
+      balance: 2291000,
+      transactions: [
+        ...sampleTxns,
         {
-          id: 'llm-외식-2026-06-20',
+          id: 'llm-외식-2026-06-24',
           kind: 'predicted',
           type: 'expense',
           amount: 120000,
           category: '외식',
           description: '최근 3개월 매월 외식 지출 반복',
-          date: new Date(2026, 5, 20),
+          date: new Date(2026, 5, 24),
           source: 'llm',
-          displayOnly: true,
         },
         {
-          id: 'llm-부수입-2026-06-22',
+          id: 'llm-부수입-2026-06-24',
           kind: 'predicted',
           type: 'income',
           amount: 200000,
           category: '부수입',
           description: '분기마다 들어온 부수입 패턴',
-          date: new Date(2026, 5, 22),
+          date: new Date(2026, 5, 24),
           source: 'llm',
-          displayOnly: true,
         },
       ],
     }),

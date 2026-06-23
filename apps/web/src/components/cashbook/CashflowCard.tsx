@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import dayjs from 'dayjs';
-import { ChevronDown, CalendarRange, Sparkles } from 'lucide-react';
+import { ChevronDown, CalendarRange } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
@@ -177,29 +177,6 @@ export function CashflowCard({
                   </div>
                 </div>
               ))
-            )}
-
-            {(card.displayPredictions?.length ?? 0) > 0 && (
-              <div
-                className="space-y-1 rounded-lg border border-dashed border-coral-200 bg-coral-50/40 px-3 py-2"
-                data-testid="cashflow-llm-predictions"
-              >
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-coral-600">
-                  <Sparkles size={12} aria-hidden />
-                  AI 예상 내역
-                  <span className="font-normal text-muted-foreground">· 참고용, 잔액 미반영</span>
-                </p>
-                {groupByDate(card.displayPredictions ?? []).map((g) => (
-                  <div key={g.key} data-testid="cashflow-llm-day-group">
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {dayjs(g.date).format('M월 D일 (dd)')}
-                    </p>
-                    {g.items.map((t) => (
-                      <CashflowTransactionRow key={t.id} txn={t} />
-                    ))}
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </CollapsibleContent>
