@@ -22,8 +22,13 @@ export type CashflowTransaction = {
   category: string;
   description: string;
   date: Date;
-  /** predicted일 때만: 출처(calendar/auto). */
+  /** predicted일 때만: 출처(calendar/auto/llm). */
   source?: PredictionSource;
+  /**
+   * true면 표시 전용 — 들어올/나갈/남는 돈(잔액) 누적에 포함하지 않는다.
+   * LLM 예측(source==='llm')처럼 "참고용 예상"을 카드에 보여주되 잔액엔 반영하지 않을 때 사용.
+   */
+  displayOnly?: boolean;
 };
 
 /** 결제일의 구체적 발생 인스턴스(미래 N개월 내 실제 날짜). */
@@ -65,6 +70,11 @@ export type CashflowCardData = {
   balance: number; // 남는 돈 (누적)
   isNegative: boolean;
   transactions: CashflowTransaction[];
+  /**
+   * 표시 전용 예측(LLM 등). 잔액에 미반영이라 inflow/outflow/balance에서 빠지고,
+   * 카드 펼침 시 별도 "AI 예상 내역" 섹션으로만 노출된다. buildCashflowCards가 항상 채운다.
+   */
+  displayPredictions?: CashflowTransaction[];
   /** §7-2 예상 변동지출(있으면 카드에 한 줄 표시). PR5에서 채움. */
   estimatedVariable?: number;
 };
@@ -176,18 +186,25 @@ export function buildCashflowCards(
   opts: { from?: Date; estimatedDailyVariable?: number } = {}
 ): CashflowCardData[] {
   const sorted = [...boundaries].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
-  const buckets = sorted.map((b) => ({ boundary: b, txns: [] as CashflowTransaction[] }));
+  const buckets = sorted.map((b) => ({
+    boundary: b,
+    txns: [] as CashflowTransaction[],
+    display: [] as CashflowTransaction[],
+  }));
 
   for (const t of transactions) {
     const bucket = buckets.find((b) => t.date.getTime() <= b.boundary.endDate.getTime());
-    if (bucket) bucket.txns.push(t);
+    if (!bucket) continue;
+    // 표시 전용(LLM 예측 등)은 잔액 계산에서 빼고 별도 목록으로만 모은다.
+    if (t.displayOnly) bucket.display.push(t);
+    else bucket.txns.push(t);
   }
 
   const dailyVar = opts.estimatedDailyVariable ?? 0;
   let running = currentCash;
   let prevEnd = opts.from ? opts.from.getTime() : (sorted[0]?.endDate.getTime() ?? 0);
 
-  return buckets.map(({ boundary, txns }) => {
+  return buckets.map(({ boundary, txns, display }) => {
     let inflow = 0;
     let outflow = 0;
     for (const t of txns) {
@@ -212,6 +229,7 @@ export function buildCashflowCards(
       balance: running,
       isNegative: running < 0,
       transactions: [...txns].sort((a, b) => a.date.getTime() - b.date.getTime()),
+      displayPredictions: [...display].sort((a, b) => a.date.getTime() - b.date.getTime()),
       estimatedVariable,
     };
   });
@@ -340,6 +358,69 @@ export function recurrenceBoundaries(occurrences: RecurrenceOccurrence[]): CardB
       };
     })
     .sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+}
+
+/** LLM이 과거 패턴에서 추정한 예상 거래 1건(API 응답 형태, 잔액 미반영 표시용). */
+export type LlmPrediction = {
+  type: 'income' | 'expense';
+  category: string;
+  amount: number;
+  /** 발생 예상일(YYYY-MM-DD). */
+  date: string;
+  /** 0~1 추정 신뢰도. */
+  confidence: number;
+  /** 왜 이렇게 예측했는지 한 줄 사유(표시용). */
+  reason?: string;
+};
+
+/**
+ * LLM 예측 → 표시 전용 합성 거래(◇, source='llm', displayOnly=true).
+ * - 호라이즌(from ~ from+months) 안의 예측만.
+ * - 같은 달 실거래가 있으면(G1) 제외 — 실거래가 더 정확.
+ * - 정기 발생으로 이미 선언된 카테고리는 통째로 제외(선언이 단일 출처, 캘린더 ◇로 이미 노출됨).
+ * - displayOnly라 잔액엔 반영되지 않고 "AI 예상 내역"으로만 보인다.
+ */
+export function llmTransactions(
+  predictions: LlmPrediction[],
+  opts: {
+    from: Dayjs;
+    months: number;
+    /** G1: 같은 달 실거래가 있는 `${categoryName}|${YYYY-MM}` 집합. */
+    actualKeys: Set<string>;
+    /** 정기 발생 선언된 카테고리 이름 집합(통째 제외). */
+    declaredCategories: Set<string>;
+  }
+): CashflowTransaction[] {
+  const start = opts.from.startOf('day');
+  const end = start.add(opts.months, 'month').endOf('day');
+  const out: CashflowTransaction[] = [];
+
+  for (const p of predictions) {
+    if (!p.category || !(p.amount > 0)) continue;
+    if (opts.declaredCategories.has(p.category)) continue;
+
+    const d = dayjs(p.date);
+    if (!d.isValid()) continue;
+    const occ = d.startOf('day');
+    const inRange = (occ.isSame(start, 'day') || occ.isAfter(start)) && occ.isBefore(end);
+    if (!inRange) continue;
+
+    if (opts.actualKeys.has(recurrenceMonthKey(p.category, occ.toDate()))) continue; // G1
+
+    out.push({
+      id: `llm-${p.category}-${occ.format('YYYY-MM-DD')}`,
+      kind: 'predicted',
+      type: p.type,
+      amount: Math.round(p.amount),
+      category: p.category,
+      description: p.reason ?? '',
+      date: occ.toDate(),
+      source: 'llm',
+      displayOnly: true,
+    });
+  }
+
+  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 /**

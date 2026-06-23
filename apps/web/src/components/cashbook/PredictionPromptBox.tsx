@@ -28,6 +28,7 @@ export type PredictionPromptView = {
 const SOURCE_LABEL: Record<PredictionSource, string> = {
   calendar: '캘린더',
   auto: '자동감지',
+  llm: 'AI 예측',
 };
 
 type PredictionPromptBoxProps = {

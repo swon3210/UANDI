@@ -8,6 +8,7 @@ import type { CashflowTransaction } from '@/utils/cashflow';
 const SOURCE_LABEL: Record<NonNullable<CashflowTransaction['source']>, string> = {
   calendar: '캘린더',
   auto: '자동감지',
+  llm: 'AI 예측',
 };
 
 type CashflowTransactionRowProps = {

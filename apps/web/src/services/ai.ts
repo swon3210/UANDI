@@ -1,5 +1,6 @@
 import { getAuth } from '@/lib/firebase/config';
 import type { CashbookEntryType } from '@/types';
+import type { LlmPrediction } from '@/utils/cashflow';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   const auth = getAuth();
@@ -137,6 +138,40 @@ export type AnalyzeSpendingParams = {
     category: string;
   }[];
 };
+
+// ── 현금흐름 LLM 예측 ──
+
+export type PredictCashflowParams = {
+  entries: {
+    type: CashbookEntryType;
+    amount: number;
+    category: string;
+    date: string;
+    description: string;
+  }[];
+  horizonStart: string;
+  horizonEnd: string;
+  declaredCategories: string[];
+  categories: string[];
+};
+
+/** 과거 패턴 기반 예상 지출/수입을 LLM으로 추정한다(표시 전용, 잔액 미반영). */
+export async function predictCashflow(params: PredictCashflowParams): Promise<LlmPrediction[]> {
+  const headers = await getAuthHeaders();
+  const res = await fetch('/api/ai/predict-cashflow', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error ?? 'AI 예측에 실패했습니다');
+  }
+
+  const { predictions } = (await res.json()) as { predictions: LlmPrediction[] };
+  return predictions;
+}
 
 export async function analyzeSpending(
   params: AnalyzeSpendingParams,

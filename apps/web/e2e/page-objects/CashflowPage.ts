@@ -43,12 +43,36 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-settings-save');
   }
 
-  get addPredictionButton(): Locator {
-    return this.page.getByTestId('cashflow-add-prediction');
-  }
-
   get predictionDelete(): Locator {
     return this.page.getByTestId('cashflow-prediction-delete');
+  }
+
+  get predictButton(): Locator {
+    return this.page.getByTestId('cashflow-predict-button');
+  }
+
+  get predictResult(): Locator {
+    return this.page.getByTestId('cashflow-predict-result');
+  }
+
+  get llmPredictions(): Locator {
+    return this.page.getByTestId('cashflow-llm-predictions');
+  }
+
+  async runPrediction() {
+    await this.predictButton.click();
+    await this.predictResult.waitFor({ state: 'visible' });
+  }
+
+  /** 닫혀 있는 카드를 모두 펼친다(예측 거래는 펼친 카드 안에서만 보임). */
+  async expandAllCards() {
+    const n = await this.cards.count();
+    for (let i = 0; i < n; i++) {
+      const card = this.cards.nth(i);
+      if ((await card.getAttribute('data-state')) === 'closed') {
+        await card.locator('button').first().click();
+      }
+    }
   }
 
   async openSettings() {
