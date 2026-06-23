@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
-import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react-native-webview';
 import type { FcmTokenInfo } from '@/lib/fcm';
 
 const UANDI_HOST = 'uandi-web.vercel.app';
@@ -41,6 +41,10 @@ export function AppWebView({
 }: AppWebViewProps) {
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
+  // 웹이 통지하는 "오버레이(바텀시트/다이얼로그) 열림" 여부.
+  // pushState는 onNavigationStateChange를 발생시키지 않아 canGoBack으로는 더미를 알 수 없으므로,
+  // 웹의 postMessage 신호로 오버레이 열림을 추적한다.
+  const overlayOpenRef = useRef(false);
   // 대시보드 로드가 끝나면 이동할 최종 목적지. 2단계 이동의 두 번째 단계용.
   const pendingTargetRef = useRef<string | null>(null);
   // 최초 웹 로드 시 스플래시를 단 한 번만 내리기 위한 가드.
@@ -59,6 +63,12 @@ export function AppWebView({
       if (Platform.OS !== 'android') return;
 
       const onBackPress = () => {
+        // 오버레이가 떠 있으면 웹에 위임한다: history.back() → popstate → 웹이 최상단 오버레이를 닫는다.
+        // (네이티브 goBack()은 canGoBack 기반이라 pushState 더미를 인지하지 못해 우회된다.)
+        if (overlayOpenRef.current && webViewRef.current) {
+          webViewRef.current.injectJavaScript('window.history.back(); true;');
+          return true;
+        }
         if (canGoBackRef.current && webViewRef.current) {
           webViewRef.current.goBack();
           return true;
@@ -74,6 +84,18 @@ export function AppWebView({
   const handleNavigationStateChange = (navState: WebViewNavigation) => {
     canGoBackRef.current = navState.canGoBack;
   };
+
+  // 웹 → 네이티브 메시지. 현재는 오버레이 열림 상태 통지에만 사용한다.
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data) as { type?: string; open?: boolean };
+      if (data?.type === 'overlay-state') {
+        overlayOpenRef.current = !!data.open;
+      }
+    } catch {
+      // 다른 형식의 메시지는 무시한다.
+    }
+  }, []);
 
   // 페이지 로드 직전에 window.__UANDI_NATIVE__를 주입 — full reload 시에도 매번 실행된다.
   const injectedJavaScriptBeforeContentLoaded = useMemo(() => {
@@ -136,6 +158,7 @@ export function AppWebView({
         style={styles.webview}
         source={{ uri: `https://${UANDI_HOST}${path}` }}
         onNavigationStateChange={handleNavigationStateChange}
+        onMessage={handleMessage}
         onLoadEnd={handleLoadEnd}
         onError={hideSplashOnce}
         onHttpError={hideSplashOnce}
