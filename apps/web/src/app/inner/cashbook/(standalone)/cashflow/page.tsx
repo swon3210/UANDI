@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
-import { ChevronLeft, Settings, CalendarRange, Sparkles, Loader2 } from 'lucide-react';
+import dayjs from 'dayjs';
+import { ChevronLeft, Settings, CalendarRange, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
@@ -57,8 +58,9 @@ export default function CashflowCalendarPage() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
-  // 과거 소비/수입 패턴 기반 LLM 예측(표시 전용, 잔액 미반영). 버튼을 누를 때마다 호출.
-  const { predictions, run, isPending, hasRun } = useCashflowPrediction(coupleId);
+  // 과거 소비/수입 패턴 기반 LLM 예측. 진입 시 자동 1회 로드(캐시 영속) + "갱신" 버튼으로만 재추론.
+  // 예측은 현금흐름 카드의 들어올/나갈/남는 돈에 반영된다.
+  const { predictions, refresh, isPending, hasRun, ranAt } = useCashflowPrediction(coupleId);
   const { cards, isConfigured, isLoading } = useCashflowCalendar(coupleId, predictions);
   const { negativeCard, dismiss } = useCashflowNegativeAlert(coupleId, cards);
   const {
@@ -152,31 +154,40 @@ export default function CashflowCalendarPage() {
               </div>
             )}
 
-            <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-coral-100 bg-coral-50/40 px-3 py-2">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1 text-xs font-medium text-coral-600">
+                  <Sparkles size={13} aria-hidden />
+                  AI 예상 내역
+                </p>
+                <p
+                  className="mt-0.5 text-[11px] text-muted-foreground"
+                  data-testid="cashflow-predict-status"
+                >
+                  {isPending
+                    ? 'AI가 예상 내역을 불러오는 중…'
+                    : hasRun
+                      ? predictions.length > 0
+                        ? `${predictions.length}건이 현금흐름에 반영됐어요${ranAt ? ` · ${dayjs(ranAt).format('M월 D일 HH:mm')} 기준` : ''}`
+                        : '예상할 만한 패턴을 찾지 못했어요'
+                      : '곧 예상 내역을 불러올게요'}
+                </p>
+              </div>
               <Button
                 variant="outline"
-                className="w-full border-coral-200 text-coral-600 hover:bg-coral-50 hover:text-coral-700"
-                onClick={run}
+                size="sm"
+                className="shrink-0 border-coral-200 text-coral-600 hover:bg-coral-50 hover:text-coral-700"
+                onClick={refresh}
                 disabled={isPending}
                 data-testid="cashflow-predict-button"
               >
                 {isPending ? (
-                  <Loader2 size={16} className="mr-1.5 animate-spin" />
+                  <Loader2 size={14} className="mr-1 animate-spin" />
                 ) : (
-                  <Sparkles size={16} className="mr-1.5" />
+                  <RefreshCw size={14} className="mr-1" />
                 )}
-                {isPending ? 'AI가 분석 중…' : 'AI로 예상 내역 보기'}
+                갱신
               </Button>
-              {hasRun && !isPending && (
-                <p
-                  className="text-center text-xs text-muted-foreground"
-                  data-testid="cashflow-predict-result"
-                >
-                  {predictions.length > 0
-                    ? `AI가 ${predictions.length}건의 예상 내역을 카드에 추가했어요 (참고용)`
-                    : '예상할 만한 패턴을 찾지 못했어요'}
-                </p>
-              )}
             </div>
 
             <CashflowCardList cards={cards} onDeletePrediction={handleDeletePrediction} />
