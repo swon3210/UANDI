@@ -3,6 +3,7 @@
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { cn } from '@uandi/ui';
 import { formatCurrencyMan } from '@/utils/currency';
+import { MONTH_LABELS } from '@/constants/plan-wizard';
 import type { AnnualPlanValidation } from '@/services/annual-plan';
 
 type PlanWizardValidateProps = {
@@ -10,8 +11,11 @@ type PlanWizardValidateProps = {
 };
 
 export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
-  const { ok, deficit, totals } = validation;
+  const { ok, deficit, totals, monthly, deficitMonths } = validation;
   const surplus = totals.income - totals.expense - totals.flex;
+  const annualOk = deficit <= 0;
+  // 연간은 흑자인데 특정 달만 적자인 경우 메시지를 분기한다.
+  const monthlyOnlyIssue = annualOk && deficitMonths.length > 0;
 
   return (
     <div className="space-y-5" data-testid="wizard-validate">
@@ -23,7 +27,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
           감당할 수 있는지 확인해요
         </h1>
         <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
-          수입 ≥ 지출 + Flex 일 때만 다음 단계로 넘어갈 수 있어요.
+          연간 합계도, 매달 들어오는 돈도 지출 + Flex 이상일 때만 다음 단계로 넘어갈 수 있어요.
         </p>
       </header>
 
@@ -42,7 +46,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
           )}
           <div className="min-w-0">
             <div className={cn('text-[15px] font-bold', ok ? 'text-sage-700' : 'text-coral-700')}>
-              {ok ? '검증 통과' : '예산이 부족해요'}
+              {ok ? '검증 통과' : monthlyOnlyIssue ? '적자가 나는 달이 있어요' : '예산이 부족해요'}
             </div>
             <div
               className={cn(
@@ -52,7 +56,9 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
             >
               {ok
                 ? `수입에서 지출과 Flex를 빼고 ${formatCurrencyMan(surplus)}원이 남아요.`
-                : `지출 + Flex 합계가 수입보다 ${formatCurrencyMan(deficit)}원 더 많아요.`}
+                : monthlyOnlyIssue
+                  ? `연간 합계는 흑자지만 ${deficitMonths.length}개월은 나가는 돈이 더 많아요.`
+                  : `지출 + Flex 합계가 수입보다 ${formatCurrencyMan(deficit)}원 더 많아요.`}
             </div>
           </div>
         </div>
@@ -71,6 +77,29 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
           emphasized
         />
       </section>
+
+      {deficitMonths.length > 0 && (
+        <section
+          className="rounded-2xl border border-coral-200 bg-coral-50/60 p-4"
+          data-testid="wizard-validate-deficit-months"
+        >
+          <div className="text-[12px] font-semibold text-coral-700">적자가 나는 달</div>
+          <div className="mt-2 space-y-1.5">
+            {deficitMonths.map((m) => (
+              <div
+                key={m}
+                className="flex items-baseline justify-between text-[12px]"
+                data-testid={`validate-deficit-month-${m}`}
+              >
+                <span className="text-stone-700">{MONTH_LABELS[m]}</span>
+                <span className="tabular-nums font-semibold text-coral-700">
+                  -{formatCurrencyMan(-monthly[m].surplus)}원
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {!ok && (
         <p className="text-center text-[12px] leading-relaxed text-stone-500">

@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { ChevronLeft } from 'lucide-react';
@@ -16,7 +17,7 @@ import {
   useBulkUpdatePlanItems,
   useValidateAnnualPlan,
 } from '@/hooks/useAnnualPlan';
-import { totalsFromItems } from '@/services/annual-plan';
+import { totalsFromItems, ensurePlanItems } from '@/services/annual-plan';
 import { BulkEditGrid, type BulkEditRow } from '@/components/cashbook/plan-bulk-edit/BulkEditGrid';
 import { BulkEditSummaryBar } from '@/components/cashbook/plan-bulk-edit/BulkEditSummaryBar';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
@@ -36,8 +37,27 @@ export default function AnnualPlanBulkEditPage() {
   const { data: items, isPending: itemsPending } = useAnnualPlanItems(coupleId, plan?.id ?? null);
 
   const finalizeMutation = useBulkUpdatePlanItems(coupleId, plan?.id ?? null);
+  const qc = useQueryClient();
 
-  const isLoading = planPending || catPending || !plan || !categories || !items || itemsPending;
+  // 카테고리는 있는데 item 이 없는 경우(위저드 이후 추가된 카테고리 등) 백필을 기다린다.
+  const hasMissingItems =
+    !!categories &&
+    !!items &&
+    categories.some((c) => !items.some((it) => it.categoryId === c.id));
+
+  const isLoading =
+    planPending || catPending || !plan || !categories || !items || itemsPending || hasMissingItems;
+
+  // plan + categories 준비되면 모든 카테고리에 누락된 item 백필 (위저드와 동일)
+  const itemsInitRef = useRef(false);
+  useEffect(() => {
+    if (!plan || !categories || !items || itemsPending) return;
+    if (itemsInitRef.current) return;
+    itemsInitRef.current = true;
+    ensurePlanItems(coupleId!, plan.id, categories, items).then((changed) => {
+      if (changed) qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId, plan.id] });
+    });
+  }, [plan, categories, items, itemsPending, coupleId, qc]);
 
   // plan/items 미존재 시 위저드로 redirect (메인 페이지 redirect 로직과 동일 가드)
   useEffect(() => {

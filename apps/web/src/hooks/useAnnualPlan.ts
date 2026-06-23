@@ -152,7 +152,13 @@ export function useAnnualSummary(items: AnnualPlanItem[] | undefined): AnnualSum
 export function useValidateAnnualPlan(items: AnnualPlanItem[] | undefined): AnnualPlanValidation {
   return useMemo(() => {
     if (!items || items.length === 0) {
-      return { ok: true, deficit: 0, totals: { income: 0, expense: 0, flex: 0 } };
+      return {
+        ok: true,
+        deficit: 0,
+        totals: { income: 0, expense: 0, flex: 0 },
+        monthly: [],
+        deficitMonths: [],
+      };
     }
     return validateAnnualPlan(items);
   }, [items]);
