@@ -67,8 +67,10 @@ function computeTotal(entries: CashbookEntry[], group: GroupFilter): number {
     let income = 0;
     let expense = 0;
     for (const e of entries) {
+      // income이 아닌 건 전부 지출로 합산(expense + flex).
+      // 내역 페이지 useMonthlySummary, cashflow.ts의 outflow 규칙과 동일.
       if (e.type === 'income') income += e.amount;
-      else if (e.type === 'expense') expense += e.amount;
+      else expense += e.amount;
     }
     return income - expense;
   }
