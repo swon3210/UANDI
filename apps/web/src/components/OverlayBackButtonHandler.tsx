@@ -31,8 +31,11 @@ export function OverlayBackButtonHandler() {
   const openCount = openIds.length;
 
   // popstate 핸들러가 항상 최신 목록을 읽도록 ref에 동기화.
+  // 렌더 중 ref 쓰기는 react-hooks/refs 위반이라 effect에서 동기화한다(매 렌더 실행).
   const openIdsRef = useRef<string[]>(openIds);
-  openIdsRef.current = openIds;
+  useEffect(() => {
+    openIdsRef.current = openIds;
+  });
 
   // 우리가 만든 history 더미가 (현재 페이지 기준) 살아 있는지.
   const hasDummyRef = useRef(false);
