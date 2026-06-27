@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import type { BudgetThreshold } from '@/hooks/useMonthlyBudget';
+import { josa } from '@/utils/josa';
 
 export type BudgetAlert = {
   key: string; // localStorage dismiss key suffix: `${scopeId}-${threshold}`
@@ -13,71 +15,92 @@ export type BudgetAlert = {
 
 type BudgetAlertBannerProps = {
   alerts: BudgetAlert[];
-  onDismiss: (key: string) => void;
+  /** 배너가 대표하는 초과 알림을 한 번에 닫는다. */
+  onDismissAll: () => void;
+  /** "자세히 보기" 링크 대상. 생략 시 월간 페이지. */
+  detailHref?: string;
 };
 
-const THRESHOLD_RANK: Record<Exclude<BudgetThreshold, 'safe'>, number> = {
-  over120: 0,
-  over100: 1,
-  warn80: 2,
+// 상시 배너는 실제 초과(over100/over120)만 다룬다.
+// 80% 임박(warn80)은 월간 노란 게이지 + 실시간 토스트가 담당한다.
+type OverThreshold = 'over100' | 'over120';
+
+const EMOJI: Record<OverThreshold, string> = {
+  over100: '🔴',
+  over120: '🚨',
 };
 
-const THRESHOLD_STYLES: Record<
-  Exclude<BudgetThreshold, 'safe'>,
-  { emoji: string; bg: string; text: string }
-> = {
-  warn80: { emoji: '🟡', bg: 'bg-yellow-50', text: 'text-yellow-900' },
-  over100: { emoji: '🔴', bg: 'bg-red-50', text: 'text-red-900' },
-  over120: { emoji: '🚨', bg: 'bg-red-100', text: 'text-red-900' },
-};
-
-function alertMessage(alert: BudgetAlert): string {
-  const subject = alert.scope === 'total' ? '이번 달 전체 지출' : `이번 달 ${alert.label}`;
-  switch (alert.threshold) {
-    case 'warn80':
-      return `${subject}이 예산의 80%를 넘었어요`;
-    case 'over100':
-      return `${subject}이 예산을 넘었어요`;
-    case 'over120':
-      return `${alert.scope === 'total' ? '이번 달 전체 지출' : alert.label}이 예산보다 20% 이상 초과됐어요`;
-  }
+function isOver(threshold: Exclude<BudgetThreshold, 'safe'>): threshold is OverThreshold {
+  return threshold === 'over100' || threshold === 'over120';
 }
 
-export function BudgetAlertBanner({ alerts, onDismiss }: BudgetAlertBannerProps) {
-  if (alerts.length === 0) return null;
+function totalMessage(threshold: OverThreshold): string {
+  const subject = josa('이번 달 전체 지출', '이/가');
+  return threshold === 'over120'
+    ? `${subject} 예산보다 20% 이상 초과됐어요`
+    : `${subject} 예산을 넘었어요`;
+}
 
-  const sorted = [...alerts].sort(
-    (a, b) => THRESHOLD_RANK[a.threshold] - THRESHOLD_RANK[b.threshold]
+export function BudgetAlertBanner({
+  alerts,
+  onDismissAll,
+  detailHref = '/inner/cashbook/history/monthly',
+}: BudgetAlertBannerProps) {
+  const over = alerts.filter(
+    (a): a is BudgetAlert & { threshold: OverThreshold } => isOver(a.threshold)
   );
+  if (over.length === 0) return null;
+
+  const totalOver = over.find((a) => a.scope === 'total') ?? null;
+  const catOver = over.filter((a) => a.scope === 'category');
+
+  const hasDanger = over.some((a) => a.threshold === 'over120');
+  const catThreshold: OverThreshold = catOver.some((a) => a.threshold === 'over120')
+    ? 'over120'
+    : 'over100';
 
   return (
-    <div data-testid="budget-alert-banner" className="space-y-2" role="alert" aria-live="polite">
-      {sorted.map((alert) => {
-        const style = THRESHOLD_STYLES[alert.threshold];
-        return (
-          <div
-            key={alert.key}
-            data-testid={`budget-alert-item-${alert.key}`}
-            className={`flex items-start gap-2 rounded-lg px-3 py-2 ${style.bg} ${style.text}`}
-          >
-            <span className="text-base leading-6" aria-hidden>
-              {style.emoji}
-            </span>
-            <p className="flex-1 text-sm leading-6">{alertMessage(alert)}</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 text-current hover:bg-black/5"
-              onClick={() => onDismiss(alert.key)}
-              data-testid={`budget-alert-dismiss-${alert.key}`}
-              aria-label="알림 닫기"
-            >
-              <X size={14} />
-            </Button>
-          </div>
-        );
-      })}
+    <div
+      data-testid="budget-alert-banner"
+      role="alert"
+      aria-live="polite"
+      className={`rounded-lg px-3 py-2.5 text-red-900 ${hasDanger ? 'bg-red-100' : 'bg-red-50'}`}
+    >
+      <div className="flex items-start gap-2">
+        <div className="flex-1 space-y-1 text-sm leading-6">
+          {totalOver && (
+            <p className="font-medium">
+              <span aria-hidden>{EMOJI[totalOver.threshold]} </span>
+              {totalMessage(totalOver.threshold)}
+            </p>
+          )}
+          {catOver.length > 0 && (
+            <p>
+              <span aria-hidden>{EMOJI[catThreshold]} </span>
+              예산을 초과한 카테고리 {catOver.length}개
+              <span aria-hidden> · </span>
+              <Link
+                href={detailHref}
+                data-testid="budget-alert-detail-link"
+                className="font-medium underline underline-offset-2"
+              >
+                자세히 보기
+              </Link>
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-current hover:bg-black/5"
+          onClick={onDismissAll}
+          data-testid="budget-alert-dismiss-all"
+          aria-label="예산 알림 모두 닫기"
+        >
+          <X size={14} />
+        </Button>
+      </div>
     </div>
   );
 }

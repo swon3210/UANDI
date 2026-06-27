@@ -10,6 +10,7 @@ import { useMonthlyBudget, getBudgetThreshold, type BudgetThreshold } from './us
 import { useCashbookCategories } from './useCashbookCategories';
 import { useNotificationSettings } from './useNotificationSettings';
 import { useSsrSafeLocalStorage } from './useSsrSafeLocalStorage';
+import { josa } from '@/utils/josa';
 import type { BudgetAlert } from '@/components/cashbook/BudgetAlertBanner';
 import type { CashbookEntry, MonthlyBudgetItem, CashbookCategory } from '@/types';
 
@@ -72,9 +73,9 @@ function toastMessageForAlert(alert: BudgetAlert): string {
     if (alert.threshold === 'over100') return '이번 달 전체 지출이 예산을 넘었어요';
     return '이번 달 전체 지출이 예산보다 20% 이상 초과됐어요';
   }
-  if (alert.threshold === 'warn80') return `이번 달 ${alert.label}이 예산의 80%를 넘었어요`;
-  if (alert.threshold === 'over100') return `이번 달 ${alert.label}이 예산을 넘었어요`;
-  return `${alert.label}이 예산보다 20% 이상 초과됐어요`;
+  if (alert.threshold === 'warn80') return `이번 달 ${josa(alert.label, '이/가')} 예산의 80%를 넘었어요`;
+  if (alert.threshold === 'over100') return `이번 달 ${josa(alert.label, '이/가')} 예산을 넘었어요`;
+  return `${josa(alert.label, '이/가')} 예산보다 20% 이상 초과됐어요`;
 }
 
 type AddedExpense = {
@@ -119,6 +120,13 @@ export function useBudgetAlerts(coupleId: string | null, year: number, month1: n
     setDismissedMap({ ...dismissedMap, [`${monthKey}::${alertKey}`]: true });
   };
 
+  const dismissAlerts = (alertKeys: string[]) => {
+    if (alertKeys.length === 0) return;
+    const next = { ...dismissedMap };
+    for (const k of alertKeys) next[`${monthKey}::${k}`] = true;
+    setDismissedMap(next);
+  };
+
   const notifyTransition = (added: AddedExpense) => {
     if (!enabled) return;
     if (added.type !== 'expense') return;
@@ -154,6 +162,7 @@ export function useBudgetAlerts(coupleId: string | null, year: number, month1: n
   return {
     alerts: visibleAlerts,
     dismissAlert,
+    dismissAlerts,
     notifyTransition,
   };
 }
