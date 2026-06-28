@@ -16,7 +16,6 @@ import {
   useFilteredEntries,
   useGroupedEntries,
   useAddEntry,
-  useAddEntries,
   useUpdateEntry,
   useDeleteEntry,
   createDefaultFilterState,
@@ -42,10 +41,7 @@ import { EntryCard } from '@/components/cashbook/EntryCard';
 import { EntryForm } from '@/components/cashbook/EntryForm';
 import { PredictionPromptList } from '@/components/cashbook/PredictionPromptList';
 import type { PredictionPromptView } from '@/components/cashbook/PredictionPromptBox';
-import { AiParseInput } from '@/components/cashbook/AiParseInput';
-import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
 import { formatAmount } from '@/utils/currency';
-import { parseEntriesFromText } from '@/services/ai';
 import type { CashbookEntry, CashbookEntryType, CashbookPrediction } from '@/types';
 
 /**
@@ -153,7 +149,6 @@ export default function CashbookPage() {
   };
 
   const addMutation = useAddEntry(coupleId);
-  const addManyMutation = useAddEntries(coupleId);
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
 
@@ -397,41 +392,10 @@ export default function CashbookPage() {
 
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-      <AiParseInput
-        categories={(categories ?? []).map((c) => c.name)}
-        parseFn={parseEntriesFromText}
-        onEmptySubmit={() => handleAdd()}
-        onParsed={(results) => {
-          const initialEntries = results.map((r) => ({
-            type: r.type as CashbookEntryType,
-            amount: r.amount,
-            category: r.category,
-            description: r.description,
-            date: r.date,
-            confidence: r.confidence,
-          }));
-          overlay.open(({ isOpen, close, unmount }) => (
-            <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-              <AiBulkPreviewSheet
-                initialEntries={initialEntries}
-                categories={categories ?? []}
-                coupleId={coupleId}
-                createdBy={uid}
-                onConfirm={(confirmed) => addManyMutation.mutate(confirmed)}
-                onClose={() => {
-                  close();
-                  setTimeout(unmount, 300);
-                }}
-              />
-            </Sheet>
-          ));
-        }}
-      />
-
       <Button
         asChild
         variant="outline"
-        className="mt-4 h-auto w-full justify-start gap-3 py-3"
+        className="h-auto w-full justify-start gap-3 py-3"
         data-testid="history-review-link"
       >
         <Link href="/inner/cashbook/review">

@@ -1,6 +1,15 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
+
+// AI 입력은 이제 가계부 전역 FAB → "빠른 추가" 시트 안에서만 노출된다.
+// (history 페이지의 인라인 입력은 제거됨)
+async function openQuickAdd(page: Page) {
+  await page.goto('/inner/cashbook/history');
+  await page.waitForSelector('[data-testid="cashbook-header"]');
+  await page.getByTestId('cashbook-fab').click();
+  await expect(page.getByTestId('quick-add-sheet')).toBeVisible();
+}
 
 test.describe('자연어 가계부 다건 입력', () => {
   test('1건 입력 → 미리보기 Sheet에 카드 1개 표시 → 모두 추가하면 월간 리스트에 반영된다', async ({
@@ -8,8 +17,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     const aiInput = page.getByTestId('ai-parse-input');
     await expect(aiInput).toBeVisible();
@@ -36,8 +44,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     // 3줄 입력 → mock은 3건 배열 반환
     const aiInput = page.getByTestId('ai-parse-input');
@@ -65,8 +72,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     // 12줄 입력 → mock은 구분된 항목 수만큼 entries를 반환한다.
     // (기존엔 최대 10건으로 잘려 한 달치 결산용 스크린샷이 일부만 추가됐음)
@@ -85,8 +91,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     const aiInput = page.getByTestId('ai-parse-input');
     await aiInput.fill('점심 김치찌개 9000원');
@@ -97,23 +102,27 @@ test.describe('자연어 가계부 다건 입력', () => {
     const entryFormSheet = page.getByTestId('entry-form-sheet');
     await expect(entryFormSheet).toBeVisible();
 
-    // 금액을 12000으로 수정 후 저장
+    // 금액을 12000으로 수정 후 저장 ('카테고리 추가' 버튼과 겹치지 않게 정확히 '저장' 매칭)
     const amountInput = entryFormSheet.locator('input[name="amount"]');
     await amountInput.fill('12000');
-    await entryFormSheet.getByRole('button', { name: /저장|추가/ }).click();
+    await entryFormSheet.getByRole('button', { name: '저장', exact: true }).click();
 
     // 미리보기 카드에 12,000원이 반영됨
     await expect(page.getByTestId('parsed-entry-card').first()).toContainText('12,000');
   });
 
-  test('빈 텍스트로는 전송 버튼이 비활성화된다', async ({ authedContext }) => {
+  test('빈 텍스트로 전송하면 AI 파싱 대신 직접 입력 폼이 열린다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
+    // 빠른 추가 시트에서는 빈 입력 제출이 비활성화 대신 '직접 입력'(수동 폼 열기)로 동작한다.
     const submitBtn = page.getByTestId('ai-parse-submit');
-    await expect(submitBtn).toBeDisabled();
+    await expect(submitBtn).toBeEnabled();
+    await expect(submitBtn).toHaveAttribute('aria-label', '직접 입력');
+
+    await submitBtn.click();
+    await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
   });
 
   test('영수증 이미지 2장 첨부 → 썸네일 노출 → 제출 → 미리보기에 카드 표시', async ({
@@ -121,8 +130,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     // 영수증 이미지 2장 첨부 (buffer로 임시 이미지 생성)
     const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
@@ -162,8 +170,7 @@ test.describe('자연어 가계부 다건 입력', () => {
       date: new Date().toISOString(),
     });
 
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     await page.getByTestId('ai-parse-input').fill('점심 김치찌개 9000원');
     await page.getByTestId('ai-parse-submit').click();
@@ -202,8 +209,7 @@ test.describe('자연어 가계부 다건 입력', () => {
       date: new Date().toISOString(),
     });
 
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     // 3줄 입력 → mock이 3개 templates 반환
     await page
@@ -224,8 +230,7 @@ test.describe('자연어 가계부 다건 입력', () => {
   test('첨부한 썸네일을 X 버튼으로 제거할 수 있다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
-    await page.goto('/inner/cashbook/history');
-    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await openQuickAdd(page);
 
     const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
     await fileInput.setInputFiles([

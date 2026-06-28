@@ -63,3 +63,53 @@ test.describe('푸시 딥링크 빠른 입력 (quickAdd)', () => {
     await expect(page.getByTestId('entry-form-sheet')).not.toBeVisible();
   });
 });
+
+test.describe('가계부 전역 FAB', () => {
+  test('내역 페이지에서 FAB를 누르면 빠른 추가 시트가 열린다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    await page.goto('/inner/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+
+    const fab = page.getByTestId('cashbook-fab');
+    await expect(fab).toBeVisible();
+    await fab.click();
+
+    await expect(page.getByTestId('quick-add-sheet')).toBeVisible();
+  });
+
+  test('대시보드 등 다른 가계부 화면에서도 FAB가 보인다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    await page.goto('/inner/cashbook');
+    await expect(page.getByTestId('cashbook-fab')).toBeVisible();
+  });
+
+  test('풀스크린(chromeless) 설정 화면에서는 FAB가 숨겨진다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    await page.goto('/inner/cashbook/settings');
+    await expect(page.getByTestId('cashbook-fab')).toHaveCount(0);
+  });
+
+  test('네이티브 앱(웹뷰)에서는 웹 FAB가 뜨지 않는다(네이티브 FAB 사용)', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    // 네이티브 브리지 주입을 흉내 내면 웹 FAB는 렌더되지 않아야 한다.
+    await page.addInitScript(() => {
+      (window as unknown as { __UANDI_NATIVE__: unknown }).__UANDI_NATIVE__ = {
+        platform: 'android',
+      };
+    });
+
+    await page.goto('/inner/cashbook/history');
+    await page.waitForSelector('[data-testid="cashbook-header"]');
+    await expect(page.getByTestId('cashbook-fab')).toHaveCount(0);
+  });
+});
