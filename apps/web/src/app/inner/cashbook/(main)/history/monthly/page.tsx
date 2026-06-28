@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -25,6 +26,10 @@ export default function CashbookMonthlyPage() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
+
+  // 예산 알림 "자세히 보기"(?sort=over)로 진입하면 초과 카테고리부터 정렬해 보여준다.
+  const searchParams = useSearchParams();
+  const initialCategorySort = searchParams.get('sort') === 'over' ? 'over' : 'default';
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const year = dayjs(selectedDate).year();
@@ -100,7 +105,11 @@ export default function CashbookMonthlyPage() {
           </TabsList>
 
           <TabsContent value="expense" className="mt-4">
-            <MonthlyExpenseTab categoryBudgets={categoryBudgets} weeklyExpenses={weeklyExpenses} />
+            <MonthlyExpenseTab
+              categoryBudgets={categoryBudgets}
+              weeklyExpenses={weeklyExpenses}
+              initialSort={initialCategorySort}
+            />
           </TabsContent>
 
           <TabsContent value="income" className="mt-4">
