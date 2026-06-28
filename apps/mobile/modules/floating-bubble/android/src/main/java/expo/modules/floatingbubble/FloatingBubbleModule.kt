@@ -129,9 +129,8 @@ class FloatingBubbleModule : Module() {
 
     if (!positioned) {
       val dm = context.resources.displayMetrics
-      val sizePx = dp(60)
-      lastX = dm.widthPixels - sizePx - dp(20)
-      lastY = dm.heightPixels - sizePx - dp(160)
+      lastX = dm.widthPixels - bubbleBoxPx - dp(10)
+      lastY = dm.heightPixels - bubbleBoxPx - dp(150)
       positioned = true
     }
 
@@ -146,7 +145,7 @@ class FloatingBubbleModule : Module() {
       }
     }
     val bubble = buildBubble()
-    root.addView(bubble)
+    root.addView(bubble, FrameLayout.LayoutParams(bubbleBoxPx, bubbleBoxPx))
 
     val params = collapsedParams()
     attachBubbleTouch(root, bubble, params)
@@ -229,7 +228,7 @@ class FloatingBubbleModule : Module() {
     root.removeAllViews()
     val bubble = buildBubble()
     bubbleView = bubble
-    root.addView(bubble)
+    root.addView(bubble, FrameLayout.LayoutParams(bubbleBoxPx, bubbleBoxPx))
 
     val params = collapsedParams()
     attachBubbleTouch(root, bubble, params)
@@ -241,8 +240,17 @@ class FloatingBubbleModule : Module() {
 
   // ── 뷰 빌드 ─────────────────────────────────────────────────
 
+  // 보이는 흰 원의 지름.
+  private val bubbleCirclePx: Int get() = dp(60)
+  // 버블 창(=터치/드래그 영역)의 한 변. 원보다 크게 잡아 눌림 확대 시에도 창에 잘리지 않게 한다.
+  private val bubbleBoxPx: Int get() = dp(80)
+
+  // 투명 박스(= 창/터치영역) 안에 보이는 흰 원을 중앙에 둔다.
+  // 누름 피드백은 안쪽 원만 확대하므로, 박스가 원보다 커서 확대해도 창에 잘리지 않는다.
   private fun buildBubble(): View {
-    val container = FrameLayout(context).apply {
+    val box = FrameLayout(context).apply { clipChildren = false }
+
+    val circle = FrameLayout(context).apply {
       background = GradientDrawable().apply {
         shape = GradientDrawable.OVAL
         setColor(Color.WHITE)
@@ -260,8 +268,13 @@ class FloatingBubbleModule : Module() {
       setImageBitmap(appIconCircularBitmap(iconSize))
       scaleType = ImageView.ScaleType.FIT_CENTER
     }
-    container.addView(icon, FrameLayout.LayoutParams(iconSize, iconSize))
-    return container
+    circle.addView(icon, FrameLayout.LayoutParams(iconSize, iconSize))
+
+    box.addView(
+      circle,
+      FrameLayout.LayoutParams(bubbleCirclePx, bubbleCirclePx).apply { gravity = Gravity.CENTER }
+    )
+    return box
   }
 
   // 앱 아이콘을 깔끔한 원형 비트맵으로 렌더링한다.
@@ -405,6 +418,8 @@ class FloatingBubbleModule : Module() {
           touchX = event.rawX
           touchY = event.rawY
           moved = false
+          // 누르는(잡는) 순간 살짝 커져 "눌림/잡힘"을 알린다(탭·드래그-투-휴지통 공통).
+          setBubblePressed(v, true)
           true
         }
 
@@ -433,6 +448,7 @@ class FloatingBubbleModule : Module() {
         }
 
         MotionEvent.ACTION_UP -> {
+          setBubblePressed(v, false)
           val droppedOnTrash = moved && overTrash
           hideTrash()
           if (droppedOnTrash) {
@@ -450,6 +466,7 @@ class FloatingBubbleModule : Module() {
         }
 
         MotionEvent.ACTION_CANCEL -> {
+          setBubblePressed(v, false)
           hideTrash()
           lastX = params.x
           lastY = params.y
@@ -459,6 +476,19 @@ class FloatingBubbleModule : Module() {
         else -> false
       }
     }
+  }
+
+  // 버블을 누르는 동안 살짝 키워(scale) "눌림/잡힘"을 시각적으로 알린다. 떼면 원래 크기로.
+  // 레이아웃(params.x/y)은 그대로라 드래그·휴지통 히트 판정에는 영향이 없다.
+  private fun setBubblePressed(view: View, pressed: Boolean) {
+    // 박스(=창)가 아니라 안쪽 원만 확대한다. 박스를 키우면 창 경계에 잘린다.
+    val circle = (view as? ViewGroup)?.getChildAt(0) ?: view
+    val scale = if (pressed) 1.15f else 1f
+    circle.animate()
+      .scaleX(scale)
+      .scaleY(scale)
+      .setDuration(120)
+      .start()
   }
 
   // ── 윈도우 파라미터 ─────────────────────────────────────────
@@ -605,9 +635,8 @@ class FloatingBubbleModule : Module() {
   private fun isOverTrash(params: WindowManager.LayoutParams): Boolean {
     val tv = trashView ?: return false
     val tp = tv.layoutParams as? WindowManager.LayoutParams ?: return false
-    val bubbleSize = dp(60)
-    val bubbleCx = params.x + bubbleSize / 2f
-    val bubbleCy = params.y + bubbleSize / 2f
+    val bubbleCx = params.x + bubbleBoxPx / 2f
+    val bubbleCy = params.y + bubbleBoxPx / 2f
     val trashCx = tp.x + trashSizePx / 2f
     val trashCy = tp.y + trashSizePx / 2f
     val dx = bubbleCx - trashCx
