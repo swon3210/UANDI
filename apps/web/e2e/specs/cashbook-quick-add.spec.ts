@@ -95,13 +95,12 @@ test.describe('가계부 전역 FAB', () => {
     await expect(page.getByTestId('cashbook-fab')).toHaveCount(0);
   });
 
-  test('네이티브 앱(웹뷰)에서는 웹 FAB가 뜨지 않는다(네이티브 FAB 사용)', async ({
-    authedContext,
-  }) => {
+  test('네이티브 앱(웹뷰 포그라운드)에서도 웹 FAB가 보인다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     await seedDefaultCategories(coupleId);
 
-    // 네이티브 브리지 주입을 흉내 내면 웹 FAB는 렌더되지 않아야 한다.
+    // 네이티브 플로팅 버블은 앱이 백그라운드일 때만 뜨므로, 포그라운드 웹뷰에서는
+    // 웹 FAB가 추가 진입점이 되어야 한다.
     await page.addInitScript(() => {
       (window as unknown as { __UANDI_NATIVE__: unknown }).__UANDI_NATIVE__ = {
         platform: 'android',
@@ -110,6 +109,6 @@ test.describe('가계부 전역 FAB', () => {
 
     await page.goto('/inner/cashbook/history');
     await page.waitForSelector('[data-testid="cashbook-header"]');
-    await expect(page.getByTestId('cashbook-fab')).toHaveCount(0);
+    await expect(page.getByTestId('cashbook-fab')).toBeVisible();
   });
 });
