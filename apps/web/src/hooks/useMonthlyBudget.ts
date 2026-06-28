@@ -28,7 +28,8 @@ export type BudgetStatus = 'stable' | 'warning' | 'danger';
 
 export function getBudgetStatus(budget: number, actual: number): BudgetStatus {
   const margin = budget - actual;
-  if (margin <= 0) return 'danger';
+  // 예산을 실제로 넘긴 경우(margin < 0)만 긴급. 딱 맞춘 0원 초과는 긴급이 아니다.
+  if (margin < 0) return 'danger';
   if (margin < budget * 0.2) return 'warning';
   return 'stable';
 }

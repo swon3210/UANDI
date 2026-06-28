@@ -23,9 +23,11 @@ type CategoryBudgetRowProps = {
 };
 
 function getMarginLabel(status: BudgetStatus, margin: number): string {
-  if (margin === 0 && status === 'stable') return '완료';
-  if (margin > 0) return `여유: ${formatCurrency(margin)}`;
-  return `초과: ${formatCurrency(Math.abs(margin))}`;
+  if (margin < 0) return `초과: ${formatCurrency(Math.abs(margin))}`;
+  if (margin === 0) return '예산 소진';
+  // 예산 80% 이상 사용(warning)은 '여유'가 아니라 '주의'로 구분한다.
+  if (status === 'warning') return `주의: ${formatCurrency(margin)}`;
+  return `여유: ${formatCurrency(margin)}`;
 }
 
 function getMarginBadgeIcon(status: BudgetStatus, margin: number): string {
