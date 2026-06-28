@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookDisplaySettings } from '@/hooks/useCashbookDisplaySettings';
+import { CashbookFab } from '@/components/cashbook/CashbookFab';
 import { CashbookOpacityStyle } from './CashbookOpacityStyle';
 
 export default function CashbookRootLayout({ children }: { children: ReactNode }) {
@@ -27,6 +28,8 @@ export default function CashbookRootLayout({ children }: { children: ReactNode }
       >
         {children}
       </div>
+      {/* 가계부 전역 추가 FAB. fixed라 트리 위치와 무관하지만 opacity 래퍼 밖에 둔다. */}
+      <CashbookFab />
     </div>
   );
 }
