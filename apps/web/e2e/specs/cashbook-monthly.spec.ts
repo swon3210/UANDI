@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import {
   seedDefaultCategories,
+  seedCashbookCategory,
   seedCashbookEntry,
   seedAnnualPlan,
   seedAnnualPlanItem,
@@ -256,6 +257,80 @@ test.describe('월간 대시보드', () => {
       await monthly.prevMonthButton.click();
 
       await expect(monthly.overviewCard.getByText('0원')).toBeVisible();
+    });
+  });
+
+  test.describe('카테고리 정렬', () => {
+    // 식비 60만(초과) + 여가 100만(여유) 예산을 시드한다.
+    // 여가 예산을 먼저 추가해 기본 순서가 초과순과 다르도록 만든다.
+    async function seedOverAndUnder(coupleId: string, uid: string) {
+      const year = new Date().getFullYear();
+      const planId = await seedAnnualPlan(coupleId, year, uid);
+
+      const leisureId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_personal',
+        name: '여가',
+        icon: 'movie',
+        sortOrder: 0,
+      });
+      const foodId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        sortOrder: 1,
+      });
+
+      await seedAnnualPlanItem(coupleId, planId, {
+        categoryId: leisureId,
+        group: 'expense',
+        subGroup: 'variable_personal',
+        monthlyAmounts: Array(12).fill(1_000_000), // 월 100만
+      });
+      await seedAnnualPlanItem(coupleId, planId, {
+        categoryId: foodId,
+        group: 'expense',
+        subGroup: 'variable_common',
+        monthlyAmounts: Array(12).fill(600_000), // 월 60만
+      });
+
+      await seedCashbookEntry(coupleId, uid, { type: 'expense', amount: 800_000, category: '식비' }); // 133%
+      await seedCashbookEntry(coupleId, uid, { type: 'expense', amount: 100_000, category: '여가' }); // 10%
+    }
+
+    async function rowTop(page: import('@playwright/test').Page, name: string): Promise<number> {
+      const box = await page.getByTestId(`category-budget-${name}`).boundingBox();
+      if (!box) throw new Error(`카테고리 행을 찾을 수 없음: ${name}`);
+      return box.y;
+    }
+
+    test('?sort=over로 진입하면 초과 카테고리가 맨 위에 정렬된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedOverAndUnder(coupleId, uid);
+
+      await page.goto('/inner/cashbook/history/monthly?sort=over');
+      await page.waitForSelector('[data-testid="monthly-overview"]', { timeout: 15000 });
+
+      await expect(page.getByTestId('category-budget-식비')).toBeVisible();
+      await expect(page.getByTestId('category-budget-여가')).toBeVisible();
+      expect(await rowTop(page, '식비')).toBeLessThan(await rowTop(page, '여가'));
+    });
+
+    test('정렬 컨트롤로 초과순을 선택하면 초과 카테고리가 맨 위로 온다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedOverAndUnder(coupleId, uid);
+
+      const monthly = new CashbookMonthlyPage(page);
+      await monthly.goto(); // 기본순 진입
+
+      await expect(page.getByTestId('category-sort-select')).toBeVisible();
+      await page.getByTestId('category-sort-select').click();
+      await page.getByRole('option', { name: '초과순' }).click();
+
+      expect(await rowTop(page, '식비')).toBeLessThan(await rowTop(page, '여가'));
     });
   });
 });

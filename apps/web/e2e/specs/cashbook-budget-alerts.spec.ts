@@ -218,7 +218,8 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(alert.detailLink()).toBeVisible();
       await alert.detailLink().click();
 
-      await expect(page).toHaveURL(/\/inner\/cashbook\/history\/monthly/);
+      // 초과 카테고리부터 정렬되도록 ?sort=over로 진입한다.
+      await expect(page).toHaveURL(/\/inner\/cashbook\/history\/monthly\?sort=over/);
       await expect(page.getByTestId('monthly-overview')).toBeVisible();
     });
 

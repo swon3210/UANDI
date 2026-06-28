@@ -44,7 +44,7 @@ function totalMessage(threshold: OverThreshold): string {
 export function BudgetAlertBanner({
   alerts,
   onDismissAll,
-  detailHref = '/inner/cashbook/history/monthly',
+  detailHref = '/inner/cashbook/history/monthly?sort=over',
 }: BudgetAlertBannerProps) {
   const over = alerts.filter(
     (a): a is BudgetAlert & { threshold: OverThreshold } => isOver(a.threshold)
