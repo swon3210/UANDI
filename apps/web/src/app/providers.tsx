@@ -10,6 +10,7 @@ import { AuthInit } from '@/components/AuthInit';
 import { FcmForegroundListener } from '@/components/FcmForegroundListener';
 import { NativeFcmBridge } from '@/components/NativeFcmBridge';
 import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
+import { KeyboardInsetSync } from '@/components/KeyboardInsetSync';
 import { QuickAddBridge } from '@/components/QuickAddBridge';
 import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler';
 
@@ -25,6 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <FcmForegroundListener />
             <NativeFcmBridge />
             <NativeSafeAreaFix />
+            <KeyboardInsetSync />
             <QuickAddBridge />
             <OverlayBackButtonHandler />
             {children}
