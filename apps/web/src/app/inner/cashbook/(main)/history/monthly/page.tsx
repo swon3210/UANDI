@@ -66,6 +66,9 @@ export default function CashbookMonthlyPage() {
           categories={categories ?? []}
           coupleId={coupleId}
           createdBy={uid}
+          title="비정기 수입 추가"
+          // 비정기 "수입" 추가이므로 폼을 수입 타입으로 연다 (기본값 expense면 수입 카테고리가 안 보임)
+          prefill={{ type: 'income' }}
           onSubmit={(data) => addMutation.mutate(data)}
           onClose={() => {
             close();
