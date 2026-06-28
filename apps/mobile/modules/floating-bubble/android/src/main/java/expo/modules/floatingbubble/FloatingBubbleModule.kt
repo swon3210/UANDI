@@ -53,6 +53,9 @@ class FloatingBubbleModule : Module() {
   private var rootView: FrameLayout? = null
   private var bubbleView: View? = null
   private var webView: WebView? = null
+  // 드래그 중 화면 하단에 뜨는 삭제(휴지통) 타깃. 버블을 여기에 떨어뜨리면 버블을 끈다.
+  private var trashView: View? = null
+  private var overTrash = false
   private var expanded = false
 
   // 버블(축소) 마지막 위치. 최초 표시 전엔 화면 우측 하단을 기본값으로 잡는다.
@@ -74,7 +77,19 @@ class FloatingBubbleModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("FloatingBubble")
 
+    // 사용자가 버블을 휴지통에 떨어뜨려 끄면 JS로 알린다(설정 UI 상태 동기화용).
+    Events("onDismiss")
+
     Function("hasOverlayPermission") { Settings.canDrawOverlays(context) }
+
+    // 버블 기능 on/off 여부(사용자가 끄면 false). 단일 소스는 네이티브 SharedPreferences.
+    Function("isEnabled") { isBubbleEnabled() }
+
+    // 설정 화면에서 버블을 다시 켜거나 끌 때 호출. 끄면 즉시 화면에서 제거한다.
+    Function("setEnabled") { enabled: Boolean ->
+      setBubbleEnabled(enabled)
+      mainHandler.post { if (!enabled) removeOverlay() }
+    }
 
     Function("requestOverlayPermission") {
       mainHandler.post {
@@ -95,12 +110,20 @@ class FloatingBubbleModule : Module() {
     // (앱을 진짜로 열면 패널은 닫기 버튼/BACK으로 닫는다.)
     Function("hide") { mainHandler.post { if (!expanded) removeOverlay() } }
 
-    OnDestroy { mainHandler.post { removeOverlay() } }
+    OnDestroy { mainHandler.post { destroyEverything() } }
   }
+
+  // ── 설정(SharedPreferences) ─────────────────────────────────
+  // 버블 on/off는 네이티브에만 저장한다(이 기능은 안드로이드 네이티브 전용이라 RN 저장소가 불필요).
+
+  private fun prefs() = context.getSharedPreferences("floating_bubble", Context.MODE_PRIVATE)
+  private fun isBubbleEnabled() = prefs().getBoolean("enabled", true)
+  private fun setBubbleEnabled(value: Boolean) = prefs().edit().putBoolean("enabled", value).apply()
 
   // ── 표시/제거 ───────────────────────────────────────────────
 
   private fun showBubble() {
+    if (!isBubbleEnabled()) return
     if (!Settings.canDrawOverlays(context)) return
     if (rootView != null) return
 
@@ -138,12 +161,10 @@ class FloatingBubbleModule : Module() {
     }
   }
 
+  // 오버레이 창만 내린다. WebView는 파괴하지 않고 분리해 메모리에 살려둔다(다음 확장 때 재사용 → 콜드 로드 제거).
   private fun removeOverlay() {
-    webView?.let {
-      it.loadUrl("about:blank")
-      it.destroy()
-    }
-    webView = null
+    detachWebView()
+    hideTrash()
     val root = rootView ?: return
     try {
       windowManager.removeView(root)
@@ -154,15 +175,36 @@ class FloatingBubbleModule : Module() {
     expanded = false
   }
 
+  // 모듈이 완전히 파괴될 때만 WebView를 실제로 파괴한다.
+  private fun destroyEverything() {
+    removeOverlay()
+    webView?.let {
+      it.loadUrl("about:blank")
+      it.destroy()
+    }
+    webView = null
+  }
+
+  // WebView를 현재 부모에서 떼어내고 일시정지(타이머/렌더 중지)한다. 참조는 유지해 재사용한다.
+  private fun detachWebView() {
+    webView?.let {
+      (it.parent as? ViewGroup)?.removeView(it)
+      it.onPause()
+    }
+  }
+
   // ── 확장 / 축소 ─────────────────────────────────────────────
 
   private fun expand() {
     val root = rootView ?: return
     if (expanded) return
     expanded = true
+    hideTrash()
 
-    val web = buildWebView()
-    webView = web
+    // WebView가 이미 있으면 재사용한다(첫 로드만 콜드, 이후엔 워밍된 페이지를 즉시 보여줘 지연 제거).
+    val firstLoad = webView == null
+    val web = webView ?: buildWebView().also { webView = it }
+    (web.parent as? ViewGroup)?.removeView(web)
     val panel = buildPanel(web)
 
     root.removeAllViews()
@@ -172,7 +214,8 @@ class FloatingBubbleModule : Module() {
       windowManager.updateViewLayout(root, expandedParams())
     } catch (e: Exception) {
     }
-    web.loadUrl(OVERLAY_URL)
+    web.onResume()
+    if (firstLoad) web.loadUrl(OVERLAY_URL)
   }
 
   private fun collapse() {
@@ -180,11 +223,8 @@ class FloatingBubbleModule : Module() {
     if (!expanded) return
     expanded = false
 
-    webView?.let {
-      it.loadUrl("about:blank")
-      it.destroy()
-    }
-    webView = null
+    // WebView는 파괴하지 않고 분리만 한다(다음 확장 때 재사용).
+    detachWebView()
 
     root.removeAllViews()
     val bubble = buildBubble()
@@ -371,23 +411,48 @@ class FloatingBubbleModule : Module() {
         MotionEvent.ACTION_MOVE -> {
           val dx = (event.rawX - touchX).roundToInt()
           val dy = (event.rawY - touchY).roundToInt()
-          if (abs(dx) > touchSlop || abs(dy) > touchSlop) moved = true
+          if (abs(dx) > touchSlop || abs(dy) > touchSlop) {
+            // 드래그가 시작되면 하단에 삭제 타깃을 띄운다.
+            if (!moved) showTrash()
+            moved = true
+          }
           params.x = initialX + dx
           params.y = initialY + dy
           try {
             windowManager.updateViewLayout(root, params)
           } catch (e: Exception) {
           }
+          if (moved) {
+            val over = isOverTrash(params)
+            if (over != overTrash) {
+              overTrash = over
+              highlightTrash(over)
+            }
+          }
           true
         }
 
         MotionEvent.ACTION_UP -> {
+          val droppedOnTrash = moved && overTrash
+          hideTrash()
+          if (droppedOnTrash) {
+            // 휴지통에 떨어뜨림 → 버블 끄기(설정에서 다시 켤 수 있음).
+            dismissBubble()
+          } else {
+            lastX = params.x
+            lastY = params.y
+            if (!moved) {
+              v.performClick()
+              expand()
+            }
+          }
+          true
+        }
+
+        MotionEvent.ACTION_CANCEL -> {
+          hideTrash()
           lastX = params.x
           lastY = params.y
-          if (!moved) {
-            v.performClick()
-            expand()
-          }
           true
         }
 
@@ -467,6 +532,95 @@ class FloatingBubbleModule : Module() {
     }
     // WebView 콜백 내부이므로 collapse(WebView 파괴 포함)는 다음 루프로 미룬다.
     mainHandler.post { collapse() }
+  }
+
+  // ── 드래그-투-휴지통(버블 제거) ──────────────────────────────
+
+  private val trashSizePx: Int get() = dp(64)
+
+  // 드래그 중 화면 하단 중앙에 삭제 타깃을 띄운다(시각 표시 전용 — 터치는 받지 않는다).
+  private fun showTrash() {
+    if (trashView != null) return
+    val tv = FrameLayout(context).apply {
+      background = GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(Color.parseColor("#CC1A1A1A"))
+      }
+      elevation = dp(8).toFloat()
+      val label = TextView(context).apply {
+        text = "✕"
+        setTextColor(Color.WHITE)
+        textSize = 22f
+      }
+      addView(
+        label,
+        FrameLayout.LayoutParams(
+          ViewGroup.LayoutParams.WRAP_CONTENT,
+          ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { gravity = Gravity.CENTER }
+      )
+    }
+    val dm = context.resources.displayMetrics
+    val params = WindowManager.LayoutParams(
+      trashSizePx,
+      trashSizePx,
+      overlayType,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+      PixelFormat.TRANSLUCENT
+    ).apply {
+      gravity = Gravity.TOP or Gravity.START
+      x = (dm.widthPixels - trashSizePx) / 2
+      y = dm.heightPixels - trashSizePx - dp(80)
+    }
+    try {
+      windowManager.addView(tv, params)
+      trashView = tv
+      overTrash = false
+    } catch (e: Exception) {
+    }
+  }
+
+  private fun hideTrash() {
+    val tv = trashView ?: return
+    try {
+      windowManager.removeView(tv)
+    } catch (e: Exception) {
+    }
+    trashView = null
+    overTrash = false
+  }
+
+  // 버블이 휴지통 위에 있으면 타깃을 키우고 빨갛게 강조한다.
+  private fun highlightTrash(active: Boolean) {
+    val tv = trashView ?: return
+    tv.scaleX = if (active) 1.3f else 1f
+    tv.scaleY = if (active) 1.3f else 1f
+    (tv.background as? GradientDrawable)?.setColor(
+      Color.parseColor(if (active) "#CCE8443A" else "#CC1A1A1A")
+    )
+  }
+
+  // 버블 중심이 휴지통 중심에서 일정 반경 안에 들어왔는지.
+  private fun isOverTrash(params: WindowManager.LayoutParams): Boolean {
+    val tv = trashView ?: return false
+    val tp = tv.layoutParams as? WindowManager.LayoutParams ?: return false
+    val bubbleSize = dp(60)
+    val bubbleCx = params.x + bubbleSize / 2f
+    val bubbleCy = params.y + bubbleSize / 2f
+    val trashCx = tp.x + trashSizePx / 2f
+    val trashCy = tp.y + trashSizePx / 2f
+    val dx = bubbleCx - trashCx
+    val dy = bubbleCy - trashCy
+    val radius = dp(64).toFloat()
+    return (dx * dx + dy * dy) <= radius * radius
+  }
+
+  // 사용자가 휴지통으로 버블을 끔: 설정 저장 + 오버레이 제거 + JS에 통지.
+  private fun dismissBubble() {
+    setBubbleEnabled(false)
+    removeOverlay()
+    sendEvent("onDismiss")
   }
 
   private fun dp(value: Int): Int =

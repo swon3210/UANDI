@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useCashbookDisplaySettings';
 import { BackgroundImageUploader } from '@/components/cashbook/BackgroundImageUploader';
 import { OpacitySlider } from '@/components/cashbook/OpacitySlider';
+import { FloatingBubbleToggle } from '@/components/cashbook/FloatingBubbleToggle';
 
 export default function CashbookSettingsPage() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function CashbookSettingsPage() {
             알림 설정
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
+          {/* 모바일 네이티브(안드로이드)에서만 보인다 — 그 외엔 null. */}
+          <FloatingBubbleToggle />
         </section>
 
         <Separator className="my-6" />
