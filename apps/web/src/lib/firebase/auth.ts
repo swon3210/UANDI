@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import type { User as FirebaseUser, Unsubscribe } from 'firebase/auth';
 import { getAuth } from './config';
+import { removeCurrentDeviceTokens } from '@/services/fcm-token';
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
@@ -37,6 +38,12 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  // 로그아웃 전에 현재 기기의 FCM 토큰을 제거해, 로그아웃 후에도 푸시가 오는 것을 막는다.
+  // best-effort — 실패해도 로그아웃은 진행한다.
+  const uid = getAuth().currentUser?.uid ?? null;
+  if (uid) {
+    await removeCurrentDeviceTokens(uid).catch(() => {});
+  }
   await firebaseSignOut(getAuth());
 }
 

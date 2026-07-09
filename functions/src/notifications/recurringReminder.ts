@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
+import { loadUserTokenDocs, sendAndPrune } from './fcmTokens';
 
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -230,14 +231,13 @@ export const recurringTransactionReminder = onSchedule(
           // 미지정(기존 유저)은 켜진 것으로 간주, 명시적 false만 skip
           if (settings?.recurringTransaction?.enabled === false) continue;
 
-          const tokensSnap = await db.collection(`users/${uid}/fcmTokens`).get();
-          const tokens = tokensSnap.docs.map((d) => d.data().token as string).filter(Boolean);
-          if (tokens.length === 0) continue;
+          const tokenDocs = await loadUserTokenDocs(db, uid);
+          if (tokenDocs.length === 0) continue;
 
           for (const t of pending) {
             try {
-              const res = await messaging.sendEachForMulticast({
-                tokens,
+              // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
+              const res = await sendAndPrune(messaging, tokenDocs, {
                 notification: { title: 'UANDI 가계부', body: buildPushBody(t.category, t.schedule) },
                 data: {
                   click_action: buildQuickAddLink(t.category, t.schedule),
@@ -249,8 +249,8 @@ export const recurringTransactionReminder = onSchedule(
                 coupleId,
                 uid,
                 categoryId: t.categoryId,
-                successCount: res.successCount,
-                failureCount: res.failureCount,
+                successCount: res?.successCount,
+                failureCount: res?.failureCount,
               });
             } catch (err) {
               logger.error('recurringReminder FCM send failed', { coupleId, uid, err });

@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v2';
+import { loadUserTokenDocs, sendAndPrune } from './fcmTokens';
 
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -257,12 +258,9 @@ export const onCashbookEntryCreated = onDocumentCreated(
         continue;
       }
 
-      const tokensSnap = await db.collection(`users/${uid}/fcmTokens`).get();
-      const tokens = tokensSnap.docs
-        .map((d) => d.data().token as string)
-        .filter(Boolean);
+      const tokenDocs = await loadUserTokenDocs(db, uid);
 
-      if (tokens.length === 0) {
+      if (tokenDocs.length === 0) {
         logger.info('budgetAlert skip: no FCM tokens', { uid, isSelf });
         continue;
       }
@@ -270,8 +268,8 @@ export const onCashbookEntryCreated = onDocumentCreated(
       for (const t of transitions) {
         try {
           const body = isSelf ? `[내 지출] ${pushBody(t)}` : pushBody(t);
-          const res = await messaging.sendEachForMulticast({
-            tokens,
+          // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
+          const res = await sendAndPrune(messaging, tokenDocs, {
             notification: {
               title: 'UANDI 가계부',
               body,
@@ -287,8 +285,8 @@ export const onCashbookEntryCreated = onDocumentCreated(
             uid,
             isSelf,
             transition: t,
-            successCount: res.successCount,
-            failureCount: res.failureCount,
+            successCount: res?.successCount,
+            failureCount: res?.failureCount,
           });
         } catch (err) {
           logger.error('budgetAlert FCM send failed', { uid, isSelf, err });
