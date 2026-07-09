@@ -46,6 +46,17 @@ export type RecurringSchedule = {
   leadDays?: number;
   /** 예상 금액(선택). 있으면 알림 본문에 노출. */
   expectedAmount?: number | null;
+  /**
+   * 반복 주기(개월). 1=매월(기본), 2=격월, 3=분기, 6=반기, 12=매년.
+   * 미지정 시 1로 간주(기존 데이터 하위호환 — 매월 발생).
+   */
+  intervalMonths?: number;
+  /**
+   * 주기 위상 기준 달("YYYY-MM"). intervalMonths > 1일 때 이 달과 같은 위상의 달에만 발생한다.
+   * 예: intervalMonths=2, anchorMonth='2026-07' → 7·9·11월…(홀수 위상)에만 발생, 짝수달은 건너뜀.
+   * 미지정 시 절대 월 인덱스 기준 위상 0으로 폴백(결정적).
+   */
+  anchorMonth?: string;
 };
 
 export type CashbookCategory = {

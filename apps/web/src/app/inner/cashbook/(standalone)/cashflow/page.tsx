@@ -4,7 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { ChevronLeft, Settings, CalendarRange, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import {
+  ChevronLeft,
+  Settings,
+  CalendarRange,
+  Sparkles,
+  Loader2,
+  RefreshCw,
+  Info,
+} from 'lucide-react';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
@@ -181,6 +189,19 @@ export default function CashflowCalendarPage() {
                 )}
                 갱신
               </Button>
+            </div>
+
+            <div
+              className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground"
+              data-testid="cashflow-prediction-guide"
+            >
+              <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
+              <p>
+                <span className="text-coral-500">◇</span> 표시는 아직 확정되지 않은 예측이에요.
+                직접 등록한 <b className="font-medium text-foreground">정기 발생</b>과 과거 소비·수입
+                패턴을 분석한 <b className="font-medium text-foreground">AI 추론</b>으로 계산해요.
+                각 항목을 펼치면 어떤 근거로 잡혔는지 볼 수 있어요.
+              </p>
             </div>
 
             <CashflowCardList cards={cards} onDeletePrediction={handleDeletePrediction} />

@@ -127,6 +127,43 @@ test.describe('현금흐름 캘린더 — 정기 발생(recurrence) 통합', () 
     await expect(first.getByTestId('cashflow-card-balance')).toHaveText('2,000,000원');
   });
 
+  // 격월 정기 발생: 이번 달(anchor)엔 예측(◇)으로 뜨고, 근거 서브라벨에 "격월"이 표시된다.
+  test('격월 정기 발생은 발생하는 달에 예측(◇)으로 뜨고 "격월" 근거가 표시된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    const now = new Date();
+    const anchorMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    await seedCashflowSettings(coupleId, { currentCash: 2000000, paydays: [] });
+    await seedCashbookCategory(coupleId, {
+      group: 'income',
+      subGroup: 'regular_income',
+      name: '상여',
+      icon: 'wallet',
+      // 이번 달을 anchor로 두면 이번 달은 발생월 → 오늘 날짜에 ◇로 뜬다(격월이라 다음 달은 건너뜀).
+      recurrence: {
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: TODAY,
+        expectedAmount: 1000000,
+        intervalMonths: 2,
+        anchorMonth,
+      },
+    });
+
+    const cashflow = new CashflowPage(page);
+    await cashflow.goto();
+
+    const first = cashflow.cards.first();
+    await expect(first.getByTestId('cashflow-txn-badge-predicted')).toBeVisible();
+    await expect(first).toContainText('상여');
+    // 예측 근거: 정기 발생 + 격월 표기
+    await expect(first).toContainText('정기 발생');
+    await expect(first).toContainText('격월');
+    // 남는 돈 = 2,000,000 + 1,000,000 (이번 달 발생분만, 이중 아님)
+    await expect(first.getByTestId('cashflow-card-balance')).toHaveText('3,000,000원');
+  });
+
   // Phase 2: 정기 발생일이 결제일 없이도 카드 경계(날짜 체크포인트)가 된다.
   test('정기 발생일은 결제일 없이도 날짜 체크포인트 카드로 표시된다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;

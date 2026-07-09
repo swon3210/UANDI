@@ -198,6 +198,8 @@ type SeedRecurrence = {
   weekday?: number;
   leadDays?: number;
   expectedAmount?: number | null;
+  intervalMonths?: number;
+  anchorMonth?: string;
 };
 
 export async function seedCashbookCategory(

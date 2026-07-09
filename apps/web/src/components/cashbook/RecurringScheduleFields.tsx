@@ -1,6 +1,18 @@
 'use client';
 
-import { Switch, Input, Label, RadioGroup, RadioGroupItem } from '@uandi/ui';
+import dayjs from 'dayjs';
+import {
+  Switch,
+  Input,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@uandi/ui';
 
 export type RecurringScheduleValue = {
   enabled: boolean;
@@ -10,7 +22,35 @@ export type RecurringScheduleValue = {
   weekday?: number;
   leadDays?: number;
   expectedAmount?: number | null;
+  /** 반복 주기(개월). 1=매월, 2=격월, 3=분기, 6=반기, 12=매년. 미지정 시 매월. */
+  intervalMonths?: number;
+  /** 주기 위상 기준 달("YYYY-MM"). interval>1일 때만 의미. */
+  anchorMonth?: string;
 };
+
+const FREQUENCY_OPTIONS: { value: number; label: string }[] = [
+  { value: 1, label: '매월' },
+  { value: 2, label: '격월' },
+  { value: 3, label: '분기' },
+  { value: 6, label: '반기' },
+  { value: 12, label: '매년' },
+];
+
+/** 시작 월 후보: (편집 중 과거 anchor가 있으면 포함) + 이번 달부터 12개월. */
+function buildMonthOptions(existing?: string): { value: string; label: string }[] {
+  const now = dayjs().startOf('month');
+  const out: { value: string; label: string }[] = [];
+  const seen = new Set<string>();
+  const push = (m: dayjs.Dayjs) => {
+    const v = m.format('YYYY-MM');
+    if (seen.has(v)) return;
+    seen.add(v);
+    out.push({ value: v, label: m.format('YYYY년 M월') });
+  };
+  if (existing && dayjs(`${existing}-01`).isBefore(now)) push(dayjs(`${existing}-01`));
+  for (let i = 0; i < 12; i++) push(now.add(i, 'month'));
+  return out;
+}
 
 type RecurringScheduleFieldsProps = {
   value: RecurringScheduleValue;
@@ -60,6 +100,20 @@ export function RecurringScheduleFields({
   const patch = (partial: Partial<RecurringScheduleValue>) => onChange({ ...value, ...partial });
 
   const occurrenceHint = variant === 'income' ? '들어오는 날' : '나가는 날';
+  const intervalMonths = value.intervalMonths ?? 1;
+  const monthOptions = buildMonthOptions(value.anchorMonth);
+
+  /** 빈도 변경: 격월 이상이면 기준 월(anchorMonth)을 이번 달로 자동 지정(비어 있을 때만). */
+  const handleIntervalChange = (next: number) => {
+    if (next <= 1) {
+      patch({ intervalMonths: 1, anchorMonth: undefined });
+      return;
+    }
+    patch({
+      intervalMonths: next,
+      anchorMonth: value.anchorMonth ?? dayjs().format('YYYY-MM'),
+    });
+  };
 
   return (
     <section data-testid="recurrence-section" className="flex flex-col gap-4">
@@ -67,7 +121,7 @@ export function RecurringScheduleFields({
         <div className="space-y-0.5">
           <Label className="text-sm font-semibold">정기 발생 알림</Label>
           <p className="text-xs text-muted-foreground">
-            매월 {occurrenceHint}에 맞춰 기록 알림을 받아요.
+            설정한 주기의 {occurrenceHint}에 맞춰 기록 알림을 받아요.
           </p>
         </div>
         <Switch
@@ -79,6 +133,60 @@ export function RecurringScheduleFields({
 
       {value.enabled && (
         <div className="flex flex-col gap-4 pl-0.5">
+          {/* 발생 빈도 (매월/격월/분기/반기/매년) */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-sm">발생 빈도</Label>
+            <div className="flex flex-wrap gap-2">
+              {FREQUENCY_OPTIONS.map((opt) => {
+                const selected = intervalMonths === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    data-testid={`recurrence-interval-${opt.value}`}
+                    data-selected={selected}
+                    className={chipClassName(selected)}
+                    onClick={() => handleIntervalChange(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 시작 월 — 격월 이상일 때만(주기 위상 기준) */}
+          {intervalMonths > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="recurrence-anchor-month" className="text-sm">
+                시작 월
+              </Label>
+              <Select
+                value={value.anchorMonth ?? monthOptions[0]?.value}
+                onValueChange={(v) => patch({ anchorMonth: v })}
+              >
+                <SelectTrigger
+                  id="recurrence-anchor-month"
+                  data-testid="recurrence-anchor-month"
+                  className="w-40"
+                >
+                  <SelectValue placeholder="시작 월" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                이 달부터 {FREQUENCY_OPTIONS.find((o) => o.value === intervalMonths)?.label}로
+                반복돼요. 사이 달은 건너뛰어요.
+              </p>
+            </div>
+          )}
+
           {/* 발생 주기 방식 */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-sm">발생 주기</Label>

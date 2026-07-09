@@ -47,6 +47,8 @@ const recurrenceSchema = z
     weekday: z.number().min(1).max(7).optional(),
     leadDays: z.number().min(0).max(7).optional(),
     expectedAmount: z.number().min(0).nullable().optional(),
+    intervalMonths: z.number().optional(),
+    anchorMonth: z.string().optional(),
   })
   .superRefine((val, ctx) => {
     if (!val.enabled) return;
@@ -131,6 +133,8 @@ export function CategoryForm({
             weekday: editingCategory.recurrence.weekday,
             leadDays: editingCategory.recurrence.leadDays,
             expectedAmount: editingCategory.recurrence.expectedAmount ?? null,
+            intervalMonths: editingCategory.recurrence.intervalMonths,
+            anchorMonth: editingCategory.recurrence.anchorMonth,
           }
         : { enabled: false, kind: 'dayOfMonth' },
     },
