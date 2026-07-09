@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
+import { loadUserTokenDocs, sendAndPrune } from './fcmTokens';
 
 if (!admin.apps.length) admin.initializeApp();
 
@@ -22,23 +23,17 @@ export const sendTestPush = onCall(
       throw new HttpsError('unauthenticated', '로그인이 필요해요.');
     }
 
-    const tokensSnap = await admin
-      .firestore()
-      .collection(`users/${uid}/fcmTokens`)
-      .get();
-    const tokens = tokensSnap.docs
-      .map((d) => d.data().token as string | undefined)
-      .filter((t): t is string => Boolean(t));
+    const tokenDocs = await loadUserTokenDocs(admin.firestore(), uid);
 
-    if (tokens.length === 0) {
+    if (tokenDocs.length === 0) {
       throw new HttpsError(
         'failed-precondition',
         '등록된 FCM 토큰이 없어요. 알림 토글을 ON으로 저장해 토큰을 등록해주세요.'
       );
     }
 
-    const result = await admin.messaging().sendEachForMulticast({
-      tokens,
+    // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
+    const result = (await sendAndPrune(admin.messaging(), tokenDocs, {
       notification: {
         title: 'UANDI 테스트 알림',
         body: '푸시가 정상적으로 도착했어요 🎉',
@@ -46,7 +41,7 @@ export const sendTestPush = onCall(
       data: {
         click_action: '/inner/cashbook/history/weekly/notifications',
       },
-    });
+    }))!;
 
     const failures = result.responses
       .map((r, i) => ({ index: i, error: r.error?.message ?? '' }))

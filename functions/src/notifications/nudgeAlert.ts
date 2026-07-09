@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v2';
+import { loadUserTokenDocs, sendAndPrune } from './fcmTokens';
 
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -74,9 +75,8 @@ export const onNudgeCreated = onDocumentCreated(
     }
 
     // 수신자 FCM 토큰
-    const tokensSnap = await db.collection(`users/${toUid}/fcmTokens`).get();
-    const tokens = tokensSnap.docs.map((d) => d.data().token as string).filter(Boolean);
-    if (tokens.length === 0) {
+    const tokenDocs = await loadUserTokenDocs(db, toUid);
+    if (tokenDocs.length === 0) {
       logger.info('nudgeAlert skip: no FCM tokens', { toUid });
       return;
     }
@@ -91,8 +91,8 @@ export const onNudgeCreated = onDocumentCreated(
       : `${fromName}님이 가계부 입력을 요청했어요 🐹`;
 
     try {
-      const res = await messaging.sendEachForMulticast({
-        tokens,
+      // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
+      const res = await sendAndPrune(messaging, tokenDocs, {
         notification: {
           title: 'UANDI 가계부',
           body,
@@ -107,8 +107,8 @@ export const onNudgeCreated = onDocumentCreated(
       logger.info('nudgeAlert FCM sent', {
         toUid,
         nudgeId,
-        successCount: res.successCount,
-        failureCount: res.failureCount,
+        successCount: res?.successCount,
+        failureCount: res?.failureCount,
       });
     } catch (err) {
       logger.error('nudgeAlert FCM send failed', { toUid, nudgeId, err });

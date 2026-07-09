@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 const PROJECT_ID = 'uandi-test';
 const AUTH_EMULATOR = 'http://localhost:9099';
 const FIRESTORE_EMULATOR = 'http://localhost:8080';
@@ -870,6 +872,45 @@ export async function listNudges(coupleId: string): Promise<EmulatorNudge[]> {
     message: d.fields.message?.stringValue ?? '',
     status: d.fields.status?.stringValue ?? '',
   }));
+}
+
+// FCM 토큰 (users/{uid}/fcmTokens/{sha256(token)})
+// 문서 id는 클라이언트 tokenIdFor와 동일하게 토큰의 SHA-256 hex.
+export async function seedFcmToken(
+  uid: string,
+  token: string,
+  options: { platform?: 'web' | 'android' | 'ios'; userAgent?: string } = {}
+): Promise<void> {
+  const id = createHash('sha256').update(token).digest('hex');
+  const fields: Record<string, unknown> = {
+    id: { stringValue: id },
+    userId: { stringValue: uid },
+    token: { stringValue: token },
+    userAgent: { stringValue: options.userAgent ?? 'UANDI-Test' },
+    createdAt: { timestampValue: new Date().toISOString() },
+    lastUsedAt: { timestampValue: new Date().toISOString() },
+  };
+  if (options.platform) fields.platform = { stringValue: options.platform };
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}/fcmTokens/${id}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields }),
+    }
+  );
+}
+
+export async function listFcmTokens(uid: string): Promise<string[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}/fcmTokens`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const json = (await res.json()) as {
+    documents?: { fields: Record<string, { stringValue?: string }> }[];
+  };
+  return (json.documents ?? []).map((d) => d.fields.token?.stringValue ?? '').filter(Boolean);
 }
 
 export async function seedNotificationSettings(
