@@ -19,7 +19,7 @@ import {
 } from '@uandi/ui';
 
 const schema = z.object({
-  currentCash: z.number({ error: '현재 보유 현금을 입력해주세요' }).min(0, '0 이상이어야 해요'),
+  currentCash: z.number({ error: '시작 현금을 입력해주세요' }).min(0, '0 이상이어야 해요'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -60,7 +60,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
       data-testid="cashflow-settings-sheet"
     >
       <SheetHeader>
-        <SheetTitle>현금흐름 설정</SheetTitle>
+        <SheetTitle>시작 현금 설정</SheetTitle>
       </SheetHeader>
 
       <Form {...form}>
@@ -73,7 +73,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
             name="currentCash"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>현재 보유 현금</FormLabel>
+                <FormLabel>시작 현금 (오늘 기준)</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
@@ -90,6 +90,11 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                     </span>
                   </div>
                 </FormControl>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  이 금액에서 <span className="font-medium text-foreground">시작</span>해 앞으로
+                  들어오고 나갈 돈을 더해가며 남는 돈을 예측해요. 지금 통장 잔액을 넣고, 실제와
+                  달라지면 다시 맞춰주세요.
+                </p>
                 <FormMessage />
               </FormItem>
             )}
