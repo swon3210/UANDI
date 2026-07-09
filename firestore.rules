@@ -165,6 +165,24 @@ service cloud.firestore {
       match /cashbookCategories/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }
+      // 가계부 입력 요청 "콕 찌르기" (docs/pages/inner/cashbook-nudge.md)
+      // - read: 커플 멤버
+      // - create: 본인이 fromUid, 상대가 toUid(자기 자신 금지), record-request/pending으로만
+      // - update: 상태 전이만(status/respondedAt). 그 외 필드 변조 금지
+      // - delete: 금지
+      // 쿨다운(pending 1건)은 클라이언트 가드 + Cloud Function 재확인으로 처리(규칙으로 강제 안 함)
+      match /nudges/{nudgeId} {
+        allow read: if isCoupleMember(coupleId);
+        allow create: if isCoupleMember(coupleId)
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.toUid != request.auth.uid
+          && request.resource.data.type == 'record-request'
+          && request.resource.data.status == 'pending';
+        allow update: if isCoupleMember(coupleId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'respondedAt']);
+        allow delete: if false;
+      }
       match /cashbookSettlements/{document=**} {
         allow read, write: if isCoupleMember(coupleId);
       }

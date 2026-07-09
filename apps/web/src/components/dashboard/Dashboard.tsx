@@ -2,6 +2,7 @@
 
 import { PageHeader } from '@/components/shell/PageHeader';
 import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
+import { NudgeButton } from '@/components/cashbook/NudgeButton';
 import { useAuth } from '@/hooks/useAuth';
 import { useServiceTourAutoOpen } from '@/hooks/useServiceTourAutoOpen';
 import { BudgetDashboard } from './BudgetDashboard';
@@ -21,6 +22,7 @@ export function Dashboard() {
       <CashbookTabs />
       <main className="w-full max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
         <BudgetDashboard coupleId={coupleId} />
+        <NudgeButton />
       </main>
     </>
   );

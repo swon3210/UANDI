@@ -38,6 +38,9 @@ const notificationSettingsSchema = z.object({
   recurringTransaction: z.object({
     enabled: z.boolean(),
   }),
+  recordRequest: z.object({
+    enabled: z.boolean(),
+  }),
 });
 
 type NotificationSettingsFormValues = z.infer<typeof notificationSettingsSchema>;
@@ -211,6 +214,35 @@ export function NotificationSettingsForm({
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     data-testid="recurring-transaction-switch"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Separator />
+
+        {/* 입력 요청("콕 찌르기") 알림 */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold">입력 요청 알림</h3>
+
+          <FormField
+            control={form.control}
+            name="recordRequest.enabled"
+            render={({ field }) => (
+              <FormItem className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <FormLabel className="text-sm">알림 받기</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    파트너가 &ldquo;콕 찌르기&rdquo;로 가계부 입력을 요청하면 알려드려요.
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="record-request-switch"
                   />
                 </FormControl>
               </FormItem>
