@@ -27,14 +27,50 @@ function toDayjsDow(weekday: number): number {
   return weekday % 7;
 }
 
+/** 반복 주기(개월) → 사람이 읽는 접두 라벨. */
+export const INTERVAL_LABELS: Record<number, string> = {
+  1: '매월',
+  2: '격월',
+  3: '분기마다',
+  6: '반기마다',
+  12: '매년',
+};
+
+/** 절대 월 인덱스(year*12 + month0). 위상(phase) 계산용. */
+function absMonthIndex(year: number, month0: number): number {
+  return year * 12 + month0;
+}
+
+/**
+ * intervalMonths/anchorMonth 위상에 비춰 monthAnchor가 속한 달이 "발생하는 달"인지 판정.
+ * - interval ≤ 1 → 항상 발생(매월).
+ * - anchorMonth 지정 → 그 달과 위상이 같은 달만(diff % interval === 0).
+ * - anchorMonth 미지정 → 절대 월 인덱스 기준 위상 0으로 폴백(결정적).
+ */
+export function isActiveMonth(schedule: RecurringSchedule, monthAnchor: Dayjs): boolean {
+  const interval = schedule.intervalMonths ?? 1;
+  if (interval <= 1) return true;
+
+  const current = absMonthIndex(monthAnchor.year(), monthAnchor.month());
+  let anchor = 0; // 폴백: 절대 인덱스 위상 0
+  if (schedule.anchorMonth) {
+    const [ay, am] = schedule.anchorMonth.split('-').map((s) => Number.parseInt(s, 10));
+    if (Number.isFinite(ay) && Number.isFinite(am)) anchor = absMonthIndex(ay, am - 1);
+  }
+  return (((current - anchor) % interval) + interval) % interval === 0;
+}
+
 /**
  * 주어진 달(monthAnchor가 속한 달)에서 스케줄의 실제 발생일을 계산한다.
- * 존재하지 않는 발생일(예: 5번째 월요일이 없는 달)은 null.
+ * - 반복 주기(intervalMonths)상 발생하지 않는 달이면 null(격월/분기 등 건너뛰는 달).
+ * - 존재하지 않는 발생일(예: 5번째 월요일이 없는 달)은 null.
  */
 export function occurrenceDateInMonth(
   schedule: RecurringSchedule,
   monthAnchor: Dayjs
 ): Dayjs | null {
+  if (!isActiveMonth(schedule, monthAnchor)) return null;
+
   if (schedule.kind === 'dayOfMonth') {
     const target = schedule.dayOfMonth;
     if (!target || target < 1) return null;
@@ -82,15 +118,19 @@ export function shouldFireOn(schedule: RecurringSchedule, today: Dayjs): boolean
   });
 }
 
-/** 사람이 읽을 수 있는 발생 주기 설명 ("매월 25일", "둘째 주 수요일 · 3일 전") */
+/** 사람이 읽을 수 있는 발생 주기 설명 ("매월 25일", "격월 25일", "분기마다 둘째 주 수요일 · 3일 전") */
 export function formatRecurrence(schedule: RecurringSchedule): string {
+  const interval = schedule.intervalMonths ?? 1;
+  const intervalLabel = INTERVAL_LABELS[interval] ?? `${interval}개월마다`;
   let base = '';
   if (schedule.kind === 'dayOfMonth') {
-    base = schedule.dayOfMonth ? `매월 ${schedule.dayOfMonth}일` : '매월';
+    base = schedule.dayOfMonth ? `${intervalLabel} ${schedule.dayOfMonth}일` : intervalLabel;
   } else {
     const weekLabel = schedule.week != null ? WEEK_LABELS[String(schedule.week)] : '';
     const weekdayLabel = schedule.weekday ? WEEKDAY_LABELS[schedule.weekday] : '';
-    base = `${weekLabel} 주 ${weekdayLabel}`.trim();
+    // 매월이면 접두 라벨을 생략("둘째 주 수요일"), 격월 이상만 접두를 붙인다("격월 둘째 주 수요일").
+    const cadence = `${weekLabel} 주 ${weekdayLabel}`.trim();
+    base = interval > 1 ? `${intervalLabel} ${cadence}`.trim() : cadence;
   }
 
   const leadDays = schedule.leadDays ?? 0;

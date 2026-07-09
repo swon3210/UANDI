@@ -46,6 +46,8 @@ type RecurrenceFormValue = {
   weekday?: number;
   leadDays?: number;
   expectedAmount?: number | null;
+  intervalMonths?: number;
+  anchorMonth?: string;
 };
 
 // 폼 값 → Firestore 저장용 payload. undefined 필드를 제거하고(Firestore가 거부),
@@ -67,6 +69,12 @@ function buildRecurrencePayload(value: RecurrenceFormValue): RecurringSchedule |
   }
   if (value.leadDays != null) payload.leadDays = value.leadDays;
   payload.expectedAmount = value.expectedAmount ?? null;
+  // 반복 주기: 격월 이상일 때만 저장(매월=기본이라 생략, 하위호환). anchorMonth는 위상 기준.
+  const interval = value.intervalMonths ?? 1;
+  if (interval > 1) {
+    payload.intervalMonths = interval;
+    if (value.anchorMonth) payload.anchorMonth = value.anchorMonth;
+  }
   return payload;
 }
 

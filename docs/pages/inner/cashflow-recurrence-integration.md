@@ -353,6 +353,60 @@ recurrenceSuggestionDismissed?: boolean;
 | `apps/web/src/components/cashbook/RecurrenceSuggestionCard.tsx` | `kind:'add'                                                          | 'remove'` 변형(라벨·아이콘·버튼) |
 | E2E                                                             | 끊긴 정기 발생 → 해제 제안 → "해제" 시 제거 / "유지" 시 재노출 안 함 |
 
+## Phase 8 구현 (완료) — 반복 주기(격월/분기/반기/매년) + 예측 방식 투명화
+
+### 배경
+
+정기 발생이 `dayOfMonth`/`nthWeekday` **둘 다 매월 발생**만 표현할 수 있어, 상여·명절비·자동차세처럼
+**띄엄띄엄 발생하는 항목이 매월 예측에 박히는** 문제가 있었다(선언 경로·LLM 추론 경로 모두). 또한 예측이
+"어떤 근거로" 잡혔는지 유저에게 거의 보이지 않았다.
+
+### D8-1. 반복 주기(interval) 도입 — 단일 primitive 확장
+
+`RecurringSchedule`에 두 필드 추가(둘 다 optional → 기존 데이터는 매월로 하위호환):
+
+```ts
+intervalMonths?: number; // 1=매월(기본), 2=격월, 3=분기, 6=반기, 12=매년
+anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
+```
+
+- 발생 판정은 `isActiveMonth(schedule, monthAnchor)`(신규): `interval<=1`이면 항상, 아니면
+  `((current - anchor) % interval === 0)`인 달만. anchor 미지정 시 절대 월 인덱스 위상 0 폴백(결정적).
+- `occurrenceDateInMonth`가 비활성 달이면 **null 반환** → 캘린더 합성 거래·내역 프롬프트·알림 cron이
+  **한 곳(primitive)** 만 고쳐도 모두 격월/분기를 존중한다(구조적 일치 유지).
+- 알림 cron(`functions/.../recurringReminder.ts`)은 이 유틸을 **중복 구현**하므로 동일 `isActiveMonth`를 미러링.
+- `formatRecurrence`에 주기 접두 라벨("격월 25일", "분기마다 둘째 주 수요일"). 매월은 접두 생략(기존 표기 유지).
+
+### D8-2. LLM 추론도 주기 존중
+
+`predict-cashflow` 프롬프트에서 "매달 1건씩 강제"를 제거하고, **과거 등장 월 간격을 그대로 유지**해
+예측하도록 지시(격월 항목을 매달 넣지 말 것). `reason`에 주기를 명시하게 강화.
+
+### D8-3. 예측 방식 투명화
+
+- **항목별 근거**: `CashflowTransactionRow`가 예측 출처를 근거 서브라벨로 노출.
+  - 정기 발생(`recurrence-` id) → `정기 발생 · 격월 25일`(합성 거래 `description`에 `formatRecurrence` 실음).
+  - AI 추론(`llm-` id / `source:'llm'`) → `AI 추론 · {reason}`.
+- **상단 안내**: 현금흐름 페이지에 ◇의 의미 + "정기 발생 + AI 추론으로 계산" 한 줄 설명(`cashflow-prediction-guide`).
+- **편집 UI**: `RecurringScheduleFields`에 "발생 빈도"(매월/격월/분기/반기/매년) 칩 + interval>1일 때 "시작 월" 셀렉트.
+
+### 구현 위치
+
+| 파일                                                            | 변경                                                                      |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `packages/cashbook-core/src/types.ts`                           | `RecurringSchedule.intervalMonths?` / `anchorMonth?` 추가                  |
+| `packages/cashbook-core/src/utils/recurrence.ts`                | `isActiveMonth`·`INTERVAL_LABELS` 추가, `occurrenceDateInMonth`/`formatRecurrence` 확장 |
+| `packages/cashbook-core/src/utils/__tests__/recurrence.test.ts` | **신규** vitest — 위상/연 경계/format 검증(9 케이스)                       |
+| `functions/src/notifications/recurringReminder.ts`              | `isActiveMonth` 미러링(격월은 건너뛰는 달 알림 안 감)                      |
+| `apps/web/src/utils/cashflow.ts`                                | 합성 거래 `description`에 `formatRecurrence`(근거 라벨)                    |
+| `apps/web/src/components/cashbook/RecurringScheduleFields.tsx`  | 발생 빈도 칩 + 시작 월 셀렉트                                              |
+| `apps/web/src/app/inner/cashbook/(standalone)/categories/page.tsx` | `buildRecurrencePayload`에 interval/anchor 반영                        |
+| `apps/web/src/components/cashbook/CategoryForm.tsx`             | 스키마·기본값에 신규 필드                                                  |
+| `apps/web/src/components/cashbook/CashflowTransactionRow.tsx`   | 예측 근거 서브라벨(정기 발생/AI 추론)                                      |
+| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | 예측 방식 상단 안내                                                       |
+| `apps/web/src/app/api/ai/predict-cashflow/route.ts`             | 프롬프트: 주기 리듬 존중                                                   |
+| E2E `cashflow-recurrence.spec.ts`                               | 격월 정기 발생 노출 + "격월" 근거 표기                                     |
+
 ## 후속 (미포함)
 
 - 잔존 `source:'auto'` doc 하드 삭제(현재는 조회 단계 비활성으로 무해 — 필요 시 일회성 정리 스크립트).

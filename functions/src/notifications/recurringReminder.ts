@@ -14,6 +14,10 @@ type RecurringSchedule = {
   weekday?: number;
   leadDays?: number;
   expectedAmount?: number | null;
+  /** 반복 주기(개월). 1=매월(기본), 2=격월, 3=분기, 6=반기, 12=매년. 미지정 시 1. */
+  intervalMonths?: number;
+  /** 주기 위상 기준 달("YYYY-MM"). interval > 1일 때 이 달과 같은 위상의 달만 발생. */
+  anchorMonth?: string;
 };
 
 type CategoryDoc = {
@@ -49,7 +53,26 @@ function seoulToday(now: Date): Date {
   return utcDate(get('year'), get('month') - 1, get('day'));
 }
 
+/**
+ * intervalMonths/anchorMonth 위상에 비춰 (year, month0)이 "발생하는 달"인지.
+ * cashbook-core의 isActiveMonth와 동일 로직(격월/분기 건너뛰는 달 판정).
+ */
+function isActiveMonth(schedule: RecurringSchedule, year: number, month0: number): boolean {
+  const interval = schedule.intervalMonths ?? 1;
+  if (interval <= 1) return true;
+
+  const current = year * 12 + month0;
+  let anchor = 0; // 폴백: 절대 인덱스 위상 0
+  if (schedule.anchorMonth) {
+    const [ay, am] = schedule.anchorMonth.split('-').map((s) => Number.parseInt(s, 10));
+    if (Number.isFinite(ay) && Number.isFinite(am)) anchor = ay * 12 + (am - 1);
+  }
+  return (((current - anchor) % interval) + interval) % interval === 0;
+}
+
 function occurrenceDate(schedule: RecurringSchedule, year: number, month0: number): Date | null {
+  if (!isActiveMonth(schedule, year, month0)) return null;
+
   if (schedule.kind === 'dayOfMonth') {
     const target = schedule.dayOfMonth;
     if (!target || target < 1) return null;

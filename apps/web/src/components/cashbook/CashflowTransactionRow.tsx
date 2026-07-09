@@ -5,26 +5,34 @@ import { Button, cn } from '@uandi/ui';
 import { formatAmount } from '@/utils/currency';
 import type { CashflowTransaction } from '@/utils/cashflow';
 
-const SOURCE_LABEL: Record<NonNullable<CashflowTransaction['source']>, string> = {
-  calendar: '캘린더',
-  auto: '자동감지',
-  llm: 'AI 예측',
-};
-
 type CashflowTransactionRowProps = {
   txn: CashflowTransaction;
   /** 예측 거래에 한해 삭제 버튼 노출(SYNC-05). */
   onDelete?: () => void;
 };
 
-/** 캘린더 카드 펼침 시 거래 1건. 확정(✓ 채움)/예측(◇ 점선) 마커 + 출처 표기. */
+/**
+ * 예측 거래가 "어떻게" 나왔는지 근거를 만든다.
+ * - 정기 발생(recurrence-): 사용자가 등록한 주기 → "정기 발생 · 격월 25일"
+ * - AI 추론(llm-): 과거 패턴 추정 → "AI 추론 · 최근 3개월 평균 32만원"
+ * - 그 외(레거시 수동 예측): "예측"
+ */
+function predictionBasis(txn: CashflowTransaction): string {
+  const detail = txn.description?.trim();
+  if (txn.id.startsWith('recurrence-')) return detail ? `정기 발생 · ${detail}` : '정기 발생';
+  if (txn.source === 'llm' || txn.id.startsWith('llm-')) {
+    return detail ? `AI 추론 · ${detail}` : 'AI 추론';
+  }
+  return detail ? `예측 · ${detail}` : '예측';
+}
+
+/** 캘린더 카드 펼침 시 거래 1건. 확정(✓ 채움)/예측(◇ 점선) 마커 + 예측 근거 표기. */
 export function CashflowTransactionRow({ txn, onDelete }: CashflowTransactionRowProps) {
   const isPredicted = txn.kind === 'predicted';
-  const sublabel = isPredicted
-    ? txn.source
-      ? `${SOURCE_LABEL[txn.source]} · 예측`
-      : '예측'
-    : '확정';
+  // 예측은 근거를 서브라벨로 옮겨 노출하므로 카테고리 줄에는 설명을 붙이지 않는다.
+  // 실거래(확정)는 사용자가 적은 설명을 그대로 카테고리 줄에 유지한다.
+  const sublabel = isPredicted ? predictionBasis(txn) : '확정';
+  const showDescriptionInline = !isPredicted && !!txn.description;
 
   return (
     <div
@@ -48,7 +56,7 @@ export function CashflowTransactionRow({ txn, onDelete }: CashflowTransactionRow
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
           {txn.category}
-          {txn.description && (
+          {showDescriptionInline && (
             <span className="font-normal text-muted-foreground"> · {txn.description}</span>
           )}
         </p>

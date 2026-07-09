@@ -1,5 +1,5 @@
 import dayjs, { type Dayjs } from 'dayjs';
-import { occurrenceDateInMonth } from '@uandi/cashbook-core/utils/recurrence';
+import { occurrenceDateInMonth, formatRecurrence } from '@uandi/cashbook-core/utils/recurrence';
 import type {
   CashbookCategory,
   CashbookEntryType,
@@ -226,6 +226,8 @@ export type RecurrenceOccurrence = {
   type: 'income' | 'expense';
   amount: number;
   date: Date;
+  /** 발생 근거 라벨(formatRecurrence, 예: "격월 25일"). 예측 행에 표시. */
+  note: string;
 };
 
 /**
@@ -267,6 +269,7 @@ export function buildRecurrenceOccurrences(
         type: cat.group, // 'income' | 'expense'
         amount,
         date: occ.toDate(),
+        note: formatRecurrence(r),
       });
     }
   }
@@ -300,7 +303,7 @@ export function recurrenceTransactions(
       type: o.type,
       amount: o.amount,
       category: o.categoryName,
-      description: '',
+      description: o.note, // 발생 근거(예: "격월 25일") — 예측 행 서브라벨에 노출
       date: o.date,
       source: 'calendar',
     });

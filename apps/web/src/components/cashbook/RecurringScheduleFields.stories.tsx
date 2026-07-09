@@ -65,3 +65,36 @@ export const IncomeVariant: Story = {
     />
   ),
 };
+
+// 격월 상여: 발생 빈도 '격월' + 시작 월 셀렉트가 노출된다.
+export const Bimonthly: Story = {
+  render: () => (
+    <Interactive
+      variant="income"
+      initial={{
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: 25,
+        expectedAmount: 1000000,
+        intervalMonths: 2,
+        anchorMonth: '2026-07',
+      }}
+    />
+  ),
+};
+
+// 분기 발생(예: 자동차세) — nthWeekday와 결합.
+export const Quarterly: Story = {
+  render: () => (
+    <Interactive
+      initial={{
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: 15,
+        expectedAmount: 300000,
+        intervalMonths: 3,
+        anchorMonth: '2026-07',
+      }}
+    />
+  ),
+};
