@@ -233,6 +233,35 @@ type CashbookCategory = {
 
 ---
 
+### Nudge (가계부 입력 요청 "콕 찌르기")
+
+> 상세 UX·쿨다운 정책은 `docs/pages/inner/cashbook-nudge.md` 참고.
+
+커플 한쪽이 상대에게 가계부 입력을 요청하는 넛지. 생성 시 Cloud Function이 파트너에게 FCM 푸시를 보낸다.
+
+```ts
+type NudgeType = 'record-request';
+type NudgeStatus = 'pending' | 'seen' | 'done' | 'dismissed';
+
+type Nudge = {
+  id: string;
+  coupleId: string;
+  fromUid: string;              // 보낸 사람
+  toUid: string;               // 받는 사람 (파트너)
+  type: NudgeType;
+  message: string;             // 프리셋 or 커스텀 (빈 문자열 허용)
+  status: NudgeStatus;
+  createdAt: Timestamp;
+  respondedAt: Timestamp | null;
+};
+```
+
+**Firestore 경로**: `couples/{coupleId}/nudges/{nudgeId}`
+
+> **쿨다운**: 파트너에게 보낸 `status === 'pending'` 넛지가 이미 있으면 새 요청을 보낼 수 없다(스팸 방지). 클라이언트 가드 + Cloud Function 재확인으로 처리하며, 보안 규칙으로 강제하지 않는다.
+
+---
+
 ## 재테크 도메인 (v1.1)
 
 > v1에서는 실제 컬렉션이 도입되지 않습니다. 아래 타입·경로는 v1.1 작업 시작 시점의 기준입니다.
@@ -450,6 +479,7 @@ type CommunitySource = {
 | `couples/{coupleId}/photos/*`                             | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/cashbookEntries/*`                    | 같은 커플 멤버                             | 같은 커플 멤버                             |
 | `couples/{coupleId}/cashbookCategories/*`                 | 같은 커플 멤버                             | 같은 커플 멤버                             |
+| `couples/{coupleId}/nudges/*`                             | 같은 커플 멤버                             | create: 커플 멤버 & `fromUid == auth.uid` & `toUid != fromUid` & `type=='record-request'` & `status=='pending'`. update: 커플 멤버 & 변경 키 `status`/`respondedAt`만. delete: 금지 |
 | `couples/{coupleId}/meta/outerSummary`                    | 같은 커플 멤버                             | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신) |
 | `couples/{coupleId}/sideHustles/{uid}/**`                 | `uid == request.auth.uid` (본인만)         | `uid == request.auth.uid` (본인만)         |
 | `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 본인 글에 한해 변경 키를 `body`/`imageUrl`/`editedAt`로만 한정(`diff().affectedKeys().hasOnly(...)` — `status`/`reportCount`/`author`/`type`/시각 변조 차단). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |

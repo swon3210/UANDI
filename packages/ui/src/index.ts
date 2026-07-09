@@ -63,6 +63,10 @@ export type {
 export { AssetGrowthChart } from './custom/outer/AssetGrowthChart';
 export type { AssetGrowthChartProps, AssetGrowthPoint } from './custom/outer/AssetGrowthChart';
 
+// 가계부 입력 요청 "콕 찌르기" (프레젠테이션 전용 — 도메인 타입과 디커플)
+export { NudgeComposer, NUDGE_PRESETS, NUDGE_MAX_MESSAGE } from './custom/inner/NudgeComposer';
+export type { NudgeComposerProps } from './custom/inner/NudgeComposer';
+
 // 가계부 결산 차트 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { BudgetVsActualChart } from './custom/inner/BudgetVsActualChart';
 export type {

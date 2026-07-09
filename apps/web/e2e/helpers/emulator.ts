@@ -813,6 +813,65 @@ export async function seedAdminConfig(uid: string): Promise<void> {
   );
 }
 
+// 가계부 입력 요청 "콕 찌르기" (couples/{coupleId}/nudges/{nudgeId})
+export async function seedNudge(
+  coupleId: string,
+  fromUid: string,
+  toUid: string,
+  options: {
+    message?: string;
+    status?: 'pending' | 'seen' | 'done' | 'dismissed';
+  } = {}
+): Promise<string> {
+  const nudgeId = `nudge-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/nudges/${nudgeId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: nudgeId },
+          coupleId: { stringValue: coupleId },
+          fromUid: { stringValue: fromUid },
+          toUid: { stringValue: toUid },
+          type: { stringValue: 'record-request' },
+          message: { stringValue: options.message ?? '' },
+          status: { stringValue: options.status ?? 'pending' },
+          createdAt: { timestampValue: new Date().toISOString() },
+          respondedAt: { nullValue: null },
+        },
+      }),
+    }
+  );
+  return nudgeId;
+}
+
+type EmulatorNudge = {
+  fromUid: string;
+  toUid: string;
+  type: string;
+  message: string;
+  status: string;
+};
+
+export async function listNudges(coupleId: string): Promise<EmulatorNudge[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/nudges`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const json = (await res.json()) as {
+    documents?: { fields: Record<string, { stringValue?: string }> }[];
+  };
+  return (json.documents ?? []).map((d) => ({
+    fromUid: d.fields.fromUid?.stringValue ?? '',
+    toUid: d.fields.toUid?.stringValue ?? '',
+    type: d.fields.type?.stringValue ?? '',
+    message: d.fields.message?.stringValue ?? '',
+    status: d.fields.status?.stringValue ?? '',
+  }));
+}
+
 export async function seedNotificationSettings(
   userId: string,
   options: {

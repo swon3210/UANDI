@@ -218,7 +218,27 @@ export type NotificationSettings = {
   recurringTransaction?: {
     enabled: boolean;
   };
+  // 파트너의 가계부 입력 요청("콕 찌르기") 알림 on/off. 미지정 시 true 취급(기존 유저 호환).
+  recordRequest?: {
+    enabled: boolean;
+  };
   updatedAt: Timestamp;
+};
+
+// 가계부 입력 요청 "콕 찌르기" (docs/pages/inner/cashbook-nudge.md)
+export type NudgeType = 'record-request';
+export type NudgeStatus = 'pending' | 'seen' | 'done' | 'dismissed';
+
+export type Nudge = {
+  id: string;
+  coupleId: string;
+  fromUid: string; // 보낸 사람
+  toUid: string; // 받는 사람 (파트너)
+  type: NudgeType;
+  message: string; // 프리셋 or 커스텀 (빈 문자열 허용)
+  status: NudgeStatus;
+  createdAt: Timestamp;
+  respondedAt: Timestamp | null;
 };
 
 // 가계부 디스플레이 설정 (유저 개인)

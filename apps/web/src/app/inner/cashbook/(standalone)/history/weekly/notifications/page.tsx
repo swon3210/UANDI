@@ -41,6 +41,9 @@ const DEFAULT_VALUES = {
   recurringTransaction: {
     enabled: true,
   },
+  recordRequest: {
+    enabled: true,
+  },
 };
 
 export default function NotificationSettingsPage() {
@@ -123,6 +126,10 @@ export default function NotificationSettingsPage() {
           // 기존 사용자 문서에는 recurringTransaction이 없을 수 있어 기본값 true 보정.
           enabled: settings.recurringTransaction?.enabled ?? true,
         },
+        recordRequest: {
+          // 기존 사용자 문서에는 recordRequest가 없을 수 있어 기본값 true 보정.
+          enabled: settings.recordRequest?.enabled ?? true,
+        },
       }
     : DEFAULT_VALUES;
 
@@ -154,6 +161,7 @@ export default function NotificationSettingsPage() {
                 recordReminder: data.recordReminder,
                 budgetWarning: data.budgetWarning,
                 recurringTransaction: data.recurringTransaction,
+                recordRequest: data.recordRequest,
               },
               {
                 onSuccess: async () => {

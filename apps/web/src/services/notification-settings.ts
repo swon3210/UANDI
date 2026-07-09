@@ -21,6 +21,7 @@ export async function updateNotificationSettings(
     recordReminder: NotificationSettings['recordReminder'];
     budgetWarning: NotificationSettings['budgetWarning'];
     recurringTransaction?: NotificationSettings['recurringTransaction'];
+    recordRequest?: NotificationSettings['recordRequest'];
   }
 ): Promise<void> {
   await setDoc(
