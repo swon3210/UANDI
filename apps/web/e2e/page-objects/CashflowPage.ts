@@ -35,6 +35,15 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-settings-sheet');
   }
 
+  /** 상단 "시작 현금" 히어로 카드(설정 아이콘 없이 편집 진입점). */
+  get baselineCard(): Locator {
+    return this.page.getByTestId('cashflow-baseline-card');
+  }
+
+  get baselineAmount(): Locator {
+    return this.page.getByTestId('cashflow-baseline-amount');
+  }
+
   get currentCashInput(): Locator {
     return this.page.getByTestId('cashflow-current-cash');
   }

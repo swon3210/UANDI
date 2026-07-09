@@ -156,6 +156,28 @@ test.describe('현금흐름 캘린더', () => {
     await expect(cashflow.cards.first()).toBeVisible();
   });
 
+  test('상단 시작 현금 카드에 금액이 보이고, 눌러서 바로 수정할 수 있다(설정 아이콘 불필요)', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedCashflowSettings(coupleId, { currentCash: 2000000, paydays: [] });
+
+    const cashflow = new CashflowPage(page);
+    await cashflow.goto();
+
+    // 시작 현금이 페이지 상단에 크게 노출된다.
+    await expect(cashflow.baselineCard).toBeVisible();
+    await expect(cashflow.baselineAmount).toHaveText('2,000,000원');
+
+    // 기어 아이콘을 거치지 않고, 카드를 눌러 바로 설정 시트를 연다.
+    await cashflow.baselineCard.click();
+    await expect(cashflow.settingsSheet).toBeVisible();
+
+    // 금액을 바꿔 저장하면 상단 카드에 즉시 반영된다.
+    await cashflow.fillSettings({ currentCash: 3500000 });
+    await expect(cashflow.baselineAmount).toHaveText('3,500,000원');
+  });
+
   test('가계부 캘린더 탭으로 현금흐름 캘린더에 진입할 수 있다', async ({ authedContext }) => {
     const { page } = authedContext;
 
