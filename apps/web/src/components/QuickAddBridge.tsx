@@ -20,7 +20,18 @@ import type { CashbookEntryType } from '@/types';
  * 카테고리/뮤테이션을 최신 상태로 사용한다(이벤트 핸들러의 stale closure 회피).
  * history 페이지의 AI 추가 흐름(AiParseInput → AiBulkPreviewSheet)을 그대로 재사용한다.
  */
-function QuickAddSheetContent({ onClose }: { onClose: () => void }) {
+function QuickAddSheetContent({
+  onClose,
+  onDismiss,
+}: {
+  onClose: () => void;
+  onDismiss: () => void;
+}) {
+  // 백버튼/백드롭/직접 닫기 등 어떤 경로로 닫히든, 시트가 언마운트될 때 재-오픈 가드를 해제한다.
+  // Radix는 controlled open prop이 외부에서 바뀔 때 onOpenChange를 호출하지 않아,
+  // 안드로이드 백버튼 닫기(overlay.close) 경로에서는 onOpenChange 기반 리셋이 동작하지 않는다.
+  useEffect(() => onDismiss, [onDismiss]);
+
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
@@ -120,19 +131,25 @@ export function QuickAddBridge(): null {
       if (openRef.current) return;
       openRef.current = true;
 
+      // 시트가 언마운트되면(닫힘 경로 무관) 가드를 해제한다. handler 1회 호출당 한 번만
+      // 생성되므로 오버레이 재렌더에도 참조가 안정적이라 cleanup effect가 언마운트 시 1회만 탄다.
+      const releaseGuard = () => {
+        openRef.current = false;
+      };
+
       overlay.open(({ isOpen, close, unmount }) => (
         <Sheet
           open={isOpen}
           onOpenChange={(open) => {
             if (!open) {
-              openRef.current = false;
               close();
+              setTimeout(unmount, 300);
             }
           }}
         >
           <QuickAddSheetContent
+            onDismiss={releaseGuard}
             onClose={() => {
-              openRef.current = false;
               close();
               setTimeout(unmount, 300);
             }}
