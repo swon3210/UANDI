@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MOA',
-    short_name: 'MOA',
+    name: '말랑 가계부',
+    short_name: '말랑',
     description: '둘이 함께 쓰는 커플 가계부 — 함께 모아가는 즐거움',
     start_url: '/',
     scope: '/',

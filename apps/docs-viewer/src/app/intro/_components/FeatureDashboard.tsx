@@ -36,7 +36,7 @@ export function FeatureDashboard() {
       </div>
       <div ref={phoneRef} className="landing-fade-up landing-fade-up-d1 flex justify-center">
         <div className="landing-float-slow landing-float-delay-500ms">
-          <PhoneMockup scale={1.1} screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
+          <PhoneMockup scale={1.1} screenshot="/screenshots/dashboard.png" alt="말랑 가계부 대시보드 화면" />
         </div>
       </div>
     </section>

@@ -11,7 +11,7 @@ export function Dashboard() {
   const { user } = useAuth();
   const coupleId = user?.coupleId;
 
-  // 첫 진입 시 MOA 온보딩 투어 1회 자동 노출 (커플 연결 사용자에 한함)
+  // 첫 진입 시 말랑 가계부 온보딩 투어 1회 자동 노출 (커플 연결 사용자에 한함)
   useServiceTourAutoOpen(Boolean(coupleId));
 
   if (!coupleId) return null;

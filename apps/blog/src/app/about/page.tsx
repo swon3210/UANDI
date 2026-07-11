@@ -32,18 +32,18 @@ export default function AboutPage() {
         </p>
       </section>
 
-      {/* MOA 프로젝트 소개 */}
+      {/* 말랑 가계부 프로젝트 소개 */}
       <section className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
         <div className="sm:flex sm:items-center sm:gap-6">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-gray-900">
-              지금 만들고 있는 것 — MOA
+              지금 만들고 있는 것 — 말랑 가계부
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-gray-600">
               신혼부부를 위한 사진 갤러리 + 가계부 앱입니다. 아내와 둘이서 직접
               사용자가 되어 만들고 있고, AI를 어떻게 도구화하면 작은 팀이 빠르게
               제품을 검증할 수 있는지를 검증하는 실험장이기도 합니다. 이 블로그의
-              많은 글은 MOA를 만들면서 마주친 문제들에서 나옵니다.
+              많은 글은 말랑 가계부를 만들면서 마주친 문제들에서 나옵니다.
             </p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}

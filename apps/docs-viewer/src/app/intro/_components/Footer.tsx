@@ -17,7 +17,7 @@ export function Footer() {
         />
         <Logo variant="full" height={28} />
       </div>
-      <p className="text-[12px] text-stone-400">© 2026 MOA. 둘이서 만드는 우리만의 일상.</p>
+      <p className="text-[12px] text-stone-400">© 2026 말랑 가계부. 둘이서 만드는 우리만의 일상.</p>
     </footer>
   );
 }

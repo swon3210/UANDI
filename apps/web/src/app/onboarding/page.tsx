@@ -73,7 +73,7 @@ export default function OnboardingPage() {
   if (step === 'select') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <Logo variant="full" className="mb-2 h-10 w-auto" aria-label="MOA" />
+        <Logo variant="full" className="mb-2 h-10 w-auto" aria-label="말랑 가계부" />
         <p className="mb-10 text-muted-foreground">함께 모아가는 즐거움</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Button

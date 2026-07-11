@@ -8,9 +8,9 @@ import { MascotShowcase } from './_components/MascotShowcase';
 import { Footer } from './_components/Footer';
 
 export const metadata: Metadata = {
-  title: 'MOA — Portfolio',
+  title: '말랑 가계부 — Portfolio',
   description:
-    'MOA 개발자 포트폴리오 — Next.js 15, Firebase, Expo 모노레포 기반 신혼부부 라이프 매니지먼트 웹·모바일 앱.',
+    '말랑 가계부 개발자 포트폴리오 — Next.js 15, Firebase, Expo 모노레포 기반 신혼부부 라이프 매니지먼트 웹·모바일 앱.',
 };
 
 export default function PortfolioPage() {

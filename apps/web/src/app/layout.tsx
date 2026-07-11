@@ -11,12 +11,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'MOA',
+  title: '말랑 가계부',
   description: '둘이 함께 쓰는 커플 가계부 — 함께 모아가는 즐거움',
-  applicationName: 'MOA',
+  applicationName: '말랑 가계부',
   appleWebApp: {
     capable: true,
-    title: 'MOA',
+    title: '말랑 가계부',
     statusBarStyle: 'default',
   },
   formatDetection: {

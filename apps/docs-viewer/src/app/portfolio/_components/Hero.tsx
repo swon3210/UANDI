@@ -75,11 +75,11 @@ export function Hero() {
             className="landing-float-slow landing-float-delay-1500ms absolute"
             style={{ top: 26, right: -22 }}
           >
-            <Phone scale={0.86} screenshot="/screenshots/cashbook.png" alt="MOA 가계부 내역 화면" />
+            <Phone scale={0.86} screenshot="/screenshots/cashbook.png" alt="말랑 가계부 내역 화면" />
           </div>
           {/* front phone — 가계부 대시보드 */}
           <div className="landing-float-slow absolute" style={{ top: 0, left: -14 }}>
-            <Phone screenshot="/screenshots/dashboard.png" alt="MOA 가계부 대시보드 화면" />
+            <Phone screenshot="/screenshots/dashboard.png" alt="말랑 가계부 대시보드 화면" />
           </div>
         </div>
       </div>

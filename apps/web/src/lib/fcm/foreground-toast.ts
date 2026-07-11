@@ -14,7 +14,7 @@ export function showForegroundFcmToast(
   payload: MessagePayload,
   options: ForegroundToastOptions
 ): void {
-  const title = payload.notification?.title ?? 'MOA';
+  const title = payload.notification?.title ?? '말랑 가계부';
   const body = payload.notification?.body ?? '';
   const clickAction = payload.data?.click_action ?? DEFAULT_CLICK_ACTION;
   const recipient = payload.data?.recipient;

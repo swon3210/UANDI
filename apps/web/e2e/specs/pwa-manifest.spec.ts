@@ -14,8 +14,8 @@ test.describe('PWA manifest', () => {
     expect(res.status()).toBe(200);
 
     const json = await res.json();
-    expect(json.name).toBe('MOA');
-    expect(json.short_name).toBe('MOA');
+    expect(json.name).toBe('말랑 가계부');
+    expect(json.short_name).toBe('말랑');
     expect(json.start_url).toBe('/');
     expect(json.scope).toBe('/');
     expect(json.display).toBe('standalone');
@@ -74,6 +74,6 @@ test.describe('PWA manifest', () => {
       .locator('meta[name="apple-mobile-web-app-title"]')
       .first()
       .getAttribute('content');
-    expect(appleTitle).toBe('MOA');
+    expect(appleTitle).toBe('말랑 가계부');
   });
 });

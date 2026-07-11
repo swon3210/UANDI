@@ -35,7 +35,7 @@
   <!-- 우측: 워드마크 + 카피 -->
   <text x="610" y="252"
         font-family="Pretendard" font-weight="800" font-size="118"
-        fill="#DD7368" letter-spacing="2">MOA</text>
+        fill="#DD7368" letter-spacing="2">말랑</text>
 
   <text x="614" y="312"
         font-family="Pretendard" font-weight="700" font-size="32"

@@ -17,7 +17,7 @@ import mascotSplash from '@uandi/ui/assets/mascot-splash.png';
 import mascotSuccess from '@uandi/ui/assets/mascot-success.png';
 
 /**
- * MOA 온보딩 투어 슬라이드 정의.
+ * 말랑 가계부 온보딩 투어 슬라이드 정의.
  * 환영(1장)·마무리(마지막 장)는 마스코트 일러스트로 톤을 잡고,
  * 핵심 서비스인 가계부(내역/예산/현금흐름/점검)는 실제 화면 스크린샷으로 안내하며,
  * 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장에 일괄 소개한다.
@@ -156,7 +156,7 @@ const ReadyPreview: FC = () => (
 export const TOUR_SLIDES: TourSlide[] = [
   {
     id: 'welcome',
-    title: 'MOA에 오신 걸 환영해요',
+    title: '말랑 가계부에 오신 걸 환영해요',
     description: '둘이 함께 쓰는 가계부로 내역 입력·결산·예측 기능을 제공해요.',
     Preview: WelcomePreview,
   },

@@ -4,8 +4,8 @@ import { ArrowLeft, Trash2, Mail } from 'lucide-react';
 import { Header, Button } from '@uandi/ui';
 
 export const metadata: Metadata = {
-  title: '계정 및 데이터 삭제 | MOA',
-  description: 'MOA 계정과 데이터를 삭제하는 방법을 안내합니다.',
+  title: '계정 및 데이터 삭제 | 말랑 가계부',
+  description: '말랑 가계부 계정과 데이터를 삭제하는 방법을 안내합니다.',
   robots: {
     index: true,
     follow: true,
@@ -30,14 +30,14 @@ export default function AccountDeletionPage() {
       <main className="max-w-2xl mx-auto w-full px-4 py-6">
         <article className="prose prose-sm max-w-none text-foreground">
           <p className="mt-2">
-            MOA(이하 &lsquo;서비스&rsquo;) 이용자는 언제든지 본인의 계정과 개인정보 삭제를 요청할 수
+            말랑 가계부(이하 &lsquo;서비스&rsquo;) 이용자는 언제든지 본인의 계정과 개인정보 삭제를 요청할 수
             있습니다. 아래 방법 중 편한 방법을 이용해 주세요.
           </p>
 
           <h2 className="mt-8 text-lg font-semibold">방법 1. 앱에서 직접 삭제 (권장)</h2>
           <p>앱에 로그인한 상태에서 아래 경로로 직접 계정을 삭제할 수 있습니다.</p>
           <ol className="list-decimal pl-5 space-y-1">
-            <li>MOA 앱 실행 후 로그인</li>
+            <li>말랑 가계부 앱 실행 후 로그인</li>
             <li>
               하단 메뉴 또는 우측 상단에서 <strong>설정</strong> 이동
             </li>

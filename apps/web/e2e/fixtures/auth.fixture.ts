@@ -28,7 +28,7 @@ async function signInOnPage(page: Page, email: string, password: string) {
 }
 
 /**
- * MOA 온보딩 투어 자동 노출 플래그(localStorage)를 미리 seen=true로 심는다.
+ * 말랑 가계부 온보딩 투어 자동 노출 플래그(localStorage)를 미리 seen=true로 심는다.
  * 대시보드에 진입하는 모든 인증 테스트에서 투어 오버레이가 떠 클릭을 가로채는 것을 막는다.
  * 투어 자체를 검증하는 spec은 test.use({ seedTourSeen: false })로 해제한다.
  */

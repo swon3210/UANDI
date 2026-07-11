@@ -117,7 +117,7 @@ export function Features() {
           'AI 소비 패턴 분석 + 커플 맞춤 절약 조언',
           '수입 / 지출 / 투자 / 플렉스 4-카테고리 월별 통계',
         ]}
-        mockup={<Phone screenshot="/screenshots/cashbook.png" alt="MOA 가계부 화면" />}
+        mockup={<Phone screenshot="/screenshots/cashbook.png" alt="말랑 가계부 화면" />}
       />
       <FeatureRow
         tag="현금흐름"
@@ -130,7 +130,7 @@ export function Features() {
           '지출이 몰리는 날을 사전에 경고',
           'dayjs 기반 날짜 연산 — date-fns 미사용',
         ]}
-        mockup={<Phone screenshot="/screenshots/cashflow.png" alt="MOA 현금흐름 달력 화면" />}
+        mockup={<Phone screenshot="/screenshots/cashflow.png" alt="말랑 가계부 현금흐름 달력 화면" />}
       />
       <FeatureRow
         reverse
@@ -144,7 +144,7 @@ export function Features() {
           '환테크(외화) 자산 통합 관리',
           '우리집 / 재테크 공간 분리 (소유권 격리)',
         ]}
-        mockup={<Phone screenshot="/screenshots/allocation.png" alt="MOA 자산배분 화면" />}
+        mockup={<Phone screenshot="/screenshots/allocation.png" alt="말랑 가계부 자산배분 화면" />}
       />
       <FeatureRow
         tag="커뮤니티"
@@ -157,7 +157,7 @@ export function Features() {
           '저작권 가드레일 — 메타데이터만 저장 + 링크아웃',
           '주제별 탐색 / 공감 인터랙션',
         ]}
-        mockup={<Phone screenshot="/screenshots/community.png" alt="MOA 커뮤니티 화면" />}
+        mockup={<Phone screenshot="/screenshots/community.png" alt="말랑 가계부 커뮤니티 화면" />}
       />
     </section>
   );
