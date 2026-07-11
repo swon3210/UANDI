@@ -2,7 +2,7 @@
  * Play Store 출시용 그래픽 에셋 생성 스크립트 (마스코트 브랜드)
  *
  *   1) 앱 아이콘  512×512 PNG (알파 없음) — 기니피그 마스코트 앱 아이콘 마스터에서 리사이즈
- *   2) Feature Graphic 1024×500 PNG (알파 없음) — 코랄·세이지 마스코트 커플 + "MOA" 워드마크
+ *   2) Feature Graphic 1024×500 PNG (알파 없음) — 코랄·세이지 마스코트 커플 + "말랑" 워드마크
  *
  * 소스 마스코트 PNG 는 `assets/mascot/` 에 있고, 출력 PNG 와 마스터 SVG 는
  * `apps/mobile/assets/store/` 에 저장된다. 모바일 런처 아이콘
@@ -82,7 +82,7 @@ function copyToListing(srcPath, imageType, fileName) {
 // B. Feature Graphic 1024×500 마스터 SVG
 // ─────────────────────────────────────────────────────────────────────────────
 // 좌측~중앙: 코랄·세이지 마스코트 커플(서로 기댄 모습) + 머리 위 하트
-// 우측: "MOA" 워드마크 + 카피. 핵심 요소는 중앙~우측에 배치.
+// 우측: "말랑" 워드마크 + 카피. 핵심 요소는 중앙~우측에 배치.
 function featureGraphicSvg() {
   const coral = pngDataUri(join(MASCOT_DIR, 'mascot-coral-master.png'));
   const sage = pngDataUri(join(MASCOT_DIR, 'mascot-sage-master.png'));
@@ -127,7 +127,7 @@ function featureGraphicSvg() {
   <!-- 우측: 워드마크 + 카피 -->
   <text x="610" y="252"
         font-family="Pretendard" font-weight="800" font-size="118"
-        fill="${CORAL_DEEP}" letter-spacing="2">MOA</text>
+        fill="${CORAL_DEEP}" letter-spacing="2">말랑</text>
 
   <text x="614" y="312"
         font-family="Pretendard" font-weight="700" font-size="32"

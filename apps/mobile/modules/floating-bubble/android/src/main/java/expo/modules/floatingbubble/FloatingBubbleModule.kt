@@ -41,7 +41,7 @@ import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-// 다른 앱 위에 떠 있는 MOA 플로팅 버블.
+// 다른 앱 위에 떠 있는 말랑 가계부 플로팅 버블.
 // 탭하면 앱으로 전환되지 않고, 버블 자리에서 WebView 패널로 확장되어 빠른 추가 UI(/overlay/quick-add)를 띄운다.
 // 버블 표시/숨김은 JS(AppState)가 제어하고, 확장/축소는 터치로 내부에서 처리한다.
 class FloatingBubbleModule : Module() {
@@ -360,7 +360,7 @@ class FloatingBubbleModule : Module() {
     CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
     web.webViewClient = object : WebViewClient() {
       // 패널 내 '앱에서 내역 보기' 버튼 등 uandi:// 딥링크는 WebView에서 열지 않고
-      // MOA 앱을 띄워 해당 페이지로 보낸다.
+      // 말랑 가계부 앱을 띄워 해당 페이지로 보낸다.
       override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val uri = request?.url ?: return false
         if (uri.scheme == "uandi") {
@@ -550,7 +550,7 @@ class FloatingBubbleModule : Module() {
     }
   }
 
-  // 패널 버튼이 uandi:// 딥링크로 이동하면 MOA 앱을 열어 해당 페이지로 보내고 패널을 닫는다.
+  // 패널 버튼이 uandi:// 딥링크로 이동하면 말랑 가계부 앱을 열어 해당 페이지로 보내고 패널을 닫는다.
   private fun openAppDeepLink(uri: Uri) {
     val intent = Intent(Intent.ACTION_VIEW, uri).apply {
       setPackage(context.packageName)

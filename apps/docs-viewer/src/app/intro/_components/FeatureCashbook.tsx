@@ -69,7 +69,7 @@ export function FeatureCashbook() {
           ref={phoneRef}
           className="landing-fade-up landing-fade-up-d1 landing-float-slow landing-float-delay-1500ms"
         >
-          <PhoneMockup scale={1.05} screenshot="/screenshots/cashbook.png" alt="MOA 가계부 화면" />
+          <PhoneMockup scale={1.05} screenshot="/screenshots/cashbook.png" alt="말랑 가계부 화면" />
         </div>
       </div>
     </section>

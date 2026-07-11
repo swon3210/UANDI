@@ -3,7 +3,7 @@ import { Alert, AppState, type AppStateStatus, Platform } from 'react-native';
 import FloatingBubble from '@/modules/floating-bubble';
 import { bubblePicker } from '@/lib/bubble-picker';
 
-// 다른 앱 위에 떠 있는 MOA 플로팅 버블을 앱 생명주기에 맞춰 제어한다.
+// 다른 앱 위에 떠 있는 말랑 가계부 플로팅 버블을 앱 생명주기에 맞춰 제어한다.
 //  - 앱이 포그라운드(active)면 버블을 숨긴다(앱 안에서는 불필요).
 //  - 앱이 백그라운드/비활성이면 버블을 띄운다(다른 앱 위에 표시).
 // 버블은 '다른 앱 위에 표시'(SYSTEM_ALERT_WINDOW) 권한이 있어야 그려진다.
@@ -25,7 +25,7 @@ export function useFloatingBubble() {
       askedRef.current = true;
       Alert.alert(
         '플로팅 버블 켜기',
-        "다른 앱을 사용하는 중에도 MOA 빠른 추가 버블을 띄우려면 '다른 앱 위에 표시' 권한이 필요해요.",
+        "다른 앱을 사용하는 중에도 말랑 가계부 빠른 추가 버블을 띄우려면 '다른 앱 위에 표시' 권한이 필요해요.",
         [
           { text: '나중에', style: 'cancel' },
           { text: '권한 설정 열기', onPress: () => bubble.requestOverlayPermission() },

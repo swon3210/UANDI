@@ -50,7 +50,7 @@ export function Hero() {
           >
             추억 사진과 가계부부터 자산 관리, 신혼 커뮤니티까지.
             <br />
-            신혼부부의 가정생활을 MOA 하나로 책임져요.
+            신혼부부의 가정생활을 말랑 가계부 하나로 책임져요.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
@@ -89,7 +89,7 @@ export function Hero() {
             </div>
             {/* front phone — 실제 대시보드 스크린샷 */}
             <div className="landing-float absolute" style={{ top: 0, left: -20 }}>
-              <PhoneMockup screenshot="/screenshots/dashboard.png" alt="MOA 대시보드 화면" />
+              <PhoneMockup screenshot="/screenshots/dashboard.png" alt="말랑 가계부 대시보드 화면" />
             </div>
             {/* 마스코트 커플 — 가계부 쓰는 장면 (모바일에서 잘리지 않도록 안쪽에 배치) */}
             <div

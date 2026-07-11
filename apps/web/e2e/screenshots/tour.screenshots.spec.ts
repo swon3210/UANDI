@@ -12,7 +12,7 @@ import {
 } from '../helpers/emulator';
 import { seedDemoData } from './seed-demo';
 
-// MOA 온보딩 투어(ServiceTourOverlay)의 가계부 슬라이드용 실제 화면 스크린샷을 생성한다.
+// 말랑 가계부 온보딩 투어(ServiceTourOverlay)의 가계부 슬라이드용 실제 화면 스크린샷을 생성한다.
 // 데모 커플 데이터 + 연간 예산을 시드한 뒤 각 화면을 캡처하고, 웹용으로 리사이즈해
 // apps/web/public/tour/*.webp 로 저장한다.
 //

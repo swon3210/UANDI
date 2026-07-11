@@ -7,7 +7,7 @@ import { openServiceTour } from '@/components/tutorial/openServiceTour';
 const TOUR_SEEN_KEY = 'moa:tour:v1';
 
 /**
- * 첫 대시보드 진입 시 MOA 온보딩 투어를 1회 자동으로 연다.
+ * 첫 대시보드 진입 시 말랑 가계부 온보딩 투어를 1회 자동으로 연다.
  * localStorage 플래그(외부 시스템)에 반응하는 일회성 동작이라 effect + ref 가드를 사용한다.
  * (cashbook/history 의 quickAdd 핸들러와 동일한 패턴)
  * 추후 전체 사용자에게 재노출하려면 키 버전을 올린다(moa:tour:v2).

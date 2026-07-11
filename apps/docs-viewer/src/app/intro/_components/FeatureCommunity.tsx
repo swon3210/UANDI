@@ -24,7 +24,7 @@ export function FeatureCommunity() {
         style={{ gap: 'clamp(40px,6vw,80px)' }}
       >
         <div ref={phoneRef} className="landing-fade-up landing-float-slow">
-          <PhoneMockup scale={1.05} screenshot="/screenshots/community.png" alt="MOA 커뮤니티 화면" />
+          <PhoneMockup scale={1.05} screenshot="/screenshots/community.png" alt="말랑 가계부 커뮤니티 화면" />
         </div>
         <div
           ref={textRef}

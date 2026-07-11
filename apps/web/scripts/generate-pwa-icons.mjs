@@ -2,7 +2,7 @@
 // 실행: node apps/web/scripts/generate-pwa-icons.mjs
 //
 // public/brand/logo-app-icon.svg (any), public/icons/favicon.svg 를 기반으로
-// 192/512 사이즈 PWA PNG를 생성한다. (MOA 브랜드 에셋)
+// 192/512 사이즈 PWA PNG를 생성한다. (말랑 가계부 브랜드 에셋)
 
 import { chromium } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';

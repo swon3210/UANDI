@@ -37,7 +37,7 @@ export default function OverlayQuickAddPage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 p-6 text-center">
         <Sparkles className="text-primary" size={28} />
-        <p className="text-sm font-medium">MOA에 로그인하면 빠른 추가를 쓸 수 있어요</p>
+        <p className="text-sm font-medium">말랑 가계부에 로그인하면 빠른 추가를 쓸 수 있어요</p>
         <p className="text-xs text-muted-foreground">앱에서 로그인한 뒤 다시 시도해주세요</p>
       </main>
     );
@@ -104,7 +104,7 @@ export default function OverlayQuickAddPage() {
         자연어로 입력하거나 영수증 사진을 첨부하면 AI가 내역을 정리해드려요.
       </p>
 
-      {/* 하단: MOA 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}
+      {/* 하단: 말랑 가계부 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}
       <Button
         variant="outline"
         className="mt-auto w-full"

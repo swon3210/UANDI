@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuOFFE1heaWnCqplD38GzUbdbJERs7TgVt1BbsmlskzDJ28U0D8ww/YFMDfWWQYj+WzAUsSaD5xgG20zqYtNohaqL5ibRgc/zvA4pDNWI639cpfgcuyBWmHeNNYheD4C/GEadEgV61PKg5JA8vnkzMPOe77akMfuBqf5gXRGL0ljQM4c536B/wIpgM4twRyC1GCSgyaMEyT5rlKZ8pHcQ8rORemLro4aU+u0fpWjw8q5CdJ6WzwMXIS3BXn82jH57xwX4xXQTJD84ejQIAO5qzfyGZY5viu1b2FSozzFrRwy948IyzBGy2zqdvd7Aupu7DMIzBTCFnlSiKEqDvUu4DwIDAQAB",
-  "name": "MOA 도구",
+  "name": "말랑 가계부 도구",
   "version": "0.1.0",
   "description": "현재 탭의 웹페이지 투명도를 조절합니다",
   "permissions": ["activeTab", "scripting"],

@@ -61,7 +61,7 @@ export function Values() {
                 letterSpacing: '-0.02em',
               }}
             >
-              왜 MOA인가요?
+              왜 말랑 가계부인가요?
             </h2>
           </div>
         </div>

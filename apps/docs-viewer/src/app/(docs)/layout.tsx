@@ -3,8 +3,8 @@ import { Sidebar } from '@/components/Sidebar';
 import { MobileMenu } from '@/components/MobileMenu';
 
 export const metadata: Metadata = {
-  title: 'MOA Docs',
-  description: 'MOA 프로젝트 문서',
+  title: '말랑 가계부 Docs',
+  description: '말랑 가계부 프로젝트 문서',
 };
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
@@ -12,13 +12,13 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     <>
       <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center gap-3 px-4 bg-white border-b border-[#E8E4E0]">
         <MobileMenu />
-        <span className="font-semibold">MOA Docs</span>
+        <span className="font-semibold">말랑 가계부 Docs</span>
       </header>
 
       <div className="flex">
         <aside className="hidden md:flex flex-col w-64 shrink-0 border-r border-[#E8E4E0] h-screen fixed top-0 left-0 bg-white">
           <div className="h-14 flex items-center px-6 border-b border-[#E8E4E0] shrink-0">
-            <span className="font-semibold text-[#1C1917]">MOA Docs</span>
+            <span className="font-semibold text-[#1C1917]">말랑 가계부 Docs</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             <Sidebar />

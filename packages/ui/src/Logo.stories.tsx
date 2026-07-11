@@ -9,7 +9,7 @@ const meta: Meta<typeof Logo> = {
     docs: {
       description: {
         component:
-          '**MOA 브랜드 로고.** sage·coral 두 꽃 엠블럼 + MOA 워드마크.\n\n' +
+          '**말랑 가계부 브랜드 로고.** sage·coral 두 꽃 엠블럼 + 말랑 가계부 워드마크.\n\n' +
           '엠블럼은 sage·coral 두 꽃(캐릭터)이 겹치고 중앙에 하트를 두어 ' +
           '"둘이 함께 모아가는" 의미를 표현합니다.',
       },
