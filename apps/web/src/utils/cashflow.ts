@@ -162,15 +162,16 @@ export function weeklyBoundaries(buckets: WeekBucket[]): CardBoundary[] {
 }
 
 /**
- * 카드 경계 + 거래 + 현재 보유 현금으로 카드별 들어올/나갈/남는 돈을 누적 계산한다(§9-2).
+ * 카드 경계 + 거래 + 시작 잔액으로 카드별 들어올/나갈/남는 돈을 누적 계산한다(§9-2).
+ * - 시작 잔액 = 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액.
  * - 각 거래는 endDate가 거래일 이상인 "가장 이른" 카드에 배정된다.
  * - 마지막 카드의 endDate 이후 거래는 표시 구간 밖이라 제외된다.
- * - 남는 돈[i] = (i===0 ? currentCash : 남는 돈[i-1]) + 들어올 돈 - 나갈 돈.
+ * - 남는 돈[i] = (i===0 ? startingBalance : 남는 돈[i-1]) + 들어올 돈 - 나갈 돈.
  */
 export function buildCashflowCards(
   boundaries: CardBoundary[],
   transactions: CashflowTransaction[],
-  currentCash: number
+  startingBalance: number
 ): CashflowCardData[] {
   const sorted = [...boundaries].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
   const buckets = sorted.map((b) => ({
@@ -183,7 +184,7 @@ export function buildCashflowCards(
     if (bucket) bucket.txns.push(t);
   }
 
-  let running = currentCash;
+  let running = startingBalance;
 
   return buckets.map(({ boundary, txns }) => {
     let inflow = 0;

@@ -48,7 +48,11 @@ function SettingsSheetContent({
 
   return (
     <CashflowSettingsForm
-      initial={settings ? { currentCash: settings.currentCash } : undefined}
+      initial={
+        settings
+          ? { initialCash: settings.initialCash, initialDate: settings.initialDate.toDate() }
+          : undefined
+      }
       onSubmit={(value: CashflowSettingsFormValue) => updateMutation.mutate(value)}
       onClose={onClose}
     />
@@ -63,7 +67,8 @@ export default function CashflowCalendarPage() {
   // 과거 소비/수입 패턴 기반 LLM 예측. 진입 시 자동 1회 로드(캐시 영속) + "갱신" 버튼으로만 재추론.
   // 예측은 현금흐름 카드의 들어올/나갈/남는 돈에 반영된다.
   const { predictions, refresh, isPending, hasRun, ranAt } = useCashflowPrediction(coupleId);
-  const { cards, settings, isConfigured, isLoading } = useCashflowCalendar(coupleId, predictions);
+  const { cards, isConfigured, isLoading, initialCash, initialDate, startingBalance } =
+    useCashflowCalendar(coupleId, predictions);
   const { negativeCard, dismiss } = useCashflowNegativeAlert(coupleId, cards);
   const {
     suggestions,
@@ -126,16 +131,21 @@ export default function CashflowCalendarPage() {
           <EmptyState
             icon={<CalendarRange size={48} className="text-muted-foreground" />}
             title="현금흐름을 보려면 설정이 필요해요"
-            description="지금 가진 현금(시작 현금)을 넣으면, 그 금액에서 시작해 앞으로 들어오고 나갈 돈을 반영한 날짜별 남는 돈을 예측해 드려요"
+            description="기준 날짜에 가지고 있던 현금(최초 현금)을 넣으면, 그 뒤로 기록한 수입·지출을 더해 오늘 잔액과 앞으로의 날짜별 남는 돈을 예측해 드려요"
             action={
               <Button onClick={openSettings} data-testid="cashflow-setup-button">
-                시작 현금 설정하기
+                최초 현금 설정하기
               </Button>
             }
           />
         ) : (
           <div className="space-y-4">
-            <CashflowBaselineCard amount={settings?.currentCash ?? 0} onEdit={openSettings} />
+            <CashflowBaselineCard
+              todayBalance={startingBalance}
+              initialCash={initialCash}
+              initialDate={initialDate}
+              onEdit={openSettings}
+            />
 
             {negativeCard && (
               <CashflowNegativeBanner

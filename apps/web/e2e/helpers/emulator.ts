@@ -495,13 +495,20 @@ export async function seedPrediction(
 export async function seedCashflowSettings(
   coupleId: string,
   options: {
+    /** 최초 현금(기준일 시점 보유 현금). currentCash는 레거시 별칭. */
+    initialCash?: number;
+    /** @deprecated initialCash 별칭. */
     currentCash?: number;
+    /** 최초 현금 기준일(ISO). 미지정 시 오늘. */
+    initialDate?: string;
     // type은 선택 — 리프레이밍 후 실제 폼은 type을 저장하지 않는다(실데이터와 동일하게 검증).
     paydays?: { id: string; label: string; type?: string; dayOfMonth: number }[];
     variableMode?: 1 | 3 | 6;
   } = {}
 ): Promise<void> {
   const paydays = options.paydays ?? [];
+  const initialCash = options.initialCash ?? options.currentCash ?? 0;
+  const initialDate = options.initialDate ?? new Date().toISOString();
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/meta/cashflow`,
     {
@@ -510,7 +517,8 @@ export async function seedCashflowSettings(
       body: JSON.stringify({
         fields: {
           coupleId: { stringValue: coupleId },
-          currentCash: { integerValue: String(options.currentCash ?? 0) },
+          initialCash: { integerValue: String(initialCash) },
+          initialDate: { timestampValue: initialDate },
           variableMode: { integerValue: String(options.variableMode ?? 3) },
           paydays: {
             arrayValue: {
@@ -526,6 +534,33 @@ export async function seedCashflowSettings(
             },
           },
           updatedAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+}
+
+/**
+ * 레거시 스키마(초기 현금 도입 전) 설정 문서를 심는다 — currentCash만 있고 initialCash/initialDate는 없다.
+ * 읽기 경로의 마이그레이션(currentCash → initialCash, initialDate = updatedAt)을 검증하기 위한 헬퍼.
+ */
+export async function seedLegacyCashflowSettings(
+  coupleId: string,
+  options: { currentCash: number; updatedAt?: string } = { currentCash: 0 }
+): Promise<void> {
+  const updatedAt = options.updatedAt ?? new Date().toISOString();
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/meta/cashflow`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          coupleId: { stringValue: coupleId },
+          currentCash: { integerValue: String(options.currentCash) },
+          variableMode: { integerValue: '3' },
+          paydays: { arrayValue: { values: [] } },
+          updatedAt: { timestampValue: updatedAt },
         },
       }),
     }

@@ -35,17 +35,22 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-settings-sheet');
   }
 
-  /** 상단 "시작 현금" 히어로 카드(설정 아이콘 없이 편집 진입점). */
+  /** 상단 "오늘 예상 현금" 히어로 카드(설정 아이콘 없이 편집 진입점). */
   get baselineCard(): Locator {
     return this.page.getByTestId('cashflow-baseline-card');
   }
 
+  /** 큰 숫자 = 오늘 기준 예상 잔액(최초 현금 + 기준일 이후 실거래 누적). */
   get baselineAmount(): Locator {
     return this.page.getByTestId('cashflow-baseline-amount');
   }
 
-  get currentCashInput(): Locator {
-    return this.page.getByTestId('cashflow-current-cash');
+  get initialCashInput(): Locator {
+    return this.page.getByTestId('cashflow-initial-cash');
+  }
+
+  get initialDateInput(): Locator {
+    return this.page.getByTestId('cashflow-initial-date');
   }
 
   get saveButton(): Locator {
@@ -101,9 +106,15 @@ export class CashflowPage {
     await this.settingsSheet.waitFor({ state: 'visible' });
   }
 
-  /** 설정 시트에서 현재 보유 현금을 입력하고 저장한다(Phase 2: 결제일 수동 입력 폐지). */
-  async fillSettings(options: { currentCash: number }) {
-    await this.currentCashInput.fill(String(options.currentCash));
+  /**
+   * 설정 시트에서 최초 현금(과 선택적으로 기준일)을 입력하고 저장한다.
+   * 기준일 미지정 시 폼 기본값(오늘)을 그대로 둔다.
+   */
+  async fillSettings(options: { initialCash: number; initialDate?: string }) {
+    if (options.initialDate) {
+      await this.initialDateInput.fill(options.initialDate);
+    }
+    await this.initialCashInput.fill(String(options.initialCash));
     await this.saveButton.click();
     await this.settingsSheet.waitFor({ state: 'hidden' });
   }

@@ -38,6 +38,12 @@ export type CashflowCalendarResult = {
   /** 설정 문서가 존재하는지(없으면 설정 안내 화면). */
   isConfigured: boolean;
   isLoading: boolean;
+  /** 사용자가 설정한 최초 현금(기준일 시점의 보유 현금). */
+  initialCash: number;
+  /** 최초 현금 기준일(설정 안 됐으면 null). */
+  initialDate: Date | null;
+  /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액(예측 출발점). */
+  startingBalance: number;
 };
 
 /**
@@ -68,8 +74,30 @@ export function useCashflowCalendar(
   const pastFrom = useMemo(() => from.subtract(DEDUP_LOOKBACK_MONTHS, 'month').toDate(), [from]);
   const { data: pastEntries } = useCashbookEntriesInRange(coupleId, pastFrom, from.toDate());
 
+  // 최초 현금 기준일(설정 안 됐으면 오늘 = 누적 없음).
+  const initialDate = useMemo(
+    () => (settings?.initialDate ? dayjs(settings.initialDate.toDate()).startOf('day') : from),
+    [settings, from]
+  );
+
+  // 오늘 잔액 = 최초 현금 + (기준일 ~ 오늘 직전 실거래 누적).
+  // 오늘 이후 거래는 forward projection(entries/predictions)에서 잡으므로 오늘 00:00 직전까지만 합산해 이중계산을 막는다.
+  const { data: accumEntries, isLoading: accumLoading } = useCashbookEntriesInRange(
+    coupleId,
+    initialDate.toDate(),
+    from.subtract(1, 'millisecond').toDate()
+  );
+
+  const startingBalance = useMemo(() => {
+    let balance = settings?.initialCash ?? 0;
+    for (const e of accumEntries ?? []) {
+      if (e.type === 'income') balance += e.amount;
+      else balance -= e.amount; // expense + flex
+    }
+    return balance;
+  }, [settings, accumEntries]);
+
   const cards = useMemo<CashflowCardData[]>(() => {
-    const currentCash = settings?.currentCash ?? 0;
     const paydays = settings?.paydays ?? [];
 
     // Phase 2: 카드 경계 = recurrence 발생일(체크포인트) + 레거시 결제일(있으면) 병합.
@@ -144,14 +172,17 @@ export function useCashflowCalendar(
       txns.push(t);
     }
 
-    return buildCashflowCards(boundaries, txns, currentCash);
-  }, [settings, entries, predictions, pastEntries, categories, from, llmPredictions]);
+    return buildCashflowCards(boundaries, txns, startingBalance);
+  }, [settings, entries, predictions, pastEntries, categories, from, llmPredictions, startingBalance]);
 
   return {
     cards,
     settings: settings ?? null,
     hasPaydays: (settings?.paydays?.length ?? 0) > 0,
     isConfigured: !!settings,
-    isLoading: settingsLoading || entriesLoading || predictionsLoading,
+    isLoading: settingsLoading || entriesLoading || predictionsLoading || accumLoading,
+    initialCash: settings?.initialCash ?? 0,
+    initialDate: settings?.initialDate ? settings.initialDate.toDate() : null,
+    startingBalance,
   };
 }

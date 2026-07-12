@@ -250,7 +250,7 @@ export type CashbookDisplaySettings = {
 
 // ── 현금흐름 캘린더 설정 (커플 공동) ──
 // 저장 경로: couples/{coupleId}/meta/cashflow (단일 문서 — 결정적 ID로 전체 스캔 회피)
-// 결제일 목록 + 현재 보유 현금 + 변동지출 추정 기간을 한 문서에 보관한다.
+// 결제일 목록 + 최초 현금(기준일 포함)을 한 문서에 보관한다.
 
 export type CashflowPaydayType = 'card' | 'loan' | 'rent' | 'custom';
 
@@ -268,8 +268,15 @@ export type CashflowPayday = {
 
 export type CashflowSettings = {
   coupleId: string;
-  /** §9-2 잔액 계산 시작점("현재 보유 현금"). */
-  currentCash: number;
+  /** 최초 현금 — initialDate 시점에 보유하던 현금. 오늘 잔액 계산의 출발점(§9-2). */
+  initialCash: number;
+  /**
+   * 최초 현금 기준일. 이 날부터 오늘까지 가계부에 기록된 실제 거래를 더해 오늘 잔액을 구한다.
+   * 한 번 설정하면 유지되며, 거래가 쌓이면 자동으로 오늘 잔액이 맞춰진다.
+   */
+  initialDate: Timestamp;
+  /** @deprecated 레거시(오늘 기준 현금). 마이그레이션 시 initialCash로 승계하고 더는 쓰지 않는다. */
+  currentCash?: number;
   /** 비어 있으면 캘린더는 주 단위로 묶어서 표시(§9-1). */
   paydays: CashflowPayday[];
   /** @deprecated 변동지출은 "AI 예상 내역"으로 일원화됨. 레거시 저장 문서 호환용으로만 잔존. */

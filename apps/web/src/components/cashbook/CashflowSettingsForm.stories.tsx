@@ -27,7 +27,8 @@ export const Empty: Story = {
 export const Prefilled: Story = {
   args: {
     initial: {
-      currentCash: 2500000,
+      initialCash: 2500000,
+      initialDate: new Date('2026-01-01T00:00:00'),
     },
     onSubmit: noop,
     onClose: noop,
