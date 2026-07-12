@@ -40,6 +40,38 @@ test.describe('랜딩 & 로그인', () => {
     await expect(landing.loginButton).toHaveText('구글로 시작하기');
   });
 
+  test('Apple로 계속하기 버튼이 표시된다 (App Store 심사 가이드라인 4.8 대응)', async ({ page }) => {
+    await clearEmulatorData();
+    const landing = new LandingPage(page);
+    await landing.goto();
+    await expect(landing.appleLoginButton).toBeVisible();
+    await expect(landing.appleLoginButton).toContainText('Apple로 계속하기');
+  });
+
+  test('Apple 로그인 네트워크 오류 시 에러 메시지가 표시되고 버튼이 재활성화된다', async ({
+    page,
+  }) => {
+    await clearEmulatorData();
+    const landing = new LandingPage(page);
+    await landing.goto();
+    await expect(landing.appleLoginButton).toBeVisible();
+
+    // signInWithApple을 네트워크 에러를 던지는 모킹 함수로 교체
+    await page.evaluate(() => {
+      (window as any).__signInWithAppleMock = () => {
+        const err = new Error('auth/network-request-failed');
+        (err as any).code = 'auth/network-request-failed';
+        return Promise.reject(err);
+      };
+    });
+
+    await landing.appleLoginButton.click();
+
+    await expect(landing.appleLoginButton).toBeEnabled({ timeout: 15000 });
+    await expect(landing.errorMessage).toBeVisible();
+    await expect(landing.errorMessage).toContainText('네트워크 오류');
+  });
+
   test('구글로 시작하기 클릭 후 버튼이 비활성화되고 로딩 상태가 표시된다', async ({ page }) => {
     await clearEmulatorData();
     const landing = new LandingPage(page);
