@@ -1,24 +1,11 @@
-import type { CashbookCategory, CategoryGroup } from '@/types';
-import type { EntryFilterType } from '@/hooks/useCashbook';
+import type { CashbookEntryType } from '@/types';
 import { GROUP_LABELS } from '@/constants/default-categories';
 
-export const TYPE_ORDER: EntryFilterType[] = ['all', 'expense', 'income', 'flex'];
+/** 타입 필터 칩/탭 노출 순서(지출 → 수입 → Flex). 빈 선택 = 전체이므로 'all' 항목은 없다. */
+export const TYPE_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
-export const TYPE_LABELS: Record<EntryFilterType, string> = {
-  all: '전체',
+export const TYPE_LABELS: Record<CashbookEntryType, string> = {
   expense: GROUP_LABELS.expense,
   income: GROUP_LABELS.income,
   flex: GROUP_LABELS.flex,
 };
-
-/** 타입 필터에 맞는 카테고리만 추려 sortOrder 순으로 정렬한다. */
-export function getVisibleCategories(
-  categories: CashbookCategory[],
-  typeFilter: EntryFilterType
-): CashbookCategory[] {
-  const filtered =
-    typeFilter === 'all'
-      ? categories
-      : categories.filter((c) => c.group === (typeFilter as CategoryGroup));
-  return [...filtered].sort((a, b) => a.sortOrder - b.sortOrder);
-}

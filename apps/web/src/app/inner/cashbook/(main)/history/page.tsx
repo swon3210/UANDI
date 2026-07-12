@@ -23,7 +23,7 @@ import {
   type CashbookFilterState,
 } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useCoupleMemberMap } from '@/hooks/useCoupleMembers';
+import { useCoupleMemberMap, useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { useBudgetAlerts } from '@/hooks/useBudgetAlerts';
 import { useDayPredictions, toPromptView } from '@/hooks/useDayPredictions';
 import {
@@ -61,9 +61,15 @@ function FilterSheetContent({
   onClose: () => void;
 }) {
   const { data: categories } = useCashbookCategories(coupleId);
+  const { data: members } = useCoupleMembers(coupleId);
   return (
     <CashbookFilterSheet
       categories={categories ?? []}
+      members={(members ?? []).map((m) => ({
+        uid: m.uid,
+        displayName: m.displayName,
+        photoURL: m.photoURL,
+      }))}
       initial={initial}
       onApply={onApply}
       onClose={onClose}
@@ -80,13 +86,15 @@ export default function CashbookPage() {
   const range = useMemo(() => resolvePeriod(filter.period), [filter.period]);
 
   const isFilterActive =
-    filter.typeFilter !== 'all' ||
+    filter.selectedTypes.length > 0 ||
     filter.selectedCategoryNames.length > 0 ||
+    filter.selectedCreatorUids.length > 0 ||
     filter.keyword.trim() !== '';
 
   const activeFilterCount =
-    (filter.typeFilter !== 'all' ? 1 : 0) +
+    (filter.selectedTypes.length > 0 ? 1 : 0) +
     (filter.selectedCategoryNames.length > 0 ? 1 : 0) +
+    (filter.selectedCreatorUids.length > 0 ? 1 : 0) +
     (filter.keyword.trim() !== '' ? 1 : 0);
 
   const { data: entries, isLoading: entriesLoading } = useCashbookEntriesInRange(
@@ -98,12 +106,12 @@ export default function CashbookPage() {
   const memberMap = useCoupleMemberMap(coupleId);
   const isLoading = entriesLoading || categoriesLoading;
   const summary = useMonthlySummary(entries);
-  const filteredEntries = useFilteredEntries(
-    entries,
-    filter.typeFilter,
-    filter.selectedCategoryNames,
-    filter.keyword
-  );
+  const filteredEntries = useFilteredEntries(entries, {
+    selectedTypes: filter.selectedTypes,
+    selectedCategoryNames: filter.selectedCategoryNames,
+    selectedCreatorUids: filter.selectedCreatorUids,
+    keyword: filter.keyword,
+  });
   const filterSummary = useMonthlySummary(filteredEntries);
   const groups = useGroupedEntries(filteredEntries, filter.sort);
 

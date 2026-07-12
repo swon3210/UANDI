@@ -12,8 +12,6 @@ import {
 } from '@/services/cashbook';
 import type { CashbookEntry, CashbookEntryType } from '@/types';
 
-export type EntryFilterType = CashbookEntryType | 'all';
-
 /** 필터 시트의 기간 프리셋 버튼 값 (UI 표현). */
 export type PeriodPreset = 'thisMonth' | 'lastMonth' | 'last3Months' | 'thisYear' | 'custom';
 
@@ -37,8 +35,11 @@ export type PeriodSelection =
 
 export type CashbookFilterState = {
   period: PeriodSelection;
-  typeFilter: EntryFilterType;
+  /** 선택된 타입(지출/수입/flex). 빈 배열 = 전체(타입 무필터). 다중 선택 가능. */
+  selectedTypes: CashbookEntryType[];
   selectedCategoryNames: string[];
+  /** 선택된 작성자 uid. 빈 배열 = 전체(작성자 무필터). 다중 선택 가능. */
+  selectedCreatorUids: string[];
   keyword: string;
   sort: EntrySort;
 };
@@ -51,8 +52,9 @@ export function createDefaultFilterState(): CashbookFilterState {
   const now = dayjs();
   return {
     period: { mode: 'month', year: now.year(), month: now.month() },
-    typeFilter: 'all',
+    selectedTypes: [],
     selectedCategoryNames: [],
+    selectedCreatorUids: [],
     keyword: '',
     sort: 'latest',
   };
@@ -143,18 +145,25 @@ export type GroupedEntries = {
   entries: CashbookEntry[];
 };
 
+/** 클라이언트 사이드 좁히기 조건. 각 배열은 빈 배열이면 해당 조건 무시(전체). */
+export type EntryFilterCriteria = Pick<
+  CashbookFilterState,
+  'selectedTypes' | 'selectedCategoryNames' | 'selectedCreatorUids' | 'keyword'
+>;
+
 export function useFilteredEntries(
   entries: CashbookEntry[] | undefined,
-  typeFilter: EntryFilterType,
-  selectedCategoryNames: string[],
-  keyword: string = ''
+  { selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword = '' }: EntryFilterCriteria
 ): CashbookEntry[] {
   return useMemo(() => {
     if (!entries) return [];
     const kw = keyword.trim().toLowerCase();
     return entries.filter((entry) => {
-      if (typeFilter !== 'all' && entry.type !== typeFilter) return false;
+      if (selectedTypes.length > 0 && !selectedTypes.includes(entry.type)) return false;
       if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(entry.category)) {
+        return false;
+      }
+      if (selectedCreatorUids.length > 0 && !selectedCreatorUids.includes(entry.createdBy)) {
         return false;
       }
       if (kw && !`${entry.description} ${entry.category}`.toLowerCase().includes(kw)) {
@@ -162,7 +171,7 @@ export function useFilteredEntries(
       }
       return true;
     });
-  }, [entries, typeFilter, selectedCategoryNames, keyword]);
+  }, [entries, selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword]);
 }
 
 export function useGroupedEntries(

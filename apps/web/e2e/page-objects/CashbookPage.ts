@@ -71,12 +71,53 @@ export class CashbookPage {
     return this.page.getByTestId(`filter-type-${type}`);
   }
 
-  get categoryTrigger() {
-    return this.page.getByTestId('filter-category-trigger');
+  creatorChip(uid: string) {
+    return this.page.getByTestId(`filter-creator-${uid}`);
   }
 
-  categoryOption(name: string) {
+  // 카테고리 다중선택 전용 시트(필터 시트 위에 중첩으로 열림)
+  get categoryPickerTrigger() {
+    return this.page.getByTestId('filter-category-picker-trigger');
+  }
+
+  get categoryPickerSheet() {
+    return this.page.getByTestId('category-filter-sheet');
+  }
+
+  categoryPickerTab(type: string) {
+    return this.page.getByTestId(`category-filter-tab-${type}`);
+  }
+
+  categoryPickerOption(name: string) {
     return this.page.getByTestId(`filter-category-option-${name}`);
+  }
+
+  get categoryPickerApply() {
+    return this.page.getByTestId('category-filter-apply');
+  }
+
+  /** 현재 타입 탭의 카테고리를 한 번에 선택/해제하는 토글 버튼. */
+  get categoryPickerToggleAll() {
+    return this.page.getByTestId('category-filter-toggle-all');
+  }
+
+  async openCategoryPicker() {
+    await this.categoryPickerTrigger.click();
+    await this.categoryPickerSheet.waitFor({ state: 'visible' });
+  }
+
+  async applyCategoryPicker() {
+    await this.categoryPickerApply.click();
+    await this.categoryPickerSheet.waitFor({ state: 'hidden' });
+  }
+
+  /** 카테고리 picker 열기 → 이름들 토글 → picker 적용까지 한 번에. */
+  async selectCategories(...names: string[]) {
+    await this.openCategoryPicker();
+    for (const name of names) {
+      await this.categoryPickerOption(name).click();
+    }
+    await this.applyCategoryPicker();
   }
 
   get applyButton() {

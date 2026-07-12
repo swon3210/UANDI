@@ -58,8 +58,7 @@ test.describe('가계부 내역 필터', () => {
 
     await cashbook.openFilter();
     await cashbook.typeFilter('expense').click();
-    await cashbook.categoryTrigger.click();
-    await cashbook.categoryOption('식비').click();
+    await cashbook.selectCategories('식비');
     await cashbook.applyFilter();
 
     await expect(cashbook.entryCard(sikbiId)).toBeVisible();
@@ -90,9 +89,7 @@ test.describe('가계부 내역 필터', () => {
 
     await cashbook.openFilter();
     await cashbook.typeFilter('expense').click();
-    await cashbook.categoryTrigger.click();
-    await cashbook.categoryOption('식비').click();
-    await cashbook.categoryOption('교통').click();
+    await cashbook.selectCategories('식비', '교통');
     await cashbook.applyFilter();
 
     await expect(cashbook.entryCard(sikbiId)).toBeVisible();
@@ -119,8 +116,7 @@ test.describe('가계부 내역 필터', () => {
 
     await cashbook.openFilter();
     await cashbook.typeFilter('expense').click();
-    await cashbook.categoryTrigger.click();
-    await cashbook.categoryOption('식비').click();
+    await cashbook.selectCategories('식비');
     await cashbook.applyFilter();
 
     await expect(cashbook.entryCard(trafficId)).not.toBeVisible();
@@ -474,8 +470,7 @@ test.describe('가계부 내역 필터', () => {
 
     await cashbook.openFilter();
     await cashbook.typeFilter('expense').click();
-    await cashbook.categoryTrigger.click();
-    await cashbook.categoryOption('식비').click();
+    await cashbook.selectCategories('식비');
     await cashbook.applyFilter();
 
     await expect(cashbook.filterResultSummary).toBeVisible();
@@ -498,10 +493,104 @@ test.describe('가계부 내역 필터', () => {
 
     await cashbook.openFilter();
     await cashbook.typeFilter('expense').click();
-    await cashbook.categoryTrigger.click();
-    await cashbook.categoryOption('식비').click();
+    await cashbook.selectCategories('식비');
     await cashbook.applyFilter();
 
     await expect(cashbook.filterCount).toHaveText('2');
+  });
+
+  test('타입을 여러 개 선택하면 선택한 타입만 함께 표시된다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const expenseId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 45000,
+      category: '식비',
+    });
+    const incomeId = await seedCashbookEntry(coupleId, uid, {
+      type: 'income',
+      amount: 3000000,
+      category: '정기급여',
+    });
+    const flexId = await seedCashbookEntry(coupleId, uid, {
+      type: 'flex',
+      amount: 200000,
+      category: '여행',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+
+    await cashbook.openFilter();
+    await cashbook.typeFilter('expense').click();
+    await cashbook.typeFilter('income').click();
+    await cashbook.applyFilter();
+
+    // 지출 + 수입은 함께 보이고, flex만 숨겨진다.
+    await expect(cashbook.entryCard(expenseId)).toBeVisible();
+    await expect(cashbook.entryCard(incomeId)).toBeVisible();
+    await expect(cashbook.entryCard(flexId)).not.toBeVisible();
+  });
+
+  test('카테고리 시트의 전체 선택 토글로 현재 타입 카테고리를 한 번에 선택한다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const expenseId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 45000,
+      category: '식비',
+    });
+    const incomeId = await seedCashbookEntry(coupleId, uid, {
+      type: 'income',
+      amount: 3000000,
+      category: '정기급여',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+
+    await cashbook.openFilter();
+    await cashbook.openCategoryPicker();
+
+    // 기본 지출 탭 → '전체 선택' 클릭 시 지출 카테고리 전부 선택되고 버튼은 '전체 해제'로 토글.
+    await expect(cashbook.categoryPickerToggleAll).toHaveText('전체 선택');
+    await cashbook.categoryPickerToggleAll.click();
+    await expect(cashbook.categoryPickerToggleAll).toHaveText('전체 해제');
+    await cashbook.applyCategoryPicker();
+    await cashbook.applyFilter();
+
+    // 지출 카테고리 전부 선택 = 지출 내역만 남고 수입은 숨겨진다.
+    await expect(cashbook.entryCard(expenseId)).toBeVisible();
+    await expect(cashbook.entryCard(incomeId)).not.toBeVisible();
+  });
+
+  test('추가한 사람으로 필터하면 해당 작성자 내역만 표시된다', async ({ twoUserAuthedContext }) => {
+    const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
+    await seedDefaultCategories(coupleId);
+    const mineId = await seedCashbookEntry(coupleId, uid1, {
+      type: 'expense',
+      amount: 45000,
+      category: '식비',
+    });
+    const partnerId = await seedCashbookEntry(coupleId, uid2, {
+      type: 'expense',
+      amount: 3000,
+      category: '교통',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+
+    await expect(cashbook.entryCard(mineId)).toBeVisible();
+    await expect(cashbook.entryCard(partnerId)).toBeVisible();
+
+    await cashbook.openFilter();
+    await cashbook.creatorChip(uid1).click();
+    await cashbook.applyFilter();
+
+    await expect(cashbook.entryCard(mineId)).toBeVisible();
+    await expect(cashbook.entryCard(partnerId)).not.toBeVisible();
   });
 });
