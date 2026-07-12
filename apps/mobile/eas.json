@@ -20,6 +20,11 @@
       "android": {
         "track": "production",
         "serviceAccountKeyPath": "./play-service-account.json"
+      },
+      "ios": {
+        "ascApiKeyPath": "./asc-api-key.p8",
+        "ascApiKeyId": "378VJG2956",
+        "ascApiKeyIssuerId": "068e8073-cbc6-4ca4-9bb9-84dc04307438"
       }
     }
   }
