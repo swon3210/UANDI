@@ -2,33 +2,34 @@
 
 import { useState } from 'react';
 import dayjs from 'dayjs';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { overlay } from 'overlay-kit';
+import { ChevronRight, Search, Tag, X } from 'lucide-react';
 import {
   Button,
   cn,
   Input,
   Label,
+  Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  Tabs,
-  TabsList,
-  TabsTrigger,
 } from '@uandi/ui';
-import type { CashbookCategory } from '@/types';
+import type { CashbookCategory, CashbookEntryType } from '@/types';
 import {
   createDefaultFilterState,
   type CashbookFilterState,
-  type EntryFilterType,
   type PeriodPreset,
   type PeriodSelection,
 } from '@/hooks/useCashbook';
 import { resolvePeriod } from '@/utils/date';
-import { getVisibleCategories, TYPE_LABELS, TYPE_ORDER } from './entry-filter.utils';
 import { CategoryIcon } from './CategoryIcon';
+import { CategoryFilterSheet } from './CategoryFilterSheet';
+import { CreatorFilterChips, type FilterMember } from './CreatorFilterChips';
+import { TypeFilterChips } from './TypeFilterChips';
 
 type CashbookFilterSheetProps = {
   categories: CashbookCategory[];
+  members: FilterMember[];
   initial: CashbookFilterState;
   onApply: (next: CashbookFilterState) => void;
   onClose: () => void;
@@ -56,12 +57,12 @@ function getActivePreset(period: PeriodSelection): PeriodPreset | null {
 
 export function CashbookFilterSheet({
   categories,
+  members,
   initial,
   onApply,
   onClose,
 }: CashbookFilterSheetProps) {
   const [draft, setDraft] = useState<CashbookFilterState>(initial);
-  const [categoryOpen, setCategoryOpen] = useState(initial.selectedCategoryNames.length > 0);
 
   const custom = draft.period.mode === 'custom' ? draft.period : null;
   const customIncomplete = !!custom && (!custom.start || !custom.end);
@@ -70,7 +71,7 @@ export function CashbookFilterSheet({
 
   const activePreset = getActivePreset(draft.period);
   const periodLabel = resolvePeriod(draft.period).label;
-  const visibleCategories = getVisibleCategories(categories, draft.typeFilter);
+  const categoryByName = new Map(categories.map((c) => [c.name, c]));
 
   const handlePresetClick = (preset: PeriodPreset) => {
     const now = dayjs();
@@ -103,22 +104,51 @@ export function CashbookFilterSheet({
     });
   };
 
-  const handleTypeChange = (type: EntryFilterType) => {
-    setDraft((d) => ({ ...d, typeFilter: type, selectedCategoryNames: [] }));
-  };
-
-  const toggleCategory = (name: string) => {
+  const toggleType = (type: CashbookEntryType) => {
     setDraft((d) => ({
       ...d,
-      selectedCategoryNames: d.selectedCategoryNames.includes(name)
-        ? d.selectedCategoryNames.filter((n) => n !== name)
-        : [...d.selectedCategoryNames, name],
+      selectedTypes: d.selectedTypes.includes(type)
+        ? d.selectedTypes.filter((t) => t !== type)
+        : [...d.selectedTypes, type],
     }));
+  };
+
+  const toggleCreator = (uid: string) => {
+    setDraft((d) => ({
+      ...d,
+      selectedCreatorUids: d.selectedCreatorUids.includes(uid)
+        ? d.selectedCreatorUids.filter((u) => u !== uid)
+        : [...d.selectedCreatorUids, uid],
+    }));
+  };
+
+  const removeCategory = (name: string) => {
+    setDraft((d) => ({
+      ...d,
+      selectedCategoryNames: d.selectedCategoryNames.filter((n) => n !== name),
+    }));
+  };
+
+  // 카테고리 다중선택 시트를 필터 시트 위에 중첩으로 연다(EntryForm의 서브시트 패턴과 동일).
+  const openCategoryPicker = () => {
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <CategoryFilterSheet
+          categories={categories}
+          initialSelected={draft.selectedCategoryNames}
+          initialType={draft.selectedTypes[0] ?? 'expense'}
+          onApply={(names) => setDraft((d) => ({ ...d, selectedCategoryNames: names }))}
+          onClose={() => {
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
   };
 
   const handleReset = () => {
     setDraft(createDefaultFilterState());
-    setCategoryOpen(false);
   };
 
   const handleApply = () => {
@@ -205,82 +235,70 @@ export function CashbookFilterSheet({
           )}
         </div>
 
-        {/* 타입 */}
+        {/* 타입 (다중 선택) */}
         <div className="space-y-2">
           <Label>타입</Label>
-          <Tabs value={draft.typeFilter} onValueChange={(v) => handleTypeChange(v as EntryFilterType)}>
-            <TabsList className="w-full">
-              {TYPE_ORDER.map((t) => (
-                <TabsTrigger key={t} value={t} data-testid={`filter-type-${t}`} className="flex-1">
-                  {TYPE_LABELS[t]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <TypeFilterChips value={draft.selectedTypes} onToggle={toggleType} />
         </div>
 
-        {/* 카테고리 */}
-        {categories.length > 0 && (
+        {/* 카테고리 (전용 시트에서 다중 선택) */}
+        <div className="space-y-2">
+          <Label>카테고리</Label>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-between"
+            data-testid="filter-category-picker-trigger"
+            onClick={openCategoryPicker}
+            disabled={categories.length === 0}
+          >
+            <span className="flex items-center gap-2">
+              <Tag size={16} className="text-muted-foreground" />
+              {draft.selectedCategoryNames.length > 0
+                ? `${draft.selectedCategoryNames.length}개 선택`
+                : '카테고리 선택'}
+            </span>
+            <ChevronRight size={16} className="text-muted-foreground" />
+          </Button>
+          {draft.selectedCategoryNames.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {draft.selectedCategoryNames.map((name) => {
+                const cat = categoryByName.get(name);
+                return (
+                  <span
+                    key={name}
+                    data-testid={`filter-selected-category-${name}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-primary"
+                  >
+                    {cat && <CategoryIcon name={cat.icon} size={13} />}
+                    {name}
+                    <button
+                      type="button"
+                      aria-label={`${name} 제거`}
+                      onClick={() => removeCategory(name)}
+                      className={cn(
+                        'flex h-4 w-4 items-center justify-center rounded-full',
+                        'transition-colors hover:bg-primary hover:text-primary-foreground'
+                      )}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 추가한 사람 (다중 선택, 커플 2인일 때만) */}
+        {members.length >= 2 && (
           <div className="space-y-2">
-            <button
-              type="button"
-              data-testid="filter-category-trigger"
-              onClick={() => setCategoryOpen((o) => !o)}
-              className="flex w-full items-center justify-between"
-            >
-              <span className="text-sm font-medium">카테고리</span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                {draft.selectedCategoryNames.length > 0
-                  ? `${draft.selectedCategoryNames.length}개 선택`
-                  : '전체'}
-                <ChevronDown
-                  size={16}
-                  className={'transition-transform ' + (categoryOpen ? 'rotate-180' : '')}
-                />
-              </span>
-            </button>
-            {categoryOpen && (
-              <div className="max-h-48 overflow-y-auto rounded-lg border p-1">
-                {visibleCategories.length === 0 ? (
-                  <p className="px-2 py-3 text-xs text-muted-foreground">
-                    해당 타입의 카테고리가 없어요
-                  </p>
-                ) : (
-                  visibleCategories.map((category) => {
-                    const checked = draft.selectedCategoryNames.includes(category.name);
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        data-testid={`filter-category-option-${category.name}`}
-                        aria-pressed={checked}
-                        onClick={() => toggleCategory(category.name)}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent"
-                      >
-                        <span
-                          aria-hidden
-                          className={cn(
-                            'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                            checked
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-input'
-                          )}
-                        >
-                          {checked && <Check className="h-3 w-3" />}
-                        </span>
-                        <span
-                          className="flex h-5 w-5 items-center justify-center rounded-full"
-                          style={{ backgroundColor: category.color + '20', color: category.color }}
-                        >
-                          <CategoryIcon name={category.icon} size={12} />
-                        </span>
-                        <span className="text-sm">{category.name}</span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            )}
+            <Label>추가한 사람</Label>
+            <CreatorFilterChips
+              members={members}
+              value={draft.selectedCreatorUids}
+              onToggle={toggleCreator}
+            />
           </div>
         )}
       </div>
