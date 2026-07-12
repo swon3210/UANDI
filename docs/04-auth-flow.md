@@ -2,7 +2,9 @@
 
 ## 인증 방식
 
-- **Firebase Authentication** — Google OAuth 소셜 로그인만 지원
+- **Firebase Authentication** — Google OAuth + Apple 소셜 로그인 지원
+  - Apple 로그인은 App Store 심사 가이드라인 4.8(제3자 소셜 로그인 제공 시 필수) 대응.
+    Firebase Console에서 Apple provider 활성화 + Apple Developer의 Service ID/Key 설정이 선행돼야 한다.
 - 이메일/비밀번호 로그인은 MVP에서 제외
 
 ---
@@ -60,6 +62,7 @@
 ```ts
 // 제공해야 할 함수들
 signInWithGoogle(): Promise<void>
+signInWithApple(): Promise<void>
 signOut(): Promise<void>
 onAuthStateChanged(callback): Unsubscribe
 ```
