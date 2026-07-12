@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import dayjs from 'dayjs';
 import { Lightbulb } from 'lucide-react';
 import {
   Form,
@@ -19,13 +20,15 @@ import {
 } from '@uandi/ui';
 
 const schema = z.object({
-  currentCash: z.number({ error: '시작 현금을 입력해주세요' }).min(0, '0 이상이어야 해요'),
+  initialDate: z.string().min(1, '기준 날짜를 선택해주세요'),
+  initialCash: z.number({ error: '최초 현금을 입력해주세요' }).min(0, '0 이상이어야 해요'),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export type CashflowSettingsFormValue = {
-  currentCash: number;
+  initialCash: number;
+  initialDate: Date;
 };
 
 type CashflowSettingsFormProps = {
@@ -35,21 +38,25 @@ type CashflowSettingsFormProps = {
 };
 
 /**
- * 현금흐름 설정 시트(현재 보유 현금).
- * Phase 2: 큰 지출 예정일(결제일) 수동 입력은 폐지됐다. 고정 지출/수입의 발생일·금액은
- * 카테고리의 "정기 발생"에서 설정하면 캘린더 체크포인트로 자동 반영된다.
- * 변동지출은 "AI 예상 내역"으로 일원화돼 별도 추정 기간 설정은 제거됐다.
+ * 현금흐름 "최초 현금" 설정 시트(기준일 + 그날의 보유 현금).
+ * 기준일 이후 가계부에 기록된 실제 수입·지출을 더해 오늘 잔액이 자동 계산되므로,
+ * 한 번 설정하면 매번 다시 맞출 필요가 없다.
+ * Phase 2: 큰 지출 예정일(결제일) 수동 입력은 폐지됐다(카테고리 "정기 발생"으로 일원화).
  */
 export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSettingsFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      currentCash: initial?.currentCash ?? ('' as unknown as number),
+      initialDate: dayjs(initial?.initialDate ?? new Date()).format('YYYY-MM-DD'),
+      initialCash: initial?.initialCash ?? ('' as unknown as number),
     },
   });
 
   const handleSubmit = (data: FormValues) => {
-    onSubmit({ currentCash: data.currentCash });
+    onSubmit({
+      initialCash: data.initialCash,
+      initialDate: dayjs(data.initialDate).toDate(),
+    });
     onClose();
   };
 
@@ -60,7 +67,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
       data-testid="cashflow-settings-sheet"
     >
       <SheetHeader>
-        <SheetTitle>시작 현금 설정</SheetTitle>
+        <SheetTitle>최초 현금 설정</SheetTitle>
       </SheetHeader>
 
       <Form {...form}>
@@ -70,10 +77,27 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
         >
           <FormField
             control={form.control}
-            name="currentCash"
+            name="initialDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>시작 현금 (오늘 기준)</FormLabel>
+                <FormLabel>기준 날짜</FormLabel>
+                <FormControl>
+                  <Input type="date" data-testid="cashflow-initial-date" {...field} />
+                </FormControl>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  이 날 가지고 있던 현금을 기준으로, 이후 기록을 더해 오늘 잔액을 계산해요.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="initialCash"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>최초 현금 (기준 날짜 기준)</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
@@ -81,7 +105,7 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                       inputMode="numeric"
                       placeholder="0"
                       className="pr-8 text-right text-lg font-semibold"
-                      data-testid="cashflow-current-cash"
+                      data-testid="cashflow-initial-cash"
                       {...field}
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     />
@@ -91,9 +115,9 @@ export function CashflowSettingsForm({ initial, onSubmit, onClose }: CashflowSet
                   </div>
                 </FormControl>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  이 금액에서 <span className="font-medium text-foreground">시작</span>해 앞으로
-                  들어오고 나갈 돈을 더해가며 남는 돈을 예측해요. 지금 통장 잔액을 넣고, 실제와
-                  달라지면 다시 맞춰주세요.
+                  기준 날짜의 보유 현금을 <span className="font-medium text-foreground">한 번만</span>{' '}
+                  넣으면, 이후 가계부에 기록한 수입·지출을 자동으로 더해 오늘 잔액과 앞으로의
+                  현금흐름을 예측해요. 다시 맞출 필요가 없어요.
                 </p>
                 <FormMessage />
               </FormItem>

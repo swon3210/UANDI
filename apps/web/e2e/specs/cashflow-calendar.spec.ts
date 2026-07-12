@@ -1,6 +1,11 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import { seedCashflowSettings, seedPrediction, seedCashbookEntry } from '../helpers/emulator';
+import {
+  seedCashflowSettings,
+  seedLegacyCashflowSettings,
+  seedPrediction,
+  seedCashbookEntry,
+} from '../helpers/emulator';
 import { CashflowPage } from '../page-objects/CashflowPage';
 
 // dayOfMonth의 다음 발생일(오늘 포함)을 정오로 만들어 타임존 경계를 피한다.
@@ -148,34 +153,100 @@ test.describe('현금흐름 캘린더', () => {
 
     await cashflow.setupButton.click();
     await cashflow.settingsSheet.waitFor({ state: 'visible' });
-    // Phase 2: 결제일 수동 입력이 폐지돼 현재 보유 현금만 저장한다.
-    await cashflow.fillSettings({ currentCash: 1500000 });
+    // Phase 2: 결제일 수동 입력이 폐지돼 최초 현금(기준일 기본=오늘)만 저장한다.
+    await cashflow.fillSettings({ initialCash: 1500000 });
 
     // 결제일/정기 발생이 없으면 주 단위 카드로 폴백해 카드가 나타난다.
     await expect(cashflow.cardList).toBeVisible();
     await expect(cashflow.cards.first()).toBeVisible();
   });
 
-  test('상단 시작 현금 카드에 금액이 보이고, 눌러서 바로 수정할 수 있다(설정 아이콘 불필요)', async ({
+  test('상단 오늘 예상 현금 카드에 금액이 보이고, 눌러서 바로 수정할 수 있다(설정 아이콘 불필요)', async ({
     authedContext,
   }) => {
     const { page, coupleId } = authedContext;
-    await seedCashflowSettings(coupleId, { currentCash: 2000000, paydays: [] });
+    // 기준일=오늘, 누적 거래 없음 → 오늘 예상 현금 = 최초 현금.
+    await seedCashflowSettings(coupleId, { initialCash: 2000000, paydays: [] });
 
     const cashflow = new CashflowPage(page);
     await cashflow.goto();
 
-    // 시작 현금이 페이지 상단에 크게 노출된다.
+    // 오늘 예상 현금이 페이지 상단에 크게 노출된다.
     await expect(cashflow.baselineCard).toBeVisible();
     await expect(cashflow.baselineAmount).toHaveText('2,000,000원');
+    await expect(cashflow.baselineCard).toContainText('최초 현금');
 
     // 기어 아이콘을 거치지 않고, 카드를 눌러 바로 설정 시트를 연다.
     await cashflow.baselineCard.click();
     await expect(cashflow.settingsSheet).toBeVisible();
 
     // 금액을 바꿔 저장하면 상단 카드에 즉시 반영된다.
-    await cashflow.fillSettings({ currentCash: 3500000 });
+    await cashflow.fillSettings({ initialCash: 3500000 });
     await expect(cashflow.baselineAmount).toHaveText('3,500,000원');
+  });
+
+  test('최초 현금 + 기준일 이후 실제 거래를 더해 오늘 예상 현금을 자동 계산한다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    // 10일 전 기준으로 최초 현금 100만원 설정.
+    const now = new Date();
+    const daysAgo = (n: number) =>
+      new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 12, 0, 0);
+    await seedCashflowSettings(coupleId, {
+      initialCash: 1000000,
+      initialDate: daysAgo(10).toISOString(),
+      paydays: [],
+    });
+    // 기준일 이후~오늘 직전에 실제 지출 30만 / 수입 50만이 기록됨.
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 300000,
+      category: '식비',
+      date: daysAgo(5).toISOString(),
+    });
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'income',
+      amount: 500000,
+      category: '용돈',
+      date: daysAgo(3).toISOString(),
+    });
+
+    const cashflow = new CashflowPage(page);
+    await cashflow.goto();
+
+    // 오늘 예상 현금 = 100만 - 30만 + 50만 = 120만. 최초 현금(100만)은 보조 라벨로 노출.
+    await expect(cashflow.baselineAmount).toHaveText('1,200,000원');
+    await expect(cashflow.baselineCard).toContainText('1,000,000원');
+  });
+
+  test('레거시(currentCash) 설정 문서는 최초 현금으로 승계되고 기준일 이후 거래를 누적한다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    const now = new Date();
+    const daysAgo = (n: number) =>
+      new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 12, 0, 0);
+    // initialCash/initialDate 없이 currentCash=200만만 있던 옛 문서(updatedAt=7일 전).
+    await seedLegacyCashflowSettings(coupleId, {
+      currentCash: 2000000,
+      updatedAt: daysAgo(7).toISOString(),
+    });
+    // 기준일(=updatedAt) 이후 지출 10만이 기록됨 → 오늘 잔액 = 200만 - 10만.
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 100000,
+      category: '생활비',
+      date: daysAgo(3).toISOString(),
+    });
+
+    const cashflow = new CashflowPage(page);
+    await cashflow.goto();
+
+    // 설정 안내가 아니라 정상 카드/히어로가 뜨고, 승계된 최초 현금(200만)에서 누적해 190만이 된다.
+    await expect(cashflow.baselineCard).toBeVisible();
+    await expect(cashflow.baselineAmount).toHaveText('1,900,000원');
+    await expect(cashflow.baselineCard).toContainText('2,000,000원');
   });
 
   test('가계부 캘린더 탭으로 현금흐름 캘린더에 진입할 수 있다', async ({ authedContext }) => {

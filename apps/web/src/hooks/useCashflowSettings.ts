@@ -23,7 +23,7 @@ export function useUpdateCashflowSettings(coupleId: string | null) {
     mutationFn: (data: CashflowSettingsInput) => updateCashflowSettings(coupleId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
-      toast.success('시작 현금을 저장했어요.');
+      toast.success('최초 현금을 저장했어요.');
     },
     onError: () => {
       toast.error('현금흐름 설정 저장에 실패했어요. 다시 시도해주세요.');

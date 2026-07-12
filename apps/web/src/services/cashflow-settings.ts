@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
 import type { CashflowSettings } from '@/types';
 
@@ -10,13 +10,26 @@ function cashflowSettingsDoc(coupleId: string) {
 export async function getCashflowSettings(coupleId: string): Promise<CashflowSettings | null> {
   const snap = await getDoc(cashflowSettingsDoc(coupleId));
   if (!snap.exists()) return null;
-  return snap.data() as CashflowSettings;
+  const data = snap.data() as CashflowSettings & { currentCash?: number };
+
+  // 레거시 마이그레이션: initialCash가 없고 currentCash(오늘 기준 현금)만 있던 문서는
+  // 그 값을 '최초 현금'으로 승계하고, 기준일은 마지막 설정 시점(updatedAt, 없으면 오늘)으로 본다.
+  if (data.initialCash == null && data.currentCash != null) {
+    return {
+      ...data,
+      initialCash: data.currentCash,
+      initialDate: data.updatedAt ?? Timestamp.now(),
+    };
+  }
+  return data;
 }
 
-// paydays는 Phase 2에서 수동 입력 UI가 폐지돼 선택적이다(미전달 시 setDoc merge로 기존 값 보존).
-// variableMode도 폐지(레거시) — 입력으로 받지 않는다.
-export type CashflowSettingsInput = Pick<CashflowSettings, 'currentCash'> &
-  Partial<Pick<CashflowSettings, 'paydays'>>;
+// paydays/variableMode는 Phase 2에서 수동 입력 UI가 폐지돼 입력으로 받지 않는다
+// (미전달 시 setDoc merge로 기존 값 보존).
+export type CashflowSettingsInput = {
+  initialCash: number;
+  initialDate: Date;
+};
 
 export async function updateCashflowSettings(
   coupleId: string,
@@ -25,8 +38,9 @@ export async function updateCashflowSettings(
   await setDoc(
     cashflowSettingsDoc(coupleId),
     {
-      ...data,
       coupleId,
+      initialCash: data.initialCash,
+      initialDate: Timestamp.fromDate(data.initialDate),
       updatedAt: serverTimestamp(),
     },
     { merge: true }
