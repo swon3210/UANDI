@@ -4,22 +4,16 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import {
-  ChevronLeft,
-  CalendarRange,
-  Sparkles,
-  Loader2,
-  RefreshCw,
-  Info,
-} from 'lucide-react';
+import { ChevronLeft, CalendarRange, Sparkles, Loader2, RefreshCw, Info } from 'lucide-react';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
 import { useCashflowPrediction } from '@/hooks/useCashflowPrediction';
 import { useCashflowNegativeAlert } from '@/hooks/useCashflowNegativeAlert';
 import { useRecurrenceSuggestions } from '@/hooks/useRecurrenceSuggestions';
-import { useCashflowSettings, useUpdateCashflowSettings } from '@/hooks/useCashflowSettings';
+import { useUpdateCashflowSettings } from '@/hooks/useCashflowSettings';
 import { useDeletePrediction } from '@/hooks/usePredictions';
+import { resolveInitialCashByUid, type CashflowMember } from '@/utils/cashflow';
 import { CashflowCardList } from '@/components/cashbook/CashflowCardList';
 import { CashflowBaselineCard } from '@/components/cashbook/CashflowBaselineCard';
 import { CashflowNegativeBanner } from '@/components/cashbook/CashflowNegativeBanner';
@@ -32,26 +26,27 @@ import {
 import { formatDay } from '@/utils/date';
 
 /**
- * 설정 시트 내용. overlay-kit은 open 시점 props를 클로저로 캡처하므로,
- * 시트 안에서 설정을 다시 구독해 최신 값으로 폼을 채운다(가계부 필터 시트와 동일 패턴).
+ * 설정 시트 내용. overlay-kit은 열릴 때 React 트리에서 분리된 위치에 렌더돼
+ * 내부에서 서버 상태 쿼리(멤버·설정)가 안정적으로 resolve되지 않으므로,
+ * 페이지가 이미 확보한 members/initial 값을 props로 주입한다(저장 mutation만 내부 사용).
  */
 function SettingsSheetContent({
   coupleId,
+  members,
+  initial,
   onClose,
 }: {
   coupleId: string | null;
+  members: CashflowMember[];
+  initial?: CashflowSettingsFormValue;
   onClose: () => void;
 }) {
-  const { data: settings } = useCashflowSettings(coupleId);
   const updateMutation = useUpdateCashflowSettings(coupleId);
 
   return (
     <CashflowSettingsForm
-      initial={
-        settings
-          ? { initialCash: settings.initialCash, initialDate: settings.initialDate.toDate() }
-          : undefined
-      }
+      members={members}
+      initial={initial}
       onSubmit={(value: CashflowSettingsFormValue) => updateMutation.mutate(value)}
       onClose={onClose}
     />
@@ -66,8 +61,17 @@ export default function CashflowCalendarPage() {
   // 과거 소비/수입 패턴 기반 LLM 예측. 진입 시 자동 1회 로드(캐시 영속) + "갱신" 버튼으로만 재추론.
   // 예측은 현금흐름 카드의 들어올/나갈/남는 돈에 반영된다.
   const { predictions, refresh, isPending, hasRun, ranAt } = useCashflowPrediction(coupleId);
-  const { cards, isConfigured, isLoading, initialCash, initialDate, startingBalance } =
-    useCashflowCalendar(coupleId, predictions);
+  const {
+    cards,
+    settings,
+    isConfigured,
+    isLoading,
+    initialCash,
+    initialDate,
+    startingBalance,
+    startingBalanceByUid,
+    members,
+  } = useCashflowCalendar(coupleId, predictions);
   const { negativeCard, dismiss } = useCashflowNegativeAlert(coupleId, cards);
   const {
     suggestions,
@@ -80,11 +84,23 @@ export default function CashflowCalendarPage() {
     deletePredictionMutation.mutate(txnId);
   };
 
+  const settingsInitial: CashflowSettingsFormValue | undefined = settings
+    ? {
+        initialCashByUid: resolveInitialCashByUid(
+          members.map((m) => m.uid),
+          settings
+        ),
+        initialDate: settings.initialDate.toDate(),
+      }
+    : undefined;
+
   const openSettings = () => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <SettingsSheetContent
           coupleId={coupleId}
+          members={members}
+          initial={settingsInitial}
           onClose={() => {
             close();
             setTimeout(unmount, 300);
@@ -131,6 +147,8 @@ export default function CashflowCalendarPage() {
               todayBalance={startingBalance}
               initialCash={initialCash}
               initialDate={initialDate}
+              members={members}
+              balanceByUid={startingBalanceByUid}
               onEdit={openSettings}
             />
 
@@ -197,14 +215,18 @@ export default function CashflowCalendarPage() {
             >
               <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
               <p>
-                <span className="text-coral-500">◇</span> 표시는 아직 확정되지 않은 예측이에요.
-                직접 등록한 <b className="font-medium text-foreground">정기 발생</b>과 과거 소비·수입
+                <span className="text-coral-500">◇</span> 표시는 아직 확정되지 않은 예측이에요. 직접
+                등록한 <b className="font-medium text-foreground">정기 발생</b>과 과거 소비·수입
                 패턴을 분석한 <b className="font-medium text-foreground">AI 추론</b>으로 계산해요.
                 각 항목을 펼치면 어떤 근거로 잡혔는지 볼 수 있어요.
               </p>
             </div>
 
-            <CashflowCardList cards={cards} onDeletePrediction={handleDeletePrediction} />
+            <CashflowCardList
+              cards={cards}
+              members={members}
+              onDeletePrediction={handleDeletePrediction}
+            />
           </div>
         )}
       </main>

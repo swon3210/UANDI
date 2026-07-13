@@ -27,7 +27,8 @@ export async function getCashflowSettings(coupleId: string): Promise<CashflowSet
 // paydays/variableMode는 Phase 2에서 수동 입력 UI가 폐지돼 입력으로 받지 않는다
 // (미전달 시 setDoc merge로 기존 값 보존).
 export type CashflowSettingsInput = {
-  initialCash: number;
+  /** 사람별 최초 현금(uid→금액). initialCash(합계)는 이 값의 합으로 저장된다. */
+  initialCashByUid: Record<string, number>;
   initialDate: Date;
 };
 
@@ -35,11 +36,14 @@ export async function updateCashflowSettings(
   coupleId: string,
   data: CashflowSettingsInput
 ): Promise<void> {
+  const initialCash = Object.values(data.initialCashByUid).reduce((sum, v) => sum + (v || 0), 0);
   await setDoc(
     cashflowSettingsDoc(coupleId),
     {
       coupleId,
-      initialCash: data.initialCash,
+      // 합계는 레거시 읽기·요약용으로 계속 저장하고, 사람별 값이 단일 출처가 된다.
+      initialCash,
+      initialCashByUid: data.initialCashByUid,
       initialDate: Timestamp.fromDate(data.initialDate),
       updatedAt: serverTimestamp(),
     },

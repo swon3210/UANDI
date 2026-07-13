@@ -3,14 +3,20 @@
 import dayjs from 'dayjs';
 import { Wallet, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import { CashflowMemberBalances } from './CashflowMemberBalances';
+import type { CashflowMember } from '@/utils/cashflow';
 
 type CashflowBaselineCardProps = {
   /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액. 카드의 큰 숫자. */
   todayBalance: number;
-  /** 사용자가 설정한 최초 현금(기준일 시점의 보유 현금). */
+  /** 사용자가 설정한 최초 현금(기준일 시점의 보유 현금, 사람별 합계). */
   initialCash: number;
   /** 최초 현금 기준일. */
   initialDate: Date | null;
+  /** 커플 멤버(사람별 오늘 잔액 표기용). 2명 미만이면 생략. */
+  members?: CashflowMember[];
+  /** 사람별 오늘 예상 잔액(uid→금액). */
+  balanceByUid?: Record<string, number>;
   /** 탭하면 최초 현금 설정 시트를 연다. */
   onEdit: () => void;
 };
@@ -25,45 +31,54 @@ export function CashflowBaselineCard({
   todayBalance,
   initialCash,
   initialDate,
+  members,
+  balanceByUid,
   onEdit,
 }: CashflowBaselineCardProps) {
+  const showPerPerson = !!members && members.length >= 2 && !!balanceByUid;
+
   return (
     <button
       type="button"
       onClick={onEdit}
       data-testid="cashflow-baseline-card"
       aria-label="최초 현금 수정"
-      className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent/40"
+      className="flex w-full flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent/40"
     >
-      <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-coral-50 text-coral-500"
-        aria-hidden
-      >
-        <Wallet size={20} />
-      </span>
+      <div className="flex w-full items-center gap-3">
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-coral-50 text-coral-500"
+          aria-hidden
+        >
+          <Wallet size={20} />
+        </span>
 
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">오늘 기준 예상 현금</p>
-        <p
-          className="mt-0.5 text-xl font-bold tabular-nums text-foreground"
-          data-testid="cashflow-baseline-amount"
-        >
-          {formatCurrency(todayBalance)}
-        </p>
-        <p
-          className="mt-1 text-[11px] leading-snug text-muted-foreground"
-          data-testid="cashflow-baseline-initial"
-        >
-          최초 현금 <span className="font-medium text-foreground">{formatCurrency(initialCash)}</span>
-          {initialDate ? ` · ${dayjs(initialDate).format('YYYY.M.D')} 기준` : ''}에서 기록을 더해
-          계산했어요.
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-muted-foreground">오늘 기준 예상 현금</p>
+          <p
+            className="mt-0.5 text-xl font-bold tabular-nums text-foreground"
+            data-testid="cashflow-baseline-amount"
+          >
+            {formatCurrency(todayBalance)}
+          </p>
+          <p
+            className="mt-1 text-[11px] leading-snug text-muted-foreground"
+            data-testid="cashflow-baseline-initial"
+          >
+            최초 현금{' '}
+            <span className="font-medium text-foreground">{formatCurrency(initialCash)}</span>
+            {initialDate ? ` · ${dayjs(initialDate).format('YYYY.M.D')} 기준` : ''}에서 기록을 더해
+            계산했어요.
+          </p>
+        </div>
+
+        <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+          <Pencil size={11} aria-hidden />
+          수정
+        </span>
       </div>
 
-      <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-        <Pencil size={11} aria-hidden />
-        수정
-      </span>
+      {showPerPerson && <CashflowMemberBalances members={members} balanceByUid={balanceByUid} />}
     </button>
   );
 }

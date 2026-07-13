@@ -3,15 +3,17 @@
 import { CalendarRange } from 'lucide-react';
 import { EmptyState } from '@uandi/ui';
 import { CashflowCard } from './CashflowCard';
-import type { CashflowCardData } from '@/utils/cashflow';
+import type { CashflowCardData, CashflowMember } from '@/utils/cashflow';
 
 type CashflowCardListProps = {
   cards: CashflowCardData[];
+  /** 커플 멤버(사람별 잔액 표기용). 2명 미만이면 사람별 표기는 생략된다. */
+  members?: CashflowMember[];
   onDeletePrediction?: (txnId: string) => void;
 };
 
 /** 다음 결제일부터 시간순으로 쌓인 카드 목록(§4-3). 첫 카드는 펼친 상태로 시작. */
-export function CashflowCardList({ cards, onDeletePrediction }: CashflowCardListProps) {
+export function CashflowCardList({ cards, members, onDeletePrediction }: CashflowCardListProps) {
   if (cards.length === 0) {
     return (
       <EmptyState
@@ -28,6 +30,7 @@ export function CashflowCardList({ cards, onDeletePrediction }: CashflowCardList
         <CashflowCard
           key={card.key}
           card={card}
+          members={members}
           defaultOpen={i === 0}
           onDeletePrediction={onDeletePrediction}
         />

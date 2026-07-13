@@ -24,7 +24,43 @@ export type CashflowTransaction = {
   date: Date;
   /** predicted일 때만: 출처(calendar/auto/llm). */
   source?: PredictionSource;
+  /**
+   * 이 거래를 누구의 잔액에 반영할지(실거래=작성자 createdBy).
+   * 없으면 "공동"으로 보고 사람별 잔액에는 멤버 균등 분배한다(정기발생·AI 예측).
+   */
+  ownerUid?: string;
 };
+
+/** 현금흐름 사람별 잔액 표시에 필요한 커플 멤버 최소 정보(uid→이름/사진). */
+export type CashflowMember = {
+  uid: string;
+  displayName: string;
+  photoURL: string | null;
+};
+
+/**
+ * 사람별 최초 현금 맵을 만든다(설정 폼 초기값·계산 공통).
+ * - initialCashByUid가 있으면 그대로 사용(멤버 누락분 0으로 채움).
+ * - 없으면(레거시) 합계 initialCash를 멤버 수로 균등 분배(나머지 첫 멤버)해 총합을 보존한다.
+ */
+export function resolveInitialCashByUid(
+  memberUids: string[],
+  settings: { initialCash?: number; initialCashByUid?: Record<string, number> } | null | undefined
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (memberUids.length === 0) return out;
+  const stored = settings?.initialCashByUid;
+  if (stored) {
+    for (const uid of memberUids) out[uid] = stored[uid] ?? 0;
+    return out;
+  }
+  const total = settings?.initialCash ?? 0;
+  const base = Math.trunc(total / memberUids.length);
+  memberUids.forEach((uid, i) => {
+    out[uid] = base + (i === 0 ? total - base * memberUids.length : 0);
+  });
+  return out;
+}
 
 /** 결제일의 구체적 발생 인스턴스(미래 N개월 내 실제 날짜). */
 export type PaydayInstance = {
@@ -62,7 +98,12 @@ export type CashflowCardData = {
   paydayType?: CashflowPaydayType;
   inflow: number; // 들어올 돈 (income 합)
   outflow: number; // 나갈 돈 (expense + flex 합)
-  balance: number; // 남는 돈 (누적)
+  balance: number; // 남는 돈 (누적, 합계)
+  /**
+   * 사람별 남는 돈(uid→누적 잔액). 멤버 정보가 없으면 빈 객체.
+   * 불변식: Σ balanceByUid == balance (공동 거래는 균등 분배해 총합을 보존).
+   */
+  balanceByUid: Record<string, number>;
   isNegative: boolean;
   transactions: CashflowTransaction[];
 };
@@ -161,17 +202,43 @@ export function weeklyBoundaries(buckets: WeekBucket[]): CardBoundary[] {
   return buckets.map((b) => ({ key: b.key, label: b.label, endDate: b.end }));
 }
 
+/** 사람별 잔액 계산 옵션. 멤버 정보가 있을 때만 카드에 balanceByUid를 채운다. */
+export type CashflowPerPersonOpts = {
+  /** 커플 멤버 uid 목록(공동 거래 균등 분배 대상). */
+  memberUids: string[];
+  /** 사람별 시작 잔액(uid→오늘 예상 잔액). 누락된 uid는 0에서 시작. */
+  startingBalanceByUid: Record<string, number>;
+};
+
+/**
+ * 공동(소유자 없는) 순액을 멤버에게 정수로 균등 분배한다. 나머지는 첫 멤버에게 몰아 Σ==net을 보존한다.
+ * (음수도 Math.trunc(0 방향)으로 안전하게 나눠 총합이 정확히 맞는다.)
+ */
+function distributeShared(net: number, memberUids: string[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  const n = memberUids.length;
+  if (n === 0) return out;
+  const base = Math.trunc(net / n);
+  memberUids.forEach((uid, i) => {
+    out[uid] = base + (i === 0 ? net - base * n : 0);
+  });
+  return out;
+}
+
 /**
  * 카드 경계 + 거래 + 시작 잔액으로 카드별 들어올/나갈/남는 돈을 누적 계산한다(§9-2).
  * - 시작 잔액 = 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액.
  * - 각 거래는 endDate가 거래일 이상인 "가장 이른" 카드에 배정된다.
  * - 마지막 카드의 endDate 이후 거래는 표시 구간 밖이라 제외된다.
  * - 남는 돈[i] = (i===0 ? startingBalance : 남는 돈[i-1]) + 들어올 돈 - 나갈 돈.
+ * - perPerson이 있으면 사람별 잔액도 누적한다: 소유자(작성자)가 있는 거래는 그 사람에게,
+ *   공동 거래(정기발생·AI 예측)는 멤버 균등 분배해 Σ balanceByUid == balance를 항상 유지한다.
  */
 export function buildCashflowCards(
   boundaries: CardBoundary[],
   transactions: CashflowTransaction[],
-  startingBalance: number
+  startingBalance: number,
+  perPerson?: CashflowPerPersonOpts
 ): CashflowCardData[] {
   const sorted = [...boundaries].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
   const buckets = sorted.map((b) => ({
@@ -186,14 +253,37 @@ export function buildCashflowCards(
 
   let running = startingBalance;
 
+  const memberUids = perPerson?.memberUids ?? [];
+  const memberSet = new Set(memberUids);
+  const runningByUid: Record<string, number> = {};
+  for (const uid of memberUids) runningByUid[uid] = perPerson?.startingBalanceByUid[uid] ?? 0;
+
   return buckets.map(({ boundary, txns }) => {
     let inflow = 0;
     let outflow = 0;
+    let sharedNet = 0;
+    const attributedNet: Record<string, number> = {};
+
     for (const t of txns) {
+      const signed = t.type === 'income' ? t.amount : -t.amount; // expense + flex는 음수
       if (t.type === 'income') inflow += t.amount;
-      else outflow += t.amount; // expense + flex
+      else outflow += t.amount;
+
+      if (t.ownerUid && memberSet.has(t.ownerUid)) {
+        attributedNet[t.ownerUid] = (attributedNet[t.ownerUid] ?? 0) + signed;
+      } else {
+        sharedNet += signed; // 소유자 없음(또는 이탈 멤버) → 공동
+      }
     }
+
     running = running + inflow - outflow;
+
+    const sharedShare = distributeShared(sharedNet, memberUids);
+    const balanceByUid: Record<string, number> = {};
+    for (const uid of memberUids) {
+      runningByUid[uid] += (attributedNet[uid] ?? 0) + (sharedShare[uid] ?? 0);
+      balanceByUid[uid] = runningByUid[uid];
+    }
 
     return {
       key: boundary.key,
@@ -204,6 +294,7 @@ export function buildCashflowCards(
       inflow,
       outflow,
       balance: running,
+      balanceByUid,
       isNegative: running < 0,
       transactions: [...txns].sort((a, b) => a.date.getTime() - b.date.getTime()),
     };

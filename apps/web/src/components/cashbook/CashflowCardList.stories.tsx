@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CashflowCardList } from './CashflowCardList';
-import type { CashflowCardData } from '@/utils/cashflow';
+import type { CashflowCardData, CashflowMember } from '@/utils/cashflow';
+
+const members: CashflowMember[] = [
+  { uid: 'u1', displayName: '지훈', photoURL: null },
+  { uid: 'u2', displayName: '서연', photoURL: null },
+];
 
 const cards: CashflowCardData[] = [
   {
@@ -12,6 +17,7 @@ const cards: CashflowCardData[] = [
     inflow: 3000000,
     outflow: 700000,
     balance: 2800000,
+    balanceByUid: { u1: 2100000, u2: 700000 },
     isNegative: false,
     transactions: [
       {
@@ -22,6 +28,7 @@ const cards: CashflowCardData[] = [
         category: '정기급여',
         description: '',
         date: new Date(2026, 5, 25),
+        ownerUid: 'u1',
       },
       {
         id: 't2',
@@ -44,6 +51,7 @@ const cards: CashflowCardData[] = [
     inflow: 0,
     outflow: 450000,
     balance: 2350000,
+    balanceByUid: { u1: 1875000, u2: 475000 },
     isNegative: false,
     transactions: [
       {
@@ -67,6 +75,7 @@ const cards: CashflowCardData[] = [
     inflow: 0,
     outflow: 2800000,
     balance: -450000,
+    balanceByUid: { u1: 475000, u2: -925000 },
     isNegative: true,
     transactions: [
       {
@@ -100,11 +109,12 @@ export default meta;
 type Story = StoryObj<typeof CashflowCardList>;
 
 export const Default: Story = {
-  args: { cards },
+  args: { cards, members },
 };
 
 export const WeeklyFallback: Story = {
   args: {
+    members,
     cards: [
       {
         key: 'w0',
@@ -113,6 +123,7 @@ export const WeeklyFallback: Story = {
         inflow: 0,
         outflow: 120000,
         balance: 1380000,
+        balanceByUid: { u1: 1130000, u2: 250000 },
         isNegative: false,
         transactions: [],
       },
@@ -123,6 +134,7 @@ export const WeeklyFallback: Story = {
         inflow: 0,
         outflow: 350000,
         balance: 1030000,
+        balanceByUid: { u1: 955000, u2: 75000 },
         isNegative: false,
         transactions: [],
       },
