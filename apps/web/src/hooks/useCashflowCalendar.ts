@@ -6,6 +6,7 @@ import { useCashflowSettings } from './useCashflowSettings';
 import { useCashbookEntriesInRange } from './useCashbook';
 import { useActivePredictions } from './usePredictions';
 import { useCashbookCategories } from './useCashbookCategories';
+import { useCoupleMembers } from './useCoupleMembers';
 import {
   buildPaydayInstances,
   buildWeeklyBuckets,
@@ -18,8 +19,10 @@ import {
   mergeBoundariesByDate,
   recurrenceMonthKey,
   llmTransactions,
+  resolveInitialCashByUid,
   type CashflowCardData,
   type CashflowTransaction,
+  type CashflowMember,
   type LlmPrediction,
 } from '@/utils/cashflow';
 import { type CashflowSettings } from '@/types';
@@ -38,12 +41,16 @@ export type CashflowCalendarResult = {
   /** 설정 문서가 존재하는지(없으면 설정 안내 화면). */
   isConfigured: boolean;
   isLoading: boolean;
-  /** 사용자가 설정한 최초 현금(기준일 시점의 보유 현금). */
+  /** 사용자가 설정한 최초 현금(기준일 시점의 보유 현금, 사람별 합계). */
   initialCash: number;
   /** 최초 현금 기준일(설정 안 됐으면 null). */
   initialDate: Date | null;
-  /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액(예측 출발점). */
+  /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액(예측 출발점, 합계). */
   startingBalance: number;
+  /** 사람별 오늘 예상 잔액(uid→금액). 멤버 정보가 없으면 빈 객체. */
+  startingBalanceByUid: Record<string, number>;
+  /** 커플 멤버(사람별 잔액 표시용). uid→이름/사진. */
+  members: CashflowMember[];
 };
 
 /**
@@ -69,6 +76,9 @@ export function useCashflowCalendar(
     from.toDate()
   );
   const { data: categories } = useCashbookCategories(coupleId);
+  // 멤버 로딩을 페이지 로딩 게이트에 포함해, 콘텐츠(및 설정 시트 오픈)가 뜨는 시점엔
+  // members가 항상 확보돼 있게 한다(overlay 내부에서는 쿼리가 안정적으로 resolve되지 않음).
+  const { data: memberDocs, isLoading: membersLoading } = useCoupleMembers(coupleId);
 
   // 이중계산 방지(G1)용 과거 실거래 — 현재 달의 기존 실거래를 잡아 같은 달 예측을 제외한다.
   const pastFrom = useMemo(() => from.subtract(DEDUP_LOOKBACK_MONTHS, 'month').toDate(), [from]);
@@ -88,6 +98,17 @@ export function useCashflowCalendar(
     from.subtract(1, 'millisecond').toDate()
   );
 
+  const members = useMemo<CashflowMember[]>(
+    () =>
+      (memberDocs ?? []).map((m) => ({
+        uid: m.uid,
+        displayName: m.displayName,
+        photoURL: m.photoURL,
+      })),
+    [memberDocs]
+  );
+  const memberUids = useMemo(() => members.map((m) => m.uid), [members]);
+
   const startingBalance = useMemo(() => {
     let balance = settings?.initialCash ?? 0;
     for (const e of accumEntries ?? []) {
@@ -96,6 +117,18 @@ export function useCashflowCalendar(
     }
     return balance;
   }, [settings, accumEntries]);
+
+  // 사람별 오늘 예상 잔액 = 사람별 최초 현금 + (기준일~오늘 직전 실거래 중 작성자 본인 것).
+  const startingBalanceByUid = useMemo(() => {
+    const byUid = resolveInitialCashByUid(memberUids, settings);
+    const memberSet = new Set(memberUids);
+    for (const e of accumEntries ?? []) {
+      if (!memberSet.has(e.createdBy)) continue; // 이탈 멤버 기록은 합계에만 반영(사람별 제외)
+      const signed = e.type === 'income' ? e.amount : -e.amount;
+      byUid[e.createdBy] = (byUid[e.createdBy] ?? 0) + signed;
+    }
+    return byUid;
+  }, [memberUids, settings, accumEntries]);
 
   const cards = useMemo<CashflowCardData[]>(() => {
     const paydays = settings?.paydays ?? [];
@@ -127,6 +160,7 @@ export function useCashflowCalendar(
         category: e.category,
         description: e.description,
         date: e.date.toDate(),
+        ownerUid: e.createdBy, // 실거래는 작성자 잔액에 귀속(예측은 공동 → ownerUid 미지정)
       });
     }
     for (const p of predictions ?? []) {
@@ -172,17 +206,34 @@ export function useCashflowCalendar(
       txns.push(t);
     }
 
-    return buildCashflowCards(boundaries, txns, startingBalance);
-  }, [settings, entries, predictions, pastEntries, categories, from, llmPredictions, startingBalance]);
+    return buildCashflowCards(boundaries, txns, startingBalance, {
+      memberUids,
+      startingBalanceByUid,
+    });
+  }, [
+    settings,
+    entries,
+    predictions,
+    pastEntries,
+    categories,
+    from,
+    llmPredictions,
+    startingBalance,
+    memberUids,
+    startingBalanceByUid,
+  ]);
 
   return {
     cards,
     settings: settings ?? null,
     hasPaydays: (settings?.paydays?.length ?? 0) > 0,
     isConfigured: !!settings,
-    isLoading: settingsLoading || entriesLoading || predictionsLoading || accumLoading,
+    isLoading:
+      settingsLoading || entriesLoading || predictionsLoading || accumLoading || membersLoading,
     initialCash: settings?.initialCash ?? 0,
     initialDate: settings?.initialDate ? settings.initialDate.toDate() : null,
     startingBalance,
+    startingBalanceByUid,
+    members,
   };
 }

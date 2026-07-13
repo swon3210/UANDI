@@ -429,3 +429,57 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 </content>
 </invoke>
+
+---
+
+# 설계 명세: 현금흐름 사람별(각자) 예상 잔액
+
+## 목적
+
+커플을 **하나의 지갑**으로 보던 현금흐름을, 두 사람 **각자의 현금/예상 잔액**으로 나눠 본다.
+"특정 시점의 현금"을 설정할 때 각 사람의 현금을 따로 기록하고, 앞으로의 현금흐름 카드도
+각자의 남는 돈을 함께 보여준다. 합계(기존 동작)는 그대로 유지한다.
+
+## 데이터 모델
+
+- `CashflowSettings.initialCashByUid?: Record<uid, number>` — 사람별 최초 현금(기준일 시점).
+  - `initialCash`(합계)는 `Σ initialCashByUid`로 **계속 저장**(레거시 읽기·요약 호환).
+  - **마이그레이션**: `initialCashByUid`가 없는 레거시 문서는 읽기 시점에 `initialCash`를
+    멤버 수로 **균등 분배**(나머지 첫 멤버)해 사용한다. 총합은 보존된다.
+    (`resolveInitialCashByUid` in `utils/cashflow.ts`)
+
+## 귀속 규칙 (각자 잔액 계산)
+
+- **실거래** → 작성자(`CashbookEntry.createdBy`)의 잔액에 귀속(`CashflowTransaction.ownerUid`).
+- **예측**(정기 발생 `recurrence-*`, AI `llm-*`) → 소유자 없음 = **공동**. 각 카드에서 공동
+  순액을 멤버에게 **균등 분배**(나머지 첫 멤버).
+- **불변식**: `Σ balanceByUid == balance`(합계). 공동분 균등 분배로 총합이 항상 보존된다.
+- 이탈 멤버(현 `memberUids`에 없는 uid)의 실거래는 **합계에만** 반영, 사람별에서는 제외.
+
+## 표시
+
+- `CashflowMemberBalances` — 아바타(`AuthorAvatar`)+이름+금액 칩. 멤버 2명 미만이면 렌더 안 함.
+- **히어로**(`CashflowBaselineCard`): 오늘 예상 현금(합계) 아래 사람별 오늘 잔액.
+- **카드**(`CashflowCard`): "남는 돈"(합계) 아래 "각자 남는 돈" 칩. 음수는 빨강.
+- **설정 시트**(`CashflowSettingsForm`): 멤버별 최초 현금 입력 + 합계 표시(2명 이상).
+
+## Gotcha
+
+- overlay-kit 시트 내부에서는 TanStack Query가 **안정적으로 resolve되지 않는다**. 설정 시트는
+  페이지가 확보한 `members`/`initial`을 **props로 주입**한다(저장 mutation만 시트 내부). 멤버 로딩은
+  페이지 `isLoading` 게이트에 포함해, 콘텐츠가 뜨는 시점엔 members가 항상 있게 한다.
+- `FormField` **밖**에서 shadcn `FormLabel`을 쓰면 `useFormField`가 예외를 던져 페이지가 크래시한다
+  (섹션 제목은 일반 `<p>`로).
+
+## 구현 위치 요약
+
+| 영역        | 파일                                                            | 변경                                            |
+| ----------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| 타입        | `apps/web/src/types/index.ts`                                   | `CashflowSettings.initialCashByUid`             |
+| 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
+| 저장        | `apps/web/src/services/cashflow-settings.ts`                    | `initialCashByUid` 저장(+`initialCash`=합계)    |
+| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                     | 멤버 로드, `startingBalanceByUid`, 작성자 귀속  |
+| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`  | 사람별 잔액 칩                                  |
+| 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`     | 멤버별 입력 + 합계                              |
+| 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                      |
+| E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장) |

@@ -41,12 +41,23 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-baseline-amount');
   }
 
+  /** 사람별 최초 현금 입력들(멤버 순서대로 cashflow-initial-cash-0, -1 …). */
+  get initialCashInputs(): Locator {
+    return this.page.locator('input[data-testid^="cashflow-initial-cash-"]');
+  }
+
+  /** 첫 멤버의 최초 현금 입력(단일 값 시나리오 호환용). */
   get initialCashInput(): Locator {
-    return this.page.getByTestId('cashflow-initial-cash');
+    return this.page.getByTestId('cashflow-initial-cash-0');
   }
 
   get initialDateInput(): Locator {
     return this.page.getByTestId('cashflow-initial-date');
+  }
+
+  /** 상단 히어로/카드의 사람별 잔액 칩. */
+  get memberBalances(): Locator {
+    return this.page.getByTestId('cashflow-member-balance');
   }
 
   get saveButton(): Locator {
@@ -99,13 +110,34 @@ export class CashflowPage {
 
   /**
    * 설정 시트에서 최초 현금(과 선택적으로 기준일)을 입력하고 저장한다.
+   * 사람별 입력이 여러 개면 첫 멤버에 값을 넣고 나머지는 0으로 채워 합계 == initialCash가 되게 한다.
    * 기준일 미지정 시 폼 기본값(오늘)을 그대로 둔다.
    */
   async fillSettings(options: { initialCash: number; initialDate?: string }) {
     if (options.initialDate) {
       await this.initialDateInput.fill(options.initialDate);
     }
-    await this.initialCashInput.fill(String(options.initialCash));
+    const inputs = this.initialCashInputs;
+    const n = await inputs.count();
+    for (let i = 0; i < n; i++) {
+      await inputs.nth(i).fill(i === 0 ? String(options.initialCash) : '0');
+    }
+    await this.saveButton.click();
+    await this.settingsSheet.waitFor({ state: 'hidden' });
+  }
+
+  /**
+   * 설정 시트에서 사람별 최초 현금을 순서대로 입력하고 저장한다(멤버 순서 = 입력 순서).
+   * 기준일 미지정 시 폼 기본값(오늘)을 그대로 둔다.
+   */
+  async fillSettingsPerPerson(amounts: number[], initialDate?: string) {
+    if (initialDate) {
+      await this.initialDateInput.fill(initialDate);
+    }
+    const inputs = this.initialCashInputs;
+    for (let i = 0; i < amounts.length; i++) {
+      await inputs.nth(i).fill(String(amounts[i]));
+    }
     await this.saveButton.click();
     await this.settingsSheet.waitFor({ state: 'hidden' });
   }

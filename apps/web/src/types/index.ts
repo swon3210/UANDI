@@ -268,8 +268,14 @@ export type CashflowPayday = {
 
 export type CashflowSettings = {
   coupleId: string;
-  /** 최초 현금 — initialDate 시점에 보유하던 현금. 오늘 잔액 계산의 출발점(§9-2). */
+  /** 최초 현금 — initialDate 시점에 보유하던 현금(사람별 합계). 오늘 잔액 계산의 출발점(§9-2). */
   initialCash: number;
+  /**
+   * 사람별 최초 현금(uid→금액). 각자 예상 잔액 계산의 출발점.
+   * 없으면(레거시 문서) initialCash를 멤버 수로 균등 분배해 사용한다.
+   * 합계 = Σ initialCashByUid = initialCash 를 항상 유지한다.
+   */
+  initialCashByUid?: Record<string, number>;
   /**
    * 최초 현금 기준일. 이 날부터 오늘까지 가계부에 기록된 실제 거래를 더해 오늘 잔액을 구한다.
    * 한 번 설정하면 유지되며, 거래가 쌓이면 자동으로 오늘 잔액이 맞춰진다.

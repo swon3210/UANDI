@@ -6,10 +6,13 @@ import { ChevronDown, CalendarRange } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
-import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
+import { CashflowMemberBalances } from './CashflowMemberBalances';
+import type { CashflowCardData, CashflowMember, CashflowTransaction } from '@/utils/cashflow';
 
 type CashflowCardProps = {
   card: CashflowCardData;
+  /** 커플 멤버(각자 예상 잔액 표기용). 2명 미만이면 사람별 표기는 생략된다. */
+  members?: CashflowMember[];
   defaultOpen?: boolean;
   /**
    * 있으면 예측 거래 행에 삭제 버튼을 노출(레거시 calendar 예측 doc 정리용).
@@ -24,7 +27,9 @@ function isSyntheticPrediction(txn: CashflowTransaction): boolean {
 }
 
 /** 펼친 카드 안 거래를 '실제 날짜'별로 묶는다(각 날짜를 분명히 보이게). */
-function groupByDate(txns: CashflowTransaction[]): { key: string; date: Date; items: CashflowTransaction[] }[] {
+function groupByDate(
+  txns: CashflowTransaction[]
+): { key: string; date: Date; items: CashflowTransaction[] }[] {
   const map = new Map<string, { key: string; date: Date; items: CashflowTransaction[] }>();
   for (const t of txns) {
     const key = dayjs(t.date).format('YYYY-MM-DD');
@@ -41,6 +46,7 @@ function groupByDate(txns: CashflowTransaction[]): { key: string; date: Date; it
  */
 export function CashflowCard({
   card,
+  members,
   defaultOpen = false,
   onDeletePrediction,
 }: CashflowCardProps) {
@@ -139,6 +145,14 @@ export function CashflowCard({
             </span>
           </div>
         </div>
+
+        {/* 각자 예상 잔액 — 합계(위 "남는 돈")를 사람별로 나눠 보여준다. */}
+        {members && members.length >= 2 && (
+          <div className="border-t border-border/60 px-4 py-2.5">
+            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">각자 남는 돈</p>
+            <CashflowMemberBalances members={members} balanceByUid={card.balanceByUid} dense />
+          </div>
+        )}
 
         <CollapsibleContent>
           <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
