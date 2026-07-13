@@ -20,6 +20,8 @@ type MonthlyExpenseTabProps = {
   weeklyExpenses: WeeklyExpense[];
   /** 진입 시 초기 정렬. 예산 알림 "자세히 보기"로 오면 'over'. */
   initialSort?: CategorySort;
+  /** 지정하면 카테고리 행 클릭 시 해당 카테고리 이름으로 호출된다. */
+  onCategoryClick?: (categoryName: string) => void;
 };
 
 // 초과 정도 = 실제/예산 비율. 예산이 0인데 지출이 있으면 가장 위로.
@@ -41,6 +43,7 @@ export function MonthlyExpenseTab({
   categoryBudgets,
   weeklyExpenses,
   initialSort = 'default',
+  onCategoryClick,
 }: MonthlyExpenseTabProps) {
   const [sort, setSort] = useState<CategorySort>(initialSort);
   const sortedCategories = sortCategories(categoryBudgets, sort);
@@ -79,6 +82,9 @@ export function MonthlyExpenseTab({
                 percentage={budget.percentage}
                 status={budget.status}
                 margin={budget.margin}
+                onClick={
+                  onCategoryClick ? () => onCategoryClick(budget.categoryName) : undefined
+                }
               />
             ))
           ) : (

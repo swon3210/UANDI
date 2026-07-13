@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronRight } from 'lucide-react';
 import { Progress, Badge } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import type { BudgetStatus } from '@/hooks/useMonthlyBudget';
@@ -20,6 +21,8 @@ type CategoryBudgetRowProps = {
   percentage: number;
   status: BudgetStatus;
   margin: number;
+  /** 지정하면 행 전체가 눌러지는 버튼이 되어 해당 카테고리 내역으로 이동한다. */
+  onClick?: () => void;
 };
 
 function getMarginLabel(status: BudgetStatus, margin: number): string {
@@ -50,16 +53,17 @@ export function CategoryBudgetRow({
   percentage,
   status,
   margin,
+  onClick,
 }: CategoryBudgetRowProps) {
-  return (
-    <div
-      className="space-y-1.5 py-3 border-b border-border last:border-b-0"
-      data-testid={`category-budget-${categoryName}`}
-    >
+  const content = (
+    <>
       <div className="flex items-center gap-2">
         <CategoryIcon name={icon} size={18} />
         <span className="text-sm font-medium flex-1">{categoryName}</span>
         <span className="text-xs text-muted-foreground tabular-nums">{percentage}%</span>
+        {onClick && (
+          <ChevronRight size={16} className="shrink-0 text-muted-foreground" aria-hidden />
+        )}
       </div>
       <Progress value={percentage} className={PROGRESS_CLASS[status]} />
       <div className="flex items-center justify-between">
@@ -70,6 +74,28 @@ export function CategoryBudgetRow({
           {getMarginBadgeIcon(status, margin)} {getMarginLabel(status, margin)}
         </Badge>
       </div>
+    </>
+  );
+
+  const baseClass = 'space-y-1.5 py-3 border-b border-border last:border-b-0';
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={`${categoryName} 내역 보기`}
+        className={`${baseClass} w-full rounded-lg text-left transition-colors hover:bg-muted/40 active:bg-muted/60`}
+        data-testid={`category-budget-${categoryName}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={baseClass} data-testid={`category-budget-${categoryName}`}>
+      {content}
     </div>
   );
 }
