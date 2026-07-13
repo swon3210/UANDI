@@ -9,7 +9,9 @@ ORIGIN_REPO="/Users/jinsong/Documents/Github/UANDI"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-ENV_FILES="apps/web/.env.local apps/mobile/.env apps/mobile/google-services.json"
+# 원본 repo에만 두는 비밀/설정 파일들 (모두 gitignore 대상 → 심볼릭 링크로만 연결)
+# asc-api-key.p8: App Store Connect API 키 (eas submit --profile production 에서 사용)
+ENV_FILES="apps/web/.env.local apps/mobile/.env apps/mobile/google-services.json apps/mobile/asc-api-key.p8"
 
 for ENV_FILE in $ENV_FILES; do
   ORIGIN_ENV="$ORIGIN_REPO/$ENV_FILE"
