@@ -3,6 +3,7 @@ import {
   OAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   reauthenticateWithPopup,
   deleteUser,
   signOut as firebaseSignOut,
@@ -22,7 +23,12 @@ appleProvider.addScope('email');
 appleProvider.addScope('name');
 
 function isInAppWebView(): boolean {
-  if (typeof navigator === 'undefined') return false;
+  if (typeof window === 'undefined') return false;
+  // 네이티브 RN WebView 래퍼가 주입하는 신호로 감지한다.
+  // iOS 는 구글 disallowed_useragent 차단을 피하려고 UA 에서 'wv' 를 뺀 깨끗한 Safari UA 를 쓰므로,
+  // UA 문자열만으로는 WebView 를 감지할 수 없다. 브리지 존재로 판단해야 iOS 도 계속 redirect 경로를 탄다
+  // (WKWebView 는 signInWithPopup 이 동작하지 않음).
+  if (window.__UANDI_NATIVE__ != null || window.ReactNativeWebView != null) return true;
   const ua = navigator.userAgent;
   return /wv|WebView/i.test(ua) || (/Android/.test(ua) && /Version\/[\d.]+/.test(ua));
 }
@@ -71,6 +77,13 @@ export async function signOut(): Promise<void> {
 
 export function onAuthStateChanged(callback: (user: FirebaseUser | null) => void): Unsubscribe {
   return firebaseOnAuthStateChanged(getAuth(), callback);
+}
+
+// 인앱 WebView 는 signInWithRedirect 를 사용하므로, 리다이렉트 복귀 시 결과를 완료 처리해야 한다.
+// 이 호출이 없으면 실패(예: iOS 저장소 차단으로 인한 애플 로그인 실패)가 조용히 삼켜진다.
+// 성공 시에는 onAuthStateChanged 가 발화하므로 반환값은 사용하지 않아도 되지만, 에러 표면화를 위해 호출한다.
+export async function getRedirectSignInResult() {
+  return getRedirectResult(getAuth());
 }
 
 export async function deleteCurrentUser(): Promise<void> {

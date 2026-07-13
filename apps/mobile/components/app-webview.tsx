@@ -226,7 +226,14 @@ export function AppWebView({
         onError={hideSplashOnce}
         onHttpError={hideSplashOnce}
         originWhitelist={['*']}
-        userAgent="Mozilla/5.0 (Linux; Android 13; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+        // iOS 는 'wv' 없는 실제 Safari UA 를 써야 구글 로그인(disallowed_useragent) 차단을 피한다.
+        // 안드로이드는 기존 UA(wv 포함)를 유지해 회귀를 막는다. WebView 감지는 web 쪽에서
+        // window.__UANDI_NATIVE__ / ReactNativeWebView 브리지로 하므로 iOS UA 정리와 무관하게 동작한다.
+        userAgent={
+          Platform.OS === 'android'
+            ? 'Mozilla/5.0 (Linux; Android 13; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+            : 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+        }
         javaScriptEnabled
         domStorageEnabled
         thirdPartyCookiesEnabled
