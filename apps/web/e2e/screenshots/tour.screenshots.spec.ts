@@ -145,14 +145,10 @@ test('투어 가계부 스크린샷 캡처', async ({ page, context }) => {
     await page.addStyleTag({ content: HIDE_DEV_CHROME }).catch(() => {});
     await page.waitForTimeout(2500);
 
-    // 상단 헤더와 하단 탭(Bottom Nav)의 실제 위치를 측정해 그 사이 콘텐츠 영역만 남긴다.
+    // 상단 헤더 아래부터 화면 끝까지 콘텐츠 영역만 남긴다.
     const headerBox = await page
       .locator('header')
       .first()
-      .boundingBox()
-      .catch(() => null);
-    const navBox = await page
-      .getByTestId('app-nav')
       .boundingBox()
       .catch(() => null);
 
@@ -160,10 +156,9 @@ test('투어 가계부 스크린샷 캡처', async ({ page, context }) => {
     const { width: rawWidth = 0, height: rawHeight = 0 } = await sharp(raw).metadata();
 
     let pipeline = sharp(raw);
-    if (headerBox && navBox && rawWidth && rawHeight) {
+    if (headerBox && rawWidth && rawHeight) {
       const top = Math.max(0, Math.round((headerBox.y + headerBox.height) * DSF));
-      const bottom = Math.min(rawHeight, Math.round(navBox.y * DSF));
-      const height = bottom - top;
+      const height = rawHeight - top;
       if (height > 0) {
         pipeline = sharp(raw).extract({ left: 0, top, width: rawWidth, height });
       }

@@ -1,8 +1,6 @@
-// 전역 하단탭(AppNav)을 숨기는 풀스크린 라우트.
-//
 // 자체 footer CTA를 가진 풀스크린 편집/위저드 플로우(목표 위저드·일괄수정·항목 편집,
-// 카테고리/설정 편집 등)는 전역 하단탭이 겹치면 동선이 어색하므로 chromeless로 둔다.
-// 반대로 "둘러보는" 화면(현금흐름, 목표 랜딩)은 전역 하단탭을 그대로 노출한다.
+// 카테고리/설정 편집 등)를 나타내는 라우트. 이 화면에서는 전역 플로팅 추가 버튼(FAB)이
+// 자체 하단 CTA와 겹치므로 숨긴다.
 // (standalone)에 편집 플로우 페이지를 추가/삭제하면 이 목록도 함께 갱신할 것.
 const CHROMELESS_PREFIXES = [
   '/inner/cashbook/categories',
@@ -13,7 +11,7 @@ const CHROMELESS_PREFIXES = [
   '/inner/cashbook/history/weekly/notifications',
 ];
 
-/** 해당 경로에서 전역 하단탭을 숨겨야 하는지 여부. */
+/** 해당 경로가 자체 하단 CTA를 가진 풀스크린 편집 플로우인지 여부(전역 FAB를 숨긴다). */
 export function isChromelessRoute(pathname: string): boolean {
   return CHROMELESS_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
