@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useSetAtom } from 'jotai';
 import { Timestamp } from 'firebase/firestore';
-import { onAuthStateChanged } from '@/lib/firebase/auth';
+import { onAuthStateChanged, getRedirectSignInResult } from '@/lib/firebase/auth';
 import { setAuthCookie } from '@/lib/auth-cookie';
 import { userAtom } from '@/stores/auth.store';
 import { getUserDocument, createUserDocument } from '@/services/user';
@@ -15,6 +15,12 @@ export function AuthInit() {
   const setUser = useSetAtom(userAtom);
 
   useEffect(() => {
+    // 인앱 WebView(signInWithRedirect) 복귀 시 리다이렉트 로그인 결과를 완료 처리한다.
+    // 실패를 조용히 삼키지 않도록 에러를 로깅한다(예: iOS 애플 로그인 실패 원인 추적).
+    getRedirectSignInResult().catch((e) => {
+      console.error('[AuthInit] getRedirectResult ERROR:', e);
+    });
+
     const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
       if (!firebaseUser) {
         setAuthCookie(null);
