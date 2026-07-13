@@ -6,7 +6,6 @@ import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import {
   ChevronLeft,
-  Settings,
   CalendarRange,
   Sparkles,
   Loader2,
@@ -102,18 +101,6 @@ export default function CashflowCalendarPage() {
         leftSlot={
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
             <ChevronLeft size={20} />
-          </Button>
-        }
-        rightSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={openSettings}
-            aria-label="현금흐름 설정"
-            data-testid="cashflow-settings-button"
-          >
-            <Settings size={20} />
           </Button>
         }
       />

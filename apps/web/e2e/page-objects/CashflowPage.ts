@@ -23,10 +23,6 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-negative-banner');
   }
 
-  get settingsButton(): Locator {
-    return this.page.getByTestId('cashflow-settings-button');
-  }
-
   get setupButton(): Locator {
     return this.page.getByTestId('cashflow-setup-button');
   }
@@ -99,11 +95,6 @@ export class CashflowPage {
         await card.locator('button').first().click();
       }
     }
-  }
-
-  async openSettings() {
-    await this.settingsButton.click();
-    await this.settingsSheet.waitFor({ state: 'visible' });
   }
 
   /**
