@@ -64,3 +64,17 @@ export const Complete: Story = {
     margin: 0,
   },
 };
+
+// onClick이 있으면 행 전체가 버튼이 되고 우측에 화살표가 나타난다(내역 필터 이동).
+export const Clickable: Story = {
+  args: {
+    categoryName: '식비',
+    icon: 'bowl_food',
+    budgetAmount: 600000,
+    actualAmount: 390000,
+    percentage: 65,
+    status: 'stable',
+    margin: 210000,
+    onClick: () => {},
+  },
+};

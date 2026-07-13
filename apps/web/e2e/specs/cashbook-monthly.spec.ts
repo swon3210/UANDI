@@ -158,6 +158,62 @@ test.describe('월간 대시보드', () => {
       await expect(page.getByText('카테고리별 지출')).toBeVisible();
     });
 
+    test('카테고리 행을 누르면 해당 월·카테고리로 필터된 내역으로 이동한다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      const year = new Date().getFullYear();
+      const planId = await seedAnnualPlan(coupleId, year, uid);
+
+      // 카테고리 이름이 행에 뜨려면 예산 항목의 categoryId가 실제 카테고리 문서와 매칭돼야 한다.
+      const foodId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        sortOrder: 0,
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_personal',
+        name: '교통',
+        icon: 'bus',
+        sortOrder: 1,
+      });
+
+      await seedAnnualPlanItem(coupleId, planId, {
+        categoryId: foodId,
+        group: 'expense',
+        subGroup: 'variable_common',
+        monthlyAmounts: Array(12).fill(600000),
+      });
+
+      // 식비 1건 + 다른 카테고리(교통) 1건 → 식비만 필터되는지 확인
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 390000,
+        category: '식비',
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 50000,
+        category: '교통',
+      });
+
+      const monthly = new CashbookMonthlyPage(page);
+      await monthly.goto();
+
+      await monthly.categoryRow('식비').click();
+
+      // 내역 페이지로 이동 + 식비 카테고리로 필터됨(필터 결과 1건)
+      const summary = page.getByTestId('filter-result-summary');
+      await expect(summary).toBeVisible();
+      await expect(summary).toContainText('1건');
+      // 식비 실적은 보이고, 필터에서 빠진 교통(50,000원)은 보이지 않는다
+      await expect(page.getByText('390,000원').first()).toBeVisible();
+      await expect(page.getByText('50,000원')).not.toBeVisible();
+    });
+
     test('주별 지출 추이 테이블이 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);

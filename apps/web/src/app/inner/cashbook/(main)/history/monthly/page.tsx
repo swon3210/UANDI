@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -26,6 +26,8 @@ export default function CashbookMonthlyPage() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
+
+  const router = useRouter();
 
   // 예산 알림 "자세히 보기"(?sort=over)로 진입하면 초과 카테고리부터 정렬해 보여준다.
   const searchParams = useSearchParams();
@@ -57,6 +59,16 @@ export default function CashbookMonthlyPage() {
 
   // 뮤테이션
   const addMutation = useAddEntry(coupleId);
+
+  // 카테고리 행을 누르면 해당 월 + 해당 카테고리로 필터된 내역 목록으로 이동한다.
+  const handleCategoryClick = (categoryName: string) => {
+    const params = new URLSearchParams({
+      category: categoryName,
+      year: String(year),
+      month: String(month0), // 0-based (내역 페이지 period와 동일)
+    });
+    router.push(`/inner/cashbook/history?${params.toString()}`);
+  };
 
   // 오버레이 핸들러
   const handleAddIrregularIncome = () => {
@@ -112,6 +124,7 @@ export default function CashbookMonthlyPage() {
               categoryBudgets={categoryBudgets}
               weeklyExpenses={weeklyExpenses}
               initialSort={initialCategorySort}
+              onCategoryClick={handleCategoryClick}
             />
           </TabsContent>
 

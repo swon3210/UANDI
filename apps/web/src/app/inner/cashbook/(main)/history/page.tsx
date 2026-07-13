@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
@@ -77,12 +77,35 @@ function FilterSheetContent({
   );
 }
 
+/**
+ * 월간 내역 페이지의 카테고리 행에서 넘어온 딥링크(?category=&year=&month=)를
+ * 초기 필터 상태로 변환한다. 파라미터가 없으면 기본 상태(이번 달·무필터)를 그대로 쓴다.
+ */
+function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState {
+  const base = createDefaultFilterState();
+  const category = params.get('category');
+  if (category) base.selectedCategoryNames = [category];
+
+  const yearRaw = params.get('year');
+  const monthRaw = params.get('month');
+  if (yearRaw !== null && monthRaw !== null) {
+    const year = Number(yearRaw);
+    const month = Number(monthRaw); // 0-based
+    if (Number.isInteger(year) && Number.isInteger(month) && month >= 0 && month <= 11) {
+      base.period = { mode: 'month', year, month };
+    }
+  }
+  return base;
+}
+
 export default function CashbookPage() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
 
-  const [filter, setFilter] = useState<CashbookFilterState>(createDefaultFilterState);
+  const searchParams = useSearchParams();
+  // 딥링크 파라미터는 최초 렌더에서 한 번만 초기 필터로 반영한다(이후엔 사용자 조작이 소스).
+  const [filter, setFilter] = useState<CashbookFilterState>(() => filterFromParams(searchParams));
   const range = useMemo(() => resolvePeriod(filter.period), [filter.period]);
 
   const isFilterActive =
@@ -228,10 +251,19 @@ export default function CashbookPage() {
     ));
   };
 
+  // 카테고리 딥링크 파라미터는 초기 필터로 반영한 뒤 URL에서 제거한다.
+  // (새로고침/뒤로가기 시 사용자가 바꾼 필터가 옛 파라미터로 되돌아가지 않도록)
+  useEffect(() => {
+    if (searchParams.get('category') || searchParams.get('year') || searchParams.get('month')) {
+      window.history.replaceState(null, '', '/inner/cashbook/history');
+    }
+    // 최초 1회만 정리하면 충분(초기 상태는 이미 반영됨)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 푸시 알림 딥링크(quickAdd=1)로 진입하면 prefill된 추가 시트를 1회 자동으로 연다.
   // 카테고리 로드 후 열어야 prefill 카테고리가 선택되므로 categories를 기다린다.
   // 외부 트리거(URL)에 반응하는 일회성 동작이라 effect + ref 가드를 사용한다.
-  const searchParams = useSearchParams();
   const quickAddHandledRef = useRef(false);
   useEffect(() => {
     if (quickAddHandledRef.current) return;
