@@ -256,6 +256,6 @@ test.describe('현금흐름 캘린더', () => {
     await page.getByTestId('cashbook-tab-cashflow').click();
 
     await page.waitForURL('**/inner/cashbook/cashflow');
-    await expect(page.getByTestId('cashflow-settings-button')).toBeVisible();
+    await expect(page.getByTestId('cashflow-setup-button')).toBeVisible();
   });
 });
