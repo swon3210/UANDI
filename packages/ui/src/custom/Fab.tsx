@@ -23,8 +23,8 @@ export function Fab({ icon, label, showLabel = false, className, ...rest }: FabP
         'fixed right-4 z-30 flex h-12 items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg',
         'transition-transform hover:brightness-95 active:scale-95',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        // 모바일: 하단탭(h-16) + safe-area 위로 / 데스크톱: 하단바 없으니 아래로
-        'bottom-[calc(4rem+var(--safe-bottom)+1rem)] md:bottom-6',
+        // 하단 고정 네비가 없으므로 safe-area 위 여백만 확보 / 데스크톱은 고정 여백
+        'bottom-[calc(1.5rem+var(--safe-bottom))] md:bottom-6',
         showLabel ? 'px-4' : 'w-12 justify-center',
         className
       )}

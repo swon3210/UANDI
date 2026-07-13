@@ -1,12 +1,13 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { CommunityPage } from '../page-objects/CommunityPage';
-import { AppNavPage } from '../page-objects/AppNavPage';
+import { AppSidebarPage } from '../page-objects/AppSidebarPage';
 
 test.describe('커뮤니티 셸·네비게이션', () => {
-  test('하단탭의 커뮤니티 탭을 누르면 /community로 이동한다', async ({ authedPage }) => {
-    const nav = new AppNavPage(authedPage);
-    await nav.tabCommunity.click();
+  test('사이드바의 커뮤니티(피드)를 누르면 /community로 이동한다', async ({ authedPage }) => {
+    const nav = new AppSidebarPage(authedPage);
+    await nav.open();
+    await nav.linkCommunity.click();
     await expect(authedPage).toHaveURL(/\/community$/, { timeout: 30000 });
   });
 

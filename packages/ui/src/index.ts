@@ -21,8 +21,6 @@ export type {
   SidebarLinkProps,
   AppSidebarProps,
 } from './custom/AppSidebar';
-export { AppNav, getActiveNavId } from './custom/AppNav';
-export type { AppNavItem, AppNavLinkProps, AppNavProps } from './custom/AppNav';
 export { Fab } from './custom/Fab';
 export type { FabProps } from './custom/Fab';
 
