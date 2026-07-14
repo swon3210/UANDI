@@ -241,6 +241,20 @@ export type Nudge = {
   respondedAt: Timestamp | null;
 };
 
+// ── 커플 접속 상태 + 서로를 위한 한마디 ──
+// 저장 경로: couples/{coupleId}/meta/presence (단일 문서 — uid를 키로 각 멤버 상태 보관)
+// - lastSeen: 화면이 보이는 동안 하트비트로 갱신. now - lastSeen < 임계값이면 "접속 중".
+//   (Firestore엔 RTDB의 onDisconnect가 없어 오프라인은 staleness로 추론한다.)
+// - message: 상대방 대시보드 커플 카드에 뜨는 한마디(최대 30자). 없으면 null.
+export type CouplePresenceEntry = {
+  lastSeen: Timestamp | null;
+  message: string | null;
+  messageUpdatedAt: Timestamp | null;
+};
+
+// uid → 멤버 상태. 두 멤버 상태를 한 문서에 모아 카드가 onSnapshot 1개로 구독한다.
+export type CouplePresenceDoc = Record<string, CouplePresenceEntry>;
+
 // 가계부 디스플레이 설정 (유저 개인)
 export type CashbookDisplaySettings = {
   userId: string;

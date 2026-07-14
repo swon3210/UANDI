@@ -65,6 +65,15 @@ export type { AssetGrowthChartProps, AssetGrowthPoint } from './custom/outer/Ass
 export { NudgeComposer, NUDGE_PRESETS, NUDGE_MAX_MESSAGE } from './custom/inner/NudgeComposer';
 export type { NudgeComposerProps } from './custom/inner/NudgeComposer';
 
+// 대시보드 커플 카드 — 접속 상태 + 서로를 위한 한마디 (프레젠테이션 전용)
+export { CoupleStatusCard, COUPLE_MESSAGE_MAX } from './custom/inner/CoupleStatusCard';
+export type { CoupleStatusCardProps, CoupleStatusPerson } from './custom/inner/CoupleStatusCard';
+export {
+  CoupleMessageComposer,
+  COUPLE_MESSAGE_PRESETS,
+} from './custom/inner/CoupleMessageComposer';
+export type { CoupleMessageComposerProps } from './custom/inner/CoupleMessageComposer';
+
 // 가계부 결산 차트 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { BudgetVsActualChart } from './custom/inner/BudgetVsActualChart';
 export type {

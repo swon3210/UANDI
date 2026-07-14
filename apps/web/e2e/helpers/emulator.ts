@@ -926,6 +926,71 @@ export async function listNudges(coupleId: string): Promise<EmulatorNudge[]> {
   }));
 }
 
+// 커플 접속 상태 + 서로를 위한 한마디 (couples/{coupleId}/meta/presence)
+// uid를 키로 각 멤버 상태를 한 문서에 모은다. 여러 멤버를 한 번의 PATCH로 심는다
+// (PATCH는 문서를 덮어쓰므로 uid별로 나눠 호출하면 앞 항목이 지워진다).
+type SeedPresenceEntry = {
+  lastSeenIso?: string | null;
+  message?: string | null;
+  messageUpdatedAtIso?: string | null;
+};
+
+export async function seedCouplePresence(
+  coupleId: string,
+  entries: Record<string, SeedPresenceEntry>
+): Promise<void> {
+  const fields: Record<string, unknown> = {};
+  for (const [uid, entry] of Object.entries(entries)) {
+    fields[uid] = {
+      mapValue: {
+        fields: {
+          lastSeen: entry.lastSeenIso ? { timestampValue: entry.lastSeenIso } : { nullValue: null },
+          message: entry.message != null ? { stringValue: entry.message } : { nullValue: null },
+          messageUpdatedAt: entry.messageUpdatedAtIso
+            ? { timestampValue: entry.messageUpdatedAtIso }
+            : { nullValue: null },
+        },
+      },
+    };
+  }
+
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/meta/presence`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields }),
+    }
+  );
+}
+
+type EmulatorPresenceEntry = { message: string | null; hasLastSeen: boolean };
+
+export async function getCouplePresence(
+  coupleId: string
+): Promise<Record<string, EmulatorPresenceEntry>> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/meta/presence`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  if (!res.ok) return {};
+  const json = (await res.json()) as {
+    fields?: Record<
+      string,
+      { mapValue?: { fields?: Record<string, { stringValue?: string; timestampValue?: string }> } }
+    >;
+  };
+  const out: Record<string, EmulatorPresenceEntry> = {};
+  for (const [uid, value] of Object.entries(json.fields ?? {})) {
+    const entryFields = value.mapValue?.fields ?? {};
+    out[uid] = {
+      message: entryFields.message?.stringValue ?? null,
+      hasLastSeen: entryFields.lastSeen?.timestampValue != null,
+    };
+  }
+  return out;
+}
+
 // FCM 토큰 (users/{uid}/fcmTokens/{sha256(token)})
 // 문서 id는 클라이언트 tokenIdFor와 동일하게 토큰의 SHA-256 hex.
 export async function seedFcmToken(
