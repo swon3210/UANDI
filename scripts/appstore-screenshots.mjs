@@ -36,15 +36,20 @@ const MOBILE_DIR = join(REPO_ROOT, 'apps', 'mobile');
 const SRC_DIR = join(MOBILE_DIR, 'store', 'listings', 'ko-KR', 'images', 'phoneScreenshots');
 const API = 'https://api.appstoreconnect.apple.com';
 
+// 업로드 대상 규격. 각 디스플레이 타입마다 해상도가 다르다(폰/아이패드).
+// - APP_IPHONE_67: 6.7"(1290×2796). Apple 은 iPhone 최대 규격을 6.7" 하나로 두고 6.9"까지 커버.
+// - APP_IPAD_PRO_3GEN_129: 12.9"/13" iPad Pro(2048×2732). supportsTablet=true 라 iPad 스크린샷 필수.
+// ASC_DISPLAY_TYPES 로 일부만 실행 가능(예: APP_IPAD_PRO_3GEN_129 만).
+const ALL_TARGETS = [
+  { type: 'APP_IPHONE_67', width: 1290, height: 2796, label: 'iPhone 6.7"' },
+  { type: 'APP_IPAD_PRO_3GEN_129', width: 2048, height: 2732, label: 'iPad 12.9/13"' },
+];
 const CONFIG = {
   appAppleId: process.env.ASC_APP_ID || '6790130439',
   locale: 'ko',
-  // 목표 규격: 1290×2796 = 6.7"(APP_IPHONE_67). Apple 은 iPhone 최대 규격을 6.7" 하나로 두고
-  // 6.9" 기기까지 이걸로 커버한다(별도 6.9" 디스플레이 타입 없음). 이 한 세트로 iPhone 요건 충족.
-  // (원하면 ASC_DISPLAY_TYPES 로 APP_IPHONE_65 등 추가 규격도 지정 가능 — 대개 불필요.)
-  width: 1290,
-  height: 2796,
-  displayTypes: (process.env.ASC_DISPLAY_TYPES || 'APP_IPHONE_67').split(','),
+  targets: process.env.ASC_DISPLAY_TYPES
+    ? ALL_TARGETS.filter((t) => process.env.ASC_DISPLAY_TYPES.split(',').includes(t.type))
+    : ALL_TARGETS,
 };
 
 // ── 인자 ──────────────────────────────────────────────────────────────────────
@@ -265,21 +270,25 @@ async function main() {
   const files = sourceFiles();
   console.log(`소스 스크린샷 ${files.length}장 (${SRC_DIR.replace(REPO_ROOT + '/', '')})`);
   if (files.length < 2 || files.length > 10) {
-    console.log(`  ⚠ App Store 는 iPhone 스크린샷 1~10장 허용 (현재 ${files.length}장)`);
+    console.log(`  ⚠ App Store 는 스크린샷 1~10장 허용 (현재 ${files.length}장)`);
   }
 
-  // 변환 (모든 소스 → iOS 규격 버퍼)
-  console.log(`\n[변환] → ${CONFIG.width}×${CONFIG.height} (비율 유지 + 가장자리색 패딩)`);
-  const images = [];
-  for (const f of files) {
-    const buf = await toIosBuffer(f.path, CONFIG.width, CONFIG.height);
-    images.push({ name: f.name, buf });
-    console.log(`  ✓ ${f.name} → ${buf.length.toLocaleString()} bytes`);
-    if (flags.preview || flags.dryRun) {
-      const out = join('/tmp', `ios-${f.name}`);
-      writeFileSync(out, buf);
-      console.log(`      미리보기: ${out}`);
+  // 대상 규격별로 변환 (규격마다 해상도가 다름)
+  console.log(`\n[변환] 대상 규격: ${CONFIG.targets.map((t) => t.label).join(', ')}`);
+  const byTarget = new Map();
+  for (const t of CONFIG.targets) {
+    const imgs = [];
+    for (const f of files) {
+      const buf = await toIosBuffer(f.path, t.width, t.height);
+      imgs.push({ name: f.name, buf });
+      if (flags.preview || flags.dryRun) {
+        const out = join('/tmp', `asc-${t.type}-${f.name}`);
+        writeFileSync(out, buf);
+        console.log(`  ${t.label}: ${f.name} → ${out}`);
+      }
     }
+    byTarget.set(t.type, imgs);
+    console.log(`  ✓ ${t.label} (${t.width}×${t.height}) — ${imgs.length}장 변환`);
   }
 
   if (flags.dryRun) {
@@ -292,12 +301,12 @@ async function main() {
   console.log(`\n앱: ${app.attributes.name} (${app.attributes.bundleId})`);
   const locId = await getKoLocalizationId();
 
-  for (const displayType of CONFIG.displayTypes) {
-    console.log(`\n[${displayType}]`);
+  for (const t of CONFIG.targets) {
+    console.log(`\n[${t.label} · ${t.type}]`);
     try {
-      const setId = await ensureSet(locId, displayType);
+      const setId = await ensureSet(locId, t.type);
       const ids = [];
-      for (const img of images) {
+      for (const img of byTarget.get(t.type)) {
         const id = await uploadOne(setId, img.name, img.buf);
         ids.push(id);
         console.log(`  ✓ 업로드: ${img.name}`);
@@ -305,7 +314,7 @@ async function main() {
       await setOrder(setId, ids);
       console.log(`  ✓ 순서 정렬 (${ids.length}장)`);
     } catch (err) {
-      console.log(`  ✗ ${displayType} 실패(건너뜀): ${err.message.split('\n')[0]}`);
+      console.log(`  ✗ ${t.type} 실패(건너뜀): ${err.message.split('\n')[0]}`);
     }
   }
 
