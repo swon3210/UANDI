@@ -79,10 +79,12 @@ recordRequest?: {
 
 ## 쿨다운(스팸 방지) 정책
 
-- **미응답(pending) 요청 1건만 허용.** 파트너에게 보낸 nudge 중 `status === 'pending'`인 것이 이미 있으면 새 요청을 보낼 수 없다.
-- 파트너가 요청을 소비(입력 화면 진입 시 `seen`, 완료 시 `done`, 무시 시 `dismissed`)하면 pending이 해소되어 다시 보낼 수 있다.
-- 클라이언트: 발송 전 `getPendingNudgeForPartner()`로 확인 → pending 있으면 버튼 비활성 + "이미 요청을 보냈어요" 안내.
-- 서버(Cloud Function): 발송 시점에도 최근 pending 존재 여부를 재확인하여 중복 push를 방지(레이스 방지 이중 가드).
+- **시간 기반 쿨다운(30분).** 파트너에게 **마지막으로 보낸** nudge가 30분 이내이면 새 요청을 보낼 수 없다.
+  - 상대의 응답 여부(`status`)가 아니라 **마지막 발송 시각**으로 판단한다. 상대가 푸시를 못 받거나 응답하지 못해도 30분이 지나면 다시 보낼 수 있다. (이전의 "미응답 pending 1건 허용" 방식은 응답 전이가 구현되지 않아 한 번 보내면 영구 잠기는 문제가 있었다.)
+- 클라이언트: 발송 전 `getLatestNudgeForPartner()`로 마지막 넛지를 조회 → `createdAt`이 쿨다운 이내이면 버튼 비활성 + "약 N분 후 다시 보낼 수 있어요" 안내.
+- 서버(Cloud Function): 발송 시점에 동일 (from→to) 넛지가 쿨다운 이내에 이미 있었는지 재확인하여 중복 push를 방지(레이스 방지 이중 가드).
+- 쿨다운 상수(`NUDGE_COOLDOWN_MS = 30분`)는 `apps/web/src/services/nudge.ts`와 `functions/src/notifications/nudgeAlert.ts`에 동일값으로 둔다.
+- 쿼리에 복합 인덱스 필요: `nudges (fromUid ASC, toUid ASC, createdAt DESC)` (`firestore.indexes.json`).
 
 ---
 

@@ -19,10 +19,14 @@ type Nudge = {
 
 const CLICK_ACTION = '/inner/cashbook';
 
+/** 콕 찌르기 재발송 쿨다운(ms). 클라이언트 가드와 동일값. (apps/web src/services/nudge.ts) */
+const NUDGE_COOLDOWN_MS = 30 * 60 * 1000; // 30분
+
 /**
  * couples/{coupleId}/nudges/{nudgeId} 생성 시 파트너(toUid)에게 가계부 입력 요청 푸시를 보낸다.
  * - 수신자의 NotificationSettings.recordRequest.enabled === false면 skip.
- * - 레이스 방지: 같은 (fromUid → toUid) pending 넛지 중 가장 오래된 것만 발송(중복 방지).
+ * - 레이스 방지: 같은 (fromUid → toUid) 넛지가 쿨다운(30분) 이내에 이미 있었다면
+ *   이번 넛지는 "너무 이른 중복"이므로 push를 보내지 않는다(클라 가드 우회/더블탭 방지).
  * 발송 패턴은 budgetAlert.ts와 동일.
  */
 export const onNudgeCreated = onDocumentCreated(
@@ -45,25 +49,24 @@ export const onNudgeCreated = onDocumentCreated(
       return;
     }
 
-    // 레이스 방지: 동일 (from→to) pending 넛지가 여럿이면 가장 오래된 것만 발송한다.
-    const pendingSnap = await db
+    // 레이스 방지: 동일 (from→to) 넛지가 쿨다운 이내에 이미 있었다면 이번 push는 건너뛴다.
+    const thisCreatedAt = data.createdAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
+    const recentSnap = await db
       .collection(`couples/${coupleId}/nudges`)
       .where('fromUid', '==', fromUid)
       .where('toUid', '==', toUid)
-      .where('status', '==', 'pending')
+      .orderBy('createdAt', 'desc')
+      .limit(2)
       .get();
 
-    if (pendingSnap.size > 1) {
-      const thisCreatedAt = data.createdAt?.toMillis() ?? Number.MAX_SAFE_INTEGER;
-      const hasOlder = pendingSnap.docs.some((d) => {
-        if (d.id === nudgeId) return false;
-        const other = (d.data().createdAt as admin.firestore.Timestamp | undefined)?.toMillis() ?? 0;
-        return other < thisCreatedAt;
-      });
-      if (hasOlder) {
-        logger.info('nudgeAlert skip: older pending nudge exists', { coupleId, nudgeId });
-        return;
-      }
+    const hasRecentBefore = recentSnap.docs.some((d) => {
+      if (d.id === nudgeId) return false;
+      const other = (d.data().createdAt as admin.firestore.Timestamp | undefined)?.toMillis() ?? 0;
+      return other < thisCreatedAt && thisCreatedAt - other < NUDGE_COOLDOWN_MS;
+    });
+    if (hasRecentBefore) {
+      logger.info('nudgeAlert skip: within cooldown of a recent nudge', { coupleId, nudgeId });
+      return;
     }
 
     // 수신자 알림 설정 확인

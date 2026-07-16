@@ -1,26 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getPendingNudgeForPartner, sendNudge } from '@/services/nudge';
+import { getLatestNudgeForPartner, sendNudge } from '@/services/nudge';
 
-const PENDING_KEY = 'nudge-pending';
+const LATEST_KEY = 'nudge-latest';
 
 /**
- * 파트너에게 보낸 미응답(pending) 넛지 존재 여부. 쿨다운 가드용.
+ * 파트너에게 마지막으로 보낸 넛지. 시간 기반 쿨다운 가드용.
  */
-export function usePendingNudge(
+export function useLatestNudge(
   coupleId: string | null,
   fromUid: string | null,
   toUid: string | null
 ) {
   return useQuery({
-    queryKey: [PENDING_KEY, coupleId, fromUid, toUid],
-    queryFn: () => getPendingNudgeForPartner(coupleId!, fromUid!, toUid!),
+    queryKey: [LATEST_KEY, coupleId, fromUid, toUid],
+    queryFn: () => getLatestNudgeForPartner(coupleId!, fromUid!, toUid!),
     enabled: !!coupleId && !!fromUid && !!toUid,
   });
 }
 
 /**
- * 가계부 입력 요청 넛지 발송. 성공 시 pending 쿼리를 무효화한다.
+ * 가계부 입력 요청 넛지 발송. 성공 시 최신 넛지 쿼리를 무효화해 쿨다운을 갱신한다.
  */
 export function useSendNudge(
   coupleId: string | null,
@@ -33,7 +33,7 @@ export function useSendNudge(
     mutationFn: (message: string) =>
       sendNudge({ coupleId: coupleId!, fromUid: fromUid!, toUid: toUid!, message }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [PENDING_KEY, coupleId, fromUid, toUid] });
+      qc.invalidateQueries({ queryKey: [LATEST_KEY, coupleId, fromUid, toUid] });
       toast.success('입력 요청을 보냈어요 🐹');
     },
     onError: () => {
