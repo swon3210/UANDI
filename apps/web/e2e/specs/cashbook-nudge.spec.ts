@@ -46,12 +46,14 @@ test.describe('가계부 입력 요청 "콕 찌르기"', () => {
     });
   });
 
-  test('이미 미응답 요청이 있으면 다시 보낼 수 없다', async ({ twoUserAuthedContext }) => {
+  test('최근(쿨다운 30분 이내) 요청이 있으면 다시 보낼 수 없다', async ({
+    twoUserAuthedContext,
+  }) => {
     const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
     await seedUserDocument(uid1, EMAIL_1, coupleId, { displayName: '지수' });
     await seedUserDocument(uid2, EMAIL_2, coupleId, { displayName: '현우' });
 
-    // 이미 보낸 pending 넛지를 심는다
+    // 방금(쿨다운 이내) 보낸 넛지를 심는다
     await seedNudge(coupleId, uid1, uid2, { status: 'pending', message: '오늘 쓴 거 입력해줘' });
 
     await page.goto('/inner/cashbook');
@@ -60,9 +62,35 @@ test.describe('가계부 입력 요청 "콕 찌르기"', () => {
     const composer = page.getByTestId('nudge-composer');
     await expect(composer).toBeVisible();
 
-    // 발송 버튼 비활성 + 안내 문구
+    // 발송 버튼 비활성 + 남은 쿨다운 안내 문구
     await expect(page.getByTestId('nudge-submit')).toBeDisabled();
-    await expect(page.getByTestId('nudge-disabled-reason')).toBeVisible();
+    await expect(page.getByTestId('nudge-disabled-reason')).toContainText('다시 보낼 수 있어요');
+  });
+
+  test('마지막 요청이 쿨다운(30분)을 지났으면 다시 보낼 수 있다', async ({
+    twoUserAuthedContext,
+  }) => {
+    const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
+    await seedUserDocument(uid1, EMAIL_1, coupleId, { displayName: '지수' });
+    await seedUserDocument(uid2, EMAIL_2, coupleId, { displayName: '현우' });
+
+    // 31분 전에 보낸(= 쿨다운 만료) 넛지를 심는다. 상대가 확인하지 않아도 다시 보낼 수 있어야 한다.
+    const thirtyOneMinAgo = new Date(Date.now() - 31 * 60 * 1000).toISOString();
+    await seedNudge(coupleId, uid1, uid2, {
+      status: 'pending',
+      message: '오늘 쓴 거 입력해줘',
+      createdAt: thirtyOneMinAgo,
+    });
+
+    await page.goto('/inner/cashbook');
+    await page.getByTestId('nudge-button').click();
+
+    const composer = page.getByTestId('nudge-composer');
+    await expect(composer).toBeVisible();
+
+    // 쿨다운이 지났으므로 발송 가능, 안내 문구 없음
+    await expect(page.getByTestId('nudge-submit')).toBeEnabled();
+    await expect(page.getByTestId('nudge-disabled-reason')).toHaveCount(0);
   });
 
   test('알림 설정에서 입력 요청 알림을 끄고 저장할 수 있다', async ({ authedContext }) => {

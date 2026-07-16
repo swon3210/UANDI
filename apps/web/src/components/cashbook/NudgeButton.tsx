@@ -6,9 +6,8 @@ import { Hand } from 'lucide-react';
 import { Button, Sheet, NudgeComposer } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
-import { usePendingNudge, useSendNudge } from '@/hooks/useSendNudge';
-
-const PENDING_REASON = '이미 입력 요청을 보냈어요. 파트너가 확인하면 다시 보낼 수 있어요.';
+import { useLatestNudge, useSendNudge } from '@/hooks/useSendNudge';
+import { nudgeCooldownRemainingMs } from '@/services/nudge';
 
 /**
  * 콕 찌르기 시트 내용. overlay-kit으로 매번 새로 마운트되므로 훅을 직접 구독해
@@ -19,25 +18,34 @@ function NudgeSheetContent({
   fromUid,
   toUid,
   partnerName,
+  openedAtMs,
   onClose,
 }: {
   coupleId: string;
   fromUid: string;
   toUid: string;
   partnerName: string;
+  /** 시트를 연 시각(ms). 렌더 중 Date.now() 호출을 피하려 이벤트 핸들러에서 캡처해 주입. */
+  openedAtMs: number;
   onClose: () => void;
 }) {
-  const { data: pending } = usePendingNudge(coupleId, fromUid, toUid);
+  const { data: latest } = useLatestNudge(coupleId, fromUid, toUid);
   const sendMutation = useSendNudge(coupleId, fromUid, toUid);
 
-  const hasPending = !!pending;
+  // 시간 기반 쿨다운: 마지막 발송이 30분 이내면 잠금. 상대의 응답 여부와 무관.
+  const remainingMs = nudgeCooldownRemainingMs(latest ?? null, openedAtMs);
+  const isCoolingDown = remainingMs > 0;
+  const remainingMin = Math.ceil(remainingMs / 60000);
+  const cooldownReason = isCoolingDown
+    ? `방금 요청을 보냈어요. 약 ${remainingMin}분 후 다시 보낼 수 있어요.`
+    : undefined;
 
   return (
     <NudgeComposer
       partnerName={partnerName}
       isPending={sendMutation.isPending}
-      disabled={hasPending}
-      disabledReason={hasPending ? PENDING_REASON : undefined}
+      disabled={isCoolingDown}
+      disabledReason={cooldownReason}
       onSubmit={(message) =>
         sendMutation.mutate(message, {
           onSuccess: () => onClose(),
@@ -65,6 +73,8 @@ export function NudgeButton() {
   const partnerName = partner.displayName?.trim() || '파트너';
 
   const handleClick = () => {
+    // 이벤트 핸들러에서 현재 시각을 캡처(렌더 중 Date.now() 호출 회피).
+    const openedAtMs = Date.now();
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
         <NudgeSheetContent
@@ -72,6 +82,7 @@ export function NudgeButton() {
           fromUid={uid}
           toUid={partner.uid}
           partnerName={partnerName}
+          openedAtMs={openedAtMs}
           onClose={() => {
             close();
             setTimeout(unmount, 300);

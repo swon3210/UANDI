@@ -3,6 +3,7 @@ import {
   collection,
   getDocs,
   limit,
+  orderBy,
   query,
   serverTimestamp,
   where,
@@ -10,15 +11,19 @@ import {
 import { getDb } from '@/lib/firebase/config';
 import type { Nudge } from '@/types';
 
+/** 콕 찌르기 재발송 쿨다운(ms). 마지막 발송 후 이 시간이 지나야 다시 보낼 수 있다. */
+export const NUDGE_COOLDOWN_MS = 30 * 60 * 1000; // 30분
+
 function nudgesCol(coupleId: string) {
   return collection(getDb(), `couples/${coupleId}/nudges`);
 }
 
 /**
- * 파트너에게 보낸 미응답(pending) 넛지가 있으면 반환한다. 없으면 null.
- * 쿨다운(pending 1건) 가드에 사용 — 이미 있으면 새 요청을 보내지 않는다.
+ * 파트너에게 마지막으로 보낸 넛지 1건을 반환한다(상태 무관). 없으면 null.
+ * 시간 기반 쿨다운 가드에 사용 — 상대의 응답 여부가 아니라 마지막 발송 시각으로 판단한다.
+ * (상대가 푸시를 못 받거나 응답하지 못해도 쿨다운이 지나면 다시 보낼 수 있다.)
  */
-export async function getPendingNudgeForPartner(
+export async function getLatestNudgeForPartner(
   coupleId: string,
   fromUid: string,
   toUid: string
@@ -28,12 +33,22 @@ export async function getPendingNudgeForPartner(
       nudgesCol(coupleId),
       where('fromUid', '==', fromUid),
       where('toUid', '==', toUid),
-      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc'),
       limit(1)
     )
   );
   const first = snap.docs[0];
   return first ? ({ ...(first.data() as Omit<Nudge, 'id'>), id: first.id } as Nudge) : null;
+}
+
+/**
+ * 마지막 발송 이후 남은 쿨다운(ms). 넛지가 없거나 쿨다운이 지났으면 0.
+ * createdAt이 아직 서버에서 확정되지 않았으면(null) 쿨다운 없음으로 본다.
+ */
+export function nudgeCooldownRemainingMs(latest: Nudge | null, nowMs: number): number {
+  const createdMs = latest?.createdAt?.toMillis?.();
+  if (!createdMs) return 0;
+  return Math.max(0, NUDGE_COOLDOWN_MS - (nowMs - createdMs));
 }
 
 /**

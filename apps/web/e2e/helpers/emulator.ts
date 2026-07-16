@@ -875,6 +875,8 @@ export async function seedNudge(
   options: {
     message?: string;
     status?: 'pending' | 'seen' | 'done' | 'dismissed';
+    /** 생성 시각(ISO). 미지정 시 now. 쿨다운(30분) 만료 케이스 테스트에 사용. */
+    createdAt?: string;
   } = {}
 ): Promise<string> {
   const nudgeId = `nudge-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -892,7 +894,7 @@ export async function seedNudge(
           type: { stringValue: 'record-request' },
           message: { stringValue: options.message ?? '' },
           status: { stringValue: options.status ?? 'pending' },
-          createdAt: { timestampValue: new Date().toISOString() },
+          createdAt: { timestampValue: options.createdAt ?? new Date().toISOString() },
           respondedAt: { nullValue: null },
         },
       }),
