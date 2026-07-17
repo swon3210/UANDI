@@ -9,6 +9,7 @@ import { PostCard } from '@/components/PostCard';
 import { TagFilter } from '@/components/TagFilter';
 import { CategoryNav } from '@/components/CategoryNav';
 import { FeaturedPostHero } from '@/components/FeaturedPostHero';
+import { HomeIntro } from '@/components/HomeIntro';
 
 export default function BlogHomePage() {
   const featured = getFeaturedPost();
@@ -34,6 +35,8 @@ export default function BlogHomePage() {
 
   return (
     <>
+      <HomeIntro />
+
       {featured ? <FeaturedPostHero post={featured} /> : null}
 
       {/* 둘러보기 — 카테고리(세그먼트)·태그(칩)를 한 패널로 묶는다 */}

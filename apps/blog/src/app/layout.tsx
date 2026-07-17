@@ -8,7 +8,8 @@ const siteUrl = process.env.SITE_URL ?? 'https://blog.uandi.app';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'Doggae Log',
-  description: '말랑 가계부 서비스를 만들어가는 과정을 기록합니다.',
+  description:
+    '만드는 데서 멈추지 않고 현장에서 쓰이게 만드는 일 — AI를 팀과 제품에 배치해 정착시켜 온 과정을 기록합니다.',
   alternates: {
     types: {
       'application/rss+xml': '/feed.xml',
