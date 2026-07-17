@@ -9,6 +9,7 @@
 
 - 주니어~미드레벨 개발자
 - AI를 활용한 서비스 개발에 관심 있는 사람
+- AI를 팀·고객 현장에 배치하고 정착시키는 일(FDE)에 관심 있는 사람
 - 기술적 깊이보다는 실제 경험과 과정에 관심 있는 사람
 
 ---
@@ -76,8 +77,8 @@
 ## 태그 규칙
 
 - 프로젝트 기능 영역: `photos`, `cashbook`, `auth`, `blog`, `dashboard`, `onboarding`
-- 기술 키워드: `performance`, `testing`, `infrastructure`, `design-system`, `firebase`
-- 한글 태그도 허용 (예: `가계부`, `회고`, `AI`) — 기존 글 관례
+- 기술 키워드: `performance`, `testing`, `infrastructure`, `design-system`, `firebase`, `FDE`
+- 한글 태그도 허용 (예: `가계부`, `회고`, `AI`, `커리어`) — 기존 글 관례
 - 글당 2~4개 태그 사용
 
 ---

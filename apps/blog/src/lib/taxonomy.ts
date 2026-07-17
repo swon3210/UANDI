@@ -37,6 +37,9 @@ export const SERIES = {
   'building-uandi': {
     title: '갤러리 & 가계부 만들기',
   },
+  'road-to-fde': {
+    title: 'FDE로 가는 길',
+  },
 } as const;
 
 export type SeriesSlug = keyof typeof SERIES;

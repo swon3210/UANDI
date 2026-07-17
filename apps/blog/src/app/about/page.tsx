@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_SLUGS } from '@/lib/taxonomy';
 export const metadata: Metadata = {
   title: '소개 | Doggae Log',
   description:
-    '프론트엔드 개발자로 일하면서, 프로덕트 엔지니어로 일의 범위를 넓혀가는 5년차의 기록',
+    '화면을 만들어 온 5년차 프론트엔드 개발자. 요즘은 만든 것이 현장에서 실제로 쓰이게 만드는 일(Forward Deployed)을 파고 있습니다.',
 };
 
 export default function AboutPage() {
@@ -17,19 +17,43 @@ export default function AboutPage() {
           About
         </p>
         <h1 className="mt-2 text-3xl font-bold leading-snug text-gray-900">
-          &ldquo;프론트엔드 개발자&rdquo;로 일하면서,
-          <br />
-          프로덕트 엔지니어로 일을 넓혀가는 5년차{' '}
+          화면을 만들어 온 5년차{' '}
           <span className="text-[var(--color-primary)]">독개</span>입니다.
+          <br />
+          요즘은 만든 것이{' '}
+          <span className="underline decoration-[var(--color-primary)]/40 decoration-4 underline-offset-4">
+            현장에서 쓰이게
+          </span>{' '}
+          만드는 일을 파고 있습니다.
         </h1>
         <p className="mt-4 text-base leading-relaxed text-gray-600">
-          코드를 빨리 짜는 능력만으로는 5년차의 단가를 정당화할 수 없는
-          시대라고 믿습니다. 그래서 코드 위에 세 가지를 더 쌓는 중입니다 —
-          <strong className="text-gray-900">AI를 도구화하는 명세 인프라</strong>,{' '}
-          <strong className="text-gray-900">사용자에게 가설을 깨뜨리는 작은 프로덕트</strong>,
-          그리고 <strong className="text-gray-900">의사결정 과정을 남기는 기록</strong>.
-          매주 한 편씩, 그 세 갈래의 흔적을 이 블로그에 모읍니다.
+          잘 만든 소프트웨어와 실제로 쓰이는 소프트웨어 사이에는 별개의 일이
+          하나 더 있다고 믿게 됐습니다. 그래서 코드 위에 세 가지를 쌓는 중입니다
+          — <strong className="text-gray-900">AI를 팀과 제품에 배치해 정착시키는 인프라</strong>,{' '}
+          <strong className="text-gray-900">사용자에게 가설을 검증하는 작은 프로덕트</strong>,
+          그리고 <strong className="text-gray-900">그 과정을 남기는 기록</strong>.
+          매주 한 편씩, 그 흔적을 이 블로그에 모읍니다.
         </p>
+      </section>
+
+      {/* 지금 가는 방향 */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900">
+          지금 가는 방향 — Forward Deployed
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-gray-600">
+          FDE(Forward Deployed Engineer)는 플랫폼을 들고 사용자 곁으로 가서
+          진짜 문제를 찾고, 그들의 환경에 맞게 만들고, 실제로 쓰이는 단계까지
+          책임지는 엔지니어를 말합니다. 회사에서 기획자·디자이너가 실제로 쓰는
+          AI 워크플로우를 만들며 이 일의 성격을 몸으로 겪었고, 지금은 그 역량을
+          의식적으로 넓혀가는 중입니다. 과정은 시리즈로 기록합니다.
+        </p>
+        <Link
+          href="/series/road-to-fde"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
+        >
+          시리즈: FDE로 가는 길 →
+        </Link>
       </section>
 
       {/* 말랑 가계부 프로젝트 소개 */}
@@ -42,8 +66,10 @@ export default function AboutPage() {
             <p className="mt-3 text-sm leading-relaxed text-gray-600">
               신혼부부를 위한 사진 갤러리 + 가계부 앱입니다. 아내와 둘이서 직접
               사용자가 되어 만들고 있고, AI를 어떻게 도구화하면 작은 팀이 빠르게
-              제품을 검증할 수 있는지를 검증하는 실험장이기도 합니다. 이 블로그의
-              많은 글은 말랑 가계부를 만들면서 마주친 문제들에서 나옵니다.
+              제품을 검증할 수 있는지를 확인하는 실험장이기도 합니다. 만드는
+              데서 끝나지 않고 실제로 쓰이는지까지 지켜보는 훈련장인 셈입니다.
+              이 블로그의 많은 글은 말랑 가계부를 만들면서 마주친 문제들에서
+              나옵니다.
             </p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}

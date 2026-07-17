@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" font-family="Pretendard, 'Pretendard Variable', -apple-system, 'Apple SD Gothic Neo', sans-serif" role="img" aria-label="기존 방식과 FDE 방식 비교">
+  <defs>
+    <marker id="aGray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9ca3af"/></marker>
+    <marker id="aCoral" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#e8837a"/></marker>
+  </defs>
+
+  <rect x="8" y="8" width="320" height="234" rx="12" fill="#f6f7f8" stroke="#e5e7eb"/>
+  <text x="168" y="38" text-anchor="middle" font-size="15" font-weight="700" fill="#374151">지금까지 — 이케아처럼 팔기</text>
+  <rect x="36" y="54" width="264" height="38" rx="8" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="168" y="78" text-anchor="middle" font-size="13" fill="#1f2328">모델(부품)을 건넨다</text>
+  <line x1="168" y1="92" x2="168" y2="104" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#aGray)"/>
+  <rect x="36" y="108" width="264" height="38" rx="8" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="168" y="132" text-anchor="middle" font-size="13" fill="#1f2328">조립은 고객 몫</text>
+  <line x1="168" y1="146" x2="168" y2="158" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#aGray)"/>
+  <rect x="36" y="162" width="264" height="58" rx="8" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="168" y="186" text-anchor="middle" font-size="13" fill="#6b7280">기업 고객은 조립을 못 한다</text>
+  <text x="168" y="206" text-anchor="middle" font-size="13" font-weight="700" fill="#6b7280">비싸게 사놓고 방치 ✗</text>
+
+  <rect x="352" y="8" width="320" height="234" rx="12" fill="#fdf1f0" stroke="#f4c7c2"/>
+  <text x="512" y="38" text-anchor="middle" font-size="15" font-weight="700" fill="#b4544a">FDE — 조립까지 책임지기</text>
+  <rect x="380" y="54" width="264" height="38" rx="8" fill="#ffffff" stroke="#eeb3ac"/>
+  <text x="512" y="78" text-anchor="middle" font-size="13" fill="#1f2328">모델과 함께 엔지니어가 간다</text>
+  <line x1="512" y1="92" x2="512" y2="104" stroke="#e8837a" stroke-width="1.5" marker-end="url(#aCoral)"/>
+  <rect x="380" y="108" width="264" height="38" rx="8" fill="#ffffff" stroke="#eeb3ac"/>
+  <text x="512" y="132" text-anchor="middle" font-size="13" fill="#1f2328">고객사 안에서 함께 조립한다</text>
+  <line x1="512" y1="146" x2="512" y2="158" stroke="#e8837a" stroke-width="1.5" marker-end="url(#aCoral)"/>
+  <rect x="380" y="162" width="264" height="58" rx="8" fill="#ffffff" stroke="#eeb3ac"/>
+  <text x="512" y="186" text-anchor="middle" font-size="13" font-weight="700" fill="#b4544a">실제로 쓰일 때까지 남는다</text>
+  <text x="512" y="206" text-anchor="middle" font-size="13" font-weight="700" fill="#b4544a">성과를 숫자로 증명 ✓</text>
+</svg>
