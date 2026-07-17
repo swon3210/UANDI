@@ -22,7 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPostBySlug(slug);
   if (!post) return { title: 'Post Not Found' };
 
-  const images = post.cover ? [{ url: post.cover }] : undefined;
+  // cover가 없는 글은 사이트 기본 OG 카드로 폴백 — 없으면 미리보기 앱이
+  // 파비콘을 확대해 써서 이미지가 깨져 보인다.
+  const images = [{ url: post.cover ?? '/og-default.png' }];
 
   return {
     title: `${post.title} | Doggae Log`,
@@ -37,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images,
     },
     twitter: {
-      card: post.cover ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: post.title,
       description: post.summary,
       images,
