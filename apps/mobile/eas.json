@@ -27,7 +27,8 @@
       "ios": {
         "ascApiKeyPath": "./asc-api-key.p8",
         "ascApiKeyId": "378VJG2956",
-        "ascApiKeyIssuerId": "068e8073-cbc6-4ca4-9bb9-84dc04307438"
+        "ascApiKeyIssuerId": "068e8073-cbc6-4ca4-9bb9-84dc04307438",
+        "ascAppId": "6790130439"
       }
     }
   }
