@@ -6,8 +6,11 @@
  * "예약(POST appScreenshots) → 업로드(PUT uploadOperations) → 커밋(PATCH uploaded=true)"
  * 3단계 흐름이라 별도 스크립트로 둔다.
  *
- * 소스 이미지는 Play 와 동일하게 apps/mobile/store/listings/ko-KR/images/phoneScreenshots/
- * 를 재사용하되, App Store iPhone 규격(1290×2796)으로 비율 유지 리사이즈 + 상/하단
+ * 소스 이미지: iOS 전용 폴더(.../images/phoneScreenshots.ios/)가 있으면 그걸 쓰고,
+ * 없으면 Play 와 공유하는 .../images/phoneScreenshots/ 로 fallback 한다. iOS 앱은 가계부
+ * 외 기능(사진첩/재테크/커뮤니티)을 숨기므로, 가계부 화면만 담은 iOS 전용 폴더를 두면
+ * Play(안드로이드=전체 기능) 리스팅을 건드리지 않고 App Store 컷만 교체할 수 있다.
+ * 어느 쪽이든 App Store iPhone 규격(1290×2796)으로 비율 유지 리사이즈 + 상/하단
  * 가장자리 색 샘플링 패딩(이음매 없음) 후 업로드한다. (sharp 사용, 디스크에 안 남김)
  *
  * 인증: appstore-listing.mjs 와 동일 — eas.json 의 submit.production.ios(ascApiKeyId/
@@ -33,7 +36,13 @@ const sharp = require('sharp');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
 const MOBILE_DIR = join(REPO_ROOT, 'apps', 'mobile');
-const SRC_DIR = join(MOBILE_DIR, 'store', 'listings', 'ko-KR', 'images', 'phoneScreenshots');
+const IMAGES_DIR = join(MOBILE_DIR, 'store', 'listings', 'ko-KR', 'images');
+// App Store(iOS) 전용 스크린샷 소스. iOS 앱은 가계부 외 기능(사진첩/재테크/커뮤니티)을
+// 숨기므로, 가계부 화면만 담은 phoneScreenshots.ios/ 가 있으면 그걸 쓴다. 없으면 Play 와
+// 공유하는 phoneScreenshots/ 로 fallback. (Play 리스팅은 공유 폴더를 그대로 사용 → 영향 없음.)
+const SHARED_SRC_DIR = join(IMAGES_DIR, 'phoneScreenshots');
+const IOS_SRC_DIR = join(IMAGES_DIR, 'phoneScreenshots.ios');
+const SRC_DIR = existsSync(IOS_SRC_DIR) ? IOS_SRC_DIR : SHARED_SRC_DIR;
 const API = 'https://api.appstoreconnect.apple.com';
 
 // 업로드 대상 규격. 각 디스플레이 타입마다 해상도가 다르다(폰/아이패드).

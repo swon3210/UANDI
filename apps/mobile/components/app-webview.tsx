@@ -131,9 +131,14 @@ export function AppWebView({
     const base = tokenInfo
       ? `window.__UANDI_NATIVE__ = ${buildBridgePayload(tokenInfo)};`
       : 'window.__UANDI_NATIVE__ = window.__UANDI_NATIVE__ || {};';
+    // iOS 는 토큰(=platform 포함)이 비동기로 늦게 오거나(권한 거부/시뮬레이터면 아예 안 옴)
+    // 최초 로드 시 tokenInfo 가 없을 수 있다. App Store 심사 대응(가계부 외 기능 숨김)이
+    // 토큰 여부와 무관하게 동작하도록 platform='ios' 를 항상 명시 주입한다.
+    // (안드로이드는 tokenInfo.platform='android' 로 이미 들어가므로 여기선 iOS 만 보강한다.)
+    const platformLine = Platform.OS === 'ios' ? `window.__UANDI_NATIVE__.platform = 'ios';` : '';
     const enabled = readBubbleEnabled();
     const bubbleLine = enabled === null ? '' : `window.__UANDI_NATIVE__.bubbleEnabled = ${enabled};`;
-    return `${base} ${bubbleLine} ${FILE_PICKER_HOOK} true;`;
+    return `${base} ${platformLine} ${bubbleLine} ${FILE_PICKER_HOOK} true;`;
   }, [tokenInfo]);
 
   // 웹 → 네이티브 메시지 처리.

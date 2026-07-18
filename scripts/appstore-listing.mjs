@@ -63,13 +63,15 @@ const CONFIG = {
   privacyPolicyUrl: process.env.ASC_PRIVACY_URL || 'https://uandi-web.vercel.app/privacy',
 };
 
+// 이 스크립트는 App Store(iOS) 전용이므로, 심사 노트도 iOS 앱에 실제 노출되는 기능
+// (가계부만)으로 서술한다. iOS 네이티브에서는 사진첩/재테크/커뮤니티가 숨겨진다.
 const DEFAULT_NOTES = [
-  '말랑 가계부는 커플이 함께 쓰는 가계부/사진첩/재테크 앱입니다.',
+  '말랑 가계부는 커플이 함께 쓰는 공동 가계부 앱입니다.',
   '',
   '로그인은 Google 또는 Apple 계정으로만 가능하여 리뷰어가 직접 계정을 만들 수 없으므로,',
   '심사용 데모 계정을 아래 "로그인 정보"에 제공합니다. 이 데모 계정에는 상대방 커플이',
-  '이미 연결되어 있고 샘플 데이터가 들어 있어, 로그인 직후 모든 기능(가계부/대시보드/',
-  '사진첩/재테크/커뮤니티)을 바로 확인할 수 있습니다.',
+  '이미 연결되어 있고 샘플 데이터가 들어 있어, 로그인 직후 가계부 기능(가계부 내역/',
+  '대시보드/현금흐름/목표)을 바로 확인할 수 있습니다.',
   '',
   '"Apple로 계속하기" 버튼은 WebView 안의 웹 로그인 화면에서 Sign in with Apple(Firebase)',
   '으로 동작합니다.',
@@ -178,20 +180,34 @@ function stripEmoji(s) {
   const re = /\p{Extended_Pictographic}[️‍]*[ \t]?/gu;
   return s.replace(re, '').replace(/[ \t]+\n/g, '\n').trim();
 }
+// App Store(iOS) 전용 오버라이드 파일명: 'full-description.txt' → 'full-description.ios.txt'.
+// iOS 앱은 가계부 외 기능(사진첩/재테크/커뮤니티)을 숨기므로, 스토어 문구도 가계부만
+// 서술한 .ios 변형이 있으면 그걸 쓴다. 없으면 Play 와 공유하는 기본 파일로 fallback.
+// (Play 리스팅은 play-listing.mjs 가 기본 파일을 그대로 읽으므로 영향 없음.)
+function iosVariant(file) {
+  return file.replace(/\.txt$/, '.ios.txt');
+}
+
 function readContent(flags) {
   const dir = join(LISTINGS_DIR, CONFIG.langDir);
   const c = {};
+  let usedIos = false;
   for (const f of [...VERSION_FIELDS, ...APPINFO_FIELDS]) {
-    const v = readFileTrim(join(dir, f.file));
+    const iosPath = join(dir, iosVariant(f.file));
+    const useIos = existsSync(iosPath);
+    const chosenFile = useIos ? iosVariant(f.file) : f.file;
+    const v = readFileTrim(join(dir, chosenFile));
+    if (useIos) usedIos = true;
     if (v == null) {
       if (f.required) throw new Error(`필수 문구 파일이 없습니다: ${join('apps/mobile/store/listings', CONFIG.langDir, f.file)}`);
       continue;
     }
     if (f.max && [...v].length > f.max) {
-      throw new Error(`${f.label}(${f.file})가 ${f.max}자를 초과했습니다: ${[...v].length}자`);
+      throw new Error(`${f.label}(${chosenFile})가 ${f.max}자를 초과했습니다: ${[...v].length}자`);
     }
     c[f.key] = v;
   }
+  if (usedIos) console.log('※ App Store 전용 iOS 문구(.ios.txt)를 사용합니다 (가계부 기능만 서술).');
   // 릴리스 노트(what's new) — 첫 출시엔 불필요하므로 --whats-new 일 때만
   if (flags.whatsNew) {
     const wn = readFileTrim(join(RELEASE_NOTES_DIR, `${CONFIG.langDir}.txt`));
