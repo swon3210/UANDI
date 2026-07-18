@@ -2,7 +2,6 @@ import { useRef, useCallback, useMemo, useEffect } from 'react';
 import { StyleSheet, BackHandler, Platform, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react-native-webview';
 import type { FcmTokenInfo } from '@/lib/fcm';
@@ -12,6 +11,11 @@ import { bubblePicker } from '@/lib/bubble-picker';
 const UANDI_HOST = 'uandi-web.vercel.app';
 // 딥링크 진입 시 항상 대시보드를 거쳐 목적지로 이동한다(synthetic back stack).
 const DASHBOARD_PATH = '/inner';
+
+// 앱 기본 배경색(크림). splash backgroundColor / 웹 --background(#FAFAF8)과 동일하다.
+// iOS에서 세이프에어리어(상단 상태바 / 하단 홈 인디케이터) 여백이 기본 검정으로
+// 비치지 않도록 WebView를 감싸는 루트 View를 이 색으로 채운다.
+const APP_BACKGROUND_COLOR = '#FAFAF8';
 
 // 웹의 <input type=file>(이미지 첨부 등)이 활성화되면 네이티브로 알린다.
 // 캡처 단계 리스너라 프로그래매틱 .click()까지 잡혀, 첨부 호출부를 수정하지 않고 모든 첨부 지점을 커버한다.
@@ -215,7 +219,7 @@ export function AppWebView({
   }, [hideSplashOnce, navigateWebView]);
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <WebView
         ref={webViewRef}
         style={styles.webview}
@@ -250,9 +254,12 @@ export function AppWebView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Constants.statusBarHeight,
+    // 세이프에어리어 여백을 크림색으로 채운다. 상/하단 인셋은 padding 으로 넣어야
+    // View 자신의 배경으로 채워진다(margin 은 View 밖이라 배경색이 먹지 않아 검정 띠가 남는다).
+    backgroundColor: APP_BACKGROUND_COLOR,
   },
   webview: {
     flex: 1,
+    backgroundColor: APP_BACKGROUND_COLOR,
   },
 });
