@@ -218,8 +218,14 @@ export function AppWebView({
     navigateWebView(target);
   }, [hideSplashOnce, navigateWebView]);
 
+  // iOS는 하단을 edge-to-edge로 둔다: 네이티브가 하단을 padding하면 그만큼 크림색 死영역(띠)이
+  // 생겨 스크롤 콘텐츠를 가린다. iOS에서는 콘텐츠가 물리적 바닥까지 채우고, 홈 인디케이터 회피는
+  // 웹이 --safe-bottom(=env(safe-area-inset-bottom), edge-to-edge면 정상값 보고)으로 고정 하단 바에만
+  // 적용한다. Android는 기존 모델 유지(네이티브가 하단 인셋 소유 + 웹은 NativeSafeAreaFix로 --safe-bottom=0).
+  const bottomPadding = Platform.OS === 'ios' ? 0 : insets.bottom;
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: bottomPadding }]}>
       <WebView
         ref={webViewRef}
         style={styles.webview}
