@@ -23,7 +23,9 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      {/* 앱 배경이 밝은 크림색(#FAFAF8)이라 상태바 글자/아이콘을 어둡게 고정한다.
+          웹은 라이트 테마 전용(.dark 미구현)이라 다크모드 분기가 필요 없다. */}
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }
