@@ -23,6 +23,7 @@ import {
   type SidebarLinkProps,
   type Space,
 } from '@uandi/ui';
+import { isIosNative } from '@/lib/native';
 
 /**
  * 사이드바 섹션 구성. 공간(우리집/재테크/커뮤니티)별로 실제 존재하는 목적지만 노출한다.
@@ -57,6 +58,18 @@ const SECTIONS: SidebarSection[] = [
   },
 ];
 
+/**
+ * 노출할 사이드바 섹션. iOS 네이티브(App Store 심사 대응)에서는 "우리집 > 가계부" 하나만
+ * 남기고 갤러리 항목·재테크 섹션·커뮤니티 섹션을 숨긴다. Android/웹 브라우저는 전체 노출.
+ */
+function visibleSections(): SidebarSection[] {
+  if (!isIosNative()) return SECTIONS;
+  return SECTIONS.filter((s) => s.id === 'inner').map((s) => ({
+    ...s,
+    items: s.items.filter((i) => i.id === 'cashbook'),
+  }));
+}
+
 /** 현재 경로에서 공간 톤(coral/indigo/violet)을 결정. */
 function spaceFromPath(pathname: string): Space | undefined {
   if (pathname.startsWith('/outer')) return 'outer';
@@ -76,6 +89,8 @@ export function AppSidebarTrigger() {
   const pathname = usePathname();
 
   const openSidebar = () => {
+    // 클릭 시점(순수 클라이언트)에 계산 — SSR/hydration 불일치 없이 iOS 여부를 반영한다.
+    const sections = visibleSections();
     overlay.open(({ isOpen, close, unmount }) => {
       const dismiss = () => {
         close();
@@ -85,7 +100,7 @@ export function AppSidebarTrigger() {
         <AppSidebar
           open={isOpen}
           onOpenChange={(open) => !open && dismiss()}
-          sections={SECTIONS}
+          sections={sections}
           activePath={pathname}
           space={spaceFromPath(pathname)}
           LinkComponent={SidebarLink}

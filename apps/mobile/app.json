@@ -2,7 +2,7 @@
   "expo": {
     "name": "말랑 가계부",
     "slug": "my-react-native-app",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "uandi",
