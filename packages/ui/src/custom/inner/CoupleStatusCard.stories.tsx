@@ -13,7 +13,7 @@ const meta: Meta<typeof CoupleStatusCard> = {
     docs: {
       description: {
         component:
-          '대시보드 최상단 "커플 카드". 왼쪽(나·코랄)은 한마디를 쓰는 자리, 오른쪽(짝꿍·세이지)은 접속 상태와 한마디를 보는 자리로 비대칭 구성한다. ' +
+          '대시보드 최상단 "커플 카드". 위 행(짝꿍·세이지)은 접속 상태와 한마디를 보는 자리, 아래 행(나·코랄)은 한마디를 쓰는 자리로 구성한 가로 2줄 컴팩트 레이아웃이다. ' +
           '무상태 프레젠테이션 — 접속 상태/한마디/상대시간 라벨은 모두 props 로 주입한다. 마스코트는 `@uandi/ui/assets/mascot-couple-*.png` 에서 온다.',
       },
     },
@@ -99,7 +99,7 @@ export const PartnerMessageEmpty: Story = {
   },
 };
 
-/** 6. 긴 한마디 — 2줄 말줄임 */
+/** 6. 긴 한마디 — 한 줄 말줄임 */
 export const LongMessage: Story = {
   name: '긴 한마디 (말줄임)',
   args: {
