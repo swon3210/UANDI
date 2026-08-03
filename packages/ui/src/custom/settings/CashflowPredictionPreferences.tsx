@@ -15,7 +15,8 @@ export type CashflowPredictionPreferencesProps = {
 
 /**
  * B. 현금흐름 예측 맞춤화 — 예측 성향(보수/표준/적극) + 예측에서 제외할 카테고리.
- * 성향은 enum, 제외 카테고리는 커플 카테고리에서만 고르므로 자유 텍스트가 없다(인젝션 표면 0).
+ * 성향은 enum, 제외 카테고리는 UI에서 커플 카테고리만 고른다. 최종 안전은 서버가
+ * excludedCategories 를 sanitize+캡 재검증하는 것으로 보장한다(직접 쓰기 우회 대비).
  */
 export function CashflowPredictionPreferences({
   value,

@@ -46,9 +46,14 @@ const analyzeSpendingSchema = z.object({
 const cashflowPredictionSchema = z.object({
   enabled: z.boolean(),
   stance: z.enum(['conservative', 'standard', 'aggressive']),
+  // preprocess 로 원소 파싱 전에 개수를 자른다 → 거대 배열이 와도 per-element sanitize 작업을
+  // 상한으로 묶는다(DoS 방지). 라우트의 바디 크기 가드와 함께 CPU/메모리를 모두 제한한다.
   excludedCategories: z
-    .array(shortText(MAX_CATEGORY_NAME_LEN))
-    .transform((arr) => [...new Set(arr.filter(Boolean))].slice(0, MAX_EXCLUDED_CATEGORIES)),
+    .preprocess(
+      (v) => (Array.isArray(v) ? v.slice(0, MAX_EXCLUDED_CATEGORIES) : v),
+      z.array(shortText(MAX_CATEGORY_NAME_LEN))
+    )
+    .transform((arr) => [...new Set(arr.filter(Boolean))]),
 });
 
 const categoryRuleSchema = z.object({
@@ -59,11 +64,17 @@ const categoryRuleSchema = z.object({
 const parseEntriesSchema = z.object({
   enabled: z.boolean(),
   categoryRules: z
-    .array(categoryRuleSchema)
-    .transform((arr) => arr.filter((r) => r.match && r.category).slice(0, MAX_CATEGORY_RULES)),
+    .preprocess(
+      (v) => (Array.isArray(v) ? v.slice(0, MAX_CATEGORY_RULES) : v),
+      z.array(categoryRuleSchema)
+    )
+    .transform((arr) => arr.filter((r) => r.match && r.category)),
   transferKeywords: z
-    .array(shortText(MAX_TRANSFER_KEYWORD_LEN))
-    .transform((arr) => [...new Set(arr.filter(Boolean))].slice(0, MAX_TRANSFER_KEYWORDS)),
+    .preprocess(
+      (v) => (Array.isArray(v) ? v.slice(0, MAX_TRANSFER_KEYWORDS) : v),
+      z.array(shortText(MAX_TRANSFER_KEYWORD_LEN))
+    )
+    .transform((arr) => [...new Set(arr.filter(Boolean))]),
 });
 
 export const aiPreferencesSchema = z.object({
