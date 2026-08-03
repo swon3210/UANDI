@@ -50,7 +50,10 @@ export type CoupleStatusCardProps =
       className?: string;
     };
 
-const MASCOT_SIZE = 88;
+/** 커플 카드 행에 들어가는 마스코트 크기(px). 대시보드 상단 부피를 줄이려 작게 유지. */
+const MASCOT_SIZE = 44;
+/** 짝꿍 초대(미연결) 상태에서만 쓰는 큰 마스코트 크기(px). */
+const INVITE_MASCOT_SIZE = 96;
 
 /** 카드 외곽 — 우리집 톤(코랄→세이지) 그라데이션 */
 function CardShell({
@@ -66,7 +69,7 @@ function CardShell({
     <div
       data-testid={testId}
       className={cn(
-        'rounded-2xl border bg-gradient-to-br from-coral-50 to-sage-50 p-4 shadow-sm',
+        'rounded-2xl border bg-gradient-to-br from-coral-50 to-sage-50 p-3 shadow-sm',
         className
       )}
     >
@@ -92,11 +95,9 @@ function MessageBubble({
   testId?: string;
 }) {
   const isEmpty = message == null || message.trim() === '';
-  const content = (
-    <span className="line-clamp-2 break-words">{isEmpty ? placeholder : message}</span>
-  );
+  const content = <span className="line-clamp-1 break-all">{isEmpty ? placeholder : message}</span>;
   const base = cn(
-    'inline-block max-w-[9.5rem] rounded-2xl px-3 py-2 text-center text-sm leading-snug',
+    'inline-block max-w-[9.5rem] rounded-2xl px-3 py-1.5 text-center text-sm leading-snug',
     tone === 'coral' ? 'bg-coral-100 text-coral-900' : 'bg-sage-100 text-sage-700',
     isEmpty && 'border border-dashed bg-transparent italic text-muted-foreground'
   );
@@ -124,16 +125,26 @@ function MessageBubble({
   );
 }
 
-function Mascot({ src, name, dimmed }: { src: string; name: string; dimmed?: boolean }) {
+function Mascot({
+  src,
+  name,
+  dimmed,
+  size = MASCOT_SIZE,
+}: {
+  src: string;
+  name: string;
+  dimmed?: boolean;
+  size?: number;
+}) {
   return (
     <img
       src={src}
       alt={`${name} 마스코트`}
-      width={MASCOT_SIZE}
-      height={MASCOT_SIZE}
+      width={size}
+      height={size}
       draggable={false}
       className={cn('select-none object-contain transition-all', dimmed && 'opacity-60 grayscale')}
-      style={{ width: MASCOT_SIZE, height: MASCOT_SIZE }}
+      style={{ width: size, height: size }}
     />
   );
 }
@@ -141,20 +152,24 @@ function Mascot({ src, name, dimmed }: { src: string; name: string; dimmed?: boo
 /**
  * 대시보드 최상단 "커플 카드" — 무상태 프레젠테이션.
  *
- * 왼쪽(나·코랄)은 한마디를 **쓰는** 자리, 오른쪽(짝꿍·세이지)은 접속 상태와
- * 한마디를 **보는** 자리로 비대칭 구성한다. 데이터 조회·상대시간 포맷·편집 오버레이는
- * 모두 소비 측이 담당하고, 이 컴포넌트는 props 로 받은 값만 렌더한다.
+ * 대시보드 상단 부피를 줄이려 가로 2줄로 눕힌 컴팩트 레이아웃이다. 위 행(짝꿍·세이지)은
+ * 접속 상태와 한마디를 **보는** 자리, 아래 행(나·코랄)은 한마디를 **쓰는** 자리다.
+ * 데이터 조회·상대시간 포맷·편집 오버레이는 모두 소비 측이 담당하고,
+ * 이 컴포넌트는 props 로 받은 값만 렌더한다.
  */
 export function CoupleStatusCard(props: CoupleStatusCardProps) {
   if (props.state === 'loading') {
     return (
       <CardShell className={props.className} testId="couple-status-loading">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col divide-y divide-border">
           {[0, 1].map((i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
-              <Skeleton className="h-6 w-28 rounded-2xl" />
-              <Skeleton className="h-[88px] w-[88px] rounded-full" />
-              <Skeleton className="h-3 w-16" />
+            <div key={i} className={cn('flex items-center gap-3', i === 0 ? 'pb-2.5' : 'pt-2.5')}>
+              <Skeleton className="size-11 shrink-0 rounded-full" />
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-16" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+              <Skeleton className="ml-auto h-8 w-28 rounded-2xl" />
             </div>
           ))}
         </div>
@@ -166,7 +181,7 @@ export function CoupleStatusCard(props: CoupleStatusCardProps) {
     return (
       <CardShell className={props.className} testId="couple-status-invite">
         <div className="flex flex-col items-center gap-2 py-2 text-center">
-          <Mascot src={props.mascotSrc} name="우리 커플" />
+          <Mascot src={props.mascotSrc} name="우리 커플" size={INVITE_MASCOT_SIZE} />
           <p className="text-base font-semibold text-foreground">짝꿍과 함께 시작해요</p>
           <p className="text-sm text-muted-foreground">
             초대하면 서로의 접속 상태와 한마디를 주고받을 수 있어요
@@ -184,27 +199,34 @@ export function CoupleStatusCard(props: CoupleStatusCardProps) {
 
   return (
     <CardShell className={props.className} testId="couple-status-card">
-      <div className="grid grid-cols-2 items-end gap-3">
-        {/* 왼쪽: 나 (코랄) — 한마디를 쓰는 자리 */}
-        <div className="flex flex-col items-center gap-2">
-          <MessageBubble
-            tone="coral"
-            message={me.message}
-            placeholder="한마디 남기기"
-            as="button"
-            onClick={props.onEditMyMessage}
-            testId="couple-message-edit"
-          />
-          <Mascot src={me.mascotSrc} name={me.name} />
-          <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">{me.name}</p>
-            <p className="text-xs text-muted-foreground">탭해서 수정</p>
+      <div className="flex flex-col divide-y divide-border">
+        {/* 짝꿍 (세이지) 행 — 접속 상태 + 한마디를 보는 자리 */}
+        <div className="flex items-center gap-3 pb-2.5">
+          <div className="relative shrink-0">
+            <Mascot src={partner.mascotSrc} name={partner.name} dimmed={!isOnline} />
+            {/* 접속 점 */}
+            <span
+              className={cn(
+                'absolute -right-0.5 -top-0.5 size-3 rounded-full ring-2 ring-white',
+                isOnline ? 'bg-sage-400' : 'bg-muted-foreground'
+              )}
+            >
+              <span className="sr-only">{isOnline ? '접속 중' : '오프라인'}</span>
+            </span>
           </div>
-        </div>
-
-        {/* 오른쪽: 짝꿍 (세이지) — 접속 상태 + 한마디를 보는 자리 */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="relative">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{partner.name}</p>
+            <p className="text-xs">
+              {isOnline ? (
+                <span className="font-medium text-sage-600">접속 중</span>
+              ) : (
+                <span className="text-muted-foreground">
+                  {partnerLastSeenLabel ? `${partnerLastSeenLabel} 접속` : '오프라인'}
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="relative ml-auto shrink-0">
             {hasUnreadPartnerMessage ? (
               <span className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-coral-400 px-2 py-0.5 text-[10px] font-medium text-white shadow-sm">
                 새 한마디
@@ -216,29 +238,26 @@ export function CoupleStatusCard(props: CoupleStatusCardProps) {
               placeholder="아직 한마디가 없어요"
             />
           </div>
-          <div className="relative">
-            <Mascot src={partner.mascotSrc} name={partner.name} dimmed={!isOnline} />
-            {/* 접속 점 */}
-            <span
-              className={cn(
-                'absolute right-1 top-1 size-3 rounded-full ring-2 ring-white',
-                isOnline ? 'bg-sage-400' : 'bg-muted-foreground'
-              )}
-            >
-              <span className="sr-only">{isOnline ? '접속 중' : '오프라인'}</span>
-            </span>
+        </div>
+
+        {/* 나 (코랄) 행 — 한마디를 쓰는 자리 */}
+        <div className="flex items-center gap-3 pt-2.5">
+          <div className="shrink-0">
+            <Mascot src={me.mascotSrc} name={me.name} />
           </div>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-foreground">{partner.name}</p>
-            <p className="text-xs">
-              {isOnline ? (
-                <span className="font-medium text-sage-600">접속 중</span>
-              ) : (
-                <span className="text-muted-foreground">
-                  {partnerLastSeenLabel ? `${partnerLastSeenLabel} 접속` : '오프라인'}
-                </span>
-              )}
-            </p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{me.name}</p>
+            <p className="text-xs text-muted-foreground">탭해서 한마디 수정</p>
+          </div>
+          <div className="ml-auto shrink-0">
+            <MessageBubble
+              tone="coral"
+              message={me.message}
+              placeholder="한마디 남기기"
+              as="button"
+              onClick={props.onEditMyMessage}
+              testId="couple-message-edit"
+            />
           </div>
         </div>
       </div>
