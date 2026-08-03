@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
+import { getAiPreferences } from '@/lib/ai/preferences-store';
+import { buildParseRulesSection } from '@/lib/ai/preferences';
 import {
   PARSE_MODEL,
   buildSystemPrompt,
@@ -41,7 +43,8 @@ async function analyzeOne(
   attachment: { id: string; url: string; kind: ImageKind },
   categories: string[],
   today: string,
-  todayYear: number
+  todayYear: number,
+  customRulesSection: string
 ): Promise<AttachmentSyncResult> {
   const client = getOpenAIClient();
   const systemPrompt = buildSystemPrompt({
@@ -50,6 +53,7 @@ async function analyzeOne(
     hasImages: true,
     today,
     todayYear,
+    customRulesSection,
   });
 
   const completion = await client.chat.completions.create({
@@ -117,6 +121,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ results });
   }
 
+  const preferences = await getAiPreferences(authResult.coupleId);
+  const customRulesSection = buildParseRulesSection(preferences.parseEntries);
+
   const todayDayjs = dayjs().startOf('day');
   const today = todayDayjs.format('YYYY-MM-DD');
   const todayYear = todayDayjs.year();
@@ -124,7 +131,7 @@ export async function POST(req: NextRequest) {
   try {
     // 이미지별로 개별 분석한다(이미지↔거래 귀속을 명확히 하기 위함). 동시 호출.
     const results = await Promise.all(
-      attachments.map((a) => analyzeOne(a, categories, today, todayYear))
+      attachments.map((a) => analyzeOne(a, categories, today, todayYear, customRulesSection))
     );
     return NextResponse.json({ results });
   } catch (error) {

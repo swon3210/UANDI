@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
+import { getAiPreferences } from '@/lib/ai/preferences-store';
+import { analyzeSpendingMaxTokens, buildAnalyzeSpendingGuidance } from '@/lib/ai/preferences';
 
 const entrySchema = z.object({
   type: z.enum(['income', 'expense', 'flex']),
@@ -86,11 +88,16 @@ export async function POST(req: NextRequest) {
     )
     .join('\n');
 
+  // 사용자 맞춤 설정(말투/관점/분량)을 시스템 프롬프트 뒤에 반영한다. 섹션 구조/형식은 앱이 고정.
+  const preferences = await getAiPreferences(authResult.coupleId);
+  const guidance = buildAnalyzeSpendingGuidance(preferences.analyzeSpending);
+  const maxTokens = analyzeSpendingMaxTokens(preferences.analyzeSpending);
+
   try {
     const client = getOpenAIClient();
     const stream = await client.chat.completions.create({
       model: 'gpt-4o',
-      max_tokens: 1024,
+      max_tokens: maxTokens,
       stream: true,
       messages: [
         {
@@ -121,7 +128,7 @@ export async function POST(req: NextRequest) {
 - 각 섹션은 1~2문장으로 간결하게
 - 비판적이지 않고 격려하는 톤
 - 커플 맥락 반영 (공동 지출 vs 개인 지출 언급 시)
-- 예산 데이터가 없으면 예산 분석 섹션은 "예산을 설정하면 더 정확한 분석이 가능해요!" 로 대체`,
+- 예산 데이터가 없으면 예산 분석 섹션은 "예산을 설정하면 더 정확한 분석이 가능해요!" 로 대체${guidance}`,
         },
         {
           role: 'user',
