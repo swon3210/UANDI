@@ -5,6 +5,8 @@ import type OpenAI from 'openai';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
+import { getAiPreferences } from '@/lib/ai/preferences-store';
+import { buildParseRulesSection } from '@/lib/ai/preferences';
 import {
   PARSE_MODEL,
   imageDataUrlRegex,
@@ -55,6 +57,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(buildMockParseResponse(text, images?.length ?? 0, imageKind));
   }
 
+  const preferences = await getAiPreferences(authResult.coupleId);
+  const customRulesSection = buildParseRulesSection(preferences.parseEntries);
+
   const todayDayjs = dayjs().startOf('day');
   const today = todayDayjs.format('YYYY-MM-DD');
   const systemPrompt = buildSystemPrompt({
@@ -63,6 +68,7 @@ export async function POST(req: NextRequest) {
     hasImages,
     today,
     todayYear: todayDayjs.year(),
+    customRulesSection,
   });
 
   try {

@@ -73,8 +73,10 @@ export function buildSystemPrompt(options: {
   hasImages: boolean;
   today: string;
   todayYear: number;
+  /** 사용자 지정 분류 규칙 섹션(우선순위 낮음). 없으면 ''. lib/ai/preferences.ts 가 생성. */
+  customRulesSection?: string;
 }): string {
-  const { categories, imageKind, hasImages, today, todayYear } = options;
+  const { categories, imageKind, hasImages, today, todayYear, customRulesSection = '' } = options;
   const imageKindSection = buildImageKindSection(imageKind, hasImages);
 
   return `너는 자연어와 영수증 이미지를 구조화된 JSON으로 변환하는 가계부 파서야.
@@ -122,7 +124,7 @@ ${categories.join(', ')}
 - date가 명시되지 않으면 반드시 오늘 날짜(${today})를 사용
 - category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택
 - confidence는 파싱 확실도 (영수증이 흐리거나 정보가 불명확할수록 낮게)
-- 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정${imageKindSection}`;
+- 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정${imageKindSection}${customRulesSection}`;
 }
 
 /** AI가 돌려준 entries의 비정상 날짜를 오늘로 보정한다(2년 이전/미래). */

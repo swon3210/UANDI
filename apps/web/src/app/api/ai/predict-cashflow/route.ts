@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
+import { getAiPreferences } from '@/lib/ai/preferences-store';
+import { buildPredictionGuidance } from '@/lib/ai/preferences';
 
 // 과거 소비/수입 패턴을 LLM으로 분석해 호라이즌(향후 N개월) 내 "예상되는" 비정기 지출·수입을
 // 추정한다. 결과는 잔액에 반영하지 않고 캘린더에 "AI 예상 내역"으로만 표시한다(읽기 시점 파생).
@@ -62,6 +64,13 @@ export async function POST(req: NextRequest) {
 
   const { entries, horizonStart, horizonEnd, declaredCategories, categories } = parsed.data;
 
+  const preferences = await getAiPreferences(authResult.coupleId);
+  const { snippet: predictionGuidance, excludedCategories } = buildPredictionGuidance(
+    preferences.cashflowPrediction
+  );
+  // 사용자 지정 제외 카테고리를 기존 '정기 선언' 제외 집합과 합친다.
+  const allExcluded = [...new Set([...declaredCategories, ...excludedCategories])];
+
   if (process.env.USE_AI_MOCK === 'true') {
     // 호라이즌 시작 기준으로 결정적인 mock 2건(지출/수입). E2E용 — 선언 카테고리는 제외.
     const base = dayjs(horizonStart);
@@ -82,7 +91,7 @@ export async function POST(req: NextRequest) {
         confidence: 0.6,
         reason: '분기마다 들어온 부수입 패턴',
       },
-    ].filter((m) => !declaredCategories.includes(m.category));
+    ].filter((m) => !allExcluded.includes(m.category));
     return NextResponse.json({ predictions: mock });
   }
 
@@ -139,14 +148,14 @@ export async function POST(req: NextRequest) {
 - confidence: 0~1, 반복이 뚜렷할수록 높게(규칙적 반복≈0.8, 들쭉날쭉≈0.4~0.6)
 - reason: 왜 이렇게 예측했는지 **주기를 명시**한 한국어 한 줄
   (예: "최근 5개월 매월 평균 32만원 지출", "3·5·7월 격월로 들어온 상여 → 9월 예상")
-- **이미 정기 발생으로 선언된 카테고리는 제외**(중복 표시 방지): ${declaredCategories.join(', ') || '(없음)'}`,
+- **이미 정기 발생으로 선언된 카테고리는 제외**(중복 표시 방지): ${allExcluded.join(', ') || '(없음)'}${predictionGuidance}`,
         },
         {
           role: 'user',
           content: `오늘: ${dayjs().format('YYYY-MM-DD')}
 호라이즌: ${horizonStart} ~ ${horizonEnd} (매달 항목은 달마다 1건, 격월·분기 항목은 그 간격대로만)
 사용 가능한 카테고리: ${categories.join(', ') || '(목록 없음)'}
-이미 선언된 정기 카테고리(예측 제외): ${declaredCategories.join(', ') || '(없음)'}
+이미 선언된 정기 카테고리(예측 제외): ${allExcluded.join(', ') || '(없음)'}
 
 과거 카테고리별 월별 거래 요약(등장한 "월 간격"을 보고 다음 발생월을 추정 — 격월이면 격월로):
 ${summaryLines || '(과거 내역 없음)'}`,

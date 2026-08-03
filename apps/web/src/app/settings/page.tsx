@@ -76,6 +76,14 @@ export default function SettingsPage() {
             가계부 설정
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
+          <Link
+            href="/settings/ai"
+            data-testid="settings-ai"
+            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
+          >
+            AI 설정
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
         </div>
 
         <Separator />

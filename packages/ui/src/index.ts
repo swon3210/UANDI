@@ -74,6 +74,41 @@ export {
 } from './custom/inner/CoupleMessageComposer';
 export type { CoupleMessageComposerProps } from './custom/inner/CoupleMessageComposer';
 
+// AI 설정 — 가계부 프롬프트 맞춤화 (프레젠테이션 전용 — 도메인 디커플)
+// A. 지출 분석 / B. 현금흐름 예측 / C. 거래 파싱 — 세 기능 섹션
+export { AnalyzeSpendingPreferences } from './custom/settings/AnalyzeSpendingPreferences';
+export type { AnalyzeSpendingPreferencesProps } from './custom/settings/AnalyzeSpendingPreferences';
+export { CashflowPredictionPreferences } from './custom/settings/CashflowPredictionPreferences';
+export type { CashflowPredictionPreferencesProps } from './custom/settings/CashflowPredictionPreferences';
+export { ParseEntriesPreferences } from './custom/settings/ParseEntriesPreferences';
+export type { ParseEntriesPreferencesProps } from './custom/settings/ParseEntriesPreferences';
+export {
+  AI_TONE_OPTIONS,
+  AI_FOCUS_OPTIONS,
+  AI_LENGTH_OPTIONS,
+  AI_PREDICTION_STANCE_OPTIONS,
+  MAX_CATEGORY_RULES,
+  MAX_RULE_MATCH_LEN,
+  MAX_TRANSFER_KEYWORDS,
+  MAX_TRANSFER_KEYWORD_LEN,
+  DEFAULT_ANALYZE_SPENDING,
+  DEFAULT_CASHFLOW_PREDICTION,
+  DEFAULT_PARSE_ENTRIES,
+  DEFAULT_AI_PREFERENCES,
+} from './custom/settings/aiPreferences';
+export type {
+  AiTone,
+  AiFocus,
+  AiLength,
+  PredictionStance,
+  AnalyzeSpendingPrefs,
+  CashflowPredictionPrefs,
+  ParseEntriesPrefs,
+  CategoryRule,
+  AiPreferences,
+  AiPreferenceOption,
+} from './custom/settings/aiPreferences';
+
 // 가계부 결산 차트 (프레젠테이션 전용 — 도메인 타입과 디커플)
 export { BudgetVsActualChart } from './custom/inner/BudgetVsActualChart';
 export type {
