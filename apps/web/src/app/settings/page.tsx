@@ -49,15 +49,19 @@ export default function SettingsPage() {
         }
       />
       <main className="max-w-md mx-auto w-full px-4 pt-6 space-y-6">
-        {/* 프로필 섹션 */}
-        <div className="flex items-center gap-4">
+        {/* 프로필 섹션 — 클릭 시 프로필 편집으로 이동 */}
+        <Link
+          href="/settings/profile"
+          data-testid="settings-profile"
+          className="flex items-center gap-4 rounded-xl border border-border bg-card p-4"
+        >
           <Avatar className="h-16 w-16" data-testid="settings-profile-avatar">
             {user.photoURL ? <AvatarImage src={user.photoURL} alt={user.displayName} /> : null}
             <AvatarFallback>
               <UserIcon size={24} />
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
+          <div className="flex flex-1 flex-col">
             <span className="text-lg font-semibold" data-testid="settings-profile-name">
               {user.displayName}
             </span>
@@ -65,7 +69,8 @@ export default function SettingsPage() {
               {user.email}
             </span>
           </div>
-        </div>
+          <ChevronRight size={18} className="text-muted-foreground" />
+        </Link>
 
         <div className="space-y-2">
           <Link

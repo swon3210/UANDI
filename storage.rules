@@ -22,6 +22,17 @@ service firebase.storage {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // 프로필 사진 (아바타) — 파트너가 상대 아바타를 봐야 하므로 읽기는 로그인 유저 전체,
+    // 쓰기/삭제는 본인만. (커뮤니티 이미지와 동일한 공개 읽기 정책)
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
     // 커뮤니티 유저 글 이미지 (전역 공유 — 읽기는 모든 로그인 유저, 쓰기는 본인만)
     // 명세: docs/pages/community/community-feed.md
     match /communityImages/{uid}/{allPaths=**} {

@@ -181,3 +181,51 @@ export async function deleteCommunityImage({
   const storagePath = `communityImages/${uid}/${postId}.${ext}`;
   await deleteObject(ref(getStorage(), storagePath));
 }
+
+// ── 프로필 사진 (아바타) ──
+
+type ProfilePhotoUploadOptions = {
+  uid: string;
+  file: File;
+  onProgress?: (percent: number) => void;
+};
+
+// 확장자 없는 고정 경로에 contentType과 함께 저장한다. 매번 같은 객체를 덮어써서
+// 이전 파일이 남지 않고(오펀 없음), 덮어쓸 때마다 다운로드 토큰이 새로 발급돼
+// getDownloadURL이 캐시되지 않은 최신 URL을 돌려준다.
+const profilePhotoPath = (uid: string) => `users/${uid}/profile/avatar`;
+
+export async function uploadProfilePhoto({
+  uid,
+  file,
+  onProgress,
+}: ProfilePhotoUploadOptions): Promise<string> {
+  const storageRef = ref(getStorage(), profilePhotoPath(uid));
+
+  return new Promise((resolve, reject) => {
+    const uploadTask = uploadBytesResumable(storageRef, file, { contentType: file.type });
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        onProgress?.(percent);
+      },
+      reject,
+      async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve(url);
+      }
+    );
+  });
+}
+
+// 우리 Storage의 아바타를 삭제한다. 사진이 외부 URL(예: 구글 OAuth 프로필)이거나
+// 이미 없을 수 있으므로 실패는 조용히 무시한다.
+export async function deleteProfilePhoto(uid: string) {
+  try {
+    await deleteObject(ref(getStorage(), profilePhotoPath(uid)));
+  } catch {
+    // 삭제할 객체가 없으면 무시
+  }
+}
