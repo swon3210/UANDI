@@ -61,7 +61,7 @@ export default function ProfileEditPage() {
           </Button>
         }
       />
-      <main className="max-w-md mx-auto w-full px-4 pt-6 pb-12">
+      <main className="flex flex-1 flex-col">
         {/* user가 확정된 뒤 마운트해 폼 기본값을 시드(useEffect 없이). */}
         <ProfileEditor key={user.uid} user={user} />
       </main>
@@ -151,41 +151,52 @@ function ProfileEditor({ user }: { user: User }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleComplete} className="space-y-8">
-        <ProfileAvatarUploader
-          photoURL={effectivePhotoUrl}
-          displayName={user.displayName}
-          onSelectFile={handleSelectFile}
-          onRemove={handleRemove}
-          uploadProgress={uploadProgress}
-          disabled={saving}
-        />
-        <FormField
-          control={form.control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>이름</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  data-testid="profile-name-input"
-                  placeholder="이름을 입력하세요"
-                  maxLength={NAME_MAX}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          className="w-full"
-          data-testid="profile-complete"
-          disabled={completeDisabled}
-        >
-          {saving ? '저장하는 중...' : '완료'}
-        </Button>
+      <form onSubmit={handleComplete} className="flex flex-1 flex-col">
+        {/* 콘텐츠 — 남는 공간을 채워 하단 바를 화면 맨 아래로 밀어낸다. */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-md space-y-8 px-4 pb-6 pt-6">
+            <ProfileAvatarUploader
+              photoURL={effectivePhotoUrl}
+              displayName={user.displayName}
+              onSelectFile={handleSelectFile}
+              onRemove={handleRemove}
+              uploadProgress={uploadProgress}
+              disabled={saving}
+            />
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>이름</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      data-testid="profile-name-input"
+                      placeholder="이름을 입력하세요"
+                      maxLength={NAME_MAX}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* 하단 고정 바 — 완료 버튼을 화면 맨 아래에 둬 엄지로 누르기 쉽게. */}
+        <div className="border-t border-border bg-background">
+          <div className="mx-auto w-full max-w-md px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))]">
+            <Button
+              type="submit"
+              className="w-full"
+              data-testid="profile-complete"
+              disabled={completeDisabled}
+            >
+              {saving ? '저장하는 중...' : '완료'}
+            </Button>
+          </div>
+        </div>
       </form>
     </Form>
   );
