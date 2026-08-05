@@ -2,13 +2,13 @@
 
 import { useCallback, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
   Button,
   Slider,
 } from '@uandi/ui';
@@ -59,7 +59,7 @@ export function ProfileAvatarCropper({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative h-64 w-full overflow-hidden rounded-lg bg-muted">
+        <div className="relative h-64 w-full overflow-hidden rounded-lg bg-neutral-900">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -73,7 +73,8 @@ export function ProfileAvatarCropper({
           />
         </div>
 
-        <div className="px-1 pt-1">
+        <div className="flex items-center gap-3 px-1">
+          <ZoomOut size={16} className="shrink-0 text-muted-foreground" aria-hidden />
           <Slider
             data-testid="avatar-crop-zoom"
             value={[zoom]}
@@ -82,26 +83,30 @@ export function ProfileAvatarCropper({
             step={0.01}
             onValueChange={([z]) => setZoom(z)}
             aria-label="확대"
+            className="flex-1"
           />
+          <ZoomIn size={18} className="shrink-0 text-muted-foreground" aria-hidden />
         </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={processing}
-            data-testid="avatar-crop-cancel"
-          >
-            취소
-          </Button>
+        <div className="grid gap-2">
           <Button
             onClick={handleApply}
             disabled={!areaPixels || processing}
+            className="w-full"
             data-testid="avatar-crop-apply"
           >
             {processing ? '처리 중...' : '적용'}
           </Button>
-        </DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={processing}
+            className="w-full"
+            data-testid="avatar-crop-cancel"
+          >
+            취소
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
