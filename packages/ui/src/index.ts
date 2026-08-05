@@ -82,11 +82,6 @@ export { CashflowPredictionPreferences } from './custom/settings/CashflowPredict
 export type { CashflowPredictionPreferencesProps } from './custom/settings/CashflowPredictionPreferences';
 export { ParseEntriesPreferences } from './custom/settings/ParseEntriesPreferences';
 export type { ParseEntriesPreferencesProps } from './custom/settings/ParseEntriesPreferences';
-export { ProfileEditForm, PROFILE_NAME_MAX_LENGTH } from './custom/settings/ProfileEditForm';
-export type {
-  ProfileEditFormProps,
-  ProfileEditFormSubmit,
-} from './custom/settings/ProfileEditForm';
 export { ProfileAvatarUploader } from './custom/settings/ProfileAvatarUploader';
 export type { ProfileAvatarUploaderProps } from './custom/settings/ProfileAvatarUploader';
 export {
