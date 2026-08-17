@@ -6,7 +6,6 @@ category: 'essay'
 tags: ['AI', '커리어', 'FDE']
 series: 'making-it-used'
 seriesOrder: 1
-featured: true
 draft: false
 ---
 
