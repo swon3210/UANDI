@@ -15,10 +15,10 @@
   <text x="168" y="175" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">코드에 안 적혀 있다</text>
 
   <rect x="352" y="8" width="320" height="200" rx="12" fill="#f6f7f8" stroke="#e5e7eb"/>
-  <text x="512" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="#374151">전임자가 남긴 코드</text>
+  <text x="512" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="#374151">이유를 모르는 코드</text>
   <rect x="376" y="50" width="272" height="42" rx="8" fill="#ffffff" stroke="#d1d5db"/>
   <text x="512" y="68" text-anchor="middle" font-size="12.5" fill="#1f2328">에디터 커스터마이징</text>
-  <text x="512" y="85" text-anchor="middle" font-size="12" fill="#6b7280">양쪽이 서로 다르다</text>
+  <text x="512" y="85" text-anchor="middle" font-size="12" fill="#6b7280">양쪽 설정이 갈라져 있다</text>
   <line x1="512" y1="92" x2="512" y2="106" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#uGray)"/>
   <rect x="376" y="110" width="272" height="80" rx="8" fill="#ffffff" stroke="#d1d5db"/>
   <text x="512" y="132" text-anchor="middle" font-size="12" fill="#6b7280">결합은 오히려 약하다</text>
