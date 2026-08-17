@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 286" font-family="Pretendard, 'Pretendard Variable', -apple-system, 'Apple SD Gothic Neo', sans-serif" role="img" aria-label="같은 라이브러리를 쓰는 두 서비스에서 층마다 달라지는 공통화 기준">
+  <text x="150" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#6b7280">층</text>
+  <text x="382" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#6b7280">무엇인가</text>
+  <text x="596" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#6b7280">두 서비스가 같아야 하나</text>
+
+  <rect x="8" y="38" width="664" height="62" rx="10" fill="#fdf1f0" stroke="#e8837a" stroke-width="2"/>
+  <text x="150" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#b4544a">데이터 계약</text>
+  <text x="150" y="86" text-anchor="middle" font-size="12" fill="#b4544a">스키마</text>
+  <text x="382" y="74" text-anchor="middle" font-size="12.5" fill="#1f2328">어떤 노드와 마크가 존재하는가</text>
+  <rect x="500" y="56" width="160" height="28" rx="14" fill="#ffffff" stroke="#eeb3ac"/>
+  <text x="580" y="75" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b4544a">반드시 같아야 한다</text>
+
+  <rect x="8" y="110" width="664" height="62" rx="10" fill="#f6f7f8" stroke="#e5e7eb"/>
+  <text x="150" y="138" text-anchor="middle" font-size="14" font-weight="700" fill="#374151">동작 정책</text>
+  <text x="150" y="158" text-anchor="middle" font-size="12" fill="#9ca3af">입력과 편집</text>
+  <text x="382" y="146" text-anchor="middle" font-size="12.5" fill="#1f2328">키맵, 입력 규칙, 붙여넣기 처리</text>
+  <rect x="500" y="128" width="160" height="28" rx="14" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="580" y="147" text-anchor="middle" font-size="12.5" fill="#6b7280">달라도 된다</text>
+
+  <rect x="8" y="182" width="664" height="62" rx="10" fill="#f6f7f8" stroke="#e5e7eb"/>
+  <text x="150" y="210" text-anchor="middle" font-size="14" font-weight="700" fill="#374151">표현</text>
+  <text x="150" y="230" text-anchor="middle" font-size="12" fill="#9ca3af">렌더 결과</text>
+  <text x="382" y="218" text-anchor="middle" font-size="12.5" fill="#1f2328">클래스, 래핑, 링크 처리</text>
+  <rect x="500" y="200" width="160" height="28" rx="14" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="580" y="219" text-anchor="middle" font-size="12.5" fill="#6b7280">달라야 정상이다</text>
+
+  <text x="340" y="268" text-anchor="middle" font-size="13" fill="#6b7280">묶어야 할 것은 맨 위 한 층뿐이었다. 아래 두 층까지 같이 묶으려 해서 분기가 생길 것 같았던 것이다.</text>
+</svg>
