@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_SLUGS } from '@/lib/taxonomy';
 export const metadata: Metadata = {
   title: '소개 | Doggae Log',
   description:
-    '화면을 만들어 온 5년차 프론트엔드 개발자. 요즘은 만든 것이 현장에서 실제로 쓰이게 만드는 일(Forward Deployed)을 파고 있습니다.',
+    '화면을 만들어 온 5년차 프론트엔드 개발자. 요즘은 만든 것이 현장에서 실제로 쓰이게 만드는 일에 관심이 많습니다.',
 };
 
 export default function AboutPage() {
@@ -36,23 +36,25 @@ export default function AboutPage() {
         </p>
       </section>
 
-      {/* 지금 가는 방향 */}
+      {/* 요즘 관심사 */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900">
-          지금 가는 방향 — Forward Deployed
+          요즘 관심 있는 것
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
-          FDE(Forward Deployed Engineer)는 플랫폼을 들고 사용자 곁으로 가서
-          진짜 문제를 찾고, 그들의 환경에 맞게 만들고, 실제로 쓰이는 단계까지
-          책임지는 엔지니어를 말합니다. 회사에서 기획자·디자이너가 실제로 쓰는
-          AI 워크플로우를 만들며 이 일의 성격을 몸으로 겪었고, 지금은 그 역량을
-          의식적으로 넓혀가는 중입니다. 과정은 시리즈로 기록합니다.
+          본업은 프론트엔드입니다. 웹과 앱 화면을 만들고, 디자인 시스템과
+          테스트로 그 화면이 오래 버티게 하는 일을 해왔습니다. 여기에 요즘은
+          만든 것이 실제로 쓰이기까지의 구간이 눈에 들어옵니다. 회사에서
+          기획자·디자이너가 매일 쓰는 AI 워크플로우를 만들며 이 구간에 따로
+          품이 든다는 걸 알게 됐고, 그 뒤로 Forward Deployed Engineering처럼
+          같은 문제를 다루는 이야기들을 찾아 읽고 있습니다. 읽고 해본 것은
+          시리즈로 모아둡니다.
         </p>
         <Link
-          href="/series/road-to-fde"
+          href="/series/making-it-used"
           className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
         >
-          시리즈: FDE로 가는 길 →
+          시리즈: 쓰이게 만들기 →
         </Link>
       </section>
 
