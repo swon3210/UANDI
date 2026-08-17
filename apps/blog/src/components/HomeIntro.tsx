@@ -20,10 +20,10 @@ export function HomeIntro() {
         </p>
         <div className="mt-2 flex items-center gap-4 text-xs font-medium">
           <Link
-            href="/series/road-to-fde"
+            href="/series/making-it-used"
             className="text-[var(--color-primary)] hover:underline"
           >
-            FDE로 가는 길 →
+            쓰이게 만들기 →
           </Link>
           <Link href="/about" className="text-gray-500 hover:underline">
             소개

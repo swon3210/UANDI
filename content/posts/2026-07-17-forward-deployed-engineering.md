@@ -4,7 +4,7 @@ date: '2026-07-17'
 summary: '해커톤 공고에서 FDE라는 직군명을 처음 봤다. 팔란티어 출신이 쓴 가이드를 읽고 나서야 알았다. 나는 비슷한 일을 이름도 모른 채 사내에서 하고 있었다.'
 category: 'essay'
 tags: ['AI', '커리어', 'FDE']
-series: 'road-to-fde'
+series: 'making-it-used'
 seriesOrder: 1
 featured: true
 draft: false
