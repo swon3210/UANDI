@@ -40,6 +40,25 @@ service cloud.firestore {
       }
     }
 
+    // ── 개인 일기 (블로그 /diary — 비연결 unlisted 페이지) ───────
+    // 명세: docs/blog/07-diary.md
+    // - get(단건): 누구나 — 글 URL을 받은 사람은 그 글만 읽는다
+    // - list(목록): 주인만 — 공개 read로 전체 글이 열거되는 것을 막는다
+    // - 쓰기/수정/삭제: 주인 계정만
+    match /diaryEntries/{entryId} {
+      function isDiaryOwner() {
+        return isAuthed() && request.auth.token.email == 'swon3210@gmail.com';
+      }
+
+      allow get: if true;
+      allow list: if isDiaryOwner();
+      allow create: if isDiaryOwner()
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isDiaryOwner()
+        && request.resource.data.authorUid == resource.data.authorUid;
+      allow delete: if isDiaryOwner();
+    }
+
     // ── 커뮤니티 (전역 공유 — couples/ 격리 예외) ────────────────
     // 명세: docs/pages/community/community-feed.md
     // - 모든 로그인 유저가 승인된 글만 읽기 가능

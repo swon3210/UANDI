@@ -1,8 +1,12 @@
+/* 명조 계열 — /diary(일기)에서만 쓴다. 다른 페이지는 font-serif를 쓰지 않으므로
+   폰트 파일은 일기 페이지에 들어갔을 때만 내려받는다. */
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
 @theme {
   --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+  --font-serif: 'Nanum Myeongjo', 'Noto Serif KR', 'AppleMyungjo', 'Batang', serif;
   --color-primary: #e8837a;
 }
 
@@ -57,4 +61,101 @@ html {
   margin-top: 0.75rem;
   font-size: 0.8125rem;
   color: #9ca3af;
+}
+
+/* ── 일기(/diary) 본문 타이포그래피 ────────────────────────────
+   에디터(Tiptap)와 읽기 화면이 같은 클래스를 써서, 쓰는 화면과 보이는 화면이
+   어긋나지 않게 한다(WYSIWYG). */
+.diary-prose {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.95;
+  letter-spacing: -0.003em;
+  color: #2b2b2b;
+  word-break: keep-all;
+}
+.diary-prose p {
+  margin: 1.15em 0;
+}
+.diary-prose h2 {
+  margin: 2.2em 0 0.8em;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+}
+.diary-prose h3 {
+  margin: 1.8em 0 0.6em;
+  font-size: 19px;
+  font-weight: 700;
+  color: #111;
+}
+.diary-prose blockquote {
+  margin: 1.9em 0;
+  border-left: 3px solid #111;
+  padding-left: 1.1em;
+  color: #555;
+}
+.diary-prose ul,
+.diary-prose ol {
+  margin: 1.2em 0;
+  padding-left: 1.3em;
+}
+.diary-prose ul {
+  list-style: disc;
+}
+.diary-prose ol {
+  list-style: decimal;
+}
+.diary-prose li {
+  margin: 0.35em 0;
+}
+.diary-prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.diary-prose hr {
+  width: 60px;
+  margin: 2.8em auto;
+  border: none;
+  border-top: 1px solid #d9d9d9;
+}
+.diary-prose img {
+  display: block;
+  margin: 2.2em auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+.diary-prose code {
+  border-radius: 3px;
+  background: #f4f4f5;
+  padding: 0.1em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+}
+.diary-prose pre {
+  margin: 1.8em 0;
+  border-radius: 6px;
+  background: #f6f8fa;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.diary-prose pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Tiptap: 빈 문단 placeholder + 선택된 이미지 표시 */
+.diary-prose .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #c9c9c9;
+  pointer-events: none;
+}
+.diary-prose .ProseMirror-selectednode {
+  outline: 2px solid var(--color-primary);
 }

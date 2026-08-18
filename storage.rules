@@ -43,5 +43,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
+
+    // 일기(블로그 /diary) 이미지 — 글이 URL로 공유되므로 읽기는 공개,
+    // 쓰기·삭제는 본인 경로만. 명세: docs/blog/07-diary.md
+    match /diary/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
   }
 }

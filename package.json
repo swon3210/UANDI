@@ -10,6 +10,7 @@
     "test:e2e": "pnpm --filter web test:e2e",
     "test:e2e:visible": "pnpm --filter web test:e2e:visible",
     "test:e2e:ui": "pnpm --filter web test:e2e:ui",
+    "test:e2e:blog": "pnpm --filter blog test:e2e",
     "emulators": "npm --prefix functions run build && firebase emulators:start --only auth,firestore,storage,functions",
     "play:listing:pull": "node scripts/play-listing.mjs pull",
     "play:listing:push": "node scripts/play-listing.mjs push",

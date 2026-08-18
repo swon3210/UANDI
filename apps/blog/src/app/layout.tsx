@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { BlogHeader } from '@/components/BlogHeader';
-import { BlogFooter } from '@/components/BlogFooter';
+import { SiteChrome } from '@/components/SiteChrome';
 import './globals.css';
 
 // 기본값은 실제 서비스 중인 도메인이어야 한다 — 죽은 도메인이 기본이면
@@ -27,19 +26,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body className="flex min-h-screen flex-col bg-white font-sans antialiased">
-        <BlogHeader />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-          {children}
-        </main>
-        <BlogFooter />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
