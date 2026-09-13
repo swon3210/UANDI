@@ -18,7 +18,7 @@ export type SpellIssue = {
 };
 
 export type SpellCheckResult = {
-  provider: 'daum' | 'naver';
+  provider: 'daum' | 'naver' | 'pnu';
   issues: SpellIssue[];
 };
 
@@ -131,16 +131,152 @@ function toIssues(typos: SpellCheckTypo[], masked: string): SpellIssue[] {
   return issues.sort((a, b) => a.start - b.start);
 }
 
+/* ------------------------------------------------------------------ *
+ * 부산대 맞춤법 검사기 (speller.cs.pusan.ac.kr)
+ *
+ * hanspell 1.x는 다음·네이버만 쓰는데, 둘 다 비공식 스크래핑이라 자주 막힌다.
+ * 구버전 hanspell(0.9.x)의 부산대 구현을 참고해 fetch로 다시 썼다.
+ * 개인·비상업 용도로만 쓸 것 (검사기 이용 약관).
+ * ------------------------------------------------------------------ */
+
+const PNU_URL = 'https://speller.cs.pusan.ac.kr/results';
+const PNU_MAX_WORDS = 250;
+
+const HTML_ENTITIES: Record<string, string> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+  '&nbsp;': ' ',
+};
+
+function decodeEntities(value: string): string {
+  return value.replace(
+    /&(amp|lt|gt|quot|#39|apos|nbsp);/g,
+    (matched) => HTML_ENTITIES[matched] ?? matched
+  );
+}
+
+/** 부산대 서버는 한 번에 250단어 남짓만 받는다. 줄 단위로 모아 나눈다. */
+function splitByWordCount(text: string, maxWords: number): string[] {
+  const parts: string[] = [];
+  let current: string[] = [];
+  let words = 0;
+
+  const flush = () => {
+    if (current.length > 0) parts.push(current.join('\n'));
+    current = [];
+    words = 0;
+  };
+
+  for (const line of text.split('\n')) {
+    const lineWords = line.split(/\s+/).filter(Boolean);
+
+    // 한 줄이 통째로 한도를 넘으면 그 줄만 단어 단위로 쪼갠다.
+    if (lineWords.length > maxWords) {
+      flush();
+      for (let i = 0; i < lineWords.length; i += maxWords) {
+        parts.push(lineWords.slice(i, i + maxWords).join(' '));
+      }
+      continue;
+    }
+
+    if (words + lineWords.length > maxWords) flush();
+    current.push(line);
+    words += lineWords.length;
+  }
+
+  flush();
+  return parts;
+}
+
+type PnuErrInfo = { orgStr: string; candWord?: string; help?: string };
+
+function parsePnuResponse(html: string): SpellCheckTypo[] {
+  const matched = html.match(/data\s*=\s*(\[[\s\S]*?\])\s*;/);
+  if (!matched) return [];
+
+  const parsed = JSON.parse(matched[1]) as { errInfo?: PnuErrInfo[] }[];
+
+  return (parsed[0]?.errInfo ?? []).map((error) => {
+    const candidates = (error.candWord ?? '').replace(/\|$/, '');
+    const info = (error.help ?? '')
+      .replace(/< *[bB][rR] *\/>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return {
+      token: decodeEntities(error.orgStr),
+      suggestions: candidates ? decodeEntities(candidates).split('|') : [],
+      info: decodeEntities(info),
+    };
+  });
+}
+
+export async function checkWithPnu(text: string): Promise<SpellCheckTypo[]> {
+  const typos: SpellCheckTypo[] = [];
+  let failure: Error | null = null;
+
+  for (const part of splitByWordCount(text, PNU_MAX_WORDS)) {
+    try {
+      const res = await fetch(PNU_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ text1: `${part}\r\n` }),
+        signal: AbortSignal.timeout(CHECK_TIMEOUT_SEC * 1000),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const html = await res.text();
+      if (!html.includes('한국어 맞춤법/문법 검사기')) {
+        throw new Error('응답 형식이 바뀌었습니다');
+      }
+
+      typos.push(...parsePnuResponse(html));
+    } catch (error) {
+      failure = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  if (typos.length === 0 && failure) throw failure;
+  return typos;
+}
+
+const PROVIDER_LABEL: Record<SpellCheckResult['provider'], string> = {
+  daum: '다음',
+  naver: '네이버',
+  pnu: '부산대',
+};
+
+function errorText(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.length > 60 ? `${message.slice(0, 60)}…` : message;
+}
+
 export async function checkKoreanSpelling(markdown: string): Promise<SpellCheckResult> {
   const masked = maskUncheckable(markdown);
   if (!masked.trim()) return { provider: 'daum', issues: [] };
 
-  try {
-    const typos = await runChecker(spellCheckByDAUM, masked);
-    return { provider: 'daum', issues: toIssues(typos, masked) };
-  } catch {
-    // 다음 쪽이 막히거나 응답 형식이 바뀌는 일이 잦다 — 네이버로 한 번 더 시도한다.
-    const typos = await runChecker(spellCheckByNAVER, masked);
-    return { provider: 'naver', issues: toIssues(typos, masked) };
+  // 셋 다 비공식 경로라 수시로 막힌다. 하나가 되면 그걸로 간다.
+  const providers: { name: SpellCheckResult['provider']; run: () => Promise<SpellCheckTypo[]> }[] =
+    [
+      { name: 'daum', run: () => runChecker(spellCheckByDAUM, masked) },
+      { name: 'naver', run: () => runChecker(spellCheckByNAVER, masked) },
+      { name: 'pnu', run: () => checkWithPnu(masked) },
+    ];
+
+  const failures: string[] = [];
+
+  for (const provider of providers) {
+    try {
+      return { provider: provider.name, issues: toIssues(await provider.run(), masked) };
+    } catch (error) {
+      failures.push(`${PROVIDER_LABEL[provider.name]}: ${errorText(error)}`);
+    }
   }
+
+  throw new Error(failures.join(' / '));
 }

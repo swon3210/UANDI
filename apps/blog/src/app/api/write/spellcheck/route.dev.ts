@@ -11,9 +11,11 @@ export async function POST(request: Request) {
 
   try {
     return NextResponse.json(await checkKoreanSpelling(markdown ?? ''));
-  } catch {
+  } catch (error) {
+    // 어느 검사기가 왜 실패했는지 그대로 노출한다 — 패널만 보고 원인을 알 수 있어야 한다.
+    const detail = error instanceof Error ? error.message : '';
     return NextResponse.json(
-      { error: '맞춤법 검사기(다음·네이버)에 연결하지 못했습니다.' },
+      { error: `맞춤법 검사기에 연결하지 못했습니다. ${detail}`.trim() },
       { status: 502 }
     );
   }

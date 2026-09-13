@@ -7,7 +7,7 @@
  * (2) 우리 코드 쪽인지 가리기 위한 스크립트다. 일부러 틀린 문장을 보낸다.
  */
 import { spellCheckByDAUM, spellCheckByNAVER, type SpellCheckTypo } from 'hanspell';
-import { checkKoreanSpelling, maskUncheckable } from '../src/lib/spellcheck';
+import { checkKoreanSpelling, checkWithPnu, maskUncheckable } from '../src/lib/spellcheck';
 
 const SAMPLE = '나는 차가운 모래속에 두 손을 넣었다. 이세상의 변두리에 선 느낌이 든다.';
 
@@ -16,12 +16,18 @@ type Checker = typeof spellCheckByDAUM | typeof spellCheckByNAVER;
 function run(name: string, checker: Checker): Promise<void> {
   return new Promise((resolve) => {
     const typos: SpellCheckTypo[] = [];
+    // hanspell은 실패한 조각마다 error를 부른 뒤 마지막에 end도 부른다.
+    let failed = false;
 
     checker(
       SAMPLE,
       15,
       (found) => typos.push(...found),
       () => {
+        if (failed && typos.length === 0) {
+          resolve();
+          return;
+        }
         if (typos.length === 0) {
           console.log(
             `  ${name}: 응답은 왔지만 지적이 0건입니다. (서비스 응답 형식이 바뀌었을 수 있습니다)`
@@ -35,8 +41,8 @@ function run(name: string, checker: Checker): Promise<void> {
         resolve();
       },
       (error) => {
+        failed = true;
         console.log(`  ${name}: 실패 — ${error instanceof Error ? error.message : String(error)}`);
-        resolve();
       }
     );
   });
@@ -51,8 +57,22 @@ async function main() {
   console.log(`  보내는 문장: ${masked}\n`);
 
   console.log('2) 외부 검사기 직접 호출');
-  await run('다음(Daum) ', spellCheckByDAUM);
+  await run('다음(Daum)  ', spellCheckByDAUM);
   await run('네이버(Naver)', spellCheckByNAVER);
+
+  try {
+    const typos = await checkWithPnu(SAMPLE);
+    if (typos.length === 0) {
+      console.log('  부산대(PNU) : 응답은 왔지만 지적이 0건입니다.');
+    } else {
+      console.log(`  부산대(PNU) : ${typos.length}건`);
+      typos.forEach((typo) => {
+        console.log(`    - ${typo.token} -> ${typo.suggestions.join(', ')}`);
+      });
+    }
+  } catch (error) {
+    console.log(`  부산대(PNU) : 실패 — ${error instanceof Error ? error.message : String(error)}`);
+  }
 
   console.log('\n3) 에디터가 쓰는 경로 (checkKoreanSpelling)');
   try {
