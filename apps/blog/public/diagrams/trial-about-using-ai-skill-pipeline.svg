@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" font-family="Pretendard, 'Pretendard Variable', -apple-system, 'Apple SD Gothic Neo', sans-serif" role="img" aria-label="한 줄 설명·PRD·지라 티켓 같은 작업 설명을 넣으면 기획서 초안, figma MCP를 쓴 디자인 초안, 프론트엔드 코드까지 이어지고, 입력이 모호하면 기획서 단계에서 되묻는 흐름">
+  <defs>
+    <marker id="spGray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9ca3af"/></marker>
+    <marker id="spCoral" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#e8837a"/></marker>
+  </defs>
+
+  <rect x="38" y="68" width="130" height="104" rx="10" fill="#e5e7eb" stroke="#d1d5db"/>
+  <text x="103" y="92" font-size="12" fill="#6b7280" text-anchor="middle">작업 설명</text>
+  <text x="103" y="118" font-size="13" fill="#374151" text-anchor="middle">한 줄 설명</text>
+  <text x="103" y="140" font-size="13" fill="#374151" text-anchor="middle">PRD</text>
+  <text x="103" y="162" font-size="13" fill="#374151" text-anchor="middle">지라 티켓</text>
+
+  <rect x="196" y="90" width="130" height="60" rx="10" fill="#ffffff" stroke="#e8837a"/>
+  <text x="261" y="118" font-size="14" fill="#1f2328" text-anchor="middle">기획서 초안</text>
+  <text x="261" y="136" font-size="12" fill="#6b7280" text-anchor="middle">프론트엔드 코드 참고</text>
+
+  <rect x="354" y="90" width="130" height="60" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="419" y="118" font-size="14" fill="#1f2328" text-anchor="middle">디자인 초안</text>
+  <text x="419" y="136" font-size="12" fill="#6b7280" text-anchor="middle">figma MCP</text>
+
+  <rect x="512" y="90" width="130" height="60" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="577" y="125" font-size="14" fill="#1f2328" text-anchor="middle">프론트엔드 코드</text>
+
+  <line x1="172" y1="120" x2="190" y2="120" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#spGray)"/>
+  <line x1="330" y1="120" x2="348" y2="120" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#spGray)"/>
+  <line x1="488" y1="120" x2="506" y2="120" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#spGray)"/>
+
+  <path d="M 240 88 C 228 46, 150 48, 138 62" fill="none" stroke="#e8837a" stroke-width="2" marker-end="url(#spCoral)"/>
+  <text x="256" y="48" font-size="13" fill="#b4544a">모호하거나 기존 정책과 충돌하면 되묻는다</text>
+</svg>
