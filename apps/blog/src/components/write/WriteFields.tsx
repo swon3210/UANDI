@@ -122,7 +122,7 @@ export function WriteFields({
 
       <details className="text-sm">
         <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600">
-          선택 항목 (커버 · 시리즈 · 대표글 · 초안)
+          선택 항목 (커버 · 시리즈 · 대표글)
         </summary>
 
         <div className="mt-3 space-y-3">
@@ -182,14 +182,6 @@ export function WriteFields({
                 onChange={(e) => onChange({ featured: e.target.checked })}
               />
               홈 대표글
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={value.draft}
-                onChange={(e) => onChange({ draft: e.target.checked })}
-              />
-              초안 (draft — 배포본에서 숨김)
             </label>
           </div>
         </div>
