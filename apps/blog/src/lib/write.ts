@@ -212,3 +212,65 @@ export function saveImage(params: { slug: string; mime: string; bytes: Buffer })
 
   return { url: `${IMAGE_URL_BASE}/${dirSlug}/${fileName}` };
 }
+
+/* ------------------------------------------------------------------ *
+ * 임시저장 (실시간 자동 저장)
+ *
+ * 글을 쓰는 중에는 category·slug가 비어 있어 정식 저장이 막힌다. 그래서 자동 저장은
+ * content/posts/의 .md가 아니라 별도 스냅샷 파일에 쓴다. 커밋된 글을 예고 없이
+ * 덮어쓰는 일도 이 분리 덕에 생기지 않는다. (.write-drafts/는 git에서 제외)
+ * ------------------------------------------------------------------ */
+
+const DRAFTS_DIR = path.join(process.cwd(), '.write-drafts');
+
+/** 새 글은 'new', 기존 글은 그 파일명을 키로 쓴다. */
+export const NEW_DRAFT_KEY = 'new';
+
+export type DraftSnapshot = {
+  key: string;
+  form: Record<string, unknown>;
+  body: string;
+  savedAt: string;
+};
+
+function draftPath(key: string): string | null {
+  if (key !== NEW_DRAFT_KEY && !FILE_NAME_RE.test(key)) return null;
+  return path.join(DRAFTS_DIR, `${key}.json`);
+}
+
+export function saveDraftSnapshot(params: {
+  key: string;
+  form: Record<string, unknown>;
+  body: string;
+}): DraftSnapshot {
+  const filePath = draftPath(params.key);
+  if (!filePath) throw new Error('임시저장 키가 올바르지 않습니다.');
+
+  const snapshot: DraftSnapshot = {
+    key: params.key,
+    form: params.form,
+    body: params.body,
+    savedAt: new Date().toISOString(),
+  };
+
+  fs.mkdirSync(DRAFTS_DIR, { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2), 'utf-8');
+
+  return snapshot;
+}
+
+export function readDraftSnapshot(key: string): DraftSnapshot | null {
+  const filePath = draftPath(key);
+  if (!filePath || !fs.existsSync(filePath)) return null;
+
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as DraftSnapshot;
+  } catch {
+    return null; // 쓰다 만 파일이면 없는 셈 친다.
+  }
+}
+
+export function deleteDraftSnapshot(key: string): void {
+  const filePath = draftPath(key);
+  if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}

@@ -26,12 +26,16 @@ apps/blog/src/
 │   └── api/write/
 │       ├── posts/route.dev.ts        # 목록 조회 · 단건 조회 · 저장
 │       ├── preview/route.dev.ts      # 마크다운 → HTML 프리뷰
-│       └── images/route.dev.ts       # 붙여넣은 이미지 저장
+│       ├── images/route.dev.ts       # 붙여넣은 이미지 저장
+│       ├── spellcheck/route.dev.ts   # 한국어 맞춤법 검사
+│       └── drafts/route.dev.ts       # 임시저장 스냅샷 읽기·쓰기·삭제
 ├── components/write/
 │   ├── WriteEditor.tsx               # 상태를 쥐는 컨테이너 (client)
 │   ├── WriteFields.tsx               # frontmatter 폼
-│   └── WritePreview.tsx              # 렌더 결과 패널
-└── lib/write.ts                      # 파일 읽기·쓰기·검증·직렬화 (server)
+│   ├── WritePreview.tsx              # 렌더 결과 패널
+│   └── SpellCheckPanel.tsx           # 맞춤법 지적 목록
+├── lib/spellcheck.ts                 # 검사 대상 텍스트 추출 + hanspell 호출
+└── lib/write.ts                      # 파일 읽기·쓰기·검증·직렬화·임시저장 (server)
 ```
 
 ---
@@ -87,6 +91,31 @@ pageExtensions: ['tsx', 'ts', ...devPageExtensions],
 
 ---
 
+### 맞춤법 검사 (`POST /api/write/spellcheck`)
+
+- `hanspell`(다음·네이버 온라인 검사기)을 쓴다. 다음이 실패하면 네이버로 한 번 더 시도한다.
+- **본문이 외부 서비스로 전송된다.** 이 기능이 로컬 전용이어야 하는 또 하나의 이유다.
+- 검사 전에 코드 블록·인라인 코드·URL·HTML 태그·줄머리 기호를 **같은 길이의 공백으로 덮는다**
+  (`maskUncheckable`). 길이를 보존하므로 검사 결과에서 찾은 위치를 원문 오프셋으로 그대로 쓴다.
+  잘라내면 위치가 밀려 엉뚱한 곳을 고치게 된다.
+- 타이핑이 2.5초 멈추면 자동 검사한다. 글을 열 때도 한 번 검사한다.
+- `고치기`는 해당 위치만 치환하고, 뒤쪽 지적들의 오프셋을 길이 차이만큼 민다. 검사 후 본문이
+  바뀌어 위치가 어긋나면 고치지 않고 다시 검사한다.
+- 검사기가 응답하지 않으면 502와 함께 패널에 사유를 띄운다. **글쓰기는 막지 않는다.**
+
+### 임시저장 (`/api/write/drafts`)
+
+- 타이핑이 1.2초 멈추면 폼 + 본문 전체를 `apps/blog/.write-drafts/<키>.json`에 스냅샷으로 남긴다.
+  키는 새 글이면 `new`, 기존 글이면 그 파일명이다. (`.write-drafts/`는 git에서 제외)
+- **정식 `.md`에 자동으로 쓰지 않는다.** 쓰는 중에는 category·slug가 비어 저장이 막히고,
+  무엇보다 커밋된 글을 예고 없이 덮어쓰면 안 되기 때문이다.
+- 에디터를 다시 열었을 때 임시저장본이 있으면 상단에 배너로 알리고, `이어서 쓰기`를 누를 때만
+  적용한다. 기존 글은 파일 내용과 다를 때만 묻는다.
+- 정식 저장에 성공하면 그 키의 스냅샷을 지운다. 예약된 자동 저장이 되살리지 않도록 타이머를
+  먼저 끄고 지운다.
+
+---
+
 ## 사용법
 
 ```bash
@@ -96,6 +125,8 @@ pnpm --filter blog dev   # → http://localhost:3002/write
 - 상단 셀렉트로 기존 글을 열고, `새 글`로 새로 시작한다.
 - `⌘S` / `Ctrl+S`로 저장한다. 저장 위치는 툴바에 `content/posts/<파일명>`으로 계속 보인다.
 - 본문에 이미지를 **붙여넣거나 끌어다 놓으면** 자동으로 저장되고 마크다운이 삽입된다.
+- 쓰는 동안 맞춤법을 자동으로 검사해 아래 패널에 띄운다. `고치기` 한 번으로 반영된다.
+- 쓰는 동안 1.2초마다 임시저장된다. 툴바에 마지막 임시저장 시각이 보인다.
 - 저장한 글은 `content/posts/`의 평범한 파일이다. 발행은 커밋·푸시.
 
 ---
@@ -105,3 +136,5 @@ pnpm --filter blog dev   # → http://localhost:3002/write
 - 에디터 라우트를 일반 `page.tsx` / `route.ts`로 되돌리기 (프로덕션에 쓰기 경로가 열린다)
 - `WRITE_ENABLED` 확인 없이 파일 쓰기 API 추가
 - 프리뷰를 별도 마크다운 렌더러로 구현 (발행 결과와 어긋난다)
+- 자동 저장을 `content/posts/`의 `.md`에 직접 쓰기 (커밋된 글을 소리 없이 덮어쓴다)
+- 맞춤법 검사에 원문을 그대로 보내기 (코드·URL이 오탈자로 잡히고 위치가 어긋난다)

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { WriteFields, type FormValue } from './WriteFields';
 import { WritePreview } from './WritePreview';
+import { SpellCheckPanel, type SpellCheckState } from './SpellCheckPanel';
+import type { SpellIssue } from '@/lib/spellcheck';
 
 export type PostSummary = {
   fileName: string;
@@ -12,6 +14,15 @@ export type PostSummary = {
   date: string;
   draft: boolean;
 };
+
+export type DraftSnapshot = {
+  key: string;
+  form: Partial<FormValue>;
+  body: string;
+  savedAt: string;
+};
+
+const NEW_DRAFT_KEY = 'new';
 
 type Status = { kind: 'idle' | 'busy' | 'ok' | 'error'; text: string };
 
@@ -40,7 +51,13 @@ const STATUS_COLOR: Record<Status['kind'], string> = {
   error: 'text-red-600',
 };
 
-export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
+export function WriteEditor({
+  initialPosts,
+  initialDraft = null,
+}: {
+  initialPosts: PostSummary[];
+  initialDraft?: DraftSnapshot | null;
+}) {
   const [posts, setPosts] = useState(initialPosts);
   const [form, setForm] = useState<FormValue>(emptyForm);
   const [body, setBody] = useState('');
@@ -49,6 +66,14 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<Status>(IDLE);
+  const [spell, setSpell] = useState<SpellCheckState>({
+    status: 'idle',
+    issues: [],
+    message: '',
+  });
+  const [autosavedAt, setAutosavedAt] = useState<string | null>(null);
+  // 되살릴 수 있는 임시저장본. 자동으로 덮어쓰지 않고 사용자가 고르게 한다.
+  const [recoverable, setRecoverable] = useState<DraftSnapshot | null>(initialDraft);
 
   // 본문의 최신값은 ref가 들고 있는다. 이미지 업로드처럼 비동기로 끝나는 편집도
   // 항상 최신 본문 위에서 치환할 수 있어야 하기 때문이다.
@@ -57,8 +82,21 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
   const previewSeq = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const spellTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const spellSeq = useRef(0);
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // 폼도 자동 저장 대상이라, 타이머가 터질 때 최신 값을 읽을 수 있어야 한다.
+  const formRef = useRef<FormValue>(form);
+  const openedFileNameRef = useRef<string | null>(null);
+  // "무시"한 지적은 다시 띄우지 않는다 (이 세션 동안만).
+  const ignoredRef = useRef(new Set<string>());
+
   useEffect(() => {
-    return () => clearTimeout(previewTimer.current);
+    return () => {
+      clearTimeout(previewTimer.current);
+      clearTimeout(spellTimer.current);
+      clearTimeout(autosaveTimer.current);
+    };
   }, []);
 
   // 저장 안 한 글을 실수로 날리지 않게 — 브라우저 기본 경고를 띄운다.
@@ -109,11 +147,147 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
     setBody(next);
     setDirty(true);
     schedulePreview();
+    scheduleSpellCheck();
+    scheduleAutosave();
+  }
+
+  function draftKey(): string {
+    return openedFileNameRef.current ?? NEW_DRAFT_KEY;
+  }
+
+  async function autosave() {
+    try {
+      const res = await fetch('/api/write/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: draftKey(),
+          form: formRef.current,
+          body: bodyRef.current,
+        }),
+      });
+      if (!res.ok) return;
+
+      const data = (await res.json()) as { savedAt: string };
+      setAutosavedAt(data.savedAt);
+    } catch {
+      // 임시저장 실패는 글쓰기를 막지 않는다 — 다음 타이머에서 다시 시도한다.
+    }
+  }
+
+  // 타이핑이 잠깐 멈출 때마다 통째로 스냅샷을 남긴다.
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => void autosave(), 1200);
+  }
+
+  async function discardDraft(key: string) {
+    await fetch(`/api/write/drafts?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+  }
+
+  function applyRecovered(draft: DraftSnapshot) {
+    const nextForm = { ...emptyForm(), ...draft.form };
+    setForm(nextForm);
+    formRef.current = nextForm;
+    bodyRef.current = draft.body;
+    setBody(draft.body);
+    setRecoverable(null);
+    setDirty(true);
+    void runPreview(draft.body);
+    void runSpellCheck(draft.body);
+  }
+
+  function ignoreKey(issue: SpellIssue): string {
+    return `${issue.token}::${issue.suggestion}`;
+  }
+
+  async function runSpellCheck(markdown: string) {
+    const seq = ++spellSeq.current;
+
+    if (!markdown.trim()) {
+      setSpell({ status: 'done', issues: [], message: '' });
+      return;
+    }
+
+    setSpell((prev) => ({ ...prev, status: 'checking', message: '' }));
+
+    try {
+      const res = await fetch('/api/write/spellcheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markdown }),
+      });
+      const data = await res.json();
+      if (seq !== spellSeq.current) return;
+
+      if (!res.ok) {
+        setSpell({
+          status: 'error',
+          issues: [],
+          message: data.error ?? '맞춤법 검사에 실패했습니다.',
+        });
+        return;
+      }
+
+      const issues = (data.issues as SpellIssue[]).filter(
+        (issue) => !ignoredRef.current.has(ignoreKey(issue))
+      );
+      setSpell({ status: 'done', issues, message: '' });
+    } catch {
+      if (seq === spellSeq.current) {
+        setSpell({ status: 'error', issues: [], message: '맞춤법 검사에 실패했습니다.' });
+      }
+    }
+  }
+
+  // 타이핑이 멈추면 검사한다. 매 글자마다 외부 검사기를 두드릴 수는 없다.
+  function scheduleSpellCheck() {
+    clearTimeout(spellTimer.current);
+    spellTimer.current = setTimeout(() => void runSpellCheck(bodyRef.current), 2500);
+  }
+
+  function fixIssue(issue: SpellIssue) {
+    const current = bodyRef.current;
+
+    // 검사 후 본문이 바뀌었을 수 있다 — 위치가 어긋나면 고치지 말고 다시 검사한다.
+    if (current.slice(issue.start, issue.end) !== issue.token) {
+      setSpell((prev) => ({ ...prev, status: 'checking', message: '' }));
+      void runSpellCheck(current);
+      return;
+    }
+
+    const delta = issue.suggestion.length - issue.token.length;
+    mutateBody(
+      (prev) => `${prev.slice(0, issue.start)}${issue.suggestion}${prev.slice(issue.end)}`
+    );
+
+    // 뒤쪽 지적들의 위치를 밀어준다. 매번 재검사하면 느리다.
+    setSpell((prev) => ({
+      ...prev,
+      issues: prev.issues
+        .filter((other) => other.id !== issue.id)
+        .map((other) =>
+          other.start > issue.start
+            ? { ...other, start: other.start + delta, end: other.end + delta }
+            : other
+        ),
+    }));
+  }
+
+  function ignoreIssue(issue: SpellIssue) {
+    ignoredRef.current.add(ignoreKey(issue));
+    setSpell((prev) => ({
+      ...prev,
+      issues: prev.issues.filter((other) => ignoreKey(other) !== ignoreKey(issue)),
+    }));
   }
 
   function updateForm(patch: Partial<FormValue>) {
-    setForm((prev) => ({ ...prev, ...patch }));
+    const next = { ...formRef.current, ...patch };
+    formRef.current = next;
+    setForm(next);
     setDirty(true);
+    scheduleAutosave();
   }
 
   function confirmDiscard(): boolean {
@@ -151,7 +325,7 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
       draft?: boolean;
     };
 
-    setForm({
+    const nextForm: FormValue = {
       title: meta.title,
       date: meta.date,
       slug: data.slug as string,
@@ -163,26 +337,47 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
       seriesOrder: String(meta.seriesOrder ?? 1),
       featured: meta.featured ?? false,
       draft: meta.draft ?? false,
-    });
+    };
+    formRef.current = nextForm;
+    setForm(nextForm);
 
-    bodyRef.current = data.body as string;
-    setBody(data.body as string);
+    const fileBody = data.body as string;
+    bodyRef.current = fileBody;
+    setBody(fileBody);
     setOpenedFileName(data.fileName as string);
+    openedFileNameRef.current = data.fileName as string;
     setDirty(false);
     setStatus(IDLE);
-    void runPreview(data.body as string);
+    setAutosavedAt(null);
+    void runPreview(fileBody);
+    void runSpellCheck(fileBody);
+
+    // 파일보다 나중에 쓰다 만 임시저장본이 있으면 되살릴지 물어본다.
+    const draftRes = await fetch(
+      `/api/write/drafts?key=${encodeURIComponent(data.fileName as string)}`
+    );
+    if (!draftRes.ok) return;
+
+    const { draft } = (await draftRes.json()) as { draft: DraftSnapshot | null };
+    setRecoverable(draft && draft.body !== fileBody ? draft : null);
   }
 
   function startNewPost() {
     if (!confirmDiscard()) return;
 
-    setForm(emptyForm());
+    const blank = emptyForm();
+    formRef.current = blank;
+    setForm(blank);
     bodyRef.current = '';
     setBody('');
     setHtml('');
     setOpenedFileName(null);
+    openedFileNameRef.current = null;
     setDirty(false);
     setStatus(IDLE);
+    setSpell({ status: 'idle', issues: [], message: '' });
+    setRecoverable(null);
+    setAutosavedAt(null);
   }
 
   async function save() {
@@ -221,9 +416,20 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
       return;
     }
 
-    setOpenedFileName(data.fileName as string);
+    // 파일로 남았으니 임시저장본은 정리한다. 예약된 자동 저장이 되살리지 않게 먼저 끈다.
+    clearTimeout(autosaveTimer.current);
+    const previousKey = draftKey();
+    const savedFileName = data.fileName as string;
+
+    setOpenedFileName(savedFileName);
+    openedFileNameRef.current = savedFileName;
     setDirty(false);
-    setStatus({ kind: 'ok', text: `저장됨 — content/posts/${data.fileName}` });
+    setAutosavedAt(null);
+    setRecoverable(null);
+    setStatus({ kind: 'ok', text: `저장됨 — content/posts/${savedFileName}` });
+
+    await discardDraft(previousKey);
+    if (previousKey !== savedFileName) await discardDraft(savedFileName);
     await refreshPosts();
   }
 
@@ -305,6 +511,11 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
         <span className="font-mono text-[11px] text-gray-400">content/posts/{targetFileName}</span>
 
         <div className="ml-auto flex items-center gap-3">
+          {autosavedAt ? (
+            <span className="text-[11px] text-gray-400">
+              임시저장 {dayjs(autosavedAt).format('HH:mm:ss')}
+            </span>
+          ) : null}
           <span className={`text-xs ${STATUS_COLOR[status.kind]}`}>
             {status.text || (dirty ? '저장 안 됨' : '')}
           </span>
@@ -319,13 +530,42 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
         </div>
       </div>
 
+      {recoverable ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900">
+          <span>
+            {dayjs(recoverable.savedAt).format('M월 D일 HH:mm:ss')}에 자동 저장된 글이 있습니다.
+          </span>
+          <button
+            type="button"
+            className="rounded-md bg-amber-900 px-2 py-1 text-[11px] text-white hover:opacity-90"
+            onClick={() => applyRecovered(recoverable)}
+          >
+            이어서 쓰기
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-amber-300 px-2 py-1 text-[11px] text-amber-900 hover:bg-amber-100"
+            onClick={() => {
+              void discardDraft(recoverable.key);
+              setRecoverable(null);
+            }}
+          >
+            버리기
+          </button>
+        </div>
+      ) : null}
+
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2">
-        <div className="flex min-h-0 flex-col overflow-y-auto border-r border-gray-100">
-          <WriteFields value={form} onChange={updateForm} />
+        <div className="flex min-h-0 flex-col border-r border-gray-100">
+          {/* frontmatter는 길어질 수 있어 자기 영역 안에서만 스크롤한다 —
+              본문·맞춤법 패널이 화면 밖으로 밀리면 안 된다. */}
+          <div className="max-h-[45%] shrink-0 overflow-y-auto">
+            <WriteFields value={form} onChange={updateForm} />
+          </div>
 
           <textarea
             ref={textareaRef}
-            className="min-h-[400px] flex-1 resize-none px-4 py-4 font-mono text-sm leading-relaxed text-gray-900 focus:outline-none"
+            className="min-h-[160px] flex-1 resize-none px-4 py-4 font-mono text-sm leading-relaxed text-gray-900 focus:outline-none"
             value={body}
             onChange={(event) => {
               const { value } = event.target;
@@ -345,6 +585,13 @@ export function WriteEditor({ initialPosts }: { initialPosts: PostSummary[] }) {
             }}
             placeholder="여기에 마크다운을 씁니다. 이미지는 복사해서 붙여넣기(⌘V)하거나 끌어다 놓으면 자동으로 저장됩니다."
             spellCheck={false}
+          />
+
+          <SpellCheckPanel
+            state={spell}
+            onFix={fixIssue}
+            onIgnore={ignoreIssue}
+            onRecheck={() => void runSpellCheck(bodyRef.current)}
           />
 
           <p className="border-t border-gray-100 px-4 py-2 text-[11px] text-gray-400">
