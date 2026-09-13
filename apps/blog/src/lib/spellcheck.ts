@@ -1,3 +1,4 @@
+import dns from 'node:dns';
 import { spellCheckByDAUM, spellCheckByNAVER, type SpellCheckTypo } from 'hanspell';
 
 /**
@@ -22,7 +23,18 @@ export type SpellCheckResult = {
   issues: SpellIssue[];
 };
 
-const CHECK_TIMEOUT_SEC = 15;
+const CHECK_TIMEOUT_SEC = 20;
+
+/**
+ * Node 18+는 DNS 결과를 받은 순서 그대로 쓴다(verbatim). IPv6 주소가 먼저 오는데
+ * 네트워크가 IPv6로는 나가지 못하면, 브라우저는 멀쩡한 사이트에 Node만 연결하지
+ * 못하고 타임아웃 난다. 국내 검사기 서버들이 여기 걸리는 일이 잦아 IPv4를 먼저 쓴다.
+ */
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {
+  // 아주 옛 Node에는 없는 API다. 없으면 그냥 기본 동작으로 둔다.
+}
 
 /**
  * 검사하면 안 되는 구간을 같은 길이의 공백으로 덮는다.
@@ -139,7 +151,14 @@ function toIssues(typos: SpellCheckTypo[], masked: string): SpellIssue[] {
  * 개인·비상업 용도로만 쓸 것 (검사기 이용 약관).
  * ------------------------------------------------------------------ */
 
-const PNU_URL = 'https://speller.cs.pusan.ac.kr/results';
+// https가 막히는 환경이 있어 http도 차례로 시도한다.
+const PNU_URLS = [
+  'https://speller.cs.pusan.ac.kr/results',
+  'http://speller.cs.pusan.ac.kr/results',
+];
+const PNU_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+  '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const PNU_MAX_WORDS = 250;
 
 const HTML_ENTITIES: Record<string, string> = {
@@ -220,24 +239,31 @@ export async function checkWithPnu(text: string): Promise<SpellCheckTypo[]> {
   let failure: Error | null = null;
 
   for (const part of splitByWordCount(text, PNU_MAX_WORDS)) {
-    try {
-      const res = await fetch(PNU_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ text1: `${part}\r\n` }),
-        signal: AbortSignal.timeout(CHECK_TIMEOUT_SEC * 1000),
-      });
+    for (const url of PNU_URLS) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': PNU_USER_AGENT,
+          },
+          body: new URLSearchParams({ text1: `${part}\r\n` }),
+          signal: AbortSignal.timeout(CHECK_TIMEOUT_SEC * 1000),
+        });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const html = await res.text();
-      if (!html.includes('한국어 맞춤법/문법 검사기')) {
-        throw new Error('응답 형식이 바뀌었습니다');
+        const html = await res.text();
+        if (!html.includes('한국어 맞춤법/문법 검사기')) {
+          throw new Error('응답 형식이 바뀌었습니다');
+        }
+
+        typos.push(...parsePnuResponse(html));
+        failure = null;
+        break;
+      } catch (error) {
+        failure = error instanceof Error ? error : new Error(String(error));
       }
-
-      typos.push(...parsePnuResponse(html));
-    } catch (error) {
-      failure = error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -251,9 +277,15 @@ const PROVIDER_LABEL: Record<SpellCheckResult['provider'], string> = {
   pnu: '부산대',
 };
 
-function errorText(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.length > 60 ? `${message.slice(0, 60)}…` : message;
+/** 'fetch failed'만으로는 원인을 모른다 — cause의 코드까지 붙인다. */
+export function errorText(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+
+  const cause = error.cause as { code?: string; message?: string } | undefined;
+  const code = cause?.code ? ` (${cause.code})` : '';
+  const message = `${error.message}${code}`;
+
+  return message.length > 80 ? `${message.slice(0, 80)}…` : message;
 }
 
 export async function checkKoreanSpelling(markdown: string): Promise<SpellCheckResult> {

@@ -6,8 +6,50 @@
  * 에디터의 맞춤법 패널이 비어 있을 때, 문제가 (1) 외부 검사기 쪽인지
  * (2) 우리 코드 쪽인지 가리기 위한 스크립트다. 일부러 틀린 문장을 보낸다.
  */
+import dns from 'node:dns/promises';
 import { spellCheckByDAUM, spellCheckByNAVER, type SpellCheckTypo } from 'hanspell';
-import { checkKoreanSpelling, checkWithPnu, maskUncheckable } from '../src/lib/spellcheck';
+import {
+  checkKoreanSpelling,
+  checkWithPnu,
+  errorText,
+  maskUncheckable,
+} from '../src/lib/spellcheck';
+
+// 검사기별로 실제로 접속해야 하는 호스트
+const HOSTS = [
+  { label: '다음', url: 'https://dic.daum.net/grammar_checker.do' },
+  { label: '네이버', url: 'https://m.search.naver.com/p/csearch/ocontent/util/SpellerProxy' },
+  { label: '부산대', url: 'https://speller.cs.pusan.ac.kr/' },
+];
+
+/** 검사기 이전에 네트워크 자체가 되는지부터 가른다. */
+async function probeNetwork() {
+  console.log(`Node ${process.version}\n`);
+  console.log('0) 네트워크 확인 (DNS + 접속)');
+
+  for (const host of HOSTS) {
+    const { hostname } = new URL(host.url);
+
+    try {
+      const addresses = await dns.lookup(hostname, { all: true });
+      console.log(
+        `  ${host.label} DNS: ${addresses.map((a) => `${a.address}(v${a.family})`).join(', ')}`
+      );
+    } catch (error) {
+      console.log(`  ${host.label} DNS: 실패 — ${errorText(error)}`);
+      continue;
+    }
+
+    try {
+      const res = await fetch(host.url, { signal: AbortSignal.timeout(10_000) });
+      console.log(`  ${host.label} 접속: HTTP ${res.status}`);
+    } catch (error) {
+      console.log(`  ${host.label} 접속: 실패 — ${errorText(error)}`);
+    }
+  }
+
+  console.log('');
+}
 
 const SAMPLE = '나는 차가운 모래속에 두 손을 넣었다. 이세상의 변두리에 선 느낌이 든다.';
 
@@ -50,6 +92,8 @@ function run(name: string, checker: Checker): Promise<void> {
 
 async function main() {
   console.log(`검사할 문장: ${SAMPLE}\n`);
+
+  await probeNetwork();
 
   console.log('1) 마스킹 (코드·URL 제외 처리)');
   const masked = maskUncheckable(SAMPLE);
