@@ -81,13 +81,21 @@ type Checker = typeof spellCheckByDAUM | typeof spellCheckByNAVER;
 function runChecker(checker: Checker, text: string): Promise<SpellCheckTypo[]> {
   return new Promise((resolve, reject) => {
     const typos: SpellCheckTypo[] = [];
+    let failure: Error | null = null;
 
+    // hanspell은 긴 글을 1000자씩 나눠 보내고, 실패한 조각마다 error를 부른 뒤
+    // 마지막에 end를 부른다. 한 조각이 실패했다고 성공한 조각까지 버리지 않는다.
     checker(
       text,
       CHECK_TIMEOUT_SEC,
       (found) => typos.push(...found),
-      () => resolve(typos),
-      (error) => reject(error instanceof Error ? error : new Error(String(error)))
+      () => {
+        if (typos.length === 0 && failure) reject(failure);
+        else resolve(typos);
+      },
+      (error) => {
+        failure = error instanceof Error ? error : new Error(String(error));
+      }
     );
   });
 }
