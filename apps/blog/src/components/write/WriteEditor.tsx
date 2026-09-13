@@ -409,6 +409,24 @@ export function WriteEditor({
 
         <span className="font-mono text-[11px] text-gray-400">content/posts/{targetFileName}</span>
 
+        {/* 발행 여부는 배포본에 글이 보이냐 마냐를 가른다 — 접힌 폼 안에 숨기지 않는다. */}
+        <button
+          type="button"
+          className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+            form.draft
+              ? 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100'
+              : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+          }`}
+          onClick={() => updateForm({ draft: !form.draft })}
+          title={
+            form.draft
+              ? '초안입니다. 배포본(Vercel)에는 보이지 않습니다. 눌러서 발행으로 바꿉니다.'
+              : '발행 상태입니다. 배포하면 블로그에 보입니다. 눌러서 초안으로 되돌립니다.'
+          }
+        >
+          {form.draft ? '초안 · 배포본에 안 보임' : '발행'}
+        </button>
+
         <div className="ml-auto flex items-center gap-3">
           {autosavedAt ? (
             <span className="text-[11px] text-gray-400">

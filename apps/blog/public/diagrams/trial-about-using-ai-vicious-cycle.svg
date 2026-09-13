@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" font-family="Pretendard, 'Pretendard Variable', -apple-system, 'Apple SD Gothic Neo', sans-serif" role="img" aria-label="AI로 개발 속도가 빨라지자 작업 사이클이 일찍 끝나 기획·디자인이 쫓기고, 미완성 명세와 추가 요구·재작업이 늘어 일정이 무너지고 코드베이스가 악화되며, 더 빨리 대응하라는 요구가 다시 처음으로 돌아가는 고리">
+  <defs>
+    <marker id="vcGray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9ca3af"/></marker>
+    <marker id="vcCoral" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#e8837a"/></marker>
+  </defs>
+
+  <rect x="30" y="34" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="120" y="67" font-size="13" fill="#1f2328" text-anchor="middle">AI로 개발 속도 상승</text>
+
+  <rect x="250" y="34" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="340" y="67" font-size="13" fill="#1f2328" text-anchor="middle">작업 사이클 조기 종료</text>
+
+  <rect x="470" y="34" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="560" y="67" font-size="13" fill="#1f2328" text-anchor="middle">기획·디자인 시간 압박</text>
+
+  <rect x="470" y="174" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="560" y="207" font-size="13" fill="#1f2328" text-anchor="middle">미완성 명세 전달</text>
+
+  <rect x="250" y="174" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="340" y="207" font-size="13" fill="#1f2328" text-anchor="middle">추가 요구·재작업</text>
+
+  <rect x="30" y="174" width="180" height="54" rx="10" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="120" y="198" font-size="13" fill="#1f2328" text-anchor="middle">일정 붕괴 · 긴급 패치</text>
+  <text x="120" y="216" font-size="12" fill="#6b7280" text-anchor="middle">코드베이스 악화</text>
+
+  <line x1="214" y1="61" x2="242" y2="61" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#vcGray)"/>
+  <line x1="434" y1="61" x2="462" y2="61" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#vcGray)"/>
+  <line x1="560" y1="92" x2="560" y2="168" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#vcGray)"/>
+  <line x1="466" y1="201" x2="438" y2="201" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#vcGray)"/>
+  <line x1="246" y1="201" x2="218" y2="201" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#vcGray)"/>
+
+  <line x1="120" y1="170" x2="120" y2="94" stroke="#e8837a" stroke-width="2" marker-end="url(#vcCoral)"/>
+  <text x="136" y="126" font-size="13" fill="#b4544a">&#8220;빨리 대응해달라&#8221;</text>
+  <text x="136" y="146" font-size="12" fill="#6b7280">다시 처음으로</text>
+</svg>
