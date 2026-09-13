@@ -1,2 +1,5 @@
 # 빌드 시 생성되는 검색 인덱스
 public/search-index.json
+
+# 글쓰기 에디터 임시저장 (로컬 전용)
+.write-drafts/
