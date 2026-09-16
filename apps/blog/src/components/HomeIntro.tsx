@@ -1,7 +1,16 @@
 import Link from 'next/link';
 
-// 홈 상단 정체성 인트로 — 블로그가 어디로 가는 기록인지 첫 화면에서 밝힌다
-export function HomeIntro() {
+import { getHomeIntro } from '@/lib/home-intro';
+import { markdownToHtml } from '@/lib/markdown';
+
+// 홈 상단 정체성 인트로 — 문구·링크·노출 여부는 content/home-intro.md 가 정한다.
+// 본문은 글과 같은 마크다운 파이프라인을 타므로 **강조**·링크를 그대로 쓸 수 있다.
+export async function HomeIntro() {
+  const intro = getHomeIntro();
+  if (!intro) return null;
+
+  const { html } = await markdownToHtml(intro.markdown);
+
   return (
     <section className="mb-8 flex items-center gap-5 rounded-2xl border border-gray-200/80 bg-gray-50 p-5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -12,23 +21,28 @@ export function HomeIntro() {
         className="hidden w-14 shrink-0 sm:block"
       />
       <div className="min-w-0">
-        <p className="text-sm leading-relaxed text-gray-700">
-          만드는 데서 멈추지 않고, 만든 것이{' '}
-          <strong className="text-gray-900">현장에서 실제로 쓰이게</strong>{' '}
-          만드는 일을 파고 있습니다. AI를 팀과 제품에 배치해 정착시키는 과정을
-          여기에 기록합니다.
-        </p>
-        <div className="mt-2 flex items-center gap-4 text-xs font-medium">
-          <Link
-            href="/series/making-it-used"
-            className="text-[var(--color-primary)] hover:underline"
-          >
-            쓰이게 만들기 →
-          </Link>
-          <Link href="/about" className="text-gray-500 hover:underline">
-            소개
-          </Link>
-        </div>
+        <div
+          className="text-sm leading-relaxed text-gray-700 [&_a]:text-[var(--color-primary)] [&_a:hover]:underline [&_p+p]:mt-2 [&_p]:m-0 [&_strong]:font-semibold [&_strong]:text-gray-900"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+
+        {intro.links.length > 0 ? (
+          <div className="mt-2 flex items-center gap-4 text-xs font-medium">
+            {intro.links.map((link) => (
+              <Link
+                key={`${link.href}-${link.label}`}
+                href={link.href}
+                className={
+                  link.primary
+                    ? 'text-[var(--color-primary)] hover:underline'
+                    : 'text-gray-500 hover:underline'
+                }
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
