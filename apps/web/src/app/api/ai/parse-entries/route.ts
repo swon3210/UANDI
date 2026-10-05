@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import { z } from 'zod';
 import type OpenAI from 'openai';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
@@ -11,8 +12,8 @@ import {
   PARSE_MODEL,
   imageDataUrlRegex,
   buildSystemPrompt,
-  parseResponseSchema,
-  normalizeEntries,
+  parseOutputSchema,
+  fromParseOutput,
   buildMockParseResponse,
 } from '@/lib/ai/parse-entries-core';
 
@@ -74,44 +75,41 @@ export async function POST(req: NextRequest) {
   try {
     const client = getOpenAIClient();
 
-    const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+    const userContent: OpenAI.Responses.ResponseInputContent[] = [];
     if (hasImages) {
       for (const url of images ?? []) {
-        userContent.push({ type: 'image_url', image_url: { url, detail: 'high' } });
+        // 영수증·거래내역 OCR은 원본 해상도 유지가 정확도에 유리 (Responses API 전용 detail 값)
+        userContent.push({ type: 'input_image', image_url: url, detail: 'original' });
       }
     }
     const userText = text?.trim() || (hasImages ? '첨부된 영수증을 파싱해줘.' : '');
     if (userText) {
-      userContent.push({ type: 'text', text: userText });
+      userContent.push({ type: 'input_text', text: userText });
     }
 
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.parse({
       model: PARSE_MODEL,
+      // 가계부 원문·이미지를 OpenAI 측에 저장하지 않는다
+      store: false,
       // 추론 토큰 + 최대 100건 JSON 출력을 모두 수용하도록 넉넉히 확보
-      max_completion_tokens: 16000,
+      max_output_tokens: 16000,
       // OCR/추출 위주 작업이라 낮은 추론 강도로도 충분 (필요 시 'medium'까지 상향)
-      reasoning_effort: 'low',
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: hasImages ? userContent : userText,
-        },
-      ],
+      reasoning: { effort: 'low' },
+      instructions: systemPrompt,
+      input: [{ role: 'user', content: hasImages ? userContent : userText }],
+      // Structured Outputs(strict): 스키마 준수가 보장되어 후처리 파싱 실패가 사라진다
+      text: { format: zodTextFormat(parseOutputSchema, 'parse_entries') },
     });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
+    if (!response.output_parsed) {
+      console.error('[parse-entries] 빈 응답', {
+        status: response.status,
+        incomplete: response.incomplete_details,
+      });
       return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
-    const result = parseResponseSchema.parse(JSON.parse(content));
-
-    return NextResponse.json({
-      entries: normalizeEntries(result.entries),
-      imageKindMismatch: result.imageKindMismatch ?? false,
-    });
+    return NextResponse.json(fromParseOutput(response.output_parsed));
   } catch (error) {
     console.error('[parse-entries] AI 호출 실패:', error);
     return NextResponse.json(

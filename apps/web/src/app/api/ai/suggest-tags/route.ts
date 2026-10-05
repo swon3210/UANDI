@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
@@ -45,16 +46,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getOpenAIClient();
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.parse({
       model: TAG_MODEL,
-      max_completion_tokens: 512,
+      store: false,
+      max_output_tokens: 512,
       // 태그 3~5개 제안은 추론 없이 충분
-      reasoning_effort: 'none',
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `너는 사진 태그를 제안하는 AI야.
+      reasoning: { effort: 'none' },
+      text: { format: zodTextFormat(responseSchema, 'suggested_tags') },
+      instructions: `너는 사진 태그를 제안하는 AI야.
 사진을 분석해서 적절한 한국어 태그 3~5개를 제안해.
 
 기존에 사용된 태그 목록:
@@ -66,26 +65,27 @@ ${existingTags.length > 0 ? existingTags.join(', ') : '(없음)'}
 - 한국어로 작성
 - 반드시 아래 JSON 형식으로만 응답:
 { "suggestedTags": ["태그1", "태그2", "태그3"] }`,
-        },
+      input: [
         {
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: { url: imageBase64 },
-            },
-            { type: 'text', text: '이 사진에 적합한 태그를 제안해줘.' },
+            // 태그 제안은 대략적 이해로 충분 → 기본 detail
+            { type: 'input_image', image_url: imageBase64, detail: 'auto' },
+            { type: 'input_text', text: '이 사진에 적합한 태그를 제안해줘.' },
           ],
         },
       ],
     });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
+    const result = response.output_parsed;
+    if (!result) {
+      console.error('[suggest-tags] 빈 응답', {
+        status: response.status,
+        incomplete: response.incomplete_details,
+      });
       return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
-    const result = responseSchema.parse(JSON.parse(content));
     return NextResponse.json(result);
   } catch (error) {
     console.error('[suggest-tags] AI 호출 실패:', error);

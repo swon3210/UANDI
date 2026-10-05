@@ -126,7 +126,10 @@ Response:
 ### 프롬프트 전략
 
 - 시스템 프롬프트에 카테고리 목록 포함
-- JSON 출력 강제 (`response_format: { type: "json_object" }`)
+- OpenAI **Responses API** (`client.responses.parse`) 사용 — Chat Completions 아님
+- JSON 출력은 Structured Outputs(strict, `text.format` + `zodTextFormat`)로 스키마 준수 보장. strict 모드는 optional 불가 → 선택 필드는 `nullable`로 선언 후 앱 내부 형태로 변환
+- 이미지 입력은 `input_image` + `detail: 'original'` (OCR 정확도용, Responses 전용 값)
+- `store: false` — 가계부 원문·이미지를 OpenAI 측에 저장하지 않음
 - 오늘 날짜를 컨텍스트로 전달
 - 항목 구분자(줄바꿈/쉼표/그리고) 지침 명시
 - 이미지: **단일 영수증은 1건**으로, **카드/계좌 거래 내역 목록 스크린샷은 각 거래 행을 개별 건**으로 추출 (합계·잔액·취소거래 행은 제외)

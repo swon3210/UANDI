@@ -254,7 +254,7 @@ useForexOutlook(currency: SupportedCurrency)
 }
 ```
 
-- `response_format: { type: 'json_object' }` (JSON 모드 강제)
+- Responses API `client.responses.parse` + Structured Outputs(strict, `zodTextFormat`)로 `{ summary, confidence }` 스키마 보장
 - `max_tokens` 적당히 (300 정도)
 
 ### 프롬프트 전략

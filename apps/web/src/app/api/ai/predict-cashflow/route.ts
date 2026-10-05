@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import { z } from 'zod';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
@@ -34,15 +35,16 @@ const requestSchema = z.object({
 const MODEL = 'gpt-5.6-luna';
 const MAX_PREDICTIONS = 30;
 
+// Structured Outputs(strict) 출력 스키마 — optional/default 불가, 모든 필드 필수
 const predictionSchema = z.object({
   type: z.enum(['income', 'expense']),
   category: z.string(),
   amount: z.number().positive(),
   date: z.string(),
   confidence: z.number().min(0).max(1),
-  reason: z.string().optional().default(''),
+  reason: z.string(),
 });
-const responseSchema = z.object({ predictions: z.array(predictionSchema) });
+const outputSchema = z.object({ predictions: z.array(predictionSchema) });
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
@@ -116,17 +118,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getOpenAIClient();
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.parse({
       model: MODEL,
+      store: false,
       // 추론 토큰 + 예측 JSON(최대 수십 건)을 모두 수용
-      max_completion_tokens: 8000,
+      max_output_tokens: 8000,
       // 주기(매달/격월/분기) 판단이 필요한 작업이라 낮은 추론 강도 사용
-      reasoning_effort: 'low',
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `너는 커플 가계부 앱의 현금흐름 예측 AI야.
+      reasoning: { effort: 'low' },
+      text: { format: zodTextFormat(outputSchema, 'cashflow_predictions') },
+      instructions: `너는 커플 가계부 앱의 현금흐름 예측 AI야.
 과거 거래 패턴을 보고, 주어진 기간(호라이즌) 안에 발생할 "예상되는" 지출·수입을 추정해.
 이 결과는 잔액에 반영되는 참고용 예상 내역이라, **실제 리듬을 최대한 따르는 게** 사용자에게 유용하다.
 
@@ -152,26 +152,24 @@ export async function POST(req: NextRequest) {
 - reason: 왜 이렇게 예측했는지 **주기를 명시**한 한국어 한 줄
   (예: "최근 5개월 매월 평균 32만원 지출", "3·5·7월 격월로 들어온 상여 → 9월 예상")
 - **이미 정기 발생으로 선언된 카테고리는 제외**(중복 표시 방지): ${allExcluded.join(', ') || '(없음)'}${predictionGuidance}`,
-        },
-        {
-          role: 'user',
-          content: `오늘: ${dayjs().format('YYYY-MM-DD')}
+      input: `오늘: ${dayjs().format('YYYY-MM-DD')}
 호라이즌: ${horizonStart} ~ ${horizonEnd} (매달 항목은 달마다 1건, 격월·분기 항목은 그 간격대로만)
 사용 가능한 카테고리: ${categories.join(', ') || '(목록 없음)'}
 이미 선언된 정기 카테고리(예측 제외): ${allExcluded.join(', ') || '(없음)'}
 
 과거 카테고리별 월별 거래 요약(등장한 "월 간격"을 보고 다음 발생월을 추정 — 격월이면 격월로):
 ${summaryLines || '(과거 내역 없음)'}`,
-        },
-      ],
     });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
+    const result = response.output_parsed;
+    if (!result) {
+      console.error('[predict-cashflow] 빈 응답', {
+        status: response.status,
+        incomplete: response.incomplete_details,
+      });
       return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
-    const result = responseSchema.parse(JSON.parse(content));
     return NextResponse.json({ predictions: result.predictions.slice(0, MAX_PREDICTIONS) });
   } catch (error) {
     console.error('[predict-cashflow] AI 호출 실패:', error);

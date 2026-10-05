@@ -10,11 +10,18 @@ import {
   TREND_LABEL,
   computeRecommendation,
 } from '@uandi/investment-core';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
 const FOREX_MODEL = 'gpt-5.6-luna';
+
+// Structured Outputs(strict) 출력 스키마
+const outlookSchema = z.object({
+  summary: z.string(),
+  confidence: z.number().min(0).max(1),
+});
 
 const requestSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES as [SupportedCurrency, ...SupportedCurrency[]]),
@@ -99,16 +106,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getOpenAIClient();
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.parse({
       model: FOREX_MODEL,
-      response_format: { type: 'json_object' },
-      max_completion_tokens: 2000,
+      store: false,
+      max_output_tokens: 2000,
       // gpt-5.6 계열은 'minimal' 미지원 → 'none'
-      reasoning_effort: 'none',
-      messages: [
-        {
-          role: 'system',
-          content: `당신은 외환 시장 분석 어시스턴트입니다.
+      reasoning: { effort: 'none' },
+      text: { format: zodTextFormat(outlookSchema, 'forex_outlook') },
+      instructions: `당신은 외환 시장 분석 어시스턴트입니다.
 한국 개인 투자자가 환테크 의사결정에 참고할 수 있도록 최근 90일 시계열과 기술 지표를 바탕으로
 이미 결정된 추천(매수/매도/관망)을 뒷받침하는 근거를 1~3문장 한국어로 제시하세요.
 
@@ -124,10 +129,7 @@ export async function POST(req: NextRequest) {
 - 52주 백분위가 높아도(75% 이상) 추세가 'up'이면 평균회귀가 즉시 일어나지 않을 수 있으므로 매도 신호를 신중히 해석하세요(이 경우 추천은 'hold'로 다운그레이드됩니다).
 - 13주 백분위는 최근 분기 내 위치로, 추세가 길게 이어지는 장에서도 단기 진입 타이밍을 보조합니다.
 - summary는 가능하면 "추세가 X이고 단기(13주) 백분위가 Y%이므로 …" 형태로 추세-단기 결합 해석을 권장합니다.`,
-        },
-        {
-          role: 'user',
-          content: `통화: ${currency}/KRW (${CURRENCY_META[currency].label})
+      input: `통화: ${currency}/KRW (${CURRENCY_META[currency].label})
 
 기술적 추천(고정): ${recommendation} (${recommendationLabel})
 
@@ -138,26 +140,20 @@ ${summarizeSeries(points)}
 ${indicatorLines(indicators)}
 
 위 추천을 뒷받침하는 근거를 JSON으로 응답하세요.`,
-        },
-      ],
     });
 
-    const choice = completion.choices[0];
-    const content = choice?.message?.content;
-    if (!content) {
+    const result = response.output_parsed;
+    if (!result) {
       console.error('[forex-outlook] 빈 응답', {
         model: FOREX_MODEL,
-        finishReason: choice?.finish_reason,
-        usage: completion.usage,
+        status: response.status,
+        incomplete: response.incomplete_details,
+        usage: response.usage,
       });
       return NextResponse.json({ error: 'AI 응답이 비어 있습니다' }, { status: 502 });
     }
 
-    const parsedContent = JSON.parse(content) as { summary?: unknown; confidence?: unknown };
-    const summary = typeof parsedContent.summary === 'string' ? parsedContent.summary : '';
-    const confidence =
-      typeof parsedContent.confidence === 'number' ? parsedContent.confidence : 0.5;
-    return NextResponse.json({ summary, confidence });
+    return NextResponse.json({ summary: result.summary, confidence: result.confidence });
   } catch (error) {
     console.error('[forex-outlook] AI 호출 실패:', error);
     return NextResponse.json(
