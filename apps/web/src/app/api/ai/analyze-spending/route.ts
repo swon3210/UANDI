@@ -97,16 +97,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getOpenAIClient();
-    const stream = await client.chat.completions.create({
+    const stream = await client.responses.create({
       model: ANALYZE_MODEL,
-      max_completion_tokens: maxTokens,
+      store: false,
+      max_output_tokens: maxTokens,
       // 요약·서술 작업이라 추론 없이 바로 스트리밍 시작 (첫 토큰 지연 최소화)
-      reasoning_effort: 'none',
+      reasoning: { effort: 'none' },
       stream: true,
-      messages: [
-        {
-          role: 'system',
-          content: `너는 커플 가계부 앱의 지출 분석 AI야.
+      instructions: `너는 커플 가계부 앱의 지출 분석 AI야.
 주어진 데이터를 바탕으로 친근하고 실용적인 분석을 제공해.
 
 반드시 아래 5개 섹션을 순서대로 작성해:
@@ -133,10 +131,7 @@ export async function POST(req: NextRequest) {
 - 비판적이지 않고 격려하는 톤
 - 커플 맥락 반영 (공동 지출 vs 개인 지출 언급 시)
 - 예산 데이터가 없으면 예산 분석 섹션은 "예산을 설정하면 더 정확한 분석이 가능해요!" 로 대체${guidance}`,
-        },
-        {
-          role: 'user',
-          content: `${year}년 ${month}월 가계부 데이터를 분석해줘.
+      input: `${year}년 ${month}월 가계부 데이터를 분석해줘.
 
 현재 날짜: ${year}년 ${month}월 (연말까지 ${12 - month}개월 남음)
 
@@ -151,16 +146,15 @@ ${categoryBreakdown || '  (지출 내역 없음)'}
 ${budgetInfo}
 
 거래 건수: ${entries.length}건`,
-        },
-      ],
     });
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of stream) {
-            const text = chunk.choices[0]?.delta?.content;
+          for await (const event of stream) {
+            if (event.type !== 'response.output_text.delta') continue;
+            const text = event.delta;
             if (text) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
             }

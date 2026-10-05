@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import { z } from 'zod';
+import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
@@ -9,7 +10,8 @@ import { buildParseRulesSection } from '@/lib/ai/preferences';
 import {
   PARSE_MODEL,
   buildSystemPrompt,
-  parseResponseSchema,
+  parseOutputSchema,
+  fromParseOutput,
   normalizeEntries,
   buildMockAttachmentEntries,
   detectedMonthsOf,
@@ -56,33 +58,35 @@ async function analyzeOne(
     customRulesSection,
   });
 
-  const completion = await client.chat.completions.create({
+  const response = await client.responses.parse({
     model: PARSE_MODEL,
-    max_completion_tokens: 16000,
-    reasoning_effort: 'low',
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: systemPrompt },
+    store: false,
+    max_output_tokens: 16000,
+    reasoning: { effort: 'low' },
+    instructions: systemPrompt,
+    input: [
       {
         role: 'user',
         content: [
-          { type: 'image_url', image_url: { url: attachment.url, detail: 'high' } },
-          { type: 'text', text: '첨부된 거래 내역을 파싱해줘.' },
+          // 거래내역 스크린샷 OCR → 원본 해상도 유지
+          { type: 'input_image', image_url: attachment.url, detail: 'original' },
+          { type: 'input_text', text: '첨부된 거래 내역을 파싱해줘.' },
         ],
       },
     ],
+    text: { format: zodTextFormat(parseOutputSchema, 'parse_entries') },
   });
 
-  const content = completion.choices[0]?.message?.content;
-  if (!content) throw new Error('빈 응답');
+  if (!response.output_parsed) {
+    throw new Error(`빈 응답 (status=${response.status})`);
+  }
 
-  const result = parseResponseSchema.parse(JSON.parse(content));
-  const entries = normalizeEntries(result.entries);
+  const { entries, imageKindMismatch } = fromParseOutput(response.output_parsed);
   return {
     attachmentId: attachment.id,
     kind: attachment.kind,
     detectedMonths: detectedMonthsOf(entries),
-    imageKindMismatch: result.imageKindMismatch ?? false,
+    imageKindMismatch,
     entries,
   };
 }

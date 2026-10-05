@@ -30,11 +30,38 @@ export const parsedEntrySchema = z.object({
 
 export type ParsedEntry = z.infer<typeof parsedEntrySchema>;
 
-export const parseResponseSchema = z.object({
-  entries: z.array(parsedEntrySchema).min(1).max(MAX_ENTRIES),
+/** parse-entries / sync-attachments 라우트가 클라이언트에 돌려주는 파싱 결과. */
+export type ParseResponse = {
+  entries: ParsedEntry[];
   // imageKind='card'로 첨부했지만 카드 내역이 아니라고 판단되면 true.
-  imageKindMismatch: z.boolean().optional(),
+  imageKindMismatch: boolean;
+};
+
+/**
+ * Responses API Structured Outputs(strict)용 출력 스키마.
+ * strict 모드는 optional 필드를 허용하지 않으므로 선택 필드는 nullable로 선언하고,
+ * fromParseOutput()에서 앱 내부 형태(ParseResponse)로 되돌린다.
+ */
+export const parseOutputSchema = z.object({
+  entries: z
+    .array(parsedEntrySchema.extend({ isTransfer: z.boolean().nullable() }))
+    .min(1)
+    .max(MAX_ENTRIES),
+  imageKindMismatch: z.boolean().nullable(),
 });
+
+export type ParseOutput = z.infer<typeof parseOutputSchema>;
+
+/** strict 출력(null 포함)을 앱 내부 응답 형태로 변환하고 날짜를 보정한다. */
+export function fromParseOutput(output: ParseOutput): ParseResponse {
+  const entries = output.entries.map(({ isTransfer, ...rest }) =>
+    isTransfer == null ? rest : { ...rest, isTransfer }
+  );
+  return {
+    entries: normalizeEntries(entries),
+    imageKindMismatch: output.imageKindMismatch ?? false,
+  };
+}
 
 /**
  * imageKind가 지정된 첨부 이미지에 적용하는 추가 규칙 섹션.
@@ -53,19 +80,19 @@ function buildImageKindSection(imageKind: ImageKind | undefined, hasImages: bool
 
 [단순 송금 표시]
 가맹점/상호명이 아니라 **사람 이름으로의 이체·"이체"·"송금"·카카오페이/토스 송금·ATM 현금 출금**처럼
-단순 자금 이동으로 보이는 거래는 entry로 추출하되 그 entry에 "isTransfer": true 를 포함해라(소비가 아닐 수 있어 사용자 확인 대상).
-명백한 가맹점 결제 등 일반 소비는 isTransfer를 생략하거나 false.
+단순 자금 이동으로 보이는 거래는 entry로 추출하되 그 entry의 "isTransfer"를 true로 설정해라(소비가 아닐 수 있어 사용자 확인 대상).
+명백한 가맹점 결제 등 일반 소비는 isTransfer를 false로 둔다.
 
 [이미지 종류 검증]
-첨부 이미지가 계좌/통장 거래 내역이 아니라 명백히 다른 종류(예: 카드 사용 내역, 일반 사진)면 응답 JSON 최상위에 "imageKindMismatch": true 를 포함해라. 일치하거나 판단이 애매하면 생략하거나 false.`;
+첨부 이미지가 계좌/통장 거래 내역이 아니라 명백히 다른 종류(예: 카드 사용 내역, 일반 사진)면 응답 JSON 최상위의 "imageKindMismatch"를 true로 설정해라. 일치하거나 판단이 애매하면 false.`;
   }
   return `
 [이미지 분류 — 신용/체크카드 사용 내역]
 첨부된 이미지는 신용/체크카드 사용(승인) 내역이어야 한다. 화면에 보이는 카드 사용 한 건마다 개별 entry로 추출한다.
-카드 사용 내역은 단순 송금이 아니므로 isTransfer는 항상 생략하거나 false.
+카드 사용 내역은 단순 송금이 아니므로 isTransfer는 항상 false.
 
 [이미지 종류 검증]
-첨부 이미지가 카드 사용 내역이 아니라 명백히 다른 종류(예: 계좌/통장 거래 내역, 일반 사진)면 응답 JSON 최상위에 "imageKindMismatch": true 를 포함해라. 일치하거나 판단이 애매하면 생략하거나 false.`;
+첨부 이미지가 카드 사용 내역이 아니라 명백히 다른 종류(예: 계좌/통장 거래 내역, 일반 사진)면 응답 JSON 최상위의 "imageKindMismatch"를 true로 설정해라. 일치하거나 판단이 애매하면 false.`;
 }
 
 export function buildSystemPrompt(options: {
@@ -113,9 +140,10 @@ ${categories.join(', ')}
       "description": "항목 설명 (영수증이면 상호명 + 대표 품목)",
       "date": "YYYY-MM-DD",
       "confidence": 0.0 ~ 1.0,
-      "isTransfer": true | false
+      "isTransfer": true | false | null
     }
-  ]
+  ],
+  "imageKindMismatch": true | false | null
 }
 
 규칙:
