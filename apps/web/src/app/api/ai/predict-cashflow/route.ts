@@ -31,7 +31,7 @@ const requestSchema = z.object({
   categories: z.array(z.string()).optional().default([]),
 });
 
-const MODEL = 'gpt-4o';
+const MODEL = 'gpt-5.6-luna';
 const MAX_PREDICTIONS = 30;
 
 const predictionSchema = z.object({
@@ -118,7 +118,10 @@ export async function POST(req: NextRequest) {
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
       model: MODEL,
-      max_tokens: 3000,
+      // 추론 토큰 + 예측 JSON(최대 수십 건)을 모두 수용
+      max_completion_tokens: 8000,
+      // 주기(매달/격월/분기) 판단이 필요한 작업이라 낮은 추론 강도 사용
+      reasoning_effort: 'low',
       response_format: { type: 'json_object' },
       messages: [
         {

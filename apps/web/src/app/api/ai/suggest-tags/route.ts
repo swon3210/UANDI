@@ -4,6 +4,8 @@ import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
+const TAG_MODEL = 'gpt-5.6-luna';
+
 const requestSchema = z.object({
   imageBase64: z.string().min(1),
   existingTags: z.array(z.string()),
@@ -44,8 +46,10 @@ export async function POST(req: NextRequest) {
   try {
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 256,
+      model: TAG_MODEL,
+      max_completion_tokens: 512,
+      // 태그 3~5개 제안은 추론 없이 충분
+      reasoning_effort: 'none',
       response_format: { type: 'json_object' },
       messages: [
         {

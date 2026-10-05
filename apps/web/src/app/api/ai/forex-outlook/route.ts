@@ -14,7 +14,7 @@ import { getOpenAIClient } from '@/lib/ai/openai';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 
-const FOREX_MODEL = 'gpt-5-mini';
+const FOREX_MODEL = 'gpt-5.6-luna';
 
 const requestSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES as [SupportedCurrency, ...SupportedCurrency[]]),
@@ -103,7 +103,8 @@ export async function POST(req: NextRequest) {
       model: FOREX_MODEL,
       response_format: { type: 'json_object' },
       max_completion_tokens: 2000,
-      reasoning_effort: 'minimal',
+      // gpt-5.6 계열은 'minimal' 미지원 → 'none'
+      reasoning_effort: 'none',
       messages: [
         {
           role: 'system',

@@ -222,7 +222,7 @@ useForexOutlook(currency: SupportedCurrency)
 - POST만 허용, JSON 응답
 - Firebase Auth 토큰 인증 (`verifyAuth`)
 - 일일 사용량 제한: 커플당 50회/일 (`checkAndIncrementUsage`, 카운터 키: `aiUsage`)
-- 모델: **`gpt-5-mini`** (정확한 모델 ID는 구현 시점 OpenAI 문서 재확인)
+- 모델: **`gpt-5.6-luna`** (`reasoning_effort: 'none'`; gpt-5.6 계열은 `minimal` 미지원)
 
 **Request**
 
