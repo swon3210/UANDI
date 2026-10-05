@@ -6,6 +6,8 @@ import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 import { getAiPreferences } from '@/lib/ai/preferences-store';
 import { analyzeSpendingMaxTokens, buildAnalyzeSpendingGuidance } from '@/lib/ai/preferences';
 
+const ANALYZE_MODEL = 'gpt-5.6-luna';
+
 const entrySchema = z.object({
   type: z.enum(['income', 'expense', 'flex']),
   amount: z.number(),
@@ -96,8 +98,10 @@ export async function POST(req: NextRequest) {
   try {
     const client = getOpenAIClient();
     const stream = await client.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: maxTokens,
+      model: ANALYZE_MODEL,
+      max_completion_tokens: maxTokens,
+      // 요약·서술 작업이라 추론 없이 바로 스트리밍 시작 (첫 토큰 지연 최소화)
+      reasoning_effort: 'none',
       stream: true,
       messages: [
         {

@@ -130,7 +130,7 @@ Response:
 - 오늘 날짜를 컨텍스트로 전달
 - 항목 구분자(줄바꿈/쉼표/그리고) 지침 명시
 - 이미지: **단일 영수증은 1건**으로, **카드/계좌 거래 내역 목록 스크린샷은 각 거래 행을 개별 건**으로 추출 (합계·잔액·취소거래 행은 제외)
-- 모델: **`gpt-5-mini`** (vision 지원 추론 모델) — 텍스트·이미지 공통 사용
+- 모델: **`gpt-5.6-luna`** (vision 지원 추론 모델, `reasoning_effort` 는 `none|low|medium|high|xhigh` 만 지원) — 텍스트·이미지 공통 사용
 - 추론 모델이므로 `max_tokens` 대신 `max_completion_tokens: 16000` + `reasoning_effort: 'low'` 사용 (추론 토큰 + 최대 100건 출력 수용)
 
 ---

@@ -2,9 +2,10 @@ import dayjs from 'dayjs';
 import { z } from 'zod';
 
 // OCR·자연어 파싱 모델. 거래 내역 스크린샷의 행 누락을 줄이기 위해 GPT-5 계열 사용.
-// gpt-5-mini는 vision 입력을 지원하며, 추론 모델이라 max_tokens 대신
+// gpt-5.6-luna는 vision 입력을 지원하는 추론 모델이라 max_tokens 대신
 // max_completion_tokens / reasoning_effort 를 사용한다.
-export const PARSE_MODEL = 'gpt-5-mini';
+// (reasoning_effort는 'none'|'low'|'medium'|'high'|'xhigh'만 지원 — 'minimal' 불가)
+export const PARSE_MODEL = 'gpt-5.6-luna';
 
 // 한 요청에서 추출 가능한 최대 entry 수.
 // 거래 내역 목록 스크린샷은 한 화면에 수십 건이 들어갈 수 있어 넉넉히 잡는다.
