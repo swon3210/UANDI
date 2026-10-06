@@ -13,6 +13,9 @@ export const MAX_ENTRIES = 100;
 
 export const imageDataUrlRegex = /^data:image\/(png|jpe?g|webp|gif);base64,/i;
 
+/** 한 요청에서 받는 PDF 페이지(렌더링 이미지) 총량 상한. 비용·요청 크기 보호. */
+export const MAX_PDF_PAGES_PER_REQUEST = 20;
+
 // ── 과거 내역 기반 카테고리 힌트 ──
 // 클라이언트가 "마지막 내역 날짜 기준 최근 3개월" 내역에서 뽑은 "설명 → 카테고리" 쌍.
 // 모델이 비슷한 설명의 새 내역에 같은 카테고리를 고르게 유도한다.
@@ -175,7 +178,7 @@ ${categories.join(', ')}
 
 입력 구성:
 - 텍스트: 여러 줄/쉼표/"그리고" 등으로 구분된 여러 건이 포함될 수 있음
-- 이미지: 영수증 사진이거나, 카드/계좌의 거래 내역 목록 화면(스크린샷)일 수 있음
+- 이미지/PDF: 영수증 사진이거나, 카드/계좌의 거래 내역 목록 화면(스크린샷) 또는 이용내역서 PDF 페이지일 수 있음
   - **단일 영수증 사진**: 여러 품목이 찍혀 있어도 영수증 1장 = entry 1개로 합쳐서 처리 (description에 상호명 + 대표 품목 요약)
   - **거래 내역 목록 화면**(카드 사용 내역, 통장/계좌 거래 내역 등 여러 거래가 행으로 나열된 화면): 화면에 보이는 **거래 한 건(한 행)마다 개별 entry를 만든다.** 한 화면에 20건이 보이면 20개의 entry를 생성하고, 절대 하나로 합치거나 일부만 추리지 마.
     - 각 행에서 가맹점/상호명 → description, 결제 금액 → amount, 거래 날짜 → date 로 추출
@@ -234,10 +237,13 @@ const MOCK_TEMPLATES: ParsedEntry[] = [
   { type: 'income', amount: 3500000, category: '정기급여', description: '월급', date: '', confidence: 0.98 },
 ];
 
-/** parse-entries 라우트용 결정적 mock (기존 동작 유지 + isTransfer:false 기본). */
+/**
+ * parse-entries 라우트용 결정적 mock (기존 동작 유지 + isTransfer:false 기본).
+ * @param attachmentsCount 첨부 수(이미지 장수 + PDF 파일 수). 첨부 1개당 entry 1건.
+ */
 export function buildMockParseResponse(
   text: string | undefined,
-  imagesCount: number,
+  attachmentsCount: number,
   imageKind?: ImageKind
 ) {
   const today = dayjs().format('YYYY-MM-DD');
@@ -247,7 +253,7 @@ export function buildMockParseResponse(
     .split(/[\n,]/)
     .map((s) => s.trim())
     .filter(Boolean).length;
-  const count = Math.min(Math.max(textSegments + imagesCount, 1), MAX_ENTRIES);
+  const count = Math.min(Math.max(textSegments + attachmentsCount, 1), MAX_ENTRIES);
 
   return {
     entries: Array.from({ length: count }, (_, i) => ({
