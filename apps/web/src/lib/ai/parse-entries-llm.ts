@@ -17,7 +17,7 @@ import {
 export async function parseEntriesWithModel(options: {
   client: OpenAI;
   systemPrompt: string;
-  /** data URL 또는 https URL. 없으면 텍스트만 파싱. */
+  /** data URL 또는 https URL. 없으면 텍스트만 파싱. PDF 페이지도 클라이언트가 이미지로 렌더링해 보낸다. */
   imageUrl?: string;
   text: string;
   /** 에러 로그 식별자 */

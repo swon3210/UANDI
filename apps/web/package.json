@@ -33,6 +33,7 @@
     "next": "^15.2.0",
     "openai": "^6.33.0",
     "overlay-kit": "^1.4.0",
+    "pdfjs-dist": "^6.4.299",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-easy-crop": "^6.2.3",

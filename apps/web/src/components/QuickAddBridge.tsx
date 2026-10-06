@@ -75,9 +75,10 @@ function QuickAddSheetContent({
       <div className="py-4">
         <AiParseInput
           categories={(categories ?? []).map((c) => c.name)}
-          parseFn={async (text, categoryNames, images) =>
+          parseFn={async (text, categoryNames, images, pdfs) =>
             parseEntriesFromText(text, categoryNames, images, {
               categoryHints: await resolveCategoryHints(),
+              pdfs,
             })
           }
           textareaClassName="focus-visible:ring-inset focus-visible:ring-offset-0"

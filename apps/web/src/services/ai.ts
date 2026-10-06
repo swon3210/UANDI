@@ -71,6 +71,14 @@ export type ParseEntriesOptions = {
   onImageKindMismatch?: () => void;
   /** 과거 내역 기반 "설명 → 카테고리" 힌트(useCategoryHints). 비슷한 설명의 새 내역 분류에 쓰인다. */
   categoryHints?: CategoryHint[];
+  /** 이용내역서 PDF. 클라이언트가 페이지별로 렌더링한 이미지 data URL 묶음. */
+  pdfs?: ParsedPdfAttachment[];
+};
+
+export type ParsedPdfAttachment = {
+  name: string;
+  /** 페이지별 렌더링 이미지(data URL) */
+  pages: string[];
 };
 
 export async function parseEntriesFromText(
@@ -89,6 +97,7 @@ export async function parseEntriesFromText(
       images,
       imageKind: options?.imageKind,
       categoryHints: options?.categoryHints,
+      pdfs: options?.pdfs,
     }),
   });
 
