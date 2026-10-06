@@ -11,6 +11,7 @@ import {
   monthKeyOf,
 } from '@/services/cashbook-settlement';
 import { syncAttachments, type AttachmentSyncResult } from '@/services/ai';
+import type { CategoryHint } from '@/utils/category-hints';
 import {
   uploadSettlementAttachment,
   deleteSettlementAttachment,
@@ -116,7 +117,9 @@ export function useAnalyzeAttachments(
   coupleId: string | null,
   monthKey: string,
   attachments: SettlementAttachment[],
-  categories: string[]
+  categories: string[],
+  /** 과거 내역 기반 카테고리 힌트. undefined면(로딩 중) 분석을 시작하지 않는다. */
+  categoryHints: CategoryHint[] | undefined
 ) {
   const qc = useQueryClient();
   const ids = attachments.map((a) => a.id).join(',');
@@ -129,7 +132,8 @@ export function useAnalyzeAttachments(
           url: a.url,
           kind: a.kind === 'card' ? 'card' : 'account',
         })),
-        categories
+        categories,
+        categoryHints
       );
       const monthsById: Record<string, string[]> = {};
       for (const r of results) monthsById[r.attachmentId] = r.detectedMonths;
@@ -137,7 +141,7 @@ export function useAnalyzeAttachments(
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId, monthKey] });
       return results;
     },
-    enabled: !!coupleId && attachments.length > 0,
+    enabled: !!coupleId && attachments.length > 0 && categoryHints !== undefined,
     staleTime: 0,
     gcTime: 0,
     refetchOnWindowFocus: false,

@@ -5,7 +5,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { Button, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType, SettlementAttachment } from '@/types';
 import { useAnalyzeAttachments } from '@/hooks/useSettlement';
-import { useDuplicateScopeEntries } from '@/hooks/useCashbook';
+import { useDuplicateScopeEntries, useCategoryHints } from '@/hooks/useCashbook';
 import { findDuplicate } from '@/utils/cashbook-duplicate';
 import { BulkSyncResultView, type BulkSyncEntryData } from './BulkSyncResultView';
 import type { ConfirmedEntry } from './AiBulkPreviewSheet';
@@ -36,11 +36,14 @@ export function SettlementBulkSyncSheet({
   onConfirm,
   onClose,
 }: SettlementBulkSyncSheetProps) {
+  // 힌트 로딩이 끝난 뒤 분석을 시작한다(실패하면 힌트 없이 진행).
+  const hints = useCategoryHints(coupleId);
   const analyze = useAnalyzeAttachments(
     coupleId,
     monthKey,
     attachments,
-    useMemo(() => categories.map((c) => c.name), [categories])
+    useMemo(() => categories.map((c) => c.name), [categories]),
+    hints.isPending ? undefined : (hints.data ?? [])
   );
 
   // 분석된 모든 entry를 평탄화 (이미지↔월 귀속은 entry.date로 결정).

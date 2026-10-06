@@ -16,6 +16,7 @@ export type {
 export {
   getMonthlyEntries,
   getEntriesInRange,
+  getLatestEntryDate,
   addEntry,
   addEntries,
   updateEntry,

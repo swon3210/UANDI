@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import { z } from 'zod';
-import { zodTextFormat } from 'openai/helpers/zod';
 import { getOpenAIClient } from '@/lib/ai/openai';
+import { parseEntriesWithModel } from '@/lib/ai/parse-entries-llm';
 import { verifyAuth } from '@/lib/ai/verify-auth';
 import { checkAndIncrementUsage } from '@/lib/ai/rate-limit';
 import { getAiPreferences } from '@/lib/ai/preferences-store';
 import { buildParseRulesSection } from '@/lib/ai/preferences';
 import {
-  PARSE_MODEL,
   buildSystemPrompt,
-  parseOutputSchema,
-  fromParseOutput,
+  categoryHintsSchema,
   normalizeEntries,
   buildMockAttachmentEntries,
   detectedMonthsOf,
+  type CategoryHint,
   type ImageKind,
   type ParsedEntry,
 } from '@/lib/ai/parse-entries-core';
@@ -31,6 +30,8 @@ const requestSchema = z.object({
     .min(1)
     .max(10),
   categories: z.array(z.string()),
+  // 과거 내역 기반 "설명 → 카테고리" 힌트(클라이언트가 마지막 내역 기준 3개월에서 추출).
+  categoryHints: categoryHintsSchema.optional(),
 });
 
 export type AttachmentSyncResult = {
@@ -46,7 +47,8 @@ async function analyzeOne(
   categories: string[],
   today: string,
   todayYear: number,
-  customRulesSection: string
+  customRulesSection: string,
+  categoryHints: CategoryHint[] | undefined
 ): Promise<AttachmentSyncResult> {
   const client = getOpenAIClient();
   const systemPrompt = buildSystemPrompt({
@@ -56,32 +58,16 @@ async function analyzeOne(
     today,
     todayYear,
     customRulesSection,
+    categoryHints,
   });
 
-  const response = await client.responses.parse({
-    model: PARSE_MODEL,
-    store: false,
-    max_output_tokens: 16000,
-    reasoning: { effort: 'low' },
-    instructions: systemPrompt,
-    input: [
-      {
-        role: 'user',
-        content: [
-          // 거래내역 스크린샷 OCR → 원본 해상도 유지
-          { type: 'input_image', image_url: attachment.url, detail: 'original' },
-          { type: 'input_text', text: '첨부된 거래 내역을 파싱해줘.' },
-        ],
-      },
-    ],
-    text: { format: zodTextFormat(parseOutputSchema, 'parse_entries') },
+  const { entries, imageKindMismatch } = await parseEntriesWithModel({
+    client,
+    systemPrompt,
+    imageUrl: attachment.url,
+    text: '첨부된 거래 내역을 파싱해줘.',
+    tag: 'sync-attachments',
   });
-
-  if (!response.output_parsed) {
-    throw new Error(`빈 응답 (status=${response.status})`);
-  }
-
-  const { entries, imageKindMismatch } = fromParseOutput(response.output_parsed);
   return {
     attachmentId: attachment.id,
     kind: attachment.kind,
@@ -109,7 +95,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
-  const { attachments, categories } = parsed.data;
+  const { attachments, categories, categoryHints } = parsed.data;
 
   if (process.env.USE_AI_MOCK === 'true') {
     const results: AttachmentSyncResult[] = attachments.map((a) => {
@@ -135,7 +121,9 @@ export async function POST(req: NextRequest) {
   try {
     // 이미지별로 개별 분석한다(이미지↔거래 귀속을 명확히 하기 위함). 동시 호출.
     const results = await Promise.all(
-      attachments.map((a) => analyzeOne(a, categories, today, todayYear, customRulesSection))
+      attachments.map((a) =>
+        analyzeOne(a, categories, today, todayYear, customRulesSection, categoryHints)
+      )
     );
     return NextResponse.json({ results });
   } catch (error) {

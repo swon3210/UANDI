@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import dayjs from 'dayjs';
 import { test } from '../fixtures/auth.fixture';
 import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
 
@@ -251,3 +252,74 @@ test.describe('자연어 가계부 다건 입력', () => {
 });
 
 // 지출 패턴 AI 분석은 월 결산 페이지로 이전됨 → cashbook-settlement.spec.ts 참고
+
+test.describe('과거 내역 기반 카테고리 힌트', () => {
+  test('마지막 내역 날짜 기준 3개월 안의 "설명 → 카테고리"만 힌트로 전송된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId, uid } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    // 기준점은 "오늘"이 아니라 "가장 최근 내역"이다.
+    // 최근 내역이 5개월 전이면 창(window)은 [8개월 전, 5개월 전].
+    const monthsAgo = (n: number) => dayjs().subtract(n, 'month').toISOString();
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 5500,
+      category: '식비',
+      description: '스타벅스 강남점',
+      date: monthsAgo(5), // 기준점(가장 최근)
+    });
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 12000,
+      category: '교통',
+      description: '카카오택시',
+      date: monthsAgo(7), // 기준점에서 2개월 전 → 포함
+    });
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'flex',
+      amount: 30000,
+      category: '소비',
+      description: '옛날가게',
+      date: monthsAgo(10), // 기준점에서 5개월 전 → 제외
+    });
+
+    await openQuickAdd(page);
+    await page.getByTestId('ai-parse-input').fill('스타벅스 강남점 6000원');
+
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/parse-entries') && req.method() === 'POST'
+    );
+    await page.getByTestId('ai-parse-submit').click();
+    const request = await requestPromise;
+    const body = request.postDataJSON() as {
+      categoryHints?: { description: string; category: string }[];
+    };
+
+    expect(body.categoryHints).toEqual(
+      expect.arrayContaining([
+        { description: '스타벅스 강남점', category: '식비' },
+        { description: '카카오택시', category: '교통' },
+      ])
+    );
+    expect(body.categoryHints?.map((h) => h.description)).not.toContain('옛날가게');
+
+    // 요청은 정상 처리되어 미리보기가 열린다
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+  });
+
+  test('내역이 하나도 없으면 힌트 없이(빈 배열) 요청된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+    await page.getByTestId('ai-parse-input').fill('점심 9000원');
+
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/parse-entries') && req.method() === 'POST'
+    );
+    await page.getByTestId('ai-parse-submit').click();
+    const body = (await requestPromise).postDataJSON() as { categoryHints?: unknown[] };
+    expect(body.categoryHints).toEqual([]);
+  });
+});

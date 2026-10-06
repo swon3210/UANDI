@@ -8,7 +8,7 @@ import { Sparkles } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useAddEntry, useAddEntries } from '@/hooks/useCashbook';
+import { useAddEntry, useAddEntries, useResolveCategoryHints } from '@/hooks/useCashbook';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
 import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
 import { EntryForm } from '@/components/cashbook/EntryForm';
@@ -37,6 +37,7 @@ function QuickAddSheetContent({
   const uid = user?.uid ?? '';
 
   const { data: categories } = useCashbookCategories(coupleId);
+  const resolveCategoryHints = useResolveCategoryHints(coupleId);
   const addMutation = useAddEntry(coupleId);
   const addManyMutation = useAddEntries(coupleId);
 
@@ -74,7 +75,11 @@ function QuickAddSheetContent({
       <div className="py-4">
         <AiParseInput
           categories={(categories ?? []).map((c) => c.name)}
-          parseFn={parseEntriesFromText}
+          parseFn={async (text, categoryNames, images) =>
+            parseEntriesFromText(text, categoryNames, images, {
+              categoryHints: await resolveCategoryHints(),
+            })
+          }
           textareaClassName="focus-visible:ring-inset focus-visible:ring-offset-0"
           onEmptySubmit={openManualForm}
           onParsed={(results) => {
