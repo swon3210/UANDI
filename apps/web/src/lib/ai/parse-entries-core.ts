@@ -220,7 +220,9 @@ export function normalizeEntries(entries: ParsedEntry[]): ParsedEntry[] {
   const today = todayDayjs.format('YYYY-MM-DD');
   const minAllowed = todayDayjs.subtract(2, 'year');
   const maxAllowed = todayDayjs.add(1, 'day');
-  return entries.map((entry) => {
+  return entries.map((raw) => {
+    // 원화는 소수점이 없으므로 AI가 소수 금액을 내도 정수로 보정한다.
+    const entry = { ...raw, amount: Math.round(raw.amount) };
     const d = dayjs(entry.date);
     if (!d.isValid() || d.isBefore(minAllowed) || d.isAfter(maxAllowed)) {
       return { ...entry, date: today, confidence: Math.min(entry.confidence, 0.5) };

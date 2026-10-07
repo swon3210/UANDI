@@ -37,7 +37,10 @@ import { AuthorAvatar } from './AuthorAvatar';
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
 
 const schema = z.object({
-  amount: z.number({ error: '금액을 입력해주세요' }).positive('금액을 입력해주세요'),
+  amount: z
+    .number({ error: '금액을 입력해주세요' })
+    .positive('금액을 입력해주세요')
+    .int('금액은 원 단위 정수로 입력해주세요'),
   category: z.string().min(1, '카테고리를 선택해주세요'),
   date: z.string().min(1),
   description: z.string(),
