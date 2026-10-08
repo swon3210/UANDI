@@ -28,6 +28,7 @@ const schema = z.object({
   annualAmount: z
     .number({ error: '숫자만 입력해 주세요' })
     .min(0, '0 이상이어야 해요')
+    .int('금액은 원 단위 정수로 입력해주세요')
     .max(1_000_000_000, '너무 큰 금액이에요'),
 });
 

@@ -1,4 +1,6 @@
-export { formatCurrency, formatAmount } from '@uandi/cashbook-core';
+import { toWonAmount } from '@uandi/cashbook-core';
+
+export { formatCurrency, formatAmount, toWonAmount } from '@uandi/cashbook-core';
 
 /**
  * 큰 금액을 만/억 단위로 축약. 예: 12,345,000 → "1,235만", 120,000,000 → "1.2억"
@@ -6,9 +8,10 @@ export { formatCurrency, formatAmount } from '@uandi/cashbook-core';
  * `manDecimals` 옵션으로 만 단위 자릿수 지정 가능 (예: 1 → "324.4만").
  */
 export function formatCurrencyMan(n: number, options: { manDecimals?: number } = {}): string {
-  if (n === 0) return '0';
-  const sign = n < 0 ? '-' : '';
-  const abs = Math.abs(n);
+  const won = toWonAmount(n);
+  if (won === 0) return '0';
+  const sign = won < 0 ? '-' : '';
+  const abs = Math.abs(won);
   if (abs >= 100000000) {
     const eok = abs / 100000000;
     const rounded = Math.round(eok * 10) / 10;

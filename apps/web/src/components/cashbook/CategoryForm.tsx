@@ -46,7 +46,12 @@ const recurrenceSchema = z
     week: z.number().optional(),
     weekday: z.number().min(1).max(7).optional(),
     leadDays: z.number().min(0).max(7).optional(),
-    expectedAmount: z.number().min(0).nullable().optional(),
+    expectedAmount: z
+      .number()
+      .int('금액은 원 단위 정수로 입력해주세요')
+      .min(0)
+      .nullable()
+      .optional(),
     intervalMonths: z.number().optional(),
     anchorMonth: z.string().optional(),
   })

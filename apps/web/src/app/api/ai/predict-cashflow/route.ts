@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
   const summaryLines = [...byCatMonth.entries()]
     .map(([key, v]) => {
       const [type, category, month] = key.split('|');
-      return `- ${month} | ${type === 'income' ? '수입' : '지출'} | ${category} | ${v.total.toLocaleString()}원 (${v.count}건)`;
+      return `- ${month} | ${type === 'income' ? '수입' : '지출'} | ${category} | ${Math.round(v.total).toLocaleString()}원 (${v.count}건)`;
     })
     .sort()
     .join('\n');
@@ -170,7 +170,11 @@ ${summaryLines || '(과거 내역 없음)'}`,
       return NextResponse.json({ error: 'AI 응답을 처리할 수 없습니다' }, { status: 500 });
     }
 
-    return NextResponse.json({ predictions: result.predictions.slice(0, MAX_PREDICTIONS) });
+    // 원화는 소수점이 없으므로 AI가 소수 금액을 내도 정수로 보정한다.
+    const predictions = result.predictions
+      .slice(0, MAX_PREDICTIONS)
+      .map((p) => ({ ...p, amount: Math.round(p.amount) }));
+    return NextResponse.json({ predictions });
   } catch (error) {
     console.error('[predict-cashflow] AI 호출 실패:', error);
     return NextResponse.json(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAmount, formatCurrency } from '../currency';
+import { formatAmount, formatCurrency, toWonAmount } from '../currency';
 
 describe('formatCurrency', () => {
   it('정수 금액은 천 단위 콤마로 표기한다', () => {
@@ -20,5 +20,16 @@ describe('formatAmount', () => {
   it('부호 접두사와 함께 원 단위로 반올림해 표기한다', () => {
     expect(formatAmount(12000.007, 'expense')).toBe('-12,000원');
     expect(formatAmount(12000.007, 'income')).toBe('+12,000원');
+  });
+});
+
+describe('toWonAmount', () => {
+  it('원 단위 정수로 반올림한다', () => {
+    expect(toWonAmount(12000.007)).toBe(12000);
+    expect(toWonAmount(-878958.5)).toBe(-878958);
+  });
+
+  it('-0 대신 0을 돌려준다', () => {
+    expect(Object.is(toWonAmount(-0.4), 0)).toBe(true);
   });
 });

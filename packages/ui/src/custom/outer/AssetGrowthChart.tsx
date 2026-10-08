@@ -72,7 +72,7 @@ export function AssetGrowthChart({ data, className }: AssetGrowthChartProps) {
               formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
                   {CHART_CONFIG[name as keyof typeof CHART_CONFIG]?.label ?? String(name)}{' '}
-                  {typeof value === 'number' ? value.toLocaleString() : value}원
+                  {typeof value === 'number' ? Math.round(value).toLocaleString() : value}원
                 </span>
               )}
             />

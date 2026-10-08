@@ -79,14 +79,16 @@ export async function POST(req: NextRequest) {
   const totalIncome = incomeEntries.reduce((sum, e) => sum + e.amount, 0);
 
   const budgetInfo = budget
-    ? budget.map((b) => `  - ${b.category}: 예산 ${b.budgetAmount.toLocaleString()}원`).join('\n')
+    ? budget
+        .map((b) => `  - ${b.category}: 예산 ${Math.round(b.budgetAmount).toLocaleString()}원`)
+        .join('\n')
     : '설정된 예산 없음';
 
   const categoryBreakdown = Object.entries(categoryTotals)
     .sort(([, a], [, b]) => b - a)
     .map(
       ([cat, amount]) =>
-        `  - ${cat}: ${amount.toLocaleString()}원 (${Math.round((amount / totalExpense) * 100)}%)`
+        `  - ${cat}: ${Math.round(amount).toLocaleString()}원 (${Math.round((amount / totalExpense) * 100)}%)`
     )
     .join('\n');
 
@@ -135,9 +137,9 @@ export async function POST(req: NextRequest) {
 
 현재 날짜: ${year}년 ${month}월 (연말까지 ${12 - month}개월 남음)
 
-총 수입: ${totalIncome.toLocaleString()}원
-총 지출: ${totalExpense.toLocaleString()}원
-남은 금액: ${(totalIncome - totalExpense).toLocaleString()}원
+총 수입: ${Math.round(totalIncome).toLocaleString()}원
+총 지출: ${Math.round(totalExpense).toLocaleString()}원
+남은 금액: ${Math.round(totalIncome - totalExpense).toLocaleString()}원
 
 카테고리별 지출:
 ${categoryBreakdown || '  (지출 내역 없음)'}
