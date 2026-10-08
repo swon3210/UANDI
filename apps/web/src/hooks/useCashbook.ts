@@ -11,7 +11,7 @@ import {
   updateEntry,
   deleteEntry,
 } from '@/services/cashbook';
-import type { CashbookEntry, CashbookEntryType } from '@/types';
+import type { CashbookCategory, CashbookEntry, CashbookEntryType } from '@/types';
 import { buildCategoryHints, type CategoryHint } from '@/utils/category-hints';
 
 /** 필터 시트의 기간 프리셋 버튼 값 (UI 표현). */
@@ -196,6 +196,27 @@ export type EntryFilterCriteria = Pick<
   CashbookFilterState,
   'selectedTypes' | 'selectedCategoryNames' | 'selectedCreatorUids' | 'keyword'
 >;
+
+/**
+ * 선택된 카테고리 이름에 대분류가 있으면 그 하위 소분류 이름까지 펼친다.
+ * 카테고리 시트의 "OO 전체" 칩은 대분류 이름만 담기 때문에, 펼치지 않으면
+ * 소분류로 기록된 내역이 필터에서 모두 빠진다.
+ */
+export function expandCategoryNames(
+  selectedNames: string[],
+  categories: CashbookCategory[] | undefined
+): string[] {
+  if (selectedNames.length === 0 || !categories) return selectedNames;
+  const selected = new Set(selectedNames);
+  const expanded = new Set(selectedNames);
+  const parentIds = new Set(
+    categories.filter((c) => c.parentCategoryId === null && selected.has(c.name)).map((c) => c.id)
+  );
+  for (const c of categories) {
+    if (c.parentCategoryId && parentIds.has(c.parentCategoryId)) expanded.add(c.name);
+  }
+  return Array.from(expanded);
+}
 
 export function useFilteredEntries(
   entries: CashbookEntry[] | undefined,
