@@ -28,7 +28,10 @@ const schema = z.object({
   // uid → 금액. 각 멤버의 최초 현금(0 이상). 빈 값은 0으로 본다.
   cash: z.record(
     z.string(),
-    z.number({ error: '금액을 입력해주세요' }).min(0, '0 이상이어야 해요')
+    z
+      .number({ error: '금액을 입력해주세요' })
+      .min(0, '0 이상이어야 해요')
+      .int('금액은 원 단위 정수로 입력해주세요')
   ),
 });
 

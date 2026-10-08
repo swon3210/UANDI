@@ -136,7 +136,8 @@ function buildPushBody(category: CategoryDoc, schedule: RecurringSchedule): stri
   const isIncome = category.group === 'income';
   const leadDays = schedule.leadDays ?? 0;
   const amount = schedule.expectedAmount;
-  const amountStr = amount != null && amount > 0 ? ` · 약 ${amount.toLocaleString('ko-KR')}원` : '';
+  const amountStr =
+    amount != null && amount > 0 ? ` · 약 ${Math.round(amount).toLocaleString('ko-KR')}원` : '';
   const emoji = isIncome ? '💰' : '💸';
 
   if (leadDays === 0) {
@@ -238,7 +239,10 @@ export const recurringTransactionReminder = onSchedule(
             try {
               // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
               const res = await sendAndPrune(messaging, tokenDocs, {
-                notification: { title: 'UANDI 가계부', body: buildPushBody(t.category, t.schedule) },
+                notification: {
+                  title: 'UANDI 가계부',
+                  body: buildPushBody(t.category, t.schedule),
+                },
                 data: {
                   click_action: buildQuickAddLink(t.category, t.schedule),
                   categoryId: t.categoryId,

@@ -1,6 +1,10 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
+import {
+  seedDefaultCategories,
+  seedCashbookCategory,
+  seedCashbookEntry,
+} from '../helpers/emulator';
 import { CashbookPage } from '../page-objects/CashbookPage';
 
 function ymd(d: Date): string {
@@ -63,6 +67,58 @@ test.describe('가계부 내역 필터', () => {
 
     await expect(cashbook.entryCard(sikbiId)).toBeVisible();
     await expect(cashbook.entryCard(trafficId)).not.toBeVisible();
+  });
+
+  test('대분류 전체를 선택하면 하위 소분류 내역도 함께 표시된다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const parentId = await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_common',
+      name: '식비',
+      icon: 'bowl_food',
+    });
+    await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_common',
+      name: '카페',
+      icon: 'coffee',
+      parentCategoryId: parentId,
+    });
+    await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_personal',
+      name: '교통',
+      icon: 'bus',
+    });
+    const parentEntryId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 12000,
+      category: '식비',
+    });
+    const childEntryId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 5000,
+      category: '카페',
+    });
+    const otherEntryId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 3000,
+      category: '교통',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+
+    await cashbook.openFilter();
+    await cashbook.openCategoryPicker();
+    await page.getByTestId('filter-category-parent-식비').click();
+    await cashbook.categoryPickerOption('식비').click();
+    await cashbook.applyCategoryPicker();
+    await cashbook.applyFilter();
+
+    await expect(cashbook.entryCard(parentEntryId)).toBeVisible();
+    await expect(cashbook.entryCard(childEntryId)).toBeVisible();
+    await expect(cashbook.entryCard(otherEntryId)).not.toBeVisible();
   });
 
   test('카테고리 2개 선택 시 둘 다 포함된다(OR 조건)', async ({ authedContext }) => {

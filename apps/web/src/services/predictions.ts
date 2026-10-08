@@ -1,10 +1,4 @@
-import {
-  collection,
-  doc,
-  writeBatch,
-  Timestamp,
-  type Firestore,
-} from 'firebase/firestore';
+import { collection, doc, writeBatch, Timestamp, type Firestore } from 'firebase/firestore';
 import {
   getPredictionsInRange as _getPredictionsInRange,
   getActivePredictions as _getActivePredictions,
@@ -15,6 +9,7 @@ import {
 } from '@uandi/cashbook-core';
 import type { CashbookEntry, CashbookPrediction } from '@/types';
 import { getDb } from '@/lib/firebase/config';
+import { toWonAmount } from '@/utils/currency';
 
 /** ✗ 거절 시 같은 패턴을 재제안하지 않을 기간(일). SYNC-04 / §7-1. */
 export const REJECT_SUPPRESSION_DAYS = 30;
@@ -80,7 +75,7 @@ export async function confirmPrediction(
   const now = Timestamp.now();
 
   const type = override?.type ?? prediction.type;
-  const amount = override?.amount ?? prediction.amount;
+  const amount = toWonAmount(override?.amount ?? prediction.amount);
   const category = override?.category ?? prediction.category;
   const description = override?.description ?? prediction.description;
   const date = override?.date ?? prediction.date;

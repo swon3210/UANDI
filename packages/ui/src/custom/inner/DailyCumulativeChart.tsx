@@ -31,7 +31,11 @@ function formatCompactKrw(n: number): string {
   return String(n);
 }
 
-export function DailyCumulativeChart({ data, budgetCeiling, className }: DailyCumulativeChartProps) {
+export function DailyCumulativeChart({
+  data,
+  budgetCeiling,
+  className,
+}: DailyCumulativeChartProps) {
   const hasCeiling = budgetCeiling > 0;
 
   return (
@@ -65,7 +69,8 @@ export function DailyCumulativeChart({ data, budgetCeiling, className }: DailyCu
               labelFormatter={(label) => `${label}일`}
               formatter={(value) => (
                 <span className="font-mono tabular-nums">
-                  누적 지출 {typeof value === 'number' ? value.toLocaleString() : value}원
+                  누적 지출 {typeof value === 'number' ? Math.round(value).toLocaleString() : value}
+                  원
                 </span>
               )}
             />

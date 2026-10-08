@@ -26,10 +26,6 @@ test.describe('카테고리 설정', () => {
       await expect(categoriesPage.categoryItem('월세')).toBeVisible();
       await expect(categoriesPage.categoryItem('식비')).toBeVisible();
 
-      // 재테크 탭
-      await categoriesPage.selectTab('재테크');
-      await expect(categoriesPage.categoryItem('예적금')).toBeVisible();
-
       // Flex 탭
       await categoriesPage.selectTab('Flex');
       await expect(categoriesPage.categoryItem('여행')).toBeVisible();

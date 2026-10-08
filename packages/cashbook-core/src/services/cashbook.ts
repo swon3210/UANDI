@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import type { CashbookEntry } from '../types';
+import { toWonAmount } from '../utils/currency';
 
 const MAX_BATCH_WRITES = 500;
 
@@ -48,7 +49,11 @@ export async function getEntriesInRange(
     orderBy('date', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as CashbookEntry);
+  return snap.docs.map((d) => {
+    const entry = { id: d.id, ...d.data() } as CashbookEntry;
+    // 과거에 소수 금액으로 저장된 내역도 합산·표기에서 원 단위로 다룬다.
+    return { ...entry, amount: toWonAmount(entry.amount) };
+  });
 }
 
 /**
@@ -71,6 +76,7 @@ export async function addEntry(
 ): Promise<string> {
   const docRef = await addDoc(entriesCol(db, coupleId), {
     ...data,
+    amount: toWonAmount(data.amount),
     coupleId,
     createdAt: Timestamp.now(),
   });
@@ -89,7 +95,7 @@ export async function addEntries(
     const batch = writeBatch(db);
     for (const data of entries.slice(i, i + MAX_BATCH_WRITES)) {
       const ref = doc(entriesCol(db, coupleId));
-      batch.set(ref, { ...data, coupleId, createdAt });
+      batch.set(ref, { ...data, amount: toWonAmount(data.amount), coupleId, createdAt });
     }
     await batch.commit();
   }
@@ -103,14 +109,13 @@ export async function updateEntry(
   data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>
 ): Promise<void> {
   const ref = doc(db, `couples/${coupleId}/cashbookEntries/${entryId}`);
-  await updateDoc(ref, data);
+  await updateDoc(
+    ref,
+    data.amount === undefined ? data : { ...data, amount: toWonAmount(data.amount) }
+  );
 }
 
-export async function deleteEntry(
-  db: Firestore,
-  coupleId: string,
-  entryId: string
-): Promise<void> {
+export async function deleteEntry(db: Firestore, coupleId: string, entryId: string): Promise<void> {
   const ref = doc(db, `couples/${coupleId}/cashbookEntries/${entryId}`);
   await deleteDoc(ref);
 }
