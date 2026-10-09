@@ -35,6 +35,18 @@ export const Weekly: Story = {
   ),
 };
 
+export const ClickableLabel: Story = {
+  render: () => (
+    <PeriodNavigator
+      label="2026년 3월"
+      canGoNext={true}
+      onPrev={noop}
+      onNext={noop}
+      onLabelClick={noop}
+    />
+  ),
+};
+
 export const Yearly: Story = {
   render: () => <PeriodNavigator label="2026년" canGoNext={false} onPrev={noop} onNext={noop} />,
 };

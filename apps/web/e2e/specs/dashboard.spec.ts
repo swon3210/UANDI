@@ -78,6 +78,69 @@ test.describe('대시보드', () => {
     });
   });
 
+  test.describe('가계부 대시보드 — 기간 직접 선택', () => {
+    test('월간: 라벨 클릭 시 월 선택 시트가 열리고 고른 월로 이동한다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.periodNavLabel.click();
+
+      await expect(dashboard.periodPickerSheet).toBeVisible();
+      await expect(dashboard.periodPickerTitle).toHaveText(`${dayjs().year()}년`);
+
+      await dashboard.periodPickerPrev.click();
+      const lastYear = dayjs().year() - 1;
+      await expect(dashboard.periodPickerTitle).toHaveText(`${lastYear}년`);
+      await dashboard.periodPickerMonth(3).click();
+
+      await expect(dashboard.periodPickerSheet).toBeHidden();
+      await expect(dashboard.periodNavLabel).toHaveText(`${lastYear}년 3월`);
+      await expect(dashboard.periodNextButton).toBeEnabled();
+    });
+
+    test('월간: 미래의 월은 선택할 수 없다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.periodNavLabel.click();
+
+      await expect(dashboard.periodPickerNext).toBeDisabled();
+      const now = dayjs();
+      if (now.month() < 11) {
+        await expect(dashboard.periodPickerMonth(now.month() + 2)).toBeDisabled();
+      }
+      await expect(dashboard.periodPickerMonth(now.month() + 1)).toBeEnabled();
+    });
+
+    test('주간: 달력에서 날짜를 고르면 그 날짜가 속한 주로 이동한다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodNavLabel.click();
+      await expect(dashboard.periodPickerSheet).toBeVisible();
+
+      await dashboard.periodPickerPrev.click();
+      const target = dayjs().subtract(1, 'month').date(15);
+      await dashboard.periodPickerDay(target.format('YYYY-MM-DD')).click();
+
+      await expect(dashboard.periodPickerSheet).toBeHidden();
+      const start = target.startOf('week');
+      const end = target.endOf('week');
+      await expect(dashboard.periodNavLabel).toHaveText(
+        `${start.format('M월 D일')} ~ ${end.format('D일')}`
+      );
+    });
+
+    test('연간: 연도 목록에서 고른 연도로 이동한다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabYearly.click();
+      await dashboard.periodNavLabel.click();
+      await expect(dashboard.periodPickerSheet).toBeVisible();
+
+      const target = dayjs().year() - 2;
+      await dashboard.periodPickerYear(target).click();
+
+      await expect(dashboard.periodPickerSheet).toBeHidden();
+      await expect(dashboard.periodNavLabel).toHaveText(`${target}년`);
+    });
+  });
+
   test.describe('가계부 대시보드 — 차트 렌더링', () => {
     test('데이터가 없을 때 빈 상태 메시지가 표시된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);

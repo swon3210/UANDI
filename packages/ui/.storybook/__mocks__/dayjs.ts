@@ -7,6 +7,22 @@ function pad(n: number) {
   return String(n).padStart(2, '0');
 }
 
+function startDate(d: Date, unit?: string): Date {
+  if (unit === 'day') return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (unit === 'week') return new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+  if (unit === 'month') return new Date(d.getFullYear(), d.getMonth(), 1);
+  if (unit === 'year') return new Date(d.getFullYear(), 0, 1);
+  return d;
+}
+
+function toNativeDate(other: any): Date {
+  return other._d || other.toDate?.() || new Date(other);
+}
+
+function compare(d: Date, other: any, unit?: string) {
+  return startDate(d, unit).getTime() - startDate(toNativeDate(other), unit).getTime();
+}
+
 function dayjsObj(d: Date) {
   const obj = {
     _d: d,
@@ -26,11 +42,20 @@ function dayjsObj(d: Date) {
     toDate() {
       return new Date(d);
     },
-    year() {
-      return d.getFullYear();
+    year(n?: number): any {
+      if (n === undefined) return d.getFullYear();
+      const nd = new Date(d);
+      nd.setFullYear(n);
+      return dayjsObj(nd);
     },
-    month() {
-      return d.getMonth();
+    month(n?: number): any {
+      if (n === undefined) return d.getMonth();
+      const nd = new Date(d);
+      nd.setMonth(n);
+      return dayjsObj(nd);
+    },
+    valueOf() {
+      return d.getTime();
     },
     date() {
       return d.getDate();
@@ -45,11 +70,17 @@ function dayjsObj(d: Date) {
         const diff = d.getDay();
         return dayjsObj(new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff));
       }
+      if (unit === 'year') return dayjsObj(startDate(d, 'year'));
       return dayjsObj(new Date(d));
     },
     endOf(unit: string) {
       if (unit === 'day') return dayjsObj(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999));
       if (unit === 'month') return dayjsObj(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+      if (unit === 'week') {
+        const s = startDate(d, 'week');
+        return dayjsObj(new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6));
+      }
+      if (unit === 'year') return dayjsObj(new Date(d.getFullYear(), 11, 31));
       return dayjsObj(new Date(d));
     },
     add(n: number, unit: string) {
@@ -70,35 +101,13 @@ function dayjsObj(d: Date) {
       return ms;
     },
     isBefore(other: any, unit?: string) {
-      const otherDate = other._d || other.toDate?.() || new Date(other);
-      if (unit === 'day') {
-        const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const b = new Date(otherDate.getFullYear(), otherDate.getMonth(), otherDate.getDate());
-        return a.getTime() < b.getTime();
-      }
-      return d.getTime() < otherDate.getTime();
+      return compare(d, other, unit) < 0;
     },
     isAfter(other: any, unit?: string) {
-      const otherDate = other._d || other.toDate?.() || new Date(other);
-      if (unit === 'day') {
-        const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const b = new Date(otherDate.getFullYear(), otherDate.getMonth(), otherDate.getDate());
-        return a.getTime() > b.getTime();
-      }
-      return d.getTime() > otherDate.getTime();
+      return compare(d, other, unit) > 0;
     },
     isSame(other: any, unit?: string) {
-      const otherDate = other._d || other.toDate?.() || new Date(other);
-      if (unit === 'day') {
-        return d.getFullYear() === otherDate.getFullYear() &&
-          d.getMonth() === otherDate.getMonth() &&
-          d.getDate() === otherDate.getDate();
-      }
-      if (unit === 'month') {
-        return d.getFullYear() === otherDate.getFullYear() &&
-          d.getMonth() === otherDate.getMonth();
-      }
-      return d.getTime() === otherDate.getTime();
+      return compare(d, other, unit) === 0;
     },
     isoWeekday(target?: number) {
       // ISO weekday: 1=Mon, 7=Sun
