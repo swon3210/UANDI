@@ -4,8 +4,15 @@ import {
   seedDefaultCategories,
   seedCashbookCategory,
   seedCashbookEntry,
+  seedPrediction,
 } from '../helpers/emulator';
 import { CashbookPage } from '../page-objects/CashbookPage';
+
+// 오늘 정오 — 현재 달 & 오늘 이후 조건을 동시에 만족(타임존 경계 회피)
+function todayNoonISO(): string {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12, 0, 0).toISOString();
+}
 
 function ymd(d: Date): string {
   const y = d.getFullYear();
@@ -648,5 +655,60 @@ test.describe('가계부 내역 필터', () => {
 
     await expect(cashbook.entryCard(mineId)).toBeVisible();
     await expect(cashbook.entryCard(partnerId)).not.toBeVisible();
+  });
+
+  test('카테고리 필터는 예상 수입/지출 프롬프트에도 적용된다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const sikbiId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 45000,
+      category: '식비',
+    });
+    await seedPrediction(coupleId, uid, {
+      type: 'expense',
+      amount: 700000,
+      category: '월세',
+      date: todayNoonISO(),
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await expect(cashbook.predictionPrompt).toBeVisible();
+
+    await cashbook.openFilter();
+    await cashbook.selectCategories('식비');
+    await cashbook.applyFilter();
+
+    await expect(cashbook.entryCard(sikbiId)).toBeVisible();
+    await expect(cashbook.predictionPrompt).toHaveCount(0);
+
+    await cashbook.openFilter();
+    await cashbook.selectCategories('월세');
+    await cashbook.applyFilter();
+
+    await expect(cashbook.predictionPrompt).toBeVisible();
+    await expect(cashbook.predictionPrompt).toContainText('월세');
+  });
+
+  test('타입 필터도 예상 수입/지출 프롬프트에 적용된다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await seedPrediction(coupleId, uid, {
+      type: 'expense',
+      amount: 700000,
+      category: '월세',
+      date: todayNoonISO(),
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await expect(cashbook.predictionPrompt).toBeVisible();
+
+    await cashbook.openFilter();
+    await cashbook.typeFilter('income').click();
+    await cashbook.applyFilter();
+
+    await expect(cashbook.predictionPrompt).toHaveCount(0);
   });
 });
