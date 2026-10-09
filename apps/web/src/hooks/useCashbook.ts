@@ -218,26 +218,44 @@ export function expandCategoryNames(
   return Array.from(expanded);
 }
 
+type FilterableItem = Pick<CashbookEntry, 'type' | 'category' | 'description'> & {
+  /** 예상 수입/지출 프롬프트처럼 작성자가 없는 항목은 undefined */
+  createdBy?: string;
+};
+
+/**
+ * 내역(및 같은 목록에 섞이는 예상 수입/지출 프롬프트)이 필터 조건에 맞는지 판정한다.
+ * 작성자 필터가 걸려 있으면 작성자가 없는 항목은 제외된다.
+ */
+export function matchesEntryFilter(
+  item: FilterableItem,
+  { selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword = '' }: EntryFilterCriteria
+): boolean {
+  if (selectedTypes.length > 0 && !selectedTypes.includes(item.type)) return false;
+  if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(item.category)) {
+    return false;
+  }
+  if (
+    selectedCreatorUids.length > 0 &&
+    (!item.createdBy || !selectedCreatorUids.includes(item.createdBy))
+  ) {
+    return false;
+  }
+  const kw = keyword.trim().toLowerCase();
+  if (kw && !`${item.description} ${item.category}`.toLowerCase().includes(kw)) {
+    return false;
+  }
+  return true;
+}
+
 export function useFilteredEntries(
   entries: CashbookEntry[] | undefined,
   { selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword = '' }: EntryFilterCriteria
 ): CashbookEntry[] {
   return useMemo(() => {
     if (!entries) return [];
-    const kw = keyword.trim().toLowerCase();
-    return entries.filter((entry) => {
-      if (selectedTypes.length > 0 && !selectedTypes.includes(entry.type)) return false;
-      if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(entry.category)) {
-        return false;
-      }
-      if (selectedCreatorUids.length > 0 && !selectedCreatorUids.includes(entry.createdBy)) {
-        return false;
-      }
-      if (kw && !`${entry.description} ${entry.category}`.toLowerCase().includes(kw)) {
-        return false;
-      }
-      return true;
-    });
+    const criteria = { selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword };
+    return entries.filter((entry) => matchesEntryFilter(entry, criteria));
   }, [entries, selectedTypes, selectedCategoryNames, selectedCreatorUids, keyword]);
 }
 

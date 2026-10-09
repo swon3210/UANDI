@@ -14,6 +14,7 @@ import {
   useCashbookEntriesInRange,
   useMonthlySummary,
   useFilteredEntries,
+  matchesEntryFilter,
   expandCategoryNames,
   useGroupedEntries,
   useAddEntry,
@@ -135,12 +136,16 @@ export default function CashbookPage() {
     () => expandCategoryNames(filter.selectedCategoryNames, categories),
     [filter.selectedCategoryNames, categories]
   );
-  const filteredEntries = useFilteredEntries(entries, {
-    selectedTypes: filter.selectedTypes,
-    selectedCategoryNames: effectiveCategoryNames,
-    selectedCreatorUids: filter.selectedCreatorUids,
-    keyword: filter.keyword,
-  });
+  const filterCriteria = useMemo(
+    () => ({
+      selectedTypes: filter.selectedTypes,
+      selectedCategoryNames: effectiveCategoryNames,
+      selectedCreatorUids: filter.selectedCreatorUids,
+      keyword: filter.keyword,
+    }),
+    [filter.selectedTypes, effectiveCategoryNames, filter.selectedCreatorUids, filter.keyword]
+  );
+  const filteredEntries = useFilteredEntries(entries, filterCriteria);
   const filterSummary = useMonthlySummary(filteredEntries);
   const groups = useGroupedEntries(filteredEntries, filter.sort);
 
@@ -222,7 +227,10 @@ export default function CashbookPage() {
         promptViews: [],
       });
     }
-    const pushViews = (key: string, views: PredictionPromptView[]) => {
+    // 예상 수입/지출 프롬프트에도 내역과 같은 필터를 적용한다.
+    const pushViews = (key: string, allViews: PredictionPromptView[]) => {
+      const views = allViews.filter((v) => matchesEntryFilter(v, filterCriteria));
+      if (views.length === 0) return;
       const existing = map.get(key);
       if (existing) existing.promptViews.push(...views);
       else map.set(key, { date: dayjs(key).toDate(), entries: [], promptViews: views });
@@ -231,7 +239,7 @@ export default function CashbookPage() {
     for (const [key, views] of recurrencePromptsByDate) pushViews(key, views);
     const dir = filter.sort === 'latest' ? -1 : 1;
     return [...map.values()].sort((a, b) => (a.date.getTime() - b.date.getTime()) * dir);
-  }, [groups, promptsByDate, recurrencePromptsByDate, filter.sort]);
+  }, [groups, promptsByDate, recurrencePromptsByDate, filter.sort, filterCriteria]);
 
   const handleAdd = (prefill?: {
     type?: CashbookEntryType;
