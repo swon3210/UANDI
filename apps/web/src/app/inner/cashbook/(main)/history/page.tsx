@@ -79,9 +79,14 @@ function FilterSheetContent({
   );
 }
 
+const DEEP_LINK_KEYS = ['category', 'year', 'month', 'start', 'end', 'type'] as const;
+const ENTRY_TYPES: readonly CashbookEntryType[] = ['expense', 'income', 'flex'];
+const DATE_PARAM_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * 월간 내역 페이지의 카테고리 행에서 넘어온 딥링크(?category=&year=&month=)를
- * 초기 필터 상태로 변환한다. 파라미터가 없으면 기본 상태(이번 달·무필터)를 그대로 쓴다.
+ * 딥링크 파라미터를 초기 필터 상태로 변환한다. 파라미터가 없으면 기본 상태(이번 달·무필터)를 그대로 쓴다.
+ * - 월간 내역 카테고리 행: ?category=&year=&month=
+ * - 대시보드 내역 보기: ?year=&month= 또는 ?start=&end= (+ ?type=)
  */
 function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState {
   const base = createDefaultFilterState();
@@ -96,6 +101,24 @@ function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState 
     if (Number.isInteger(year) && Number.isInteger(month) && month >= 0 && month <= 11) {
       base.period = { mode: 'month', year, month };
     }
+  }
+
+  const start = params.get('start');
+  const end = params.get('end');
+  if (
+    start &&
+    end &&
+    DATE_PARAM_RE.test(start) &&
+    DATE_PARAM_RE.test(end) &&
+    dayjs(start).isValid() &&
+    dayjs(end).isValid()
+  ) {
+    base.period = { mode: 'custom', start, end };
+  }
+
+  const type = params.get('type');
+  if (type && (ENTRY_TYPES as readonly string[]).includes(type)) {
+    base.selectedTypes = [type as CashbookEntryType];
   }
   return base;
 }
@@ -265,10 +288,10 @@ export default function CashbookPage() {
     ));
   };
 
-  // 카테고리 딥링크 파라미터는 초기 필터로 반영한 뒤 URL에서 제거한다.
+  // 딥링크 파라미터는 초기 필터로 반영한 뒤 URL에서 제거한다.
   // (새로고침/뒤로가기 시 사용자가 바꾼 필터가 옛 파라미터로 되돌아가지 않도록)
   useEffect(() => {
-    if (searchParams.get('category') || searchParams.get('year') || searchParams.get('month')) {
+    if (DEEP_LINK_KEYS.some((key) => searchParams.get(key))) {
       window.history.replaceState(null, '', '/inner/cashbook/history');
     }
     // 최초 1회만 정리하면 충분(초기 상태는 이미 반영됨)

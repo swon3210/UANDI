@@ -10,6 +10,7 @@ import { useDashboardData, type GroupFilter } from '@/hooks/useDashboardData';
 import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
+  getPeriodRange,
   isCurrentPeriod,
   normalizeCursor,
   shiftPeriod,
@@ -58,6 +59,24 @@ const PICKER_TITLE: Record<PeriodKind, string> = {
   monthly: '월 선택',
   yearly: '연도 선택',
 };
+
+/**
+ * 대시보드의 기간·그룹 상태를 내역 페이지 딥링크로 변환한다.
+ * 월간은 월 스테퍼를 쓸 수 있도록 year/month로, 주간·연간은 start/end(커스텀 기간)로 넘긴다.
+ */
+function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: GroupFilter): string {
+  const params = new URLSearchParams();
+  if (period === 'monthly') {
+    params.set('year', String(cursor.year()));
+    params.set('month', String(cursor.month())); // 0-based
+  } else {
+    const { start, end } = getPeriodRange(period, cursor);
+    params.set('start', dayjs(start).format('YYYY-MM-DD'));
+    params.set('end', dayjs(end).format('YYYY-MM-DD'));
+  }
+  if (group !== 'all') params.set('type', group);
+  return `/inner/cashbook/history?${params.toString()}`;
+}
 
 export function BudgetDashboard({ coupleId }: Props) {
   const [period, setPeriod] = useState<PeriodKind>('weekly');
@@ -166,7 +185,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       <GroupTabs value={group} onChange={handleGroupChange} />
 
       <Link
-        href="/inner/cashbook/history"
+        href={buildHistoryHref(period, cursor, group)}
         data-testid="dashboard-total"
         className="block rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40"
       >
