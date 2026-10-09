@@ -27,6 +27,52 @@ test.describe('대시보드', () => {
       await dashboard.totalAmount.click();
       await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
     });
+
+    test('주간 기간이 내역 페이지에 그대로 적용된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.totalAmount.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+
+      const start = dayjs().startOf('week');
+      const end = dayjs().endOf('week');
+      await expect(authedPage.getByTestId('cashbook-period-label')).toHaveText(
+        `${start.format('YYYY. M. D.')} ~ ${end.format('YYYY. M. D.')}`
+      );
+      await expect(authedPage.getByTestId('cashbook-filter-count')).toHaveCount(0);
+    });
+
+    test('월간 + 지출 탭 상태가 내역 페이지의 기간·타입 필터로 적용된다', async ({
+      authedPage,
+    }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.periodPrevButton.click();
+      await dashboard.groupTabExpense.click();
+      await dashboard.totalAmount.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+
+      const prevMonth = dayjs().subtract(1, 'month');
+      await expect(authedPage.getByTestId('cashbook-year-label')).toHaveText(
+        `${prevMonth.year()}년`
+      );
+      await expect(authedPage.getByTestId('cashbook-period-label')).toHaveText(
+        `${prevMonth.month() + 1}월`
+      );
+      await expect(authedPage.getByTestId('cashbook-filter-count')).toHaveText('1');
+    });
+
+    test('연간 기간이 내역 페이지에 그대로 적용된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabYearly.click();
+      await dashboard.periodPrevButton.click();
+      await dashboard.totalAmount.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+
+      const year = dayjs().year() - 1;
+      await expect(authedPage.getByTestId('cashbook-period-label')).toHaveText(
+        `${year}. 1. 1. ~ ${year}. 12. 31.`
+      );
+    });
   });
 
   test.describe('가계부 대시보드 — 컨트롤', () => {
