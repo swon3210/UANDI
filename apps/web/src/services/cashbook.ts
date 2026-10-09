@@ -1,6 +1,7 @@
 import {
   getMonthlyEntries as _getMonthlyEntries,
   getEntriesInRange as _getEntriesInRange,
+  getLatestEntryDate as _getLatestEntryDate,
   addEntry as _addEntry,
   addEntries as _addEntries,
   updateEntry as _updateEntry,
@@ -26,6 +27,10 @@ export async function getEntriesInRange(
   end: Date
 ): Promise<CashbookEntry[]> {
   return _getEntriesInRange(getDb(), coupleId, start, end);
+}
+
+export async function getLatestEntryDate(coupleId: string): Promise<Date | null> {
+  return _getLatestEntryDate(getDb(), coupleId);
 }
 
 export async function addEntry(

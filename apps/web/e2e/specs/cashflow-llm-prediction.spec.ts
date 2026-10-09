@@ -31,8 +31,8 @@ test.describe('현금흐름 LLM 예측', () => {
     await cashflow.expandAllCards();
 
     // ◇ 예측 거래가 카드에 노출된다(외식/부수입).
-    await expect(page.getByText('외식')).toBeVisible();
-    await expect(page.getByText('부수입')).toBeVisible();
+    await expect(page.getByText('외식', { exact: true })).toBeVisible();
+    await expect(page.getByText('부수입', { exact: true })).toBeVisible();
 
     // 잔액에 반영 — 보유 2,000,000 + 부수입 200,000 - 외식 120,000 = 2,080,000.
     await expect(
@@ -61,7 +61,7 @@ test.describe('현금흐름 LLM 예측', () => {
 
     await cashflow.expandAllCards();
 
-    await expect(page.getByText('부수입')).toBeVisible();
+    await expect(page.getByText('부수입', { exact: true })).toBeVisible();
     await expect(cashflow.llmPredictionRows.filter({ hasText: '외식' })).toHaveCount(0);
   });
 
@@ -89,7 +89,7 @@ test.describe('현금흐름 LLM 예측', () => {
     await cashflow.expandAllCards();
 
     // 부수입은 보이지만 외식 예측은 G1으로 가려진다.
-    await expect(page.getByText('부수입')).toBeVisible();
+    await expect(page.getByText('부수입', { exact: true })).toBeVisible();
     await expect(cashflow.llmPredictionRows.filter({ hasText: '외식' })).toHaveCount(0);
   });
 

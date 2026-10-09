@@ -14,6 +14,7 @@ import {
   useCashbookEntriesInRange,
   useMonthlySummary,
   useFilteredEntries,
+  expandCategoryNames,
   useGroupedEntries,
   useAddEntry,
   useUpdateEntry,
@@ -129,9 +130,14 @@ export default function CashbookPage() {
   const memberMap = useCoupleMemberMap(coupleId);
   const isLoading = entriesLoading || categoriesLoading;
   const summary = useMonthlySummary(entries);
+  // 대분류를 고르면 하위 소분류 내역도 함께 보이도록 이름을 펼쳐서 넘긴다.
+  const effectiveCategoryNames = useMemo(
+    () => expandCategoryNames(filter.selectedCategoryNames, categories),
+    [filter.selectedCategoryNames, categories]
+  );
   const filteredEntries = useFilteredEntries(entries, {
     selectedTypes: filter.selectedTypes,
-    selectedCategoryNames: filter.selectedCategoryNames,
+    selectedCategoryNames: effectiveCategoryNames,
     selectedCreatorUids: filter.selectedCreatorUids,
     keyword: filter.keyword,
   });

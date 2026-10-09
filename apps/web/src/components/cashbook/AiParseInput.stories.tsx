@@ -5,9 +5,16 @@ const mockCategories = ['식비', '교통', '쇼핑', '의료', '문화/여가',
 
 const today = new Date().toISOString().split('T')[0];
 
-const mockParseFnSingle = async (text: string, _categories: string[], images?: string[]) => {
+const mockParseFnSingle = async (
+  text: string,
+  _categories: string[],
+  images?: string[],
+  pdfs?: { name: string; pages: string[] }[]
+) => {
   await new Promise((r) => setTimeout(r, 800));
-  const imagesCount = images?.length ?? 0;
+  // 이미지 1장 = 1건, PDF는 페이지당 1건으로 흉내 낸다
+  const imagesCount =
+    (images?.length ?? 0) + (pdfs ?? []).reduce((sum, p) => sum + p.pages.length, 0);
   const base = [
     {
       type: 'expense',

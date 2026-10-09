@@ -7,6 +7,7 @@ import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { EmptyState, Sheet, SheetContent, SheetHeader, SheetTitle, Skeleton } from '@uandi/ui';
 import { useDashboardData, type GroupFilter } from '@/hooks/useDashboardData';
+import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
   isCurrentPeriod,
@@ -179,7 +180,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         <div
           className={`mt-1 text-2xl font-semibold tabular-nums ${totalColorClass(group, total)}`}
         >
-          {totalDisplay.toLocaleString()}원
+          {formatCurrency(totalDisplay)}
         </div>
       </Link>
 

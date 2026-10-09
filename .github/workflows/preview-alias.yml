@@ -1,0 +1,34 @@
+# uandi-web Preview 배포가 끝나면 고정 도메인(uandi-web-preview.vercel.app)을 그 배포에 붙인다.
+# Firebase Auth 승인 도메인은 와일드카드를 지원하지 않으므로, 이 고정 도메인 하나만
+# 승인 도메인에 등록해 두면 어떤 Preview에서든 로그인할 수 있다.
+# 가장 최근에 배포가 끝난 Preview가 별칭을 가져간다.
+#
+# 필요한 설정:
+# - GitHub Secret `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, swon3210s-projects 스코프)
+# - Firebase Console → Authentication → 승인된 도메인에 uandi-web-preview.vercel.app 추가
+name: Preview 고정 도메인 연결
+
+on:
+  deployment_status:
+
+concurrency:
+  group: preview-alias
+  cancel-in-progress: false
+
+jobs:
+  alias:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Preview – uandi-web'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vercel 별칭 연결
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url }}
+          ALIAS: uandi-web-preview.vercel.app
+          SCOPE: swon3210s-projects
+        run: |
+          npx --yes vercel@59.23.2 alias set "${DEPLOYMENT_URL#https://}" "$ALIAS" \
+            --token "$VERCEL_TOKEN" --scope "$SCOPE"
+          echo "### Preview: https://$ALIAS" >> "$GITHUB_STEP_SUMMARY"

@@ -1,16 +1,18 @@
 import { useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import {
   getMonthlyEntries,
   getEntriesInRange,
+  getLatestEntryDate,
   addEntry,
   addEntries,
   updateEntry,
   deleteEntry,
 } from '@/services/cashbook';
-import type { CashbookEntry, CashbookEntryType } from '@/types';
+import type { CashbookCategory, CashbookEntry, CashbookEntryType } from '@/types';
+import { buildCategoryHints, type CategoryHint } from '@/utils/category-hints';
 
 /** 필터 시트의 기간 프리셋 버튼 값 (UI 표현). */
 export type PeriodPreset = 'thisMonth' | 'lastMonth' | 'last3Months' | 'thisYear' | 'custom';
@@ -114,6 +116,50 @@ export function useDuplicateScopeEntries(
   return query.data ?? [];
 }
 
+/** 카테고리 힌트로 볼 과거 내역 기간(개월). 기준점은 "마지막 내역 날짜". */
+export const CATEGORY_HINT_MONTHS = 3;
+
+/**
+ * AI 파싱용 "설명 → 카테고리" 힌트.
+ * 가장 최근 내역의 날짜를 기준으로 그 이전 CATEGORY_HINT_MONTHS개월 내역에서 만든다.
+ * 오늘 기준이 아니라서 입력이 오래 끊긴 뒤 다시 쓰기 시작해도 과거 패턴을 그대로 참고한다.
+ */
+export function categoryHintsQueryOptions(coupleId: string | null) {
+  return queryOptions({
+    queryKey: [QUERY_KEY, coupleId, 'category-hints', CATEGORY_HINT_MONTHS],
+    queryFn: async (): Promise<CategoryHint[]> => {
+      const latest = await getLatestEntryDate(coupleId!);
+      if (!latest) return [];
+      const end = dayjs(latest).endOf('day');
+      const start = end.subtract(CATEGORY_HINT_MONTHS, 'month').startOf('day');
+      const entries = await getEntriesInRange(coupleId!, start.toDate(), end.toDate());
+      return buildCategoryHints(entries);
+    },
+    enabled: !!coupleId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCategoryHints(coupleId: string | null) {
+  return useQuery(categoryHintsQueryOptions(coupleId));
+}
+
+/**
+ * 제출 시점에 힌트를 확실히 확보하는 함수를 돌려준다(캐시에 있으면 즉시, 없으면 로드 후).
+ * 시트를 열고 바로 제출해도 힌트가 빠지지 않게 하기 위함. 로드 실패 시 빈 배열로 진행한다.
+ */
+export function useResolveCategoryHints(coupleId: string | null) {
+  const qc = useQueryClient();
+  return async (): Promise<CategoryHint[]> => {
+    if (!coupleId) return [];
+    try {
+      return await qc.ensureQueryData(categoryHintsQueryOptions(coupleId));
+    } catch {
+      return [];
+    }
+  };
+}
+
 export type MonthlySummary = {
   income: number;
   expense: number;
@@ -150,6 +196,27 @@ export type EntryFilterCriteria = Pick<
   CashbookFilterState,
   'selectedTypes' | 'selectedCategoryNames' | 'selectedCreatorUids' | 'keyword'
 >;
+
+/**
+ * 선택된 카테고리 이름에 대분류가 있으면 그 하위 소분류 이름까지 펼친다.
+ * 카테고리 시트의 "OO 전체" 칩은 대분류 이름만 담기 때문에, 펼치지 않으면
+ * 소분류로 기록된 내역이 필터에서 모두 빠진다.
+ */
+export function expandCategoryNames(
+  selectedNames: string[],
+  categories: CashbookCategory[] | undefined
+): string[] {
+  if (selectedNames.length === 0 || !categories) return selectedNames;
+  const selected = new Set(selectedNames);
+  const expanded = new Set(selectedNames);
+  const parentIds = new Set(
+    categories.filter((c) => c.parentCategoryId === null && selected.has(c.name)).map((c) => c.id)
+  );
+  for (const c of categories) {
+    if (c.parentCategoryId && parentIds.has(c.parentCategoryId)) expanded.add(c.name);
+  }
+  return Array.from(expanded);
+}
 
 export function useFilteredEntries(
   entries: CashbookEntry[] | undefined,

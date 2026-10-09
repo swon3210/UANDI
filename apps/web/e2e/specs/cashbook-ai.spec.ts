@@ -1,6 +1,15 @@
+import path from 'node:path';
 import { expect, type Page } from '@playwright/test';
+import dayjs from 'dayjs';
 import { test } from '../fixtures/auth.fixture';
 import { seedDefaultCategories, seedCashbookEntry } from '../helpers/emulator';
+
+// 첨부 테스트용 유효한 1x1 PNG. (0으로 채운 가짜 버퍼는 이미지 압축 단계에서 실패해 썸네일이 뜨지 않는다)
+const TINY_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+function tinyPng(name: string) {
+  return { name, mimeType: 'image/png', buffer: Buffer.from(TINY_PNG_BASE64, 'base64') };
+}
 
 // AI 입력은 이제 가계부 전역 FAB → "빠른 추가" 시트 안에서만 노출된다.
 // (history 페이지의 인라인 입력은 제거됨)
@@ -134,10 +143,7 @@ test.describe('자연어 가계부 다건 입력', () => {
 
     // 영수증 이미지 2장 첨부 (buffer로 임시 이미지 생성)
     const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([
-      { name: 'receipt-1.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
-      { name: 'receipt-2.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
-    ]);
+    await fileInput.setInputFiles([tinyPng('receipt-1.png'), tinyPng('receipt-2.png')]);
 
     // 썸네일 2개 노출
     await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
@@ -233,10 +239,7 @@ test.describe('자연어 가계부 다건 입력', () => {
     await openQuickAdd(page);
 
     const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
-    await fileInput.setInputFiles([
-      { name: 'receipt-1.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
-      { name: 'receipt-2.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(1024) },
-    ]);
+    await fileInput.setInputFiles([tinyPng('receipt-1.png'), tinyPng('receipt-2.png')]);
 
     await expect(page.getByTestId('ai-parse-thumbnail-0')).toBeVisible();
     await expect(page.getByTestId('ai-parse-thumbnail-1')).toBeVisible();
@@ -251,3 +254,154 @@ test.describe('자연어 가계부 다건 입력', () => {
 });
 
 // 지출 패턴 AI 분석은 월 결산 페이지로 이전됨 → cashbook-settlement.spec.ts 참고
+
+test.describe('과거 내역 기반 카테고리 힌트', () => {
+  test('마지막 내역 날짜 기준 3개월 안의 "설명 → 카테고리"만 힌트로 전송된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId, uid } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    // 기준점은 "오늘"이 아니라 "가장 최근 내역"이다.
+    // 최근 내역이 5개월 전이면 창(window)은 [8개월 전, 5개월 전].
+    const monthsAgo = (n: number) => dayjs().subtract(n, 'month').toISOString();
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 5500,
+      category: '식비',
+      description: '스타벅스 강남점',
+      date: monthsAgo(5), // 기준점(가장 최근)
+    });
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 12000,
+      category: '교통',
+      description: '카카오택시',
+      date: monthsAgo(7), // 기준점에서 2개월 전 → 포함
+    });
+    await seedCashbookEntry(coupleId, uid, {
+      type: 'flex',
+      amount: 30000,
+      category: '소비',
+      description: '옛날가게',
+      date: monthsAgo(10), // 기준점에서 5개월 전 → 제외
+    });
+
+    await openQuickAdd(page);
+    await page.getByTestId('ai-parse-input').fill('스타벅스 강남점 6000원');
+
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/parse-entries') && req.method() === 'POST'
+    );
+    await page.getByTestId('ai-parse-submit').click();
+    const request = await requestPromise;
+    const body = request.postDataJSON() as {
+      categoryHints?: { description: string; category: string }[];
+    };
+
+    expect(body.categoryHints).toEqual(
+      expect.arrayContaining([
+        { description: '스타벅스 강남점', category: '식비' },
+        { description: '카카오택시', category: '교통' },
+      ])
+    );
+    expect(body.categoryHints?.map((h) => h.description)).not.toContain('옛날가게');
+
+    // 요청은 정상 처리되어 미리보기가 열린다
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+  });
+
+  test('내역이 하나도 없으면 힌트 없이(빈 배열) 요청된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+    await page.getByTestId('ai-parse-input').fill('점심 9000원');
+
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/parse-entries') && req.method() === 'POST'
+    );
+    await page.getByTestId('ai-parse-submit').click();
+    const body = (await requestPromise).postDataJSON() as { categoryHints?: unknown[] };
+    expect(body.categoryHints).toEqual([]);
+  });
+});
+
+test.describe('이용내역서 PDF 첨부', () => {
+  const fixture = (name: string) => path.join(__dirname, '../fixtures/files', name);
+
+  test('PDF를 첨부하면 파일명 칩이 뜨고, 제출 시 페이지 이미지가 pdfs로 전송된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    await page.getByTestId('ai-parse-file-input').setInputFiles(fixture('statement.pdf'));
+
+    const chip = page.getByTestId('ai-parse-thumbnail-0');
+    await expect(chip).toBeVisible({ timeout: 15000 });
+    await expect(chip).toHaveAttribute('data-kind', 'pdf');
+    await expect(chip).toContainText('statement.pdf');
+    await expect(chip).toContainText('1페이지');
+
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/parse-entries') && req.method() === 'POST'
+    );
+    await page.getByTestId('ai-parse-submit').click();
+    const body = (await requestPromise).postDataJSON() as {
+      images?: string[];
+      pdfs?: { name: string; pages: string[] }[];
+    };
+    expect(body.images).toBeUndefined();
+    expect(body.pdfs).toHaveLength(1);
+    expect(body.pdfs?.[0].name).toBe('statement.pdf');
+    expect(body.pdfs?.[0].pages).toHaveLength(1);
+    expect(body.pdfs?.[0].pages[0]).toMatch(/^data:image\/jpeg;base64,/);
+
+    // mock은 PDF 1개 = 1건 → 미리보기 카드 1개
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).toBeVisible();
+    await expect(page.getByTestId('parsed-entry-card')).toHaveCount(1);
+  });
+
+  test('잠긴 PDF는 비밀번호 시트가 뜨고, 틀리면 오류 후 재입력, 맞으면 칩이 추가된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    await page.getByTestId('ai-parse-file-input').setInputFiles(fixture('statement-locked.pdf'));
+
+    const sheet = page.getByTestId('pdf-password-sheet');
+    await expect(sheet).toBeVisible({ timeout: 15000 });
+    await expect(sheet).toContainText('statement-locked.pdf');
+
+    // 틀린 비밀번호 → 오류 문구와 함께 다시 뜬다
+    await page.getByTestId('pdf-password-input').fill('0000');
+    await page.getByTestId('pdf-password-submit').click();
+    await expect(page.getByTestId('pdf-password-error')).toBeVisible({ timeout: 15000 });
+
+    // 맞는 비밀번호 → 시트 닫히고 PDF 칩 추가
+    await page.getByTestId('pdf-password-input').fill('1234');
+    await page.getByTestId('pdf-password-submit').click();
+    await expect(page.getByTestId('pdf-password-sheet')).not.toBeVisible();
+    const chip = page.getByTestId('ai-parse-thumbnail-0');
+    await expect(chip).toBeVisible({ timeout: 15000 });
+    await expect(chip).toHaveAttribute('data-kind', 'pdf');
+  });
+
+  test('잠긴 PDF에서 건너뛰기를 누르면 그 파일만 제외된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    await page.getByTestId('ai-parse-file-input').setInputFiles(fixture('statement-locked.pdf'));
+    await expect(page.getByTestId('pdf-password-sheet')).toBeVisible({ timeout: 15000 });
+    await page.getByTestId('pdf-password-cancel').click();
+
+    await expect(page.getByTestId('pdf-password-sheet')).not.toBeVisible();
+    await expect(page.getByTestId('ai-parse-thumbnail-0')).toHaveCount(0);
+    // 첨부가 없으니 제출 버튼은 "직접 입력" 모드
+    await expect(page.getByTestId('ai-parse-submit')).toHaveAttribute('aria-label', '직접 입력');
+  });
+});

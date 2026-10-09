@@ -1,5 +1,6 @@
 import { getAuth } from '@/lib/firebase/config';
 import type { CashbookEntryType } from '@/types';
+import type { CategoryHint } from '@/utils/category-hints';
 import type { LlmPrediction } from '@/utils/cashflow';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -44,13 +45,14 @@ export type AttachmentSyncResult = {
  */
 export async function syncAttachments(
   attachments: { id: string; url: string; kind: SettlementImageKind }[],
-  categories: string[]
+  categories: string[],
+  categoryHints?: CategoryHint[]
 ): Promise<AttachmentSyncResult[]> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/ai/sync-attachments', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ attachments, categories }),
+    body: JSON.stringify({ attachments, categories, categoryHints }),
   });
 
   if (!res.ok) {
@@ -67,6 +69,16 @@ export type ParseEntriesOptions = {
   imageKind?: 'account' | 'card';
   /** imageKind='card'인데 첨부 이미지가 카드 내역이 아니라고 판단됐을 때 호출된다. */
   onImageKindMismatch?: () => void;
+  /** 과거 내역 기반 "설명 → 카테고리" 힌트(useCategoryHints). 비슷한 설명의 새 내역 분류에 쓰인다. */
+  categoryHints?: CategoryHint[];
+  /** 이용내역서 PDF. 클라이언트가 페이지별로 렌더링한 이미지 data URL 묶음. */
+  pdfs?: ParsedPdfAttachment[];
+};
+
+export type ParsedPdfAttachment = {
+  name: string;
+  /** 페이지별 렌더링 이미지(data URL) */
+  pages: string[];
 };
 
 export async function parseEntriesFromText(
@@ -79,7 +91,14 @@ export async function parseEntriesFromText(
   const res = await fetch('/api/ai/parse-entries', {
     method: 'POST',
     headers,
-    body: JSON.stringify({ text, categories, images, imageKind: options?.imageKind }),
+    body: JSON.stringify({
+      text,
+      categories,
+      images,
+      imageKind: options?.imageKind,
+      categoryHints: options?.categoryHints,
+      pdfs: options?.pdfs,
+    }),
   });
 
   if (!res.ok) {

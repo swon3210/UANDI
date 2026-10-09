@@ -327,5 +327,5 @@ function sum(arr: number[]): number {
 
 function formatNumber(n: number): string {
   if (!Number.isFinite(n) || n === 0) return '';
-  return n.toLocaleString('ko-KR');
+  return Math.round(n).toLocaleString('ko-KR');
 }

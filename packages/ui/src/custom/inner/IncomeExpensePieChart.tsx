@@ -49,7 +49,8 @@ export function IncomeExpensePieChart({ data, className }: IncomeExpensePieChart
             <ChartTooltipContent
               formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
-                  {String(name)} {typeof value === 'number' ? value.toLocaleString() : value}원
+                  {String(name)}{' '}
+                  {typeof value === 'number' ? Math.round(value).toLocaleString() : value}원
                 </span>
               )}
             />

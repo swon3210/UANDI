@@ -7,7 +7,7 @@ import { Sheet, Button } from '@uandi/ui';
 import { authStatusAtom, userAtom } from '@/stores/auth.store';
 import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useAddEntry, useAddEntries } from '@/hooks/useCashbook';
+import { useAddEntry, useAddEntries, useResolveCategoryHints } from '@/hooks/useCashbook';
 import { AiParseInput } from '@/components/cashbook/AiParseInput';
 import { AiBulkPreviewSheet } from '@/components/cashbook/AiBulkPreviewSheet';
 import { EntryForm } from '@/components/cashbook/EntryForm';
@@ -26,6 +26,7 @@ export default function OverlayQuickAddPage() {
   const uid = user?.uid ?? '';
 
   const { data: categories } = useCashbookCategories(coupleId);
+  const resolveCategoryHints = useResolveCategoryHints(coupleId);
   const addMutation = useAddEntry(coupleId);
   const addManyMutation = useAddEntries(coupleId);
 
@@ -69,7 +70,12 @@ export default function OverlayQuickAddPage() {
 
       <AiParseInput
         categories={(categories ?? []).map((c) => c.name)}
-        parseFn={parseEntriesFromText}
+        parseFn={async (text, categoryNames, images, pdfs) =>
+          parseEntriesFromText(text, categoryNames, images, {
+            categoryHints: await resolveCategoryHints(),
+            pdfs,
+          })
+        }
         textareaClassName="focus-visible:ring-inset focus-visible:ring-offset-0"
         onEmptySubmit={openManualForm}
         onParsed={(results) => {
@@ -101,7 +107,7 @@ export default function OverlayQuickAddPage() {
       />
 
       <p className="mt-3 text-xs text-muted-foreground">
-        자연어로 입력하거나 영수증 사진을 첨부하면 AI가 내역을 정리해드려요.
+        자연어로 입력하거나 영수증 사진·이용내역서 PDF를 첨부하면 AI가 내역을 정리해드려요.
       </p>
 
       {/* 하단: 말랑 가계부 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}

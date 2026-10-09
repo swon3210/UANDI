@@ -16,6 +16,7 @@ export type {
 export {
   getMonthlyEntries,
   getEntriesInRange,
+  getLatestEntryDate,
   addEntry,
   addEntries,
   updateEntry,
@@ -51,7 +52,7 @@ export {
 } from './constants/default-categories';
 
 // Utils
-export { formatCurrency, formatAmount } from './utils/currency';
+export { formatCurrency, formatAmount, toWonAmount } from './utils/currency';
 export {
   occurrenceDateInMonth,
   shouldFireOn,
