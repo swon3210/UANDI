@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
-import { EmptyState, Skeleton } from '@uandi/ui';
+import { overlay } from 'overlay-kit';
+import { EmptyState, Sheet, SheetContent, SheetHeader, SheetTitle, Skeleton } from '@uandi/ui';
 import { useDashboardData, type GroupFilter } from '@/hooks/useDashboardData';
 import {
   getPeriodLabel,
@@ -15,6 +16,7 @@ import {
 } from '@/utils/date';
 import { PeriodSelector } from './PeriodSelector';
 import { PeriodNavigator } from './PeriodNavigator';
+import { PeriodPicker } from './PeriodPicker';
 import { GroupTabs } from './GroupTabs';
 import { CategoryBarChart } from './CategoryBarChart';
 import { CategoryDonutChart } from './CategoryDonutChart';
@@ -49,6 +51,12 @@ function totalColorClass(group: GroupFilter, total: number): string {
 }
 
 const DEFAULT_TREND_TOP_N = 3;
+
+const PICKER_TITLE: Record<PeriodKind, string> = {
+  weekly: '주 선택',
+  monthly: '월 선택',
+  yearly: '연도 선택',
+};
 
 export function BudgetDashboard({ coupleId }: Props) {
   const [period, setPeriod] = useState<PeriodKind>('weekly');
@@ -87,6 +95,39 @@ export function BudgetDashboard({ coupleId }: Props) {
     }
   };
 
+  const handleOpenPicker = () => {
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <SheetContent
+            side="bottom"
+            className="rounded-t-[20px] max-h-[90vh]"
+            data-testid="period-picker-sheet"
+          >
+            <SheetHeader>
+              <SheetTitle>{PICKER_TITLE[period]}</SheetTitle>
+            </SheetHeader>
+            <div className="py-4">
+              <PeriodPicker
+                kind={period}
+                value={cursor}
+                onSelect={(next) => {
+                  setCursor(normalizeCursor(period, next));
+                  resetTrendSelection();
+                  closeAndUnmount();
+                }}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      );
+    });
+  };
+
   const canGoNext = !isCurrentPeriod(period, cursor);
   const label = getPeriodLabel(period, cursor);
   const totalDisplay = group === 'all' ? total : Math.abs(total);
@@ -119,6 +160,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         canGoNext={canGoNext}
         onPrev={handlePrev}
         onNext={handleNext}
+        onLabelClick={handleOpenPicker}
       />
       <GroupTabs value={group} onChange={handleGroupChange} />
 

@@ -6,9 +6,11 @@ type Props = {
   canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
+  /** 라벨 클릭 시 기간 직접 선택 UI를 연다 */
+  onLabelClick?: () => void;
 };
 
-export function PeriodNavigator({ label, canGoNext, onPrev, onNext }: Props) {
+export function PeriodNavigator({ label, canGoNext, onPrev, onNext, onLabelClick }: Props) {
   return (
     <div
       data-testid="period-navigator"
@@ -23,9 +25,16 @@ export function PeriodNavigator({ label, canGoNext, onPrev, onNext }: Props) {
       >
         <ChevronLeft size={18} />
       </Button>
-      <span data-testid="period-nav-label" className="flex-1 text-center text-sm font-medium">
+      <Button
+        variant="ghost"
+        onClick={onLabelClick}
+        disabled={!onLabelClick}
+        data-testid="period-nav-label"
+        aria-label={`${label}, 기간 직접 선택`}
+        className="flex-1 text-sm font-medium disabled:opacity-100"
+      >
         {label}
-      </span>
+      </Button>
       <Button
         variant="ghost"
         size="icon"

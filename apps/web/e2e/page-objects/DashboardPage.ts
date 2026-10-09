@@ -14,6 +14,22 @@ export class DashboardPage {
   readonly periodNavLabel: Locator;
   readonly periodPrevButton: Locator;
   readonly periodNextButton: Locator;
+  readonly periodPickerSheet: Locator;
+  readonly periodPickerPrev: Locator;
+  readonly periodPickerNext: Locator;
+  readonly periodPickerTitle: Locator;
+
+  periodPickerMonth(month: number): Locator {
+    return this.page.getByTestId(`period-picker-month-${month}`);
+  }
+
+  periodPickerYear(year: number): Locator {
+    return this.page.getByTestId(`period-picker-year-${year}`);
+  }
+
+  periodPickerDay(date: string): Locator {
+    return this.page.getByTestId(`period-picker-day-${date}`);
+  }
 
   readonly groupTabs: Locator;
   readonly groupTabAll: Locator;
@@ -49,6 +65,10 @@ export class DashboardPage {
     this.periodNavLabel = page.getByTestId('period-nav-label');
     this.periodPrevButton = page.getByTestId('period-prev');
     this.periodNextButton = page.getByTestId('period-next');
+    this.periodPickerSheet = page.getByTestId('period-picker-sheet');
+    this.periodPickerPrev = page.getByTestId('period-picker-prev');
+    this.periodPickerNext = page.getByTestId('period-picker-next');
+    this.periodPickerTitle = page.getByTestId('period-picker-title');
 
     this.groupTabs = page.getByTestId('group-tabs');
     this.groupTabAll = this.groupTabs.getByRole('tab', { name: '전체' });
