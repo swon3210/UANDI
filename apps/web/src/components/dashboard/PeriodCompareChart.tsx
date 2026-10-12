@@ -14,7 +14,7 @@ import {
 } from '@uandi/ui';
 import type { PeriodComparison } from '@/hooks/useDashboardData';
 import type { CategoryGroup } from '@/types';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency, formatCurrencyMan } from '@/utils/currency';
 
 type Props = {
   comparison: PeriodComparison;
@@ -41,12 +41,9 @@ type Props = {
 
 const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
-function formatCompact(n: number): string {
-  if (n >= 10_000_000) return `${Math.round(n / 1_000_000)}M`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 10_000) return `${Math.round(n / 1_000)}k`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
+// 막대 라벨: 만원 단위로 반올림해 읽기 쉽게 (예: 1,700,000 → 170만원, 281,000 → 28만원, 5,000 → 5,000원)
+function formatBarLabel(n: number): string {
+  return `${formatCurrencyMan(n)}원`;
 }
 
 // 현재 기간 막대 색: 그룹 시맨틱 색. 비교 기간은 회색으로 눌러 현재 기간이 먼저 읽히게 한다.
@@ -107,9 +104,11 @@ export function PeriodCompareChart({
   onRemoveCategory,
   onSelectCategoriesClick,
 }: Props) {
-  const { currentTotal, compareTotal } = comparison;
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
   const rows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
+  // 요약 합계·증감도 선택한 카테고리 기준으로 막대와 맞춘다
+  const currentTotal = rows.reduce((sum, r) => sum + r.current, 0);
+  const compareTotal = rows.reduce((sum, r) => sum + r.compare, 0);
 
   const config: ChartConfig = {
     current: { label: currentLabel, color: CURRENT_COLOR[group] },
@@ -145,36 +144,46 @@ export function PeriodCompareChart({
         <Skeleton className="h-[160px] w-full rounded-lg" />
       ) : (
         <>
-          <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: CURRENT_COLOR[group] }}
-                />
-                <span className="truncate">{currentLabel}</span>
+          {rows.length > 0 ? (
+            <>
+              <div
+                className="text-[11px] text-muted-foreground"
+                data-testid="compare-summary-caption"
+              >
+                선택한 카테고리 {rows.length}개 합계
               </div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {formatCurrency(currentTotal)}
+              <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: CURRENT_COLOR[group] }}
+                    />
+                    <span className="truncate">{currentLabel}</span>
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold tabular-nums">
+                    {formatCurrency(currentTotal)}
+                  </div>
+                </div>
+                <div className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: COMPARE_COLOR }}
+                    />
+                    <span className="truncate">{compareLabel}</span>
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold tabular-nums">
+                    {formatCurrency(compareTotal)}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: COMPARE_COLOR }}
-                />
-                <span className="truncate">{compareLabel}</span>
+              <div data-testid="compare-delta" className="text-xs">
+                <span className="text-muted-foreground">{compareLabel} 대비 </span>
+                <DeltaText current={currentTotal} compare={compareTotal} group={group} />
               </div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {formatCurrency(compareTotal)}
-              </div>
-            </div>
-          </div>
-          <div data-testid="compare-delta" className="text-xs">
-            <span className="text-muted-foreground">{compareLabel} 대비 </span>
-            <DeltaText current={currentTotal} compare={compareTotal} group={group} />
-          </div>
+            </>
+          ) : null}
 
           {comparison.rows.length > 0 ? (
             <div data-testid="compare-category-section" className="space-y-2">
@@ -251,7 +260,7 @@ export function PeriodCompareChart({
                 data={rows}
                 layout="vertical"
                 barGap={2}
-                margin={{ left: 0, right: 48, top: 4, bottom: 4 }}
+                margin={{ left: 0, right: 64, top: 4, bottom: 4 }}
               >
                 <XAxis type="number" hide />
                 <YAxis
@@ -288,7 +297,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-foreground"
                     fontSize={10}
-                    formatter={(label) => formatCompact(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0)}
                   />
                 </Bar>
                 <Bar
@@ -303,7 +312,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-muted-foreground"
                     fontSize={10}
-                    formatter={(label) => formatCompact(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0)}
                   />
                 </Bar>
               </BarChart>

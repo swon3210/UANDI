@@ -35,14 +35,19 @@ export type CategoryComparisonRow = {
 };
 
 export type PeriodComparison = {
-  currentTotal: number;
-  compareTotal: number;
   /** 두 기간 중 어느 한쪽에라도 금액이 있는 카테고리. 현재 → 비교 금액 내림차순. */
   rows: CategoryComparisonRow[];
 };
 
+/** 상위 카테고리 기준 슬라이스. 하위가 있으면 children에 하위별 금액(상위 직접 기록분은 '상위(기타)')을 담는다. */
+export type CategoryTreeSlice = CategorySlice & {
+  children: CategorySlice[];
+};
+
 export type DashboardData = {
   byCategory: CategorySlice[];
+  /** 도넛용: 하위 카테고리 금액을 상위로 합친 슬라이스 (금액 내림차순) */
+  byParent: CategoryTreeSlice[];
   /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (금액 0인 유형은 제외) */
   byType: CategorySlice[];
   total: number;
@@ -93,6 +98,56 @@ function buildByCategory(
     i++;
   }
   return slices.sort((a, b) => b.amount - a.amount);
+}
+
+/** 상위에 직접 기록된 금액을 하위 목록에서 구분해 보여줄 때의 라벨 */
+export function directParentLabel(parent: string): string {
+  return `${parent}(기타)`;
+}
+
+/**
+ * 하위 카테고리 금액을 상위 카테고리로 합친다. 카테고리 메타(타입+이름 → 상위 이름)로 판단하고,
+ * 메타에 없거나 상위가 없는 카테고리는 그 자체가 상위다.
+ */
+function buildByParent(
+  entries: CashbookEntry[],
+  categories: CashbookCategory[] | undefined
+): CategoryTreeSlice[] {
+  const byId = new Map((categories ?? []).map((c) => [c.id, c]));
+  const parentOf = new Map<string, string>();
+  for (const c of categories ?? []) {
+    const parent = c.parentCategoryId ? byId.get(c.parentCategoryId) : undefined;
+    if (parent) parentOf.set(`${c.group}:${c.name}`, parent.name);
+  }
+
+  // 상위 → (하위 이름 → 금액). 상위 직접 기록분은 상위 이름 키로 담는다.
+  const tree = new Map<string, Map<string, number>>();
+  for (const e of entries) {
+    const parent = parentOf.get(`${e.type}:${e.category}`) ?? e.category;
+    const children = tree.get(parent) ?? new Map<string, number>();
+    children.set(e.category, (children.get(e.category) ?? 0) + e.amount);
+    tree.set(parent, children);
+  }
+
+  const slices = [...tree.entries()].map(([parent, children]) => {
+    const amount = [...children.values()].reduce((sum, v) => sum + v, 0);
+    // 하위 없이 상위만 기록됐으면 펼칠 것이 없다.
+    const isLeaf = children.size === 1 && children.has(parent);
+    const childSlices = isLeaf
+      ? []
+      : [...children.entries()]
+          .map(([name, value]) => ({
+            category: name === parent ? directParentLabel(parent) : name,
+            amount: value,
+          }))
+          .sort((a, b) => b.amount - a.amount)
+          .map((c, i) => ({ ...c, color: CHART_PALETTE[i % CHART_PALETTE.length] }));
+    return { category: parent, amount, children: childSlices };
+  });
+
+  return slices
+    .sort((a, b) => b.amount - a.amount)
+    .map((s, i) => ({ ...s, color: CHART_PALETTE[i % CHART_PALETTE.length] }));
 }
 
 // 유형 시맨틱 색 (지출=coral, 수입=sage, FLEX=amber — 기본 카테고리 색과 동일)
@@ -187,12 +242,11 @@ export function useDashboardData(args: {
 
     return {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
+      byParent: buildByParent(filtered, categoriesQuery.data),
       byType: buildByType(entriesQuery.data ?? []),
       total,
       hasEntries: filtered.length > 0,
       comparison: {
-        currentTotal: total,
-        compareTotal: computeTotal(compareFiltered),
         rows: buildComparisonRows(filtered, compareFiltered),
       },
       isLoading: entriesQuery.isLoading || categoriesQuery.isLoading,
