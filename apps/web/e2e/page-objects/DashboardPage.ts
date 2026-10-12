@@ -55,10 +55,23 @@ export class DashboardPage {
   readonly comparePickerSheet: Locator;
   readonly compareSummary: Locator;
   readonly compareDelta: Locator;
-  readonly categorySelector: Locator;
+  readonly compareCategoryButton: Locator;
+  readonly compareCategorySheet: Locator;
+  readonly compareCategorySearch: Locator;
+  readonly compareCategoryApply: Locator;
 
-  categoryChip(name: string): Locator {
-    return this.page.getByTestId(`category-chip-${name}`);
+  /** 기간 비교 카드에 표시된(선택된) 카테고리 칩 */
+  compareCategoryChip(name: string): Locator {
+    return this.page.getByTestId(`compare-category-chip-${name}`);
+  }
+
+  compareCategoryRemove(name: string): Locator {
+    return this.page.getByTestId(`compare-category-remove-${name}`);
+  }
+
+  /** 카테고리 선택 시트의 목록 항목 */
+  compareCategoryOption(name: string): Locator {
+    return this.page.getByTestId(`compare-category-option-${name}`);
   }
 
   // 제거된 영역 검증용
@@ -102,7 +115,10 @@ export class DashboardPage {
     this.comparePickerSheet = page.getByTestId('compare-picker-sheet');
     this.compareSummary = page.getByTestId('compare-summary');
     this.compareDelta = page.getByTestId('compare-delta');
-    this.categorySelector = page.getByTestId('category-selector');
+    this.compareCategoryButton = page.getByTestId('compare-category-button');
+    this.compareCategorySheet = page.getByTestId('compare-category-sheet');
+    this.compareCategorySearch = page.getByTestId('compare-category-search');
+    this.compareCategoryApply = page.getByTestId('compare-category-apply');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

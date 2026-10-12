@@ -28,7 +28,7 @@ import { GroupTabs } from './GroupTabs';
 import { SubGroupTabs } from './SubGroupTabs';
 import { CategoryDonutChart } from './CategoryDonutChart';
 import { PeriodCompareChart } from './PeriodCompareChart';
-import type { CategoryOption } from './CategorySelector';
+import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 
 type Props = {
   coupleId: string;
@@ -232,20 +232,43 @@ export function BudgetDashboard({ coupleId }: Props) {
   const canGoNext = !isCurrentPeriod(period, cursor);
   const label = getPeriodLabel(period, cursor);
   const totalDisplay = group === 'all' ? total : Math.abs(total);
-  const chipColors = new Map(byCategory.map((c) => [c.category, c.color]));
-  const categoryOptions: CategoryOption[] = comparison.rows.map((r) => ({
+  const categoryColors: Record<string, string> = Object.fromEntries(
+    byCategory.map((c) => [c.category, c.color])
+  );
+  const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) => ({
     name: r.category,
-    color: chipColors.get(r.category) ?? FALLBACK_CHIP_COLOR,
+    color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
+    current: r.current,
+    compare: r.compare,
   }));
   const defaultCategorySelection = comparison.rows
     .slice(0, DEFAULT_COMPARE_TOP_N)
     .map((r) => r.category);
   const selectedCategories = categorySelection ?? defaultCategorySelection;
 
-  const handleToggleCategory = (name: string) => {
-    setCategorySelection((prev) => {
-      const current = prev ?? defaultCategorySelection;
-      return current.includes(name) ? current.filter((n) => n !== name) : [...current, name];
+  const handleRemoveCategory = (name: string) => {
+    setCategorySelection((prev) => (prev ?? defaultCategorySelection).filter((n) => n !== name));
+  };
+
+  const handleOpenCategorySheet = () => {
+    const compareLabel = getPeriodLabel(period, compareCursor);
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <CompareCategorySheet
+            options={categoryOptions}
+            initialSelected={selectedCategories}
+            currentLabel={label}
+            compareLabel={compareLabel}
+            onApply={setCategorySelection}
+            onClose={closeAndUnmount}
+          />
+        </Sheet>
+      );
     });
   };
 
@@ -319,9 +342,10 @@ export function BudgetDashboard({ coupleId }: Props) {
               compareLabel={getPeriodLabel(period, compareCursor)}
               compareHint={isDefaultCompare ? PREV_PERIOD_HINT[period] : undefined}
               onCompareClick={handleOpenComparePicker}
-              categoryOptions={categoryOptions}
+              categoryColors={categoryColors}
               selectedCategories={selectedCategories}
-              onToggleCategory={handleToggleCategory}
+              onRemoveCategory={handleRemoveCategory}
+              onSelectCategoriesClick={handleOpenCategorySheet}
             />
           </div>
         </>

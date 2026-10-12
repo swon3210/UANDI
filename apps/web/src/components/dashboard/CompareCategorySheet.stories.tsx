@@ -1,0 +1,68 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { Sheet } from '@uandi/ui';
+import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
+
+const meta: Meta<typeof CompareCategorySheet> = {
+  title: 'Dashboard/CompareCategorySheet',
+  component: CompareCategorySheet,
+  parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <Sheet open>
+        <Story />
+      </Sheet>
+    ),
+  ],
+  args: {
+    currentLabel: '2026년 9월',
+    compareLabel: '2026년 8월',
+    onApply: () => {},
+    onClose: () => {},
+  },
+};
+export default meta;
+
+type Story = StoryObj<typeof CompareCategorySheet>;
+
+const COLORS = ['#D8635A', '#4CAF86', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6'];
+const NAMES = [
+  '정기급여',
+  '격월 상여',
+  '여행',
+  '주담대 대출이자',
+  '식비',
+  '적금',
+  '데이트',
+  '병원/건강',
+  '소모품',
+  '교통비',
+  '사회생활',
+  '공과금',
+  '코스트코',
+  '가족',
+  '개발 인프라',
+  '정기결제',
+  '보험비',
+  '서비스 구독',
+  '집꾸미기',
+  '통신비',
+];
+
+const manyOptions: CompareCategoryOption[] = NAMES.map((name, i) => ({
+  name,
+  color: COLORS[i % COLORS.length],
+  current: Math.max(4_200_000 - i * 210_000, 12_000),
+  compare: Math.max(3_900_000 - i * 190_000, 0),
+}));
+
+export const ManyCategories: Story = {
+  args: { options: manyOptions, initialSelected: ['정기급여', '격월 상여', '여행'] },
+};
+
+export const NothingSelected: Story = {
+  args: { options: manyOptions, initialSelected: [] },
+};
+
+export const FewCategories: Story = {
+  args: { options: manyOptions.slice(0, 3), initialSelected: ['정기급여'] },
+};

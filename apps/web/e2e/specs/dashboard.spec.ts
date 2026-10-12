@@ -449,7 +449,7 @@ test.describe('대시보드', () => {
       }
     }
 
-    test('현재 기간 금액 상위 3개 카테고리가 기본으로 선택된다', async ({ authedContext }) => {
+    test('현재 기간 금액 상위 3개 카테고리만 카드에 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFourCategories(coupleId, uid);
 
@@ -457,15 +457,14 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      await expect(dashboard.categorySelector).toBeVisible();
-      await expect(dashboard.categoryChip('식비')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('교통')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('월세')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('보험')).toHaveAttribute('data-state', 'unselected');
+      await expect(dashboard.compareCategoryChip('식비')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('교통')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('월세')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('보험')).toBeHidden();
       await expect(dashboard.trendChart).not.toContainText('보험');
     });
 
-    test('칩을 토글하면 막대 차트의 비교 대상이 바뀐다', async ({ authedContext }) => {
+    test('바텀시트에서 검색해 카테고리를 추가할 수 있다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFourCategories(coupleId, uid);
 
@@ -473,12 +472,54 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      await dashboard.categoryChip('보험').click();
-      await expect(dashboard.categoryChip('보험')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.trendChart).toContainText('보험');
+      await dashboard.compareCategoryButton.click();
+      await expect(dashboard.compareCategorySheet).toBeVisible();
+      await expect(dashboard.compareCategoryOption('식비')).toHaveAttribute(
+        'data-state',
+        'selected'
+      );
 
-      await dashboard.categoryChip('식비').click();
-      await expect(dashboard.categoryChip('식비')).toHaveAttribute('data-state', 'unselected');
+      await dashboard.compareCategorySearch.fill('보험');
+      await expect(dashboard.compareCategoryOption('식비')).toBeHidden();
+      await dashboard.compareCategoryOption('보험').click();
+      await expect(dashboard.compareCategoryOption('보험')).toHaveAttribute(
+        'data-state',
+        'selected'
+      );
+      await dashboard.compareCategoryApply.click();
+
+      await expect(dashboard.compareCategorySheet).toBeHidden();
+      await expect(dashboard.compareCategoryChip('보험')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('식비')).toBeVisible();
+      await expect(dashboard.trendChart).toContainText('보험');
+    });
+
+    test('적용하지 않고 시트를 닫으면 선택이 바뀌지 않는다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFourCategories(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.compareCategoryButton.click();
+      await dashboard.compareCategoryOption('보험').click();
+      await page.keyboard.press('Escape');
+
+      await expect(dashboard.compareCategorySheet).toBeHidden();
+      await expect(dashboard.compareCategoryChip('보험')).toBeHidden();
+    });
+
+    test('칩의 X를 누르면 비교 대상에서 빠진다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFourCategories(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.compareCategoryRemove('식비').click();
+      await expect(dashboard.compareCategoryChip('식비')).toBeHidden();
       await expect(dashboard.trendChart).not.toContainText('식비');
     });
 
@@ -503,7 +544,7 @@ test.describe('대시보드', () => {
       await dashboard.periodTabMonthly.click();
       await dashboard.groupTabExpense.click();
 
-      await expect(dashboard.categoryChip('보험')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('보험')).toBeVisible();
       await expect(dashboard.trendChart).toContainText('보험');
     });
   });

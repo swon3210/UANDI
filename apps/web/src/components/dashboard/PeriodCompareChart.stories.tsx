@@ -7,7 +7,7 @@ const CHIP_COLORS = ['#D8635A', '#4CAF86', '#3B82F6', '#F59E0B', '#8B5CF6'];
 
 type ChartProps = ComponentProps<typeof PeriodCompareChart>;
 
-// 카테고리 칩 선택을 스토리 안에서 직접 토글해볼 수 있게 상태를 들고 있는 래퍼
+// 선택 칩의 X로 비교 대상을 빼볼 수 있게 상태를 들고 있는 래퍼 (시트 열기는 스토리에서 생략)
 function Interactive({ initialSelected, ...args }: ChartProps & { initialSelected?: string[] }) {
   const rows = args.comparison.rows;
   const [selected, setSelected] = useState<string[]>(
@@ -16,16 +16,12 @@ function Interactive({ initialSelected, ...args }: ChartProps & { initialSelecte
   return (
     <PeriodCompareChart
       {...args}
-      categoryOptions={rows.map((r, i) => ({
-        name: r.category,
-        color: CHIP_COLORS[i % CHIP_COLORS.length],
-      }))}
+      categoryColors={Object.fromEntries(
+        rows.map((r, i) => [r.category, CHIP_COLORS[i % CHIP_COLORS.length]])
+      )}
       selectedCategories={selected}
-      onToggleCategory={(name) =>
-        setSelected((prev) =>
-          prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
-        )
-      }
+      onRemoveCategory={(name) => setSelected((prev) => prev.filter((n) => n !== name))}
+      onSelectCategoriesClick={() => {}}
     />
   );
 }
@@ -47,9 +43,10 @@ const meta: Meta<typeof PeriodCompareChart> = {
     compareLabel: '2026년 9월',
     compareHint: '전월',
     onCompareClick: () => {},
-    categoryOptions: [],
+    categoryColors: {},
     selectedCategories: [],
-    onToggleCategory: () => {},
+    onRemoveCategory: () => {},
+    onSelectCategoriesClick: () => {},
   },
   render: (args) => <Interactive {...args} />,
 };

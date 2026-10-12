@@ -1,7 +1,7 @@
 'use client';
 
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts';
-import { BarChart3, ChevronDown } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronRight, X } from 'lucide-react';
 import {
   Button,
   ChartContainer,
@@ -14,7 +14,6 @@ import {
 } from '@uandi/ui';
 import type { GroupFilter, PeriodComparison } from '@/hooks/useDashboardData';
 import { formatCurrency } from '@/utils/currency';
-import { CategorySelector, type CategoryOption } from './CategorySelector';
 
 type Props = {
   comparison: PeriodComparison;
@@ -29,12 +28,17 @@ type Props = {
   compareHint?: string;
   /** 비교 기간 선택 UI를 연다 */
   onCompareClick: () => void;
-  /** 비교 대상으로 고를 수 있는 카테고리 (comparison.rows 순서) */
-  categoryOptions: CategoryOption[];
+  /** 카테고리별 칩 점 색 */
+  categoryColors: Record<string, string>;
   /** 막대 차트에 표시할 카테고리 */
   selectedCategories: string[];
-  onToggleCategory: (name: string) => void;
+  /** 선택된 칩의 X를 눌러 비교 대상에서 뺀다 */
+  onRemoveCategory: (name: string) => void;
+  /** 비교 대상 카테고리 선택 시트를 연다 */
+  onSelectCategoriesClick: () => void;
 };
+
+const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
 function formatCompact(n: number): string {
   if (n >= 10_000_000) return `${Math.round(n / 1_000_000)}M`;
@@ -99,9 +103,10 @@ export function PeriodCompareChart({
   compareLabel,
   compareHint,
   onCompareClick,
-  categoryOptions,
+  categoryColors,
   selectedCategories,
-  onToggleCategory,
+  onRemoveCategory,
+  onSelectCategoriesClick,
 }: Props) {
   const { currentTotal, compareTotal } = comparison;
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
@@ -174,11 +179,53 @@ export function PeriodCompareChart({
             <DeltaText current={currentTotal} compare={compareTotal} group={group} />
           </div>
 
-          <CategorySelector
-            options={categoryOptions}
-            selected={selectedCategories}
-            onToggle={onToggleCategory}
-          />
+          {comparison.rows.length > 0 ? (
+            <div data-testid="compare-category-section" className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  비교할 카테고리 {rows.length}개
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onSelectCategoriesClick}
+                  data-testid="compare-category-button"
+                  className="h-7 gap-0.5 px-2 text-xs"
+                >
+                  카테고리 선택
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+              {rows.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {rows.map((r) => (
+                    <span
+                      key={r.category}
+                      data-testid={`compare-category-chip-${r.category}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary/10 py-1 pl-2.5 pr-1 text-xs text-primary"
+                    >
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
+                        }}
+                      />
+                      {r.category}
+                      <button
+                        type="button"
+                        onClick={() => onRemoveCategory(r.category)}
+                        aria-label={`${r.category} 비교에서 빼기`}
+                        data-testid={`compare-category-remove-${r.category}`}
+                        className="rounded-full p-0.5 hover:bg-primary/15"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {comparison.rows.length === 0 ? (
             <div data-testid="trend-chart">
@@ -193,7 +240,7 @@ export function PeriodCompareChart({
               <EmptyState
                 icon={<BarChart3 size={32} />}
                 title="비교할 카테고리를 선택해주세요"
-                description="위 칩에서 카테고리를 골라 두 기간의 금액을 비교할 수 있어요"
+                description="'카테고리 선택'에서 비교할 카테고리를 골라보세요"
               />
             </div>
           ) : (
