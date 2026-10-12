@@ -49,10 +49,26 @@ const NAMES = [
 const manyOptions: CompareCategoryOption[] = NAMES.map((name, i) => ({
   name,
   color: COLORS[i % COLORS.length],
+  parent: null,
 }));
+
+// 상위(식비·주거) 아래 하위가 있는 2단계 구조. 식비는 상위에 직접 기록된 내역도 있다.
+const nestedOptions: CompareCategoryOption[] = [
+  { name: '식비', color: '#D8635A', parent: null },
+  { name: '외식', color: '#F59E0B', parent: '식비' },
+  { name: '장보기', color: '#4CAF86', parent: '식비' },
+  { name: '배달', color: '#3B82F6', parent: '식비' },
+  { name: '월세', color: '#8B5CF6', parent: '주거' },
+  { name: '관리비', color: '#EC4899', parent: '주거' },
+  { name: '교통', color: '#14B8A6', parent: null },
+];
 
 export const ManyCategories: Story = {
   args: { options: manyOptions, initialSelected: ['정기급여', '격월 상여', '여행'] },
+};
+
+export const NestedCategories: Story = {
+  args: { options: nestedOptions, initialSelected: ['외식', '월세', '관리비'] },
 };
 
 export const NothingSelected: Story = {

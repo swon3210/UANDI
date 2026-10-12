@@ -172,6 +172,11 @@ query(
   - `카테고리 선택`(`compare-category-button`) → 바텀시트 `CompareCategorySheet`(`compare-category-sheet`)
     - 상단 검색창(`compare-category-search`, 이름 부분 일치) + 체크 목록(`compare-category-option-{name}`, 색 점 + 이름만 — 금액 비교는 차트에서 하므로 목록엔 표시하지 않음)
     - `전체 해제` / `N개 적용`(`compare-category-apply`). 적용을 눌러야 반영, 그냥 닫으면 변경 없음
+    - 상위/하위(2단계) 분류: 카테고리 메타의 `parentCategoryId`로 하위를 상위 아래에 들여써 묶음(`compare-category-group-{상위}`)
+      - 상위 행(`compare-category-group-toggle-{상위}`)은 상위 자신(직접 기록된 내역이 있을 때) + 하위 전체를 한 번에 선택/해제, 일부만 선택되면 `partial`(−) 표시
+      - 상위에 직접 기록된 내역이 없으면 상위는 묶음 헤더로만 쓰이고 선택 대상(칩·막대)에는 하위만 들어간다
+      - 하위가 없는 카테고리는 묶음 없이 단독 항목. 그룹 순서는 금액순 목록에서 처음 등장한 순서
+      - 검색: 상위 이름이 맞으면 하위 전체, 하위 이름이 맞으면 상위 헤더 + 일치하는 하위만
     - 열 때 검색창 자동 포커스 안 함 (모바일 키보드가 목록을 가리지 않게)
   - 옵션: 두 기간 중 어느 한쪽에라도 금액이 있는 카테고리 (현재→비교 금액 내림차순)
   - 기본 선택: 현재 기간 금액 상위 **3개** (`DEFAULT_COMPARE_TOP_N`), 개수 제한 없음

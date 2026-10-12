@@ -2,7 +2,11 @@ import { expect } from '@playwright/test';
 import dayjs from 'dayjs';
 import { test } from '../fixtures/auth.fixture';
 import { DashboardPage } from '../page-objects/DashboardPage';
-import { seedCashbookEntry, seedDefaultCategories } from '../helpers/emulator';
+import {
+  seedCashbookCategory,
+  seedCashbookEntry,
+  seedDefaultCategories,
+} from '../helpers/emulator';
 
 test.describe('대시보드', () => {
   test.describe('레이아웃', () => {
@@ -578,6 +582,111 @@ test.describe('대시보드', () => {
 
       await expect(dashboard.compareCategoryChip('보험')).toBeVisible();
       await expect(dashboard.trendChart).toContainText('보험');
+    });
+  });
+
+  test.describe('기간 비교 — 카테고리 선택 시트의 상위/하위 분류', () => {
+    async function seedNested(coupleId: string, uid: string) {
+      await seedDefaultCategories(coupleId);
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '생활비',
+        icon: 'basket',
+      });
+      for (const name of ['외식', '장보기']) {
+        await seedCashbookCategory(coupleId, {
+          group: 'expense',
+          subGroup: 'variable_common',
+          name,
+          icon: 'basket',
+          parentCategoryId: parentId,
+        });
+      }
+      const today = dayjs().toISOString();
+      const rows: Array<[string, number]> = [
+        ['외식', 30000],
+        ['장보기', 20000],
+        ['교통', 10000],
+        ['월세', 5000],
+      ];
+      for (const [category, amount] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type: 'expense', amount, category, date: today });
+      }
+    }
+
+    test('하위 카테고리는 상위 카테고리 아래에 묶여 표시된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNested(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.compareCategoryButton.click();
+
+      const group = dashboard.compareCategoryGroup('생활비');
+      await expect(group).toBeVisible();
+      await expect(group.getByTestId('compare-category-option-외식')).toBeVisible();
+      await expect(group.getByTestId('compare-category-option-장보기')).toBeVisible();
+      // 하위가 없는 카테고리는 묶음 없이 단독 항목
+      await expect(dashboard.compareCategoryOption('교통')).toBeVisible();
+      await expect(dashboard.compareCategoryGroup('교통')).toHaveCount(0);
+    });
+
+    test('상위 카테고리를 누르면 하위 전체가 선택/해제된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNested(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.compareCategoryButton.click();
+
+      // 기본 선택(상위 3개: 외식·장보기·교통) → 생활비 하위가 모두 선택된 상태
+      const toggle = dashboard.compareCategoryGroupToggle('생활비');
+      await expect(toggle).toHaveAttribute('data-state', 'selected');
+
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('data-state', 'unselected');
+      await expect(dashboard.compareCategoryOption('외식')).toHaveAttribute(
+        'data-state',
+        'unselected'
+      );
+      await expect(dashboard.compareCategoryOption('장보기')).toHaveAttribute(
+        'data-state',
+        'unselected'
+      );
+
+      // 하위 하나만 선택하면 상위는 부분 선택
+      await dashboard.compareCategoryOption('외식').click();
+      await expect(toggle).toHaveAttribute('data-state', 'partial');
+
+      // 부분 선택에서 상위를 누르면 하위 전체 선택
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('data-state', 'selected');
+
+      await dashboard.compareCategoryApply.click();
+      await expect(dashboard.compareCategoryChip('외식')).toBeVisible();
+      await expect(dashboard.compareCategoryChip('장보기')).toBeVisible();
+    });
+
+    test('검색해도 상위/하위 구조가 유지된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNested(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.compareCategoryButton.click();
+
+      // 하위 이름으로 검색 → 상위 헤더 + 일치하는 하위만
+      await dashboard.compareCategorySearch.fill('외식');
+      await expect(dashboard.compareCategoryGroup('생활비')).toBeVisible();
+      await expect(dashboard.compareCategoryOption('외식')).toBeVisible();
+      await expect(dashboard.compareCategoryOption('장보기')).toBeHidden();
+      await expect(dashboard.compareCategoryOption('교통')).toBeHidden();
+
+      // 상위 이름으로 검색 → 하위 전체
+      await dashboard.compareCategorySearch.fill('생활');
+      await expect(dashboard.compareCategoryOption('외식')).toBeVisible();
+      await expect(dashboard.compareCategoryOption('장보기')).toBeVisible();
     });
   });
 });

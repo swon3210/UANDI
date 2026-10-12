@@ -12,6 +12,7 @@ import {
   type GroupFilter,
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
+import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
@@ -119,6 +120,9 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   const isDefaultCompare = compareSelection === null;
   const compareCursor = compareSelection ?? shiftPeriod(period, cursor, -1);
+
+  // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
+  const { data: categories } = useCashbookCategories(coupleId);
 
   const { byCategory, total, netBalance, hasEntries, comparison, isLoading, isCompareLoading } =
     useDashboardData({
@@ -235,9 +239,17 @@ export function BudgetDashboard({ coupleId }: Props) {
   const categoryColors: Record<string, string> = Object.fromEntries(
     byCategory.map((c) => [c.category, c.color])
   );
+  // 카테고리 선택 시트의 상위/하위 묶음용: 현재 그룹 카테고리 이름 → 상위 카테고리 이름
+  const groupCategories = (categories ?? []).filter((c) => c.group === group);
+  const categoryById = new Map(groupCategories.map((c) => [c.id, c]));
+  const parentNameOf = (name: string): string | null => {
+    const parentId = groupCategories.find((c) => c.name === name)?.parentCategoryId;
+    return parentId ? (categoryById.get(parentId)?.name ?? null) : null;
+  };
   const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) => ({
     name: r.category,
     color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
+    parent: parentNameOf(r.category),
   }));
   const defaultCategorySelection = comparison.rows
     .slice(0, DEFAULT_COMPARE_TOP_N)

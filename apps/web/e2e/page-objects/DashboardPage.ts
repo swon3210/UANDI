@@ -69,6 +69,16 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-category-remove-${name}`);
   }
 
+  /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
+  compareCategoryGroup(name: string): Locator {
+    return this.page.getByTestId(`compare-category-group-${name}`);
+  }
+
+  /** 상위 카테고리 행(하위 전체 선택/해제) */
+  compareCategoryGroupToggle(name: string): Locator {
+    return this.page.getByTestId(`compare-category-group-toggle-${name}`);
+  }
+
   /** 카테고리 선택 시트의 목록 항목 */
   compareCategoryOption(name: string): Locator {
     return this.page.getByTestId(`compare-category-option-${name}`);
