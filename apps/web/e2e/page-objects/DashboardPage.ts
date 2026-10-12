@@ -38,14 +38,51 @@ export class DashboardPage {
   readonly groupTabFlex: Locator;
   readonly groupTabInvestment: Locator;
 
+  readonly subGroupTabs: Locator;
+
+  subGroupTab(name: string): Locator {
+    return this.subGroupTabs.getByRole('tab', { name });
+  }
+
   readonly totalAmount: Locator;
+  readonly periodCompare: Locator;
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
   readonly emptyState: Locator;
-  readonly categorySelector: Locator;
 
-  categoryChip(name: string): Locator {
-    return this.page.getByTestId(`category-chip-${name}`);
+  // 기간 비교 차트
+  readonly comparePeriodButton: Locator;
+  readonly comparePeriodLabel: Locator;
+  readonly comparePickerSheet: Locator;
+  readonly compareSummary: Locator;
+  readonly compareDelta: Locator;
+  readonly compareCategoryButton: Locator;
+  readonly compareCategorySheet: Locator;
+  readonly compareCategorySearch: Locator;
+  readonly compareCategoryApply: Locator;
+
+  /** 기간 비교 카드에 표시된(선택된) 카테고리 칩 */
+  compareCategoryChip(name: string): Locator {
+    return this.page.getByTestId(`compare-category-chip-${name}`);
+  }
+
+  compareCategoryRemove(name: string): Locator {
+    return this.page.getByTestId(`compare-category-remove-${name}`);
+  }
+
+  /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
+  compareCategoryGroup(name: string): Locator {
+    return this.page.getByTestId(`compare-category-group-${name}`);
+  }
+
+  /** 상위 카테고리 행(하위 전체 선택/해제) */
+  compareCategoryGroupToggle(name: string): Locator {
+    return this.page.getByTestId(`compare-category-group-toggle-${name}`);
+  }
+
+  /** 카테고리 선택 시트의 목록 항목 */
+  compareCategoryOption(name: string): Locator {
+    return this.page.getByTestId(`compare-category-option-${name}`);
   }
 
   // 제거된 영역 검증용
@@ -77,11 +114,23 @@ export class DashboardPage {
     this.groupTabFlex = this.groupTabs.getByRole('tab', { name: 'FLEX' });
     this.groupTabInvestment = this.groupTabs.getByRole('tab', { name: '투자' });
 
+    this.subGroupTabs = page.getByTestId('subgroup-tabs');
+
     this.totalAmount = page.getByTestId('dashboard-total');
+    this.periodCompare = page.getByTestId('period-compare');
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
-    this.categorySelector = page.getByTestId('category-selector');
+
+    this.comparePeriodButton = page.getByTestId('compare-period-button');
+    this.comparePeriodLabel = page.getByTestId('compare-period-label');
+    this.comparePickerSheet = page.getByTestId('compare-picker-sheet');
+    this.compareSummary = page.getByTestId('compare-summary');
+    this.compareDelta = page.getByTestId('compare-delta');
+    this.compareCategoryButton = page.getByTestId('compare-category-button');
+    this.compareCategorySheet = page.getByTestId('compare-category-sheet');
+    this.compareCategorySearch = page.getByTestId('compare-category-search');
+    this.compareCategoryApply = page.getByTestId('compare-category-apply');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');
