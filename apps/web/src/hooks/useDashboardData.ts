@@ -43,8 +43,6 @@ export type PeriodComparison = {
 export type DashboardData = {
   byCategory: CategorySlice[];
   total: number;
-  /** 기간 순잔액(수입 − 지출). 그룹 탭과 무관하게 항상 같은 값 */
-  netBalance: number;
   hasEntries: boolean;
   comparison: PeriodComparison;
   isLoading: boolean;
@@ -98,17 +96,6 @@ function computeTotal(entries: CashbookEntry[]): number {
   return entries.reduce((sum, e) => sum + e.amount, 0);
 }
 
-/** 기간 순잔액 = 수입 − 지출. 그룹/세부 필터와 무관하게 기간 전체 내역으로 계산한다. */
-function computeNetBalance(entries: CashbookEntry[]): number {
-  let net = 0;
-  for (const e of entries) {
-    // income이 아닌 건 전부 지출로 합산(expense + flex).
-    // 내역 페이지 useMonthlySummary, cashflow.ts의 outflow 규칙과 동일.
-    net += e.type === 'income' ? e.amount : -e.amount;
-  }
-  return net;
-}
-
 /** 엔트리 타입+카테고리 이름 → 고정 여부. 같은 이름이 여러 세부 그룹에 있으면 하나라도 고정이면 고정. */
 function buildFixedLookup(categories: CashbookCategory[] | undefined): Set<string> {
   const fixed = new Set<string>();
@@ -132,7 +119,7 @@ function filterEntries(
   );
 }
 
-/** 카테고리별 비교 행. 순잔액(전체)에서도 카테고리 금액은 절대 금액으로 비교한다. */
+/** 카테고리별 비교 행 (현재·비교 기간 금액). */
 function buildComparisonRows(
   current: CashbookEntry[],
   compare: CashbookEntry[]
@@ -173,15 +160,13 @@ export function useDashboardData(args: {
 
   return useMemo(() => {
     const fixedLookup = buildFixedLookup(categoriesQuery.data);
-    const allEntries = entriesQuery.data ?? [];
-    const filtered = filterEntries(allEntries, group, subGroup, fixedLookup);
+    const filtered = filterEntries(entriesQuery.data ?? [], group, subGroup, fixedLookup);
     const compareFiltered = filterEntries(compareQuery.data ?? [], group, subGroup, fixedLookup);
     const total = computeTotal(filtered);
 
     return {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
       total,
-      netBalance: computeNetBalance(allEntries),
       hasEntries: filtered.length > 0,
       comparison: {
         currentTotal: total,

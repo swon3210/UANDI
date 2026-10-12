@@ -232,8 +232,6 @@ test.describe('대시보드', () => {
       // 합계 KPI: 기본 지출 탭 = 지출 합계 20,000
       await expect(dashboard.totalAmount).toContainText('지출 합계');
       await expect(dashboard.totalAmount).toContainText('20,000');
-      // 순잔액: 수입(1,000,000) - 지출(20,000) = +980,000
-      await expect(dashboard.netBalance).toContainText('+980,000');
     });
 
     test('지출 탭으로 전환 시 카테고리 도넛에 지출 카테고리만 표시된다', async ({
@@ -263,32 +261,6 @@ test.describe('대시보드', () => {
       await expect(dashboard.categoryDonut).toContainText('식비');
       await expect(dashboard.categoryDonut).not.toContainText('정기급여');
       await expect(dashboard.totalAmount).toContainText('12,000');
-    });
-
-    test('순잔액은 그룹 탭과 무관하게 수입 − 지출로 표시된다', async ({ authedContext }) => {
-      const { page, uid, coupleId } = authedContext;
-      await seedDefaultCategories(coupleId);
-      const today = dayjs().toISOString();
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 1200000,
-        category: '식비',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'income',
-        amount: 1000000,
-        category: '정기급여',
-        date: today,
-      });
-
-      const dashboard = new DashboardPage(page);
-      await dashboard.goto();
-
-      await expect(dashboard.netBalance).toContainText('-200,000');
-      await dashboard.groupTabIncome.click();
-      await expect(dashboard.totalAmount).toContainText('1,000,000');
-      await expect(dashboard.netBalance).toContainText('-200,000');
     });
   });
 

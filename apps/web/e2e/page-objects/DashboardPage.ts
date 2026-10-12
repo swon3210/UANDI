@@ -44,7 +44,6 @@ export class DashboardPage {
   }
 
   readonly totalAmount: Locator;
-  readonly netBalance: Locator;
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
   readonly emptyState: Locator;
@@ -115,7 +114,6 @@ export class DashboardPage {
     this.subGroupTabs = page.getByTestId('subgroup-tabs');
 
     this.totalAmount = page.getByTestId('dashboard-total');
-    this.netBalance = page.getByTestId('dashboard-net-balance');
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');

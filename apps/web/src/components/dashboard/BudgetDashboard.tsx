@@ -52,19 +52,6 @@ const SUB_GROUP_PREFIX: Record<Exclude<SubGroupFilter, 'all'>, string> = {
   variable: '변동',
 };
 
-// 순잔액은 부호에 따라 지출/수입 합계와 동일한 색으로 표기한다.
-function netBalanceColorClass(net: number): string {
-  if (net < 0) return 'text-expense';
-  if (net > 0) return 'text-income';
-  return 'text-foreground';
-}
-
-function formatSignedCurrency(n: number): string {
-  if (n > 0) return `+${formatCurrency(n)}`;
-  if (n < 0) return `-${formatCurrency(Math.abs(n))}`;
-  return formatCurrency(0);
-}
-
 // 기간 비교 차트에 기본으로 표시할 카테고리 수 (현재 기간 금액 상위)
 const DEFAULT_COMPARE_TOP_N = 3;
 // 비교 기간에만 있는(도넛 팔레트에 없는) 카테고리 칩 색
@@ -124,7 +111,7 @@ export function BudgetDashboard({ coupleId }: Props) {
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
 
-  const { byCategory, total, netBalance, hasEntries, comparison, isLoading, isCompareLoading } =
+  const { byCategory, total, hasEntries, comparison, isLoading, isCompareLoading } =
     useDashboardData({
       coupleId,
       period,
@@ -317,16 +304,6 @@ export function BudgetDashboard({ coupleId }: Props) {
         </div>
         <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
           {formatCurrency(total)}
-        </div>
-        {/* 그룹 탭과 무관한 기간 순잔액(수입 − 지출)을 보조 정보로 함께 보여준다 */}
-        <div
-          data-testid="dashboard-net-balance"
-          className="mt-2 flex items-center justify-between border-t border-border pt-2 text-xs"
-        >
-          <span className="text-muted-foreground">순잔액 (수입 − 지출)</span>
-          <span className={`font-medium tabular-nums ${netBalanceColorClass(netBalance)}`}>
-            {formatSignedCurrency(netBalance)}
-          </span>
         </div>
       </Link>
 
