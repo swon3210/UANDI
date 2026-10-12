@@ -257,96 +257,179 @@ test.describe('대시보드', () => {
     });
   });
 
-  test.describe('카테고리 비교 선택기', () => {
-    test('데이터가 있을 때 카테고리 칩 선택기가 표시되고 상위 3개가 자동 선택된다', async ({
+  test.describe('고정/변동 세부 필터', () => {
+    async function seedFixedAndVariable(coupleId: string, uid: string) {
+      await seedDefaultCategories(coupleId);
+      const today = dayjs().toISOString();
+      // 지출: 월세(고정) 20,000 / 식비(변동) 50,000
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 20000,
+        category: '월세',
+        date: today,
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 50000,
+        category: '식비',
+        date: today,
+      });
+      // 수입: 정기급여(고정) 1,000,000 / 부업(변동) 300,000
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 1000000,
+        category: '정기급여',
+        date: today,
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 300000,
+        category: '부업',
+        date: today,
+      });
+    }
+
+    test('전체·FLEX 탭에서는 고정/변동 필터가 보이지 않는다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await expect(dashboard.groupTabs).toBeVisible();
+      await expect(dashboard.subGroupTabs).toBeHidden();
+      await dashboard.groupTabFlex.click();
+      await expect(dashboard.subGroupTabs).toBeHidden();
+    });
+
+    test('지출 탭에서 고정 지출/변동 지출만 따로 볼 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFixedAndVariable(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.subGroupTabs).toBeVisible();
+      await expect(dashboard.totalAmount).toContainText('70,000');
+
+      await dashboard.subGroupTab('고정 지출').click();
+      await expect(dashboard.totalAmount).toContainText('고정 지출 합계');
+      await expect(dashboard.totalAmount).toContainText('20,000');
+      await expect(dashboard.categoryDonut).toContainText('월세');
+      await expect(dashboard.categoryDonut).not.toContainText('식비');
+
+      await dashboard.subGroupTab('변동 지출').click();
+      await expect(dashboard.totalAmount).toContainText('변동 지출 합계');
+      await expect(dashboard.totalAmount).toContainText('50,000');
+      await expect(dashboard.categoryDonut).toContainText('식비');
+      await expect(dashboard.categoryDonut).not.toContainText('월세');
+    });
+
+    test('수입 탭에서 고정 수입/변동 수입만 따로 볼 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFixedAndVariable(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabIncome.click();
+
+      await dashboard.subGroupTab('고정 수입').click();
+      await expect(dashboard.totalAmount).toContainText('1,000,000');
+      await expect(dashboard.categoryDonut).toContainText('정기급여');
+      await expect(dashboard.categoryDonut).not.toContainText('부업');
+
+      await dashboard.subGroupTab('변동 수입').click();
+      await expect(dashboard.totalAmount).toContainText('300,000');
+      await expect(dashboard.categoryDonut).toContainText('부업');
+      await expect(dashboard.categoryDonut).not.toContainText('정기급여');
+    });
+
+    test('그룹 탭을 바꾸면 세부 필터는 전체로 돌아간다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFixedAndVariable(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('고정 지출').click();
+      await dashboard.groupTabIncome.click();
+
+      await expect(dashboard.subGroupTab('전체 수입')).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.totalAmount).toContainText('1,300,000');
+    });
+  });
+
+  test.describe('기간 비교 차트', () => {
+    async function seedMonthlyExpenses(coupleId: string, uid: string) {
+      await seedDefaultCategories(coupleId);
+      const amounts = [50000, 30000, 10000]; // 이번 달, 1개월 전, 2개월 전
+      for (const [offset, amount] of amounts.entries()) {
+        await seedCashbookEntry(coupleId, uid, {
+          type: 'expense',
+          amount,
+          category: '식비',
+          date: dayjs().subtract(offset, 'month').startOf('month').add(12, 'hour').toISOString(),
+        });
+      }
+    }
+
+    test('기본으로 직전 기간(전월)과 비교한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedMonthlyExpenses(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabExpense.click();
+
+      const prevMonth = dayjs().subtract(1, 'month');
+      await expect(dashboard.trendChart).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.comparePeriodLabel).toHaveText(prevMonth.format('YYYY년 M월'));
+      await expect(dashboard.comparePeriodButton).toContainText('전월');
+      await expect(dashboard.compareSummary).toContainText('50,000');
+      await expect(dashboard.compareSummary).toContainText('30,000');
+      await expect(dashboard.compareDelta).toContainText('20,000');
+      await expect(dashboard.compareDelta).toContainText('67%');
+    });
+
+    test('비교할 기간을 직접 선택할 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedMonthlyExpenses(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.comparePeriodButton.click();
+      await expect(dashboard.comparePickerSheet).toBeVisible();
+
+      const prevMonth = dayjs().subtract(1, 'month');
+      const twoMonthsAgo = dayjs().subtract(2, 'month');
+      if (twoMonthsAgo.year() !== prevMonth.year()) {
+        await dashboard.periodPickerPrev.click();
+      }
+      await dashboard.periodPickerMonth(twoMonthsAgo.month() + 1).click();
+
+      await expect(dashboard.comparePickerSheet).toBeHidden();
+      await expect(dashboard.comparePeriodLabel).toHaveText(twoMonthsAgo.format('YYYY년 M월'));
+      await expect(dashboard.comparePeriodButton).not.toContainText('전월');
+      await expect(dashboard.compareSummary).toContainText('10,000');
+      await expect(dashboard.compareDelta).toContainText('40,000');
+    });
+
+    test('기준 기간을 이동하면 비교 기간은 다시 직전 기간으로 돌아간다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
-      await seedDefaultCategories(coupleId);
-      const today = dayjs().toISOString();
-      // 4개 카테고리에 서로 다른 금액 시드 (식비 > 교통 > 쇼핑 > 의료 순)
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 50000,
-        category: '식비',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 30000,
-        category: '교통',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 20000,
-        category: '월세',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 10000,
-        category: '보험',
-        date: today,
-      });
+      await seedMonthlyExpenses(coupleId, uid);
 
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
       await dashboard.groupTabExpense.click();
+      await dashboard.periodPrevButton.click();
 
-      await expect(dashboard.categorySelector).toBeVisible();
-      // 상위 3개(식비, 교통, 월세)가 자동 선택, 4번째(보험)는 미선택
-      await expect(dashboard.categoryChip('식비')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('교통')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('월세')).toHaveAttribute('data-state', 'selected');
-      await expect(dashboard.categoryChip('보험')).toHaveAttribute('data-state', 'unselected');
-    });
-
-    test('칩을 토글하면 선택 상태가 바뀐다', async ({ authedContext }) => {
-      const { page, uid, coupleId } = authedContext;
-      await seedDefaultCategories(coupleId);
-      const today = dayjs().toISOString();
-      // 4개 시드 → 상위 3개(식비/교통/월세)만 자동 선택, 보험은 미선택
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 50000,
-        category: '식비',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 30000,
-        category: '교통',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 20000,
-        category: '월세',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 10000,
-        category: '보험',
-        date: today,
-      });
-
-      const dashboard = new DashboardPage(page);
-      await dashboard.goto();
-      await dashboard.groupTabExpense.click();
-
-      // 보험은 기본 미선택 → 클릭하면 선택됨
-      const insurance = dashboard.categoryChip('보험');
-      await expect(insurance).toHaveAttribute('data-state', 'unselected');
-      await insurance.click();
-      await expect(insurance).toHaveAttribute('data-state', 'selected');
-
-      // 식비는 기본 선택 → 클릭하면 해제됨
-      const food = dashboard.categoryChip('식비');
-      await expect(food).toHaveAttribute('data-state', 'selected');
-      await food.click();
-      await expect(food).toHaveAttribute('data-state', 'unselected');
+      const twoMonthsAgo = dayjs().subtract(2, 'month');
+      await expect(dashboard.comparePeriodLabel).toHaveText(twoMonthsAgo.format('YYYY년 M월'));
+      await expect(dashboard.compareSummary).toContainText('30,000');
+      await expect(dashboard.compareSummary).toContainText('10,000');
     });
   });
 });

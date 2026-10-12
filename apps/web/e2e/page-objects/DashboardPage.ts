@@ -38,15 +38,23 @@ export class DashboardPage {
   readonly groupTabFlex: Locator;
   readonly groupTabInvestment: Locator;
 
+  readonly subGroupTabs: Locator;
+
+  subGroupTab(name: string): Locator {
+    return this.subGroupTabs.getByRole('tab', { name });
+  }
+
   readonly totalAmount: Locator;
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
   readonly emptyState: Locator;
-  readonly categorySelector: Locator;
 
-  categoryChip(name: string): Locator {
-    return this.page.getByTestId(`category-chip-${name}`);
-  }
+  // 기간 비교 차트
+  readonly comparePeriodButton: Locator;
+  readonly comparePeriodLabel: Locator;
+  readonly comparePickerSheet: Locator;
+  readonly compareSummary: Locator;
+  readonly compareDelta: Locator;
 
   // 제거된 영역 검증용
   readonly recentPhotosSection: Locator;
@@ -77,11 +85,18 @@ export class DashboardPage {
     this.groupTabFlex = this.groupTabs.getByRole('tab', { name: 'FLEX' });
     this.groupTabInvestment = this.groupTabs.getByRole('tab', { name: '투자' });
 
+    this.subGroupTabs = page.getByTestId('subgroup-tabs');
+
     this.totalAmount = page.getByTestId('dashboard-total');
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
-    this.categorySelector = page.getByTestId('category-selector');
+
+    this.comparePeriodButton = page.getByTestId('compare-period-button');
+    this.comparePeriodLabel = page.getByTestId('compare-period-label');
+    this.comparePickerSheet = page.getByTestId('compare-picker-sheet');
+    this.compareSummary = page.getByTestId('compare-summary');
+    this.compareDelta = page.getByTestId('compare-delta');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');
