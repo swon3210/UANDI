@@ -164,8 +164,8 @@ query(
 - 비교 기간 선택: 헤더 버튼(`compare-period-button`) → 바텀 시트(`compare-picker-sheet`)에서 `PeriodPicker`로 같은 단위의 기간 선택 (미래 기간 불가)
   - 직전 기간을 다시 고르면 기본값으로 되돌린다
   - 기간 단위 변경·기준 기간 이동 시 비교 기간은 직전 기간으로 리셋
-- 요약(`compare-summary`): 현재 기간 / 비교 기간 합계 (그룹·세부 필터 적용, 순잔액은 부호 유지)
-- 증감(`compare-delta`): `▲/▼ 금액 (비율%)`. 수입·순잔액은 증가=income 색, 지출·FLEX는 증가=expense 색
+- 요약(`compare-summary`): 현재 기간 / 비교 기간 합계 (그룹·세부 필터 적용)
+- 증감(`compare-delta`): `▲/▼ 금액 (비율%)`. 수입은 증가=income 색, 지출·FLEX는 증가=expense 색
 - 차트: `recharts BarChart`(가로) — 카테고리당 현재(그룹 시맨틱 색)·비교(회색) 막대 2개, 현재→비교 금액 내림차순
 - 비교 대상 카테고리 선택
   - 카드에는 **선택된 카테고리만** 칩(`compare-category-chip-{name}`)으로 표시, 칩의 ✕(`compare-category-remove-{name}`)로 바로 제외
