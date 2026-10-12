@@ -5,7 +5,8 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
-export type GroupFilter = CategoryGroup;
+/** 'all'(전체)은 지출·수입·FLEX 총량 비교 전용 탭이다. */
+export type GroupFilter = 'all' | CategoryGroup;
 
 /** 지출·수입 그룹 안에서 고정/변동만 따로 보기 위한 세부 필터. */
 export type SubGroupFilter = 'all' | 'fixed' | 'variable';
@@ -42,6 +43,8 @@ export type PeriodComparison = {
 
 export type DashboardData = {
   byCategory: CategorySlice[];
+  /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (금액 0인 유형은 제외) */
+  byType: CategorySlice[];
   total: number;
   hasEntries: boolean;
   comparison: PeriodComparison;
@@ -92,6 +95,23 @@ function buildByCategory(
   return slices.sort((a, b) => b.amount - a.amount);
 }
 
+// 유형 시맨틱 색 (지출=coral, 수입=sage, FLEX=amber — 기본 카테고리 색과 동일)
+const TYPE_SLICES: Array<{ type: CategoryGroup; label: string; color: string }> = [
+  { type: 'expense', label: '지출', color: '#D8635A' },
+  { type: 'income', label: '수입', color: '#4CAF86' },
+  { type: 'flex', label: 'FLEX', color: '#F0A05E' },
+];
+
+function buildByType(entries: CashbookEntry[]): CategorySlice[] {
+  const sums = new Map<CategoryGroup, number>();
+  for (const e of entries) sums.set(e.type, (sums.get(e.type) ?? 0) + e.amount);
+  return TYPE_SLICES.map((t) => ({
+    category: t.label,
+    amount: sums.get(t.type) ?? 0,
+    color: t.color,
+  })).filter((s) => s.amount > 0);
+}
+
 function computeTotal(entries: CashbookEntry[]): number {
   return entries.reduce((sum, e) => sum + e.amount, 0);
 }
@@ -111,6 +131,7 @@ function filterEntries(
   subGroup: SubGroupFilter,
   fixedLookup: Set<string>
 ): CashbookEntry[] {
+  if (group === 'all') return entries;
   const byGroup = entries.filter((e) => e.type === group);
   if (!supportsSubGroup(group) || subGroup === 'all') return byGroup;
   // 카테고리 메타에 없는(삭제·이름 변경된) 카테고리는 변동으로 취급한다.
@@ -166,6 +187,7 @@ export function useDashboardData(args: {
 
     return {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
+      byType: buildByType(entriesQuery.data ?? []),
       total,
       hasEntries: filtered.length > 0,
       comparison: {

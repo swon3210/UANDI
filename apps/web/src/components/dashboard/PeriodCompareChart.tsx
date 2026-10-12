@@ -12,14 +12,15 @@ import {
   cn,
   type ChartConfig,
 } from '@uandi/ui';
-import type { GroupFilter, PeriodComparison } from '@/hooks/useDashboardData';
+import type { PeriodComparison } from '@/hooks/useDashboardData';
+import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 
 type Props = {
   comparison: PeriodComparison;
   /** 비교 기간 데이터 로딩 중이면 요약·차트 대신 스켈레톤을 보여준다 */
   isLoading?: boolean;
-  group: GroupFilter;
+  group: CategoryGroup;
   /** 현재 기간 라벨 (예: 2026년 10월) */
   currentLabel: string;
   /** 비교 기간 라벨 (예: 2026년 9월) */
@@ -49,7 +50,7 @@ function formatCompact(n: number): string {
 }
 
 // 현재 기간 막대 색: 그룹 시맨틱 색. 비교 기간은 회색으로 눌러 현재 기간이 먼저 읽히게 한다.
-const CURRENT_COLOR: Record<GroupFilter, string> = {
+const CURRENT_COLOR: Record<CategoryGroup, string> = {
   expense: 'hsl(var(--expense))',
   income: 'hsl(var(--income))',
   flex: 'hsl(var(--primary))',
@@ -57,7 +58,7 @@ const CURRENT_COLOR: Record<GroupFilter, string> = {
 const COMPARE_COLOR = 'hsl(var(--muted-foreground) / 0.35)';
 
 // 증가가 좋은 그룹(수입)과 나쁜 그룹(지출·FLEX)을 나눠 증감 색을 정한다.
-const INCREASE_IS_GOOD: Record<GroupFilter, boolean> = {
+const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = {
   expense: false,
   income: true,
   flex: false,
@@ -77,7 +78,7 @@ function DeltaText({
 }: {
   current: number;
   compare: number;
-  group: GroupFilter;
+  group: CategoryGroup;
 }) {
   const delta = current - compare;
   if (delta === 0) {

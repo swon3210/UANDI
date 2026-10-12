@@ -13,6 +13,7 @@ import {
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
@@ -35,13 +36,13 @@ type Props = {
   coupleId: string;
 };
 
-const TOTAL_LABEL: Record<GroupFilter, string> = {
+const TOTAL_LABEL: Record<CategoryGroup, string> = {
   expense: '지출 합계',
   income: '수입 합계',
   flex: 'FLEX 합계',
 };
 
-const TOTAL_COLOR: Record<GroupFilter, string> = {
+const TOTAL_COLOR: Record<CategoryGroup, string> = {
   expense: 'text-expense',
   income: 'text-income',
   flex: 'text-foreground',
@@ -80,7 +81,7 @@ const PREV_PERIOD_HINT: Record<PeriodKind, string> = {
  * 대시보드의 기간·그룹 상태를 내역 페이지 딥링크로 변환한다.
  * 월간은 월 스테퍼를 쓸 수 있도록 year/month로, 주간·연간은 start/end(커스텀 기간)로 넘긴다.
  */
-function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: GroupFilter): string {
+function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGroup): string {
   const params = new URLSearchParams();
   if (period === 'monthly') {
     params.set('year', String(cursor.year()));
@@ -96,7 +97,7 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: GroupFilter)
 
 export function BudgetDashboard({ coupleId }: Props) {
   const [period, setPeriod] = useState<PeriodKind>('weekly');
-  const [group, setGroup] = useState<GroupFilter>('expense');
+  const [group, setGroup] = useState<GroupFilter>('all');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
   const [subGroup, setSubGroup] = useState<SubGroupFilter>('all');
   // null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간
@@ -111,7 +112,7 @@ export function BudgetDashboard({ coupleId }: Props) {
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
 
-  const { byCategory, total, hasEntries, comparison, isLoading, isCompareLoading } =
+  const { byCategory, byType, total, hasEntries, comparison, isLoading, isCompareLoading } =
     useDashboardData({
       coupleId,
       period,
@@ -267,9 +268,11 @@ export function BudgetDashboard({ coupleId }: Props) {
   };
 
   const totalLabel =
-    supportsSubGroup(group) && subGroup !== 'all'
-      ? `${SUB_GROUP_PREFIX[subGroup]} ${TOTAL_LABEL[group]}`
-      : TOTAL_LABEL[group];
+    group === 'all'
+      ? ''
+      : supportsSubGroup(group) && subGroup !== 'all'
+        ? `${SUB_GROUP_PREFIX[subGroup]} ${TOTAL_LABEL[group]}`
+        : TOTAL_LABEL[group];
 
   return (
     <section className="space-y-3">
@@ -290,22 +293,25 @@ export function BudgetDashboard({ coupleId }: Props) {
         />
       ) : null}
 
-      <Link
-        href={buildHistoryHref(period, cursor, group)}
-        data-testid="dashboard-total"
-        className="block rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40"
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">{totalLabel}</div>
-          <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-            내역 보기
-            <ChevronRight size={14} />
-          </span>
-        </div>
-        <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
-          {formatCurrency(total)}
-        </div>
-      </Link>
+      {/* 전체 탭은 지출·수입·FLEX 총량 파이 차트만 보여준다 (합계 카드·기간 비교 없음) */}
+      {group !== 'all' ? (
+        <Link
+          href={buildHistoryHref(period, cursor, group)}
+          data-testid="dashboard-total"
+          className="block rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">{totalLabel}</div>
+            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+              내역 보기
+              <ChevronRight size={14} />
+            </span>
+          </div>
+          <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
+            {formatCurrency(total)}
+          </div>
+        </Link>
+      ) : null}
 
       {isLoading ? (
         <>
@@ -319,6 +325,10 @@ export function BudgetDashboard({ coupleId }: Props) {
             title="이 기간엔 내역이 없어요"
             description="다른 기간을 선택하거나 가계부에 내역을 추가해보세요"
           />
+        </div>
+      ) : group === 'all' ? (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <CategoryDonutChart data={byType} />
         </div>
       ) : (
         <>

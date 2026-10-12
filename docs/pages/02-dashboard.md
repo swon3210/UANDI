@@ -55,7 +55,7 @@
 │                         │
 │  ‹  2026년 5월  ›        │  ← 기간 네비게이터 (현재 기간이면 ›는 disabled)
 │                         │
-│  [지출|수입|FLEX]        │  ← 그룹 탭 (기본: 지출, 전체 탭 없음)
+│  [전체|지출|수입|FLEX]   │  ← 그룹 탭 (기본: 전체)
 │  [전체 지출|고정|변동]   │  ← 세부 탭 (지출·수입 탭에서만)
 │                         │
 │  ┌───────────────────┐  │
@@ -116,7 +116,7 @@ query(
   - 현재 대시보드의 기간·그룹 상태를 쿼리 파라미터로 넘겨 내역 페이지 초기 필터로 적용
     - 월간: `?year=YYYY&month=M`(0-based) → 내역 페이지 월 모드(월 스테퍼 사용 가능)
     - 주간·연간: `?start=YYYY-MM-DD&end=YYYY-MM-DD` → 내역 페이지 커스텀 기간
-    - 항상 `&type=expense|income|flex` (현재 그룹) → 타입 필터
+    - `&type=expense|income|flex` (현재 그룹) → 타입 필터 (합계 카드는 전체 탭에 없으므로 항상 지정됨)
     - 내역 페이지는 최초 렌더에서 한 번만 반영하고 URL에서 파라미터를 제거한다
 
 ### 기간 선택기 (`PeriodSelector`)
@@ -139,11 +139,13 @@ query(
 
 ### 그룹 탭 (`GroupTabs`)
 
-- shadcn `Tabs`, 값: `expense | income | flex` (기본 `expense`)
-- 라벨: 지출 / 수입 / FLEX
+- shadcn `Tabs`, 값: `all | expense | income | flex` (기본 `all`)
+- 라벨: 전체 / 지출 / 수입 / FLEX
 - `data-testid="group-tabs"`
 - `entry.type === group`로 필터
-- `전체` 탭은 두지 않는다: 수입·지출 카테고리가 도넛·비교 차트에 섞여 의미가 없고, 고정/변동 필터도 쓸 수 없기 때문.
+- `전체` 탭은 **지출·수입·FLEX 유형별 총량 도넛만** 보여준다 (`byType`, 슬라이스 라벨 지출/수입/FLEX, 색 coral/sage/amber)
+  - 합계 KPI 카드·고정/변동 세부 탭·기간 비교 차트는 숨김 (수입·지출 카테고리가 섞이면 의미가 없기 때문)
+  - 카테고리별 분석은 지출/수입/FLEX 탭에서
 
 ### 고정/변동 세부 탭 (`SubGroupTabs`)
 
@@ -199,6 +201,7 @@ query(
 ### 합계 KPI 카드
 
 - `data-testid="dashboard-total"`
+- 지출/수입/FLEX 탭에서만 표시 (전체 탭엔 없음)
 - 선택 그룹(+세부 필터)의 기간 `amount` 합계
 - 색상: 지출=expense, 수입=income, FLEX=foreground
 

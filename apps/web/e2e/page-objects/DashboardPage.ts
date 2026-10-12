@@ -32,6 +32,7 @@ export class DashboardPage {
   }
 
   readonly groupTabs: Locator;
+  readonly groupTabAll: Locator;
   readonly groupTabIncome: Locator;
   readonly groupTabExpense: Locator;
   readonly groupTabFlex: Locator;
@@ -44,6 +45,7 @@ export class DashboardPage {
   }
 
   readonly totalAmount: Locator;
+  readonly periodCompare: Locator;
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
   readonly emptyState: Locator;
@@ -106,6 +108,7 @@ export class DashboardPage {
     this.periodPickerTitle = page.getByTestId('period-picker-title');
 
     this.groupTabs = page.getByTestId('group-tabs');
+    this.groupTabAll = this.groupTabs.getByRole('tab', { name: '전체' });
     this.groupTabIncome = this.groupTabs.getByRole('tab', { name: '수입' });
     this.groupTabExpense = this.groupTabs.getByRole('tab', { name: '지출' });
     this.groupTabFlex = this.groupTabs.getByRole('tab', { name: 'FLEX' });
@@ -114,6 +117,7 @@ export class DashboardPage {
     this.subGroupTabs = page.getByTestId('subgroup-tabs');
 
     this.totalAmount = page.getByTestId('dashboard-total');
+    this.periodCompare = page.getByTestId('period-compare');
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
     this.emptyState = page.getByTestId('dashboard-empty');
