@@ -48,6 +48,11 @@ export class DashboardPage {
   readonly periodCompare: Locator;
   readonly trendChart: Locator;
   readonly categoryDonut: Locator;
+  readonly categoryDonutBack: Locator;
+
+  categoryDonutItem(name: string): Locator {
+    return this.page.getByTestId(`category-donut-item-${name}`);
+  }
   readonly emptyState: Locator;
 
   // 기간 비교 차트
@@ -120,6 +125,7 @@ export class DashboardPage {
     this.periodCompare = page.getByTestId('period-compare');
     this.trendChart = page.getByTestId('trend-chart');
     this.categoryDonut = page.getByTestId('category-donut');
+    this.categoryDonutBack = page.getByTestId('category-donut-back');
     this.emptyState = page.getByTestId('dashboard-empty');
 
     this.comparePeriodButton = page.getByTestId('compare-period-button');

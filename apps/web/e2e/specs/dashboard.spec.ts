@@ -496,6 +496,9 @@ test.describe('대시보드', () => {
       await expect(dashboard.compareSummary).toContainText('50,000');
       await expect(dashboard.compareSummary).toContainText('20,000');
       await expect(dashboard.compareDelta).toContainText('30,000');
+      // 막대 금액 라벨은 만원 단위
+      await expect(dashboard.trendChart).toContainText('5만원');
+      await expect(dashboard.trendChart).toContainText('2만원');
 
       // 모두 빼면 요약은 숨김
       await dashboard.compareCategoryRemove('식비').click();
@@ -742,6 +745,85 @@ test.describe('대시보드', () => {
       await dashboard.compareCategorySearch.fill('생활');
       await expect(dashboard.compareCategoryOption('외식')).toBeVisible();
       await expect(dashboard.compareCategoryOption('장보기')).toBeVisible();
+    });
+  });
+
+  test.describe('카테고리 도넛 — 상위 카테고리 합산과 펼치기', () => {
+    async function seedNestedEntries(coupleId: string, uid: string) {
+      await seedDefaultCategories(coupleId);
+      const parentId = await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '생활비',
+        icon: 'basket',
+      });
+      for (const name of ['외식', '장보기']) {
+        await seedCashbookCategory(coupleId, {
+          group: 'expense',
+          subGroup: 'variable_common',
+          name,
+          icon: 'basket',
+          parentCategoryId: parentId,
+        });
+      }
+      const today = dayjs().toISOString();
+      const rows: Array<[string, number]> = [
+        ['외식', 30000],
+        ['장보기', 20000],
+        ['생활비', 5000],
+        ['교통', 10000],
+      ];
+      for (const [category, amount] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type: 'expense', amount, category, date: today });
+      }
+    }
+
+    test('하위 카테고리는 상위로 합쳐 한 항목으로 표시된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNestedEntries(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      // 생활비 = 외식 3만 + 장보기 2만 + 생활비 직접 0.5만 = 5.5만
+      await expect(dashboard.categoryDonutItem('생활비')).toContainText('5.5만');
+      await expect(dashboard.categoryDonutItem('교통')).toBeVisible();
+      await expect(dashboard.categoryDonutItem('외식')).toHaveCount(0);
+      await expect(dashboard.categoryDonutItem('장보기')).toHaveCount(0);
+    });
+
+    test('상위 항목을 누르면 하위 비율로 펼치고 뒤로 돌아올 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNestedEntries(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.categoryDonutItem('생활비').getByRole('button').click();
+      await expect(dashboard.categoryDonutBack).toContainText('생활비');
+      await expect(dashboard.categoryDonutItem('외식')).toContainText('3만');
+      await expect(dashboard.categoryDonutItem('장보기')).toContainText('2만');
+      // 상위에 직접 기록한 금액은 '(기타)'로 구분
+      await expect(dashboard.categoryDonutItem('생활비(기타)')).toContainText('5,000');
+      await expect(dashboard.categoryDonutItem('교통')).toHaveCount(0);
+
+      await dashboard.categoryDonutBack.click();
+      await expect(dashboard.categoryDonutItem('생활비')).toBeVisible();
+      await expect(dashboard.categoryDonutItem('외식')).toHaveCount(0);
+    });
+
+    test('하위가 없는 카테고리는 펼칠 수 없다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNestedEntries(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.categoryDonutItem('교통')).toBeVisible();
+      await expect(dashboard.categoryDonutItem('교통').getByRole('button')).toHaveCount(0);
     });
   });
 });

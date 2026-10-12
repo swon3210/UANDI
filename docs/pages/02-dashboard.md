@@ -168,6 +168,7 @@ query(
 - 요약(`compare-summary`): **선택한 비교 대상 카테고리의** 현재 기간 / 비교 기간 합계 (그룹·세부 필터 적용). 위에 `선택한 카테고리 N개 합계` 캡션, 선택 0개면 요약·증감 숨김
 - 증감(`compare-delta`): `▲/▼ 금액 (비율%)`. 수입은 증가=income 색, 지출·FLEX는 증가=expense 색
 - 차트: `recharts BarChart`(가로) — 카테고리당 현재(그룹 시맨틱 색)·비교(회색) 막대 2개, 현재→비교 금액 내림차순
+- 막대 금액 라벨은 만원 단위 (`170만원`, `28만원`, 1만 미만은 `5,000원`)
 - 비교 대상 카테고리 선택
   - 카드에는 **선택된 카테고리만** 칩(`compare-category-chip-{name}`)으로 표시, 칩의 ✕(`compare-category-remove-{name}`)로 바로 제외
   - `카테고리 선택`(`compare-category-button`) → 바텀시트 `CompareCategorySheet`(`compare-category-sheet`)
@@ -192,6 +193,12 @@ query(
 - `recharts PieChart` + shadcn `ChartContainer`, innerRadius로 도넛
 - `data-testid="category-donut"`
 - 카테고리별 합계 → 도넛 슬라이스
+- **상위/하위 합산 (`CategoryBreakdown`, 지출·수입·FLEX 탭)**: 하위 카테고리 금액을 상위로 합쳐 상위 하나를 한 슬라이스로 표시 (`byParent`)
+  - 하위가 있는 상위는 범례 항목(`category-donut-item-{상위}`)에 `›`, 슬라이스·범례를 누르면 그 상위의 하위 비율 도넛으로 펼침
+  - 펼친 화면 상단 `‹ {상위} {합계}`(`category-donut-back`)로 되돌아감
+  - 상위에 직접 기록한 금액은 하위 목록에서 `{상위}(기타)`로 구분
+  - 기간·그룹·세부 필터가 바뀌면 상위 화면으로 리셋
+  - 기간 비교 막대는 이 합산과 무관하게 기록된 카테고리 단위 유지
 - 카테고리 메타 `color` 사용, 메타 없으면 fallback palette
 - 우측 또는 하단에 범례(라벨+%)
 - 빈 데이터 처리:

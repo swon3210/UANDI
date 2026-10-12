@@ -14,7 +14,7 @@ import {
 } from '@uandi/ui';
 import type { PeriodComparison } from '@/hooks/useDashboardData';
 import type { CategoryGroup } from '@/types';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency, formatCurrencyMan } from '@/utils/currency';
 
 type Props = {
   comparison: PeriodComparison;
@@ -41,12 +41,9 @@ type Props = {
 
 const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
-function formatCompact(n: number): string {
-  if (n >= 10_000_000) return `${Math.round(n / 1_000_000)}M`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 10_000) return `${Math.round(n / 1_000)}k`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
+// 막대 라벨: 만원 단위로 반올림해 읽기 쉽게 (예: 1,700,000 → 170만원, 281,000 → 28만원, 5,000 → 5,000원)
+function formatBarLabel(n: number): string {
+  return `${formatCurrencyMan(n)}원`;
 }
 
 // 현재 기간 막대 색: 그룹 시맨틱 색. 비교 기간은 회색으로 눌러 현재 기간이 먼저 읽히게 한다.
@@ -263,7 +260,7 @@ export function PeriodCompareChart({
                 data={rows}
                 layout="vertical"
                 barGap={2}
-                margin={{ left: 0, right: 48, top: 4, bottom: 4 }}
+                margin={{ left: 0, right: 64, top: 4, bottom: 4 }}
               >
                 <XAxis type="number" hide />
                 <YAxis
@@ -300,7 +297,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-foreground"
                     fontSize={10}
-                    formatter={(label) => formatCompact(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0)}
                   />
                 </Bar>
                 <Bar
@@ -315,7 +312,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-muted-foreground"
                     fontSize={10}
-                    formatter={(label) => formatCompact(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0)}
                   />
                 </Bar>
               </BarChart>

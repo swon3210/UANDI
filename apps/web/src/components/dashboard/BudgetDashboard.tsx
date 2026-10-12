@@ -29,6 +29,7 @@ import { PeriodPicker } from './PeriodPicker';
 import { GroupTabs } from './GroupTabs';
 import { SubGroupTabs } from './SubGroupTabs';
 import { CategoryDonutChart } from './CategoryDonutChart';
+import { CategoryBreakdown } from './CategoryBreakdown';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 
@@ -112,15 +113,23 @@ export function BudgetDashboard({ coupleId }: Props) {
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
 
-  const { byCategory, byType, total, hasEntries, comparison, isLoading, isCompareLoading } =
-    useDashboardData({
-      coupleId,
-      period,
-      group,
-      subGroup,
-      cursor,
-      compareCursor,
-    });
+  const {
+    byCategory,
+    byParent,
+    byType,
+    total,
+    hasEntries,
+    comparison,
+    isLoading,
+    isCompareLoading,
+  } = useDashboardData({
+    coupleId,
+    period,
+    group,
+    subGroup,
+    cursor,
+    compareCursor,
+  });
 
   // 기간 단위/기준 기간이 바뀌면 비교 기간과 비교 대상 카테고리는 기본값으로 돌아간다.
   // (비교 기간만 바꿀 때는 고른 카테고리를 유지해 같은 카테고리를 여러 기간과 비교할 수 있게 한다)
@@ -333,7 +342,11 @@ export function BudgetDashboard({ coupleId }: Props) {
       ) : (
         <>
           <div className="rounded-xl border border-border bg-card p-4">
-            <CategoryDonutChart data={byCategory} />
+            {/* 기간·그룹·세부 필터가 바뀌면 펼친 상위에서 다시 상위 화면으로 */}
+            <CategoryBreakdown
+              key={`${period}-${cursor.valueOf()}-${group}-${subGroup}`}
+              data={byParent}
+            />
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <PeriodCompareChart
