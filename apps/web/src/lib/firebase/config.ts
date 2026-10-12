@@ -13,9 +13,27 @@ import {
 } from 'firebase/messaging';
 import { getFunctions as firebaseGetFunctions, type Functions } from 'firebase/functions';
 
+/**
+ * 프로덕션 authDomain(uandi-web.vercel.app)은 안드로이드 앱의 App Links(autoVerify) 도메인이기도 하다.
+ * 다른 출처(Vercel Preview 등)에서 로그인 팝업이 이 도메인의 /__/auth/handler 를 열면
+ * 크롬이 링크를 앱으로 넘겨 앱이 실행돼 버린다. 그래서 프로덕션이 아닌 *.vercel.app 에서는
+ * App Links와 무관한 기본 도메인({projectId}.firebaseapp.com)으로 인증 핸드오프를 한다.
+ * (localhost·인앱 WebView 등 그 외 환경은 설정값 그대로)
+ */
+function resolveAuthDomain(): string | undefined {
+  const configured = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (typeof window === 'undefined' || !configured || !projectId) return configured;
+  const host = window.location.hostname;
+  if (host !== configured && host.endsWith('.vercel.app')) {
+    return `${projectId}.firebaseapp.com`;
+  }
+  return configured;
+}
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  authDomain: resolveAuthDomain(),
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
