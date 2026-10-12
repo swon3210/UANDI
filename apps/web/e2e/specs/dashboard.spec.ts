@@ -38,7 +38,8 @@ test.describe('대시보드', () => {
       await expect(authedPage.getByTestId('cashbook-period-label')).toHaveText(
         `${start.format('YYYY. M. D.')} ~ ${end.format('YYYY. M. D.')}`
       );
-      await expect(authedPage.getByTestId('cashbook-filter-count')).toHaveCount(0);
+      // 기본 지출 탭 → 내역 페이지에 지출 타입 필터 1개 적용
+      await expect(authedPage.getByTestId('cashbook-filter-count')).toHaveText('1');
     });
 
     test('월간 + 지출 탭 상태가 내역 페이지의 기간·타입 필터로 적용된다', async ({
@@ -76,12 +77,13 @@ test.describe('대시보드', () => {
   });
 
   test.describe('가계부 대시보드 — 컨트롤', () => {
-    test('기본값으로 주간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
+    test('기본값으로 주간 + 지출 탭이 활성화되고 전체 탭은 없다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await expect(dashboard.periodSelector).toBeVisible();
       await expect(dashboard.groupTabs).toBeVisible();
       await expect(dashboard.periodTabWeekly).toHaveAttribute('data-state', 'active');
-      await expect(dashboard.groupTabAll).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.groupTabExpense).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.groupTabs.getByRole('tab', { name: '전체' })).toHaveCount(0);
     });
 
     test('기간 네비게이터에 현재 주 라벨이 표시된다', async ({ authedPage }) => {
@@ -223,8 +225,11 @@ test.describe('대시보드', () => {
 
       await expect(dashboard.trendChart).toBeVisible({ timeout: 10000 });
       await expect(dashboard.categoryDonut).toBeVisible();
-      // 합계 KPI: 전체 = 수입(1,000,000) - 지출(20,000) = 980,000
-      await expect(dashboard.totalAmount).toContainText('980,000');
+      // 합계 KPI: 기본 지출 탭 = 지출 합계 20,000
+      await expect(dashboard.totalAmount).toContainText('지출 합계');
+      await expect(dashboard.totalAmount).toContainText('20,000');
+      // 순잔액: 수입(1,000,000) - 지출(20,000) = +980,000
+      await expect(dashboard.netBalance).toContainText('+980,000');
     });
 
     test('지출 탭으로 전환 시 카테고리 도넛에 지출 카테고리만 표시된다', async ({
@@ -254,6 +259,32 @@ test.describe('대시보드', () => {
       await expect(dashboard.categoryDonut).toContainText('식비');
       await expect(dashboard.categoryDonut).not.toContainText('정기급여');
       await expect(dashboard.totalAmount).toContainText('12,000');
+    });
+
+    test('순잔액은 그룹 탭과 무관하게 수입 − 지출로 표시된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      const today = dayjs().toISOString();
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 1200000,
+        category: '식비',
+        date: today,
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 1000000,
+        category: '정기급여',
+        date: today,
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.netBalance).toContainText('-200,000');
+      await dashboard.groupTabIncome.click();
+      await expect(dashboard.totalAmount).toContainText('1,000,000');
+      await expect(dashboard.netBalance).toContainText('-200,000');
     });
   });
 
@@ -289,10 +320,11 @@ test.describe('대시보드', () => {
       });
     }
 
-    test('전체·FLEX 탭에서는 고정/변동 필터가 보이지 않는다', async ({ authedPage }) => {
+    test('지출 탭(기본)에서는 보이고 FLEX 탭에서는 고정/변동 필터가 보이지 않는다', async ({
+      authedPage,
+    }) => {
       const dashboard = new DashboardPage(authedPage);
-      await expect(dashboard.groupTabs).toBeVisible();
-      await expect(dashboard.subGroupTabs).toBeHidden();
+      await expect(dashboard.subGroupTabs).toBeVisible();
       await dashboard.groupTabFlex.click();
       await expect(dashboard.subGroupTabs).toBeHidden();
     });

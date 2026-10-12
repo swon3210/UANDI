@@ -5,7 +5,7 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
-export type GroupFilter = 'all' | CategoryGroup;
+export type GroupFilter = CategoryGroup;
 
 /** 지출·수입 그룹 안에서 고정/변동만 따로 보기 위한 세부 필터. */
 export type SubGroupFilter = 'all' | 'fixed' | 'variable';
@@ -43,6 +43,8 @@ export type PeriodComparison = {
 export type DashboardData = {
   byCategory: CategorySlice[];
   total: number;
+  /** 기간 순잔액(수입 − 지출). 그룹 탭과 무관하게 항상 같은 값 */
+  netBalance: number;
   hasEntries: boolean;
   comparison: PeriodComparison;
   isLoading: boolean;
@@ -92,19 +94,19 @@ function buildByCategory(
   return slices.sort((a, b) => b.amount - a.amount);
 }
 
-function computeTotal(entries: CashbookEntry[], group: GroupFilter): number {
-  if (group === 'all') {
-    let income = 0;
-    let expense = 0;
-    for (const e of entries) {
-      // income이 아닌 건 전부 지출로 합산(expense + flex).
-      // 내역 페이지 useMonthlySummary, cashflow.ts의 outflow 규칙과 동일.
-      if (e.type === 'income') income += e.amount;
-      else expense += e.amount;
-    }
-    return income - expense;
-  }
+function computeTotal(entries: CashbookEntry[]): number {
   return entries.reduce((sum, e) => sum + e.amount, 0);
+}
+
+/** 기간 순잔액 = 수입 − 지출. 그룹/세부 필터와 무관하게 기간 전체 내역으로 계산한다. */
+function computeNetBalance(entries: CashbookEntry[]): number {
+  let net = 0;
+  for (const e of entries) {
+    // income이 아닌 건 전부 지출로 합산(expense + flex).
+    // 내역 페이지 useMonthlySummary, cashflow.ts의 outflow 규칙과 동일.
+    net += e.type === 'income' ? e.amount : -e.amount;
+  }
+  return net;
 }
 
 /** 엔트리 타입+카테고리 이름 → 고정 여부. 같은 이름이 여러 세부 그룹에 있으면 하나라도 고정이면 고정. */
@@ -122,7 +124,6 @@ function filterEntries(
   subGroup: SubGroupFilter,
   fixedLookup: Set<string>
 ): CashbookEntry[] {
-  if (group === 'all') return entries;
   const byGroup = entries.filter((e) => e.type === group);
   if (!supportsSubGroup(group) || subGroup === 'all') return byGroup;
   // 카테고리 메타에 없는(삭제·이름 변경된) 카테고리는 변동으로 취급한다.
@@ -172,17 +173,19 @@ export function useDashboardData(args: {
 
   return useMemo(() => {
     const fixedLookup = buildFixedLookup(categoriesQuery.data);
-    const filtered = filterEntries(entriesQuery.data ?? [], group, subGroup, fixedLookup);
+    const allEntries = entriesQuery.data ?? [];
+    const filtered = filterEntries(allEntries, group, subGroup, fixedLookup);
     const compareFiltered = filterEntries(compareQuery.data ?? [], group, subGroup, fixedLookup);
-    const total = computeTotal(filtered, group);
+    const total = computeTotal(filtered);
 
     return {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
       total,
+      netBalance: computeNetBalance(allEntries),
       hasEntries: filtered.length > 0,
       comparison: {
         currentTotal: total,
-        compareTotal: computeTotal(compareFiltered, group),
+        compareTotal: computeTotal(compareFiltered),
         rows: buildComparisonRows(filtered, compareFiltered),
       },
       isLoading: entriesQuery.isLoading || categoriesQuery.isLoading,

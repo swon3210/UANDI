@@ -50,16 +50,14 @@ function formatCompact(n: number): string {
 
 // 현재 기간 막대 색: 그룹 시맨틱 색. 비교 기간은 회색으로 눌러 현재 기간이 먼저 읽히게 한다.
 const CURRENT_COLOR: Record<GroupFilter, string> = {
-  all: 'hsl(var(--primary))',
   expense: 'hsl(var(--expense))',
   income: 'hsl(var(--income))',
   flex: 'hsl(var(--primary))',
 };
 const COMPARE_COLOR = 'hsl(var(--muted-foreground) / 0.35)';
 
-// 증가가 좋은 그룹(수입·순잔액)과 나쁜 그룹(지출·FLEX)을 나눠 증감 색을 정한다.
+// 증가가 좋은 그룹(수입)과 나쁜 그룹(지출·FLEX)을 나눠 증감 색을 정한다.
 const INCREASE_IS_GOOD: Record<GroupFilter, boolean> = {
-  all: true,
   expense: false,
   income: true,
   flex: false,
@@ -111,8 +109,6 @@ export function PeriodCompareChart({
   const { currentTotal, compareTotal } = comparison;
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
   const rows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
-  // 순잔액은 부호가 의미 있으므로 그대로, 나머지는 금액 크기로 표기한다.
-  const display = (n: number) => formatCurrency(group === 'all' ? n : Math.abs(n));
 
   const config: ChartConfig = {
     current: { label: currentLabel, color: CURRENT_COLOR[group] },
@@ -158,7 +154,7 @@ export function PeriodCompareChart({
                 <span className="truncate">{currentLabel}</span>
               </div>
               <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {display(currentTotal)}
+                {formatCurrency(currentTotal)}
               </div>
             </div>
             <div className="rounded-lg bg-muted/50 px-3 py-2">
@@ -170,7 +166,7 @@ export function PeriodCompareChart({
                 <span className="truncate">{compareLabel}</span>
               </div>
               <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {display(compareTotal)}
+                {formatCurrency(compareTotal)}
               </div>
             </div>
           </div>

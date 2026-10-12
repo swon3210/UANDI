@@ -84,21 +84,6 @@ export const IncomeDecreased: Story = {
   },
 };
 
-export const NetBalance: Story = {
-  args: {
-    group: 'all',
-    comparison: {
-      currentTotal: -120_000,
-      compareTotal: 450_000,
-      rows: [
-        { category: '정기급여', current: 3_200_000, compare: 3_200_000 },
-        { category: '월세', current: 700_000, compare: 700_000 },
-        { category: '식비', current: 420_000, compare: 310_000 },
-      ],
-    },
-  },
-};
-
 export const CustomComparePeriod: Story = {
   args: {
     compareLabel: '2025년 10월',

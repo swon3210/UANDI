@@ -35,14 +35,12 @@ type Props = {
 };
 
 const TOTAL_LABEL: Record<GroupFilter, string> = {
-  all: '순잔액',
   expense: '지출 합계',
   income: '수입 합계',
   flex: 'FLEX 합계',
 };
 
 const TOTAL_COLOR: Record<GroupFilter, string> = {
-  all: 'text-foreground',
   expense: 'text-expense',
   income: 'text-income',
   flex: 'text-foreground',
@@ -53,14 +51,17 @@ const SUB_GROUP_PREFIX: Record<Exclude<SubGroupFilter, 'all'>, string> = {
   variable: '변동',
 };
 
-// 순잔액(전체 그룹)은 부호에 따라 지출/수입 합계와 동일한 색으로 표기한다.
-function totalColorClass(group: GroupFilter, total: number): string {
-  if (group === 'all') {
-    if (total < 0) return 'text-expense';
-    if (total > 0) return 'text-income';
-    return 'text-foreground';
-  }
-  return TOTAL_COLOR[group];
+// 순잔액은 부호에 따라 지출/수입 합계와 동일한 색으로 표기한다.
+function netBalanceColorClass(net: number): string {
+  if (net < 0) return 'text-expense';
+  if (net > 0) return 'text-income';
+  return 'text-foreground';
+}
+
+function formatSignedCurrency(n: number): string {
+  if (n > 0) return `+${formatCurrency(n)}`;
+  if (n < 0) return `-${formatCurrency(Math.abs(n))}`;
+  return formatCurrency(0);
 }
 
 // 기간 비교 차트에 기본으로 표시할 카테고리 수 (현재 기간 금액 상위)
@@ -101,13 +102,13 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: GroupFilter)
     params.set('start', dayjs(start).format('YYYY-MM-DD'));
     params.set('end', dayjs(end).format('YYYY-MM-DD'));
   }
-  if (group !== 'all') params.set('type', group);
+  params.set('type', group);
   return `/inner/cashbook/history?${params.toString()}`;
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
   const [period, setPeriod] = useState<PeriodKind>('weekly');
-  const [group, setGroup] = useState<GroupFilter>('all');
+  const [group, setGroup] = useState<GroupFilter>('expense');
   const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
   const [subGroup, setSubGroup] = useState<SubGroupFilter>('all');
   // null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간
@@ -119,7 +120,7 @@ export function BudgetDashboard({ coupleId }: Props) {
   const isDefaultCompare = compareSelection === null;
   const compareCursor = compareSelection ?? shiftPeriod(period, cursor, -1);
 
-  const { byCategory, total, hasEntries, comparison, isLoading, isCompareLoading } =
+  const { byCategory, total, netBalance, hasEntries, comparison, isLoading, isCompareLoading } =
     useDashboardData({
       coupleId,
       period,
@@ -231,7 +232,6 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   const canGoNext = !isCurrentPeriod(period, cursor);
   const label = getPeriodLabel(period, cursor);
-  const totalDisplay = group === 'all' ? total : Math.abs(total);
   const categoryColors: Record<string, string> = Object.fromEntries(
     byCategory.map((c) => [c.category, c.color])
   );
@@ -303,10 +303,18 @@ export function BudgetDashboard({ coupleId }: Props) {
             <ChevronRight size={14} />
           </span>
         </div>
+        <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
+          {formatCurrency(total)}
+        </div>
+        {/* 그룹 탭과 무관한 기간 순잔액(수입 − 지출)을 보조 정보로 함께 보여준다 */}
         <div
-          className={`mt-1 text-2xl font-semibold tabular-nums ${totalColorClass(group, total)}`}
+          data-testid="dashboard-net-balance"
+          className="mt-2 flex items-center justify-between border-t border-border pt-2 text-xs"
         >
-          {formatCurrency(totalDisplay)}
+          <span className="text-muted-foreground">순잔액 (수입 − 지출)</span>
+          <span className={`font-medium tabular-nums ${netBalanceColorClass(netBalance)}`}>
+            {formatSignedCurrency(netBalance)}
+          </span>
         </div>
       </Link>
 
