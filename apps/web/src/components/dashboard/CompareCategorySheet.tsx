@@ -3,15 +3,10 @@
 import { useState } from 'react';
 import { Check, Search } from 'lucide-react';
 import { Button, cn, Input, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
-import { formatCurrency } from '@/utils/currency';
 
 export type CompareCategoryOption = {
   name: string;
   color: string;
-  /** 현재 기간 금액 */
-  current: number;
-  /** 비교 기간 금액 */
-  compare: number;
 };
 
 type Props = {
@@ -19,9 +14,6 @@ type Props = {
   options: CompareCategoryOption[];
   /** 이미 선택된 카테고리. 시트는 이 값을 draft로 복제해 편집한다. */
   initialSelected: string[];
-  /** 기간 라벨 (목록의 금액 설명용) */
-  currentLabel: string;
-  compareLabel: string;
   onApply: (names: string[]) => void;
   onClose: () => void;
 };
@@ -30,14 +22,7 @@ type Props = {
  * 기간 비교 차트의 비교 대상 카테고리를 고르는 바텀시트.
  * 카테고리가 많아도 고르기 쉽게 검색 + 세로 목록으로 보여주고, '적용'을 눌러야 반영된다.
  */
-export function CompareCategorySheet({
-  options,
-  initialSelected,
-  currentLabel,
-  compareLabel,
-  onApply,
-  onClose,
-}: Props) {
+export function CompareCategorySheet({ options, initialSelected, onApply, onClose }: Props) {
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [search, setSearch] = useState('');
 
@@ -75,12 +60,7 @@ export function CompareCategorySheet({
         />
       </div>
 
-      <div className="flex items-center justify-between px-1 pt-3 text-[11px] text-muted-foreground">
-        <span>{selected.length}개 선택됨</span>
-        <span>
-          {currentLabel} / {compareLabel}
-        </span>
-      </div>
+      <div className="px-1 pt-3 text-[11px] text-muted-foreground">{selected.length}개 선택됨</div>
 
       <ul className="-mx-1 flex-1 overflow-y-auto py-1" data-testid="compare-category-list">
         {visible.length === 0 ? (
@@ -115,9 +95,6 @@ export function CompareCategorySheet({
                     style={{ backgroundColor: opt.color }}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm">{opt.name}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                    {formatCurrency(opt.current)} / {formatCurrency(opt.compare)}
-                  </span>
                 </button>
               </li>
             );

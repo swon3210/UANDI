@@ -14,8 +14,6 @@ const meta: Meta<typeof CompareCategorySheet> = {
     ),
   ],
   args: {
-    currentLabel: '2026년 9월',
-    compareLabel: '2026년 8월',
     onApply: () => {},
     onClose: () => {},
   },
@@ -51,8 +49,6 @@ const NAMES = [
 const manyOptions: CompareCategoryOption[] = NAMES.map((name, i) => ({
   name,
   color: COLORS[i % COLORS.length],
-  current: Math.max(4_200_000 - i * 210_000, 12_000),
-  compare: Math.max(3_900_000 - i * 190_000, 0),
 }));
 
 export const ManyCategories: Story = {

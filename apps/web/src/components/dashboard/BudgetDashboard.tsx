@@ -238,8 +238,6 @@ export function BudgetDashboard({ coupleId }: Props) {
   const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) => ({
     name: r.category,
     color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
-    current: r.current,
-    compare: r.compare,
   }));
   const defaultCategorySelection = comparison.rows
     .slice(0, DEFAULT_COMPARE_TOP_N)
@@ -251,7 +249,6 @@ export function BudgetDashboard({ coupleId }: Props) {
   };
 
   const handleOpenCategorySheet = () => {
-    const compareLabel = getPeriodLabel(period, compareCursor);
     overlay.open(({ isOpen, close, unmount }) => {
       const closeAndUnmount = () => {
         close();
@@ -262,8 +259,6 @@ export function BudgetDashboard({ coupleId }: Props) {
           <CompareCategorySheet
             options={categoryOptions}
             initialSelected={selectedCategories}
-            currentLabel={label}
-            compareLabel={compareLabel}
             onApply={setCategorySelection}
             onClose={closeAndUnmount}
           />

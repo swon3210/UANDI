@@ -168,7 +168,7 @@ query(
 - 비교 대상 카테고리 선택
   - 카드에는 **선택된 카테고리만** 칩(`compare-category-chip-{name}`)으로 표시, 칩의 ✕(`compare-category-remove-{name}`)로 바로 제외
   - `카테고리 선택`(`compare-category-button`) → 바텀시트 `CompareCategorySheet`(`compare-category-sheet`)
-    - 상단 검색창(`compare-category-search`, 이름 부분 일치) + 체크 목록(`compare-category-option-{name}`, 현재/비교 금액 표시)
+    - 상단 검색창(`compare-category-search`, 이름 부분 일치) + 체크 목록(`compare-category-option-{name}`, 색 점 + 이름만 — 금액 비교는 차트에서 하므로 목록엔 표시하지 않음)
     - `전체 해제` / `N개 적용`(`compare-category-apply`). 적용을 눌러야 반영, 그냥 닫으면 변경 없음
     - 열 때 검색창 자동 포커스 안 함 (모바일 키보드가 목록을 가리지 않게)
   - 옵션: 두 기간 중 어느 한쪽에라도 금액이 있는 카테고리 (현재→비교 금액 내림차순)
