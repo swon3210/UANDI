@@ -14,6 +14,7 @@ import {
 } from '@uandi/ui';
 import type { GroupFilter, PeriodComparison } from '@/hooks/useDashboardData';
 import { formatCurrency } from '@/utils/currency';
+import { CategorySelector, type CategoryOption } from './CategorySelector';
 
 type Props = {
   comparison: PeriodComparison;
@@ -28,6 +29,11 @@ type Props = {
   compareHint?: string;
   /** 비교 기간 선택 UI를 연다 */
   onCompareClick: () => void;
+  /** 비교 대상으로 고를 수 있는 카테고리 (comparison.rows 순서) */
+  categoryOptions: CategoryOption[];
+  /** 막대 차트에 표시할 카테고리 */
+  selectedCategories: string[];
+  onToggleCategory: (name: string) => void;
 };
 
 function formatCompact(n: number): string {
@@ -93,8 +99,13 @@ export function PeriodCompareChart({
   compareLabel,
   compareHint,
   onCompareClick,
+  categoryOptions,
+  selectedCategories,
+  onToggleCategory,
 }: Props) {
-  const { currentTotal, compareTotal, rows } = comparison;
+  const { currentTotal, compareTotal } = comparison;
+  // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
+  const rows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
   // 순잔액은 부호가 의미 있으므로 그대로, 나머지는 금액 크기로 표기한다.
   const display = (n: number) => formatCurrency(group === 'all' ? n : Math.abs(n));
 
@@ -163,12 +174,26 @@ export function PeriodCompareChart({
             <DeltaText current={currentTotal} compare={compareTotal} group={group} />
           </div>
 
-          {rows.length === 0 ? (
+          <CategorySelector
+            options={categoryOptions}
+            selected={selectedCategories}
+            onToggle={onToggleCategory}
+          />
+
+          {comparison.rows.length === 0 ? (
             <div data-testid="trend-chart">
               <EmptyState
                 icon={<BarChart3 size={32} />}
                 title="비교할 내역이 없어요"
                 description="두 기간 모두 내역이 없어요. 다른 비교 기간을 선택해보세요"
+              />
+            </div>
+          ) : rows.length === 0 ? (
+            <div data-testid="trend-chart">
+              <EmptyState
+                icon={<BarChart3 size={32} />}
+                title="비교할 카테고리를 선택해주세요"
+                description="위 칩에서 카테고리를 골라 두 기간의 금액을 비교할 수 있어요"
               />
             </div>
           ) : (

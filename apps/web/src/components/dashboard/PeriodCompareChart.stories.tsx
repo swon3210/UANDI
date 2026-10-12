@@ -1,6 +1,34 @@
+import { useState, type ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import type { PeriodComparison } from '@/hooks/useDashboardData';
+
+const CHIP_COLORS = ['#D8635A', '#4CAF86', '#3B82F6', '#F59E0B', '#8B5CF6'];
+
+type ChartProps = ComponentProps<typeof PeriodCompareChart>;
+
+// 카테고리 칩 선택을 스토리 안에서 직접 토글해볼 수 있게 상태를 들고 있는 래퍼
+function Interactive({ initialSelected, ...args }: ChartProps & { initialSelected?: string[] }) {
+  const rows = args.comparison.rows;
+  const [selected, setSelected] = useState<string[]>(
+    initialSelected ?? rows.slice(0, 3).map((r) => r.category)
+  );
+  return (
+    <PeriodCompareChart
+      {...args}
+      categoryOptions={rows.map((r, i) => ({
+        name: r.category,
+        color: CHIP_COLORS[i % CHIP_COLORS.length],
+      }))}
+      selectedCategories={selected}
+      onToggleCategory={(name) =>
+        setSelected((prev) =>
+          prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+        )
+      }
+    />
+  );
+}
 
 const meta: Meta<typeof PeriodCompareChart> = {
   title: 'Dashboard/PeriodCompareChart',
@@ -19,7 +47,11 @@ const meta: Meta<typeof PeriodCompareChart> = {
     compareLabel: '2026년 9월',
     compareHint: '전월',
     onCompareClick: () => {},
+    categoryOptions: [],
+    selectedCategories: [],
+    onToggleCategory: () => {},
   },
+  render: (args) => <Interactive {...args} />,
 };
 export default meta;
 
@@ -99,6 +131,11 @@ export const LongCategoryNames: Story = {
       ],
     },
   },
+};
+
+export const NoCategorySelected: Story = {
+  args: { comparison: expenseComparison },
+  render: (args) => <Interactive {...args} initialSelected={[]} />,
 };
 
 export const Empty: Story = {

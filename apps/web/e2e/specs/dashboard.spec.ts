@@ -432,4 +432,79 @@ test.describe('대시보드', () => {
       await expect(dashboard.compareSummary).toContainText('10,000');
     });
   });
+
+  test.describe('기간 비교 — 비교 대상 카테고리 선택', () => {
+    async function seedFourCategories(coupleId: string, uid: string) {
+      await seedDefaultCategories(coupleId);
+      const today = dayjs().toISOString();
+      // 식비 > 교통 > 월세 > 보험 순
+      const rows: Array<[string, number]> = [
+        ['식비', 50000],
+        ['교통', 30000],
+        ['월세', 20000],
+        ['보험', 10000],
+      ];
+      for (const [category, amount] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type: 'expense', amount, category, date: today });
+      }
+    }
+
+    test('현재 기간 금액 상위 3개 카테고리가 기본으로 선택된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFourCategories(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.categorySelector).toBeVisible();
+      await expect(dashboard.categoryChip('식비')).toHaveAttribute('data-state', 'selected');
+      await expect(dashboard.categoryChip('교통')).toHaveAttribute('data-state', 'selected');
+      await expect(dashboard.categoryChip('월세')).toHaveAttribute('data-state', 'selected');
+      await expect(dashboard.categoryChip('보험')).toHaveAttribute('data-state', 'unselected');
+      await expect(dashboard.trendChart).not.toContainText('보험');
+    });
+
+    test('칩을 토글하면 막대 차트의 비교 대상이 바뀐다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedFourCategories(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.categoryChip('보험').click();
+      await expect(dashboard.categoryChip('보험')).toHaveAttribute('data-state', 'selected');
+      await expect(dashboard.trendChart).toContainText('보험');
+
+      await dashboard.categoryChip('식비').click();
+      await expect(dashboard.categoryChip('식비')).toHaveAttribute('data-state', 'unselected');
+      await expect(dashboard.trendChart).not.toContainText('식비');
+    });
+
+    test('비교 기간에만 있는 카테고리도 선택할 수 있다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 50000,
+        category: '식비',
+        date: dayjs().startOf('month').add(12, 'hour').toISOString(),
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 90000,
+        category: '보험',
+        date: dayjs().subtract(1, 'month').startOf('month').add(12, 'hour').toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.categoryChip('보험')).toBeVisible();
+      await expect(dashboard.trendChart).toContainText('보험');
+    });
+  });
 });

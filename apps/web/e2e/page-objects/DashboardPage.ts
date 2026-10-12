@@ -55,6 +55,11 @@ export class DashboardPage {
   readonly comparePickerSheet: Locator;
   readonly compareSummary: Locator;
   readonly compareDelta: Locator;
+  readonly categorySelector: Locator;
+
+  categoryChip(name: string): Locator {
+    return this.page.getByTestId(`category-chip-${name}`);
+  }
 
   // 제거된 영역 검증용
   readonly recentPhotosSection: Locator;
@@ -97,6 +102,7 @@ export class DashboardPage {
     this.comparePickerSheet = page.getByTestId('compare-picker-sheet');
     this.compareSummary = page.getByTestId('compare-summary');
     this.compareDelta = page.getByTestId('compare-delta');
+    this.categorySelector = page.getByTestId('category-selector');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');
