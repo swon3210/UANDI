@@ -35,8 +35,6 @@ export type CategoryComparisonRow = {
 };
 
 export type PeriodComparison = {
-  currentTotal: number;
-  compareTotal: number;
   /** 두 기간 중 어느 한쪽에라도 금액이 있는 카테고리. 현재 → 비교 금액 내림차순. */
   rows: CategoryComparisonRow[];
 };
@@ -191,8 +189,6 @@ export function useDashboardData(args: {
       total,
       hasEntries: filtered.length > 0,
       comparison: {
-        currentTotal: total,
-        compareTotal: computeTotal(compareFiltered),
         rows: buildComparisonRows(filtered, compareFiltered),
       },
       isLoading: entriesQuery.isLoading || categoriesQuery.isLoading,

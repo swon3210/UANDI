@@ -55,8 +55,6 @@ export default meta;
 type Story = StoryObj<typeof PeriodCompareChart>;
 
 const expenseComparison: PeriodComparison = {
-  currentTotal: 1_480_000,
-  compareTotal: 1_250_000,
   rows: [
     { category: '월세', current: 700_000, compare: 700_000 },
     { category: '식비', current: 420_000, compare: 310_000 },
@@ -74,8 +72,6 @@ export const IncomeDecreased: Story = {
   args: {
     group: 'income',
     comparison: {
-      currentTotal: 3_200_000,
-      compareTotal: 3_700_000,
       rows: [
         { category: '정기급여', current: 3_200_000, compare: 3_200_000 },
         { category: '상여', current: 0, compare: 500_000 },
@@ -95,8 +91,6 @@ export const CustomComparePeriod: Story = {
 export const NoChange: Story = {
   args: {
     comparison: {
-      currentTotal: 700_000,
-      compareTotal: 700_000,
       rows: [{ category: '월세', current: 700_000, compare: 700_000 }],
     },
   },
@@ -105,8 +99,6 @@ export const NoChange: Story = {
 export const LongCategoryNames: Story = {
   args: {
     comparison: {
-      currentTotal: 530_000,
-      compareTotal: 410_000,
       rows: [
         { category: '아주아주긴카테고리이름', current: 330_000, compare: 210_000 },
         { category: '명절 용돈', current: 200_000, compare: 200_000 },
@@ -121,7 +113,7 @@ export const NoCategorySelected: Story = {
 };
 
 export const Empty: Story = {
-  args: { comparison: { currentTotal: 0, compareTotal: 0, rows: [] } },
+  args: { comparison: { rows: [] } },
 };
 
 export const Loading: Story = {

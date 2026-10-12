@@ -466,6 +466,42 @@ test.describe('대시보드', () => {
       await expect(dashboard.compareDelta).toContainText('40,000');
     });
 
+    test('요약 합계·증감은 선택한 카테고리 기준으로 계산된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      const thisMonth = dayjs().startOf('month').add(12, 'hour').toISOString();
+      const lastMonth = dayjs().subtract(1, 'month').startOf('month').add(12, 'hour').toISOString();
+      const rows: Array<[string, number, string]> = [
+        ['식비', 50000, thisMonth],
+        ['교통', 30000, thisMonth],
+        ['식비', 20000, lastMonth],
+        ['교통', 10000, lastMonth],
+      ];
+      for (const [category, amount, date] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type: 'expense', amount, category, date });
+      }
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabExpense.click();
+
+      // 기본 선택(식비·교통) 합계: 80,000 vs 30,000
+      await expect(dashboard.compareSummary).toContainText('80,000');
+      await expect(dashboard.compareSummary).toContainText('30,000');
+      await expect(dashboard.compareDelta).toContainText('50,000');
+
+      // 교통을 빼면 식비만: 50,000 vs 20,000
+      await dashboard.compareCategoryRemove('교통').click();
+      await expect(dashboard.compareSummary).toContainText('50,000');
+      await expect(dashboard.compareSummary).toContainText('20,000');
+      await expect(dashboard.compareDelta).toContainText('30,000');
+
+      // 모두 빼면 요약은 숨김
+      await dashboard.compareCategoryRemove('식비').click();
+      await expect(dashboard.compareSummary).toBeHidden();
+    });
+
     test('기준 기간을 이동하면 비교 기간은 다시 직전 기간으로 돌아간다', async ({
       authedContext,
     }) => {

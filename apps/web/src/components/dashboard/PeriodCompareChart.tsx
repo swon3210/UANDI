@@ -107,9 +107,11 @@ export function PeriodCompareChart({
   onRemoveCategory,
   onSelectCategoriesClick,
 }: Props) {
-  const { currentTotal, compareTotal } = comparison;
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
   const rows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
+  // 요약 합계·증감도 선택한 카테고리 기준으로 막대와 맞춘다
+  const currentTotal = rows.reduce((sum, r) => sum + r.current, 0);
+  const compareTotal = rows.reduce((sum, r) => sum + r.compare, 0);
 
   const config: ChartConfig = {
     current: { label: currentLabel, color: CURRENT_COLOR[group] },
@@ -145,36 +147,46 @@ export function PeriodCompareChart({
         <Skeleton className="h-[160px] w-full rounded-lg" />
       ) : (
         <>
-          <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: CURRENT_COLOR[group] }}
-                />
-                <span className="truncate">{currentLabel}</span>
+          {rows.length > 0 ? (
+            <>
+              <div
+                className="text-[11px] text-muted-foreground"
+                data-testid="compare-summary-caption"
+              >
+                선택한 카테고리 {rows.length}개 합계
               </div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {formatCurrency(currentTotal)}
+              <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: CURRENT_COLOR[group] }}
+                    />
+                    <span className="truncate">{currentLabel}</span>
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold tabular-nums">
+                    {formatCurrency(currentTotal)}
+                  </div>
+                </div>
+                <div className="rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: COMPARE_COLOR }}
+                    />
+                    <span className="truncate">{compareLabel}</span>
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold tabular-nums">
+                    {formatCurrency(compareTotal)}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: COMPARE_COLOR }}
-                />
-                <span className="truncate">{compareLabel}</span>
+              <div data-testid="compare-delta" className="text-xs">
+                <span className="text-muted-foreground">{compareLabel} 대비 </span>
+                <DeltaText current={currentTotal} compare={compareTotal} group={group} />
               </div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">
-                {formatCurrency(compareTotal)}
-              </div>
-            </div>
-          </div>
-          <div data-testid="compare-delta" className="text-xs">
-            <span className="text-muted-foreground">{compareLabel} 대비 </span>
-            <DeltaText current={currentTotal} compare={compareTotal} group={group} />
-          </div>
+            </>
+          ) : null}
 
           {comparison.rows.length > 0 ? (
             <div data-testid="compare-category-section" className="space-y-2">
