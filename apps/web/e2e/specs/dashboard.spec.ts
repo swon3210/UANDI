@@ -492,7 +492,9 @@ test.describe('대시보드', () => {
       await expect(dashboard.compareDelta).toContainText('50,000');
 
       // 교통을 빼면 식비만: 50,000 vs 20,000
-      await dashboard.compareCategoryRemove('교통').click();
+      await dashboard.compareCategoryButton.click();
+      await dashboard.compareCategoryOption('교통').click();
+      await dashboard.compareCategoryApply.click();
       await expect(dashboard.compareSummary).toContainText('50,000');
       await expect(dashboard.compareSummary).toContainText('20,000');
       await expect(dashboard.compareDelta).toContainText('30,000');
@@ -501,7 +503,9 @@ test.describe('대시보드', () => {
       await expect(dashboard.trendChart).toContainText('2만원');
 
       // 모두 빼면 요약은 숨김
-      await dashboard.compareCategoryRemove('식비').click();
+      await dashboard.compareCategoryButton.click();
+      await dashboard.compareCategoryOption('식비').click();
+      await dashboard.compareCategoryApply.click();
       await expect(dashboard.compareSummary).toBeHidden();
     });
 
@@ -548,10 +552,9 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      await expect(dashboard.compareCategoryChip('식비')).toBeVisible();
-      await expect(dashboard.compareCategoryChip('교통')).toBeVisible();
-      await expect(dashboard.compareCategoryChip('월세')).toBeVisible();
-      await expect(dashboard.compareCategoryChip('보험')).toBeHidden();
+      await expect(dashboard.trendChart).toContainText('식비');
+      await expect(dashboard.trendChart).toContainText('교통');
+      await expect(dashboard.trendChart).toContainText('월세');
       await expect(dashboard.trendChart).not.toContainText('보험');
     });
 
@@ -580,9 +583,8 @@ test.describe('대시보드', () => {
       await dashboard.compareCategoryApply.click();
 
       await expect(dashboard.compareCategorySheet).toBeHidden();
-      await expect(dashboard.compareCategoryChip('보험')).toBeVisible();
-      await expect(dashboard.compareCategoryChip('식비')).toBeVisible();
       await expect(dashboard.trendChart).toContainText('보험');
+      await expect(dashboard.trendChart).toContainText('식비');
     });
 
     test('적용하지 않고 시트를 닫으면 선택이 바뀌지 않는다', async ({ authedContext }) => {
@@ -598,10 +600,10 @@ test.describe('대시보드', () => {
       await page.keyboard.press('Escape');
 
       await expect(dashboard.compareCategorySheet).toBeHidden();
-      await expect(dashboard.compareCategoryChip('보험')).toBeHidden();
+      await expect(dashboard.trendChart).not.toContainText('보험');
     });
 
-    test('칩의 X를 누르면 비교 대상에서 빠진다', async ({ authedContext }) => {
+    test('시트에서 선택을 해제하면 비교 대상에서 빠진다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFourCategories(coupleId, uid);
 
@@ -609,8 +611,9 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      await dashboard.compareCategoryRemove('식비').click();
-      await expect(dashboard.compareCategoryChip('식비')).toBeHidden();
+      await dashboard.compareCategoryButton.click();
+      await dashboard.compareCategoryOption('식비').click();
+      await dashboard.compareCategoryApply.click();
       await expect(dashboard.trendChart).not.toContainText('식비');
     });
 
@@ -635,7 +638,6 @@ test.describe('대시보드', () => {
       await dashboard.periodTabMonthly.click();
       await dashboard.groupTabExpense.click();
 
-      await expect(dashboard.compareCategoryChip('보험')).toBeVisible();
       await expect(dashboard.trendChart).toContainText('보험');
     });
   });
@@ -721,8 +723,8 @@ test.describe('대시보드', () => {
       await expect(toggle).toHaveAttribute('data-state', 'selected');
 
       await dashboard.compareCategoryApply.click();
-      await expect(dashboard.compareCategoryChip('외식')).toBeVisible();
-      await expect(dashboard.compareCategoryChip('장보기')).toBeVisible();
+      await expect(dashboard.trendChart).toContainText('외식');
+      await expect(dashboard.trendChart).toContainText('장보기');
     });
 
     test('검색해도 상위/하위 구조가 유지된다', async ({ authedContext }) => {

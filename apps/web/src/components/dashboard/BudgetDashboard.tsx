@@ -253,10 +253,6 @@ export function BudgetDashboard({ coupleId }: Props) {
     .map((r) => r.category);
   const selectedCategories = categorySelection ?? defaultCategorySelection;
 
-  const handleRemoveCategory = (name: string) => {
-    setCategorySelection((prev) => (prev ?? defaultCategorySelection).filter((n) => n !== name));
-  };
-
   const handleOpenCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
       const closeAndUnmount = () => {
@@ -357,9 +353,7 @@ export function BudgetDashboard({ coupleId }: Props) {
               compareLabel={getPeriodLabel(period, compareCursor)}
               compareHint={isDefaultCompare ? PREV_PERIOD_HINT[period] : undefined}
               onCompareClick={handleOpenComparePicker}
-              categoryColors={categoryColors}
               selectedCategories={selectedCategories}
-              onRemoveCategory={handleRemoveCategory}
               onSelectCategoriesClick={handleOpenCategorySheet}
             />
           </div>

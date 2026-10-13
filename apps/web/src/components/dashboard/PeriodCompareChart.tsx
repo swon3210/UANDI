@@ -1,7 +1,7 @@
 'use client';
 
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts';
-import { BarChart3, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Button,
   ChartContainer,
@@ -29,17 +29,11 @@ type Props = {
   compareHint?: string;
   /** 비교 기간 선택 UI를 연다 */
   onCompareClick: () => void;
-  /** 카테고리별 칩 점 색 */
-  categoryColors: Record<string, string>;
   /** 막대 차트에 표시할 카테고리 */
   selectedCategories: string[];
-  /** 선택된 칩의 X를 눌러 비교 대상에서 뺀다 */
-  onRemoveCategory: (name: string) => void;
   /** 비교 대상 카테고리 선택 시트를 연다 */
   onSelectCategoriesClick: () => void;
 };
-
-const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
 // 막대 라벨: 만원 단위로 반올림해 읽기 쉽게 (예: 1,700,000 → 170만원, 281,000 → 28만원, 5,000 → 5,000원)
 function formatBarLabel(n: number): string {
@@ -84,7 +78,7 @@ function DeltaText({
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   const rate = compare !== 0 ? Math.round((delta / Math.abs(compare)) * 100) : null;
   return (
-    <span className={cn('tabular-nums', good ? 'text-income' : 'text-expense')}>
+    <span className={cn('font-semibold tabular-nums', good ? 'text-income' : 'text-expense')}>
       {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
       {rate !== null ? ` (${Math.abs(rate)}%)` : ''}
     </span>
@@ -99,9 +93,7 @@ export function PeriodCompareChart({
   compareLabel,
   compareHint,
   onCompareClick,
-  categoryColors,
   selectedCategories,
-  onRemoveCategory,
   onSelectCategoriesClick,
 }: Props) {
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
@@ -178,7 +170,7 @@ export function PeriodCompareChart({
                   </div>
                 </div>
               </div>
-              <div data-testid="compare-delta" className="text-xs">
+              <div data-testid="compare-delta" className="text-sm">
                 <span className="text-muted-foreground">{compareLabel} 대비 </span>
                 <DeltaText current={currentTotal} compare={compareTotal} group={group} />
               </div>
@@ -186,50 +178,21 @@ export function PeriodCompareChart({
           ) : null}
 
           {comparison.rows.length > 0 ? (
-            <div data-testid="compare-category-section" className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  비교할 카테고리 {rows.length}개
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onSelectCategoriesClick}
-                  data-testid="compare-category-button"
-                  className="h-7 gap-0.5 px-2 text-xs"
-                >
-                  카테고리 선택
-                  <ChevronRight size={14} />
-                </Button>
-              </div>
-              {rows.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {rows.map((r) => (
-                    <span
-                      key={r.category}
-                      data-testid={`compare-category-chip-${r.category}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary/10 py-1 pl-2.5 pr-1 text-xs text-primary"
-                    >
-                      <span
-                        className="h-2 w-2 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
-                        }}
-                      />
-                      {r.category}
-                      <button
-                        type="button"
-                        onClick={() => onRemoveCategory(r.category)}
-                        aria-label={`${r.category} 비교에서 빼기`}
-                        data-testid={`compare-category-remove-${r.category}`}
-                        className="rounded-full p-0.5 hover:bg-primary/15"
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+            <div
+              data-testid="compare-category-section"
+              className="flex items-center justify-between"
+            >
+              <span className="text-xs text-muted-foreground">비교할 카테고리 {rows.length}개</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSelectCategoriesClick}
+                data-testid="compare-category-button"
+                className="h-7 gap-0.5 px-2 text-xs"
+              >
+                카테고리 선택
+                <ChevronRight size={14} />
+              </Button>
             </div>
           ) : null}
 

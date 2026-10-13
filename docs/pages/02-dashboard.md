@@ -170,7 +170,7 @@ query(
 - 차트: `recharts BarChart`(가로) — 카테고리당 현재(그룹 시맨틱 색)·비교(회색) 막대 2개, 현재→비교 금액 내림차순
 - 막대 금액 라벨은 만원 단위 (`170만원`, `28만원`, 1만 미만은 `5,000원`)
 - 비교 대상 카테고리 선택
-  - 카드에는 **선택된 카테고리만** 칩(`compare-category-chip-{name}`)으로 표시, 칩의 ✕(`compare-category-remove-{name}`)로 바로 제외
+  - 카드에는 `비교할 카테고리 N개` 개수만 표시하고, 선택된 카테고리는 막대 차트로만 보여준다 (별도 칩 없음 — 추가/제외는 시트에서)
   - `카테고리 선택`(`compare-category-button`) → 바텀시트 `CompareCategorySheet`(`compare-category-sheet`)
     - 상단 검색창(`compare-category-search`, 이름 부분 일치) + 체크 목록(`compare-category-option-{name}`, 색 점 + 이름만 — 금액 비교는 차트에서 하므로 목록엔 표시하지 않음)
     - `전체 해제` / `N개 적용`(`compare-category-apply`). 적용을 눌러야 반영, 그냥 닫으면 변경 없음

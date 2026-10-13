@@ -66,15 +66,6 @@ export class DashboardPage {
   readonly compareCategorySearch: Locator;
   readonly compareCategoryApply: Locator;
 
-  /** 기간 비교 카드에 표시된(선택된) 카테고리 칩 */
-  compareCategoryChip(name: string): Locator {
-    return this.page.getByTestId(`compare-category-chip-${name}`);
-  }
-
-  compareCategoryRemove(name: string): Locator {
-    return this.page.getByTestId(`compare-category-remove-${name}`);
-  }
-
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
     return this.page.getByTestId(`compare-category-group-${name}`);
