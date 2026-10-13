@@ -66,6 +66,9 @@ export class DashboardPage {
   readonly compareCategorySheet: Locator;
   readonly compareCategorySearch: Locator;
   readonly compareCategoryApply: Locator;
+  readonly compareCategoryClear: Locator;
+  readonly compareSummaryCaption: Locator;
+  readonly donutCategoryButton: Locator;
 
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
@@ -130,6 +133,9 @@ export class DashboardPage {
     this.compareCategorySheet = page.getByTestId('compare-category-sheet');
     this.compareCategorySearch = page.getByTestId('compare-category-search');
     this.compareCategoryApply = page.getByTestId('compare-category-apply');
+    this.compareCategoryClear = page.getByTestId('compare-category-clear');
+    this.compareSummaryCaption = page.getByTestId('compare-summary-caption');
+    this.donutCategoryButton = page.getByTestId('donut-category-button');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

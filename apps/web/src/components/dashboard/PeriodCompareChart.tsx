@@ -31,8 +31,13 @@ type Props = {
   onCompareClick: () => void;
   /** 막대 차트에 표시할 카테고리 */
   selectedCategories: string[];
-  /** 비교 대상 카테고리 선택 시트를 연다 */
-  onSelectCategoriesClick: () => void;
+  /**
+   * 카테고리를 하나도 고르지 않았을 때 대신 보여줄 총액 막대의 이름 (예: 전체 고정 지출).
+   * 주면 선택이 없을 때 전체 합계 1줄로 비교하고, 없으면 카테고리 선택을 안내한다.
+   */
+  totalRowLabel?: string;
+  /** 비교 대상 카테고리 선택 시트를 연다. 없으면 카테고리 선택 영역을 숨긴다(총액 비교 전용). */
+  onSelectCategoriesClick?: () => void;
 };
 
 // 막대 라벨: 만원 단위로 반올림해 읽기 쉽게 (예: 1,700,000 → 170만원, 281,000 → 28만원, 5,000 → 5,000원)
@@ -56,7 +61,8 @@ const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = {
 };
 
 const ROW_HEIGHT = 52;
-const MAX_LABEL_CHARS = 7;
+// '전체 고정 지출'(8자)처럼 총액 막대 이름이 잘리지 않을 만큼
+const MAX_LABEL_CHARS = 8;
 
 function truncateLabel(label: string): string {
   return label.length > MAX_LABEL_CHARS ? `${label.slice(0, MAX_LABEL_CHARS - 1)}…` : label;
@@ -101,10 +107,23 @@ export function PeriodCompareChart({
   compareHint,
   onCompareClick,
   selectedCategories,
+  totalRowLabel,
   onSelectCategoriesClick,
 }: Props) {
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
-  const rows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
+  const selectedRows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
+  // 선택이 없고 총액 막대 이름이 있으면 전체 합계 1줄로 비교한다
+  const isTotalMode =
+    totalRowLabel !== undefined && selectedRows.length === 0 && comparison.rows.length > 0;
+  const rows = isTotalMode
+    ? [
+        {
+          category: totalRowLabel,
+          current: comparison.rows.reduce((sum, r) => sum + r.current, 0),
+          compare: comparison.rows.reduce((sum, r) => sum + r.compare, 0),
+        },
+      ]
+    : selectedRows;
   // 요약 합계·증감도 선택한 카테고리 기준으로 막대와 맞춘다
   const currentTotal = rows.reduce((sum, r) => sum + r.current, 0);
   const compareTotal = rows.reduce((sum, r) => sum + r.compare, 0);
@@ -145,12 +164,14 @@ export function PeriodCompareChart({
         <>
           {rows.length > 0 ? (
             <>
-              <div
-                className="text-[11px] text-muted-foreground"
-                data-testid="compare-summary-caption"
-              >
-                선택한 카테고리 {rows.length}개 합계
-              </div>
+              {isTotalMode ? null : (
+                <div
+                  className="text-[11px] text-muted-foreground"
+                  data-testid="compare-summary-caption"
+                >
+                  선택한 카테고리 {rows.length}개 합계
+                </div>
+              )}
               <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-muted/50 px-3 py-2">
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -191,18 +212,22 @@ export function PeriodCompareChart({
             </>
           ) : null}
 
-          {comparison.rows.length > 0 ? (
+          {onSelectCategoriesClick && comparison.rows.length > 0 ? (
             <div
               data-testid="compare-category-section"
               className="flex items-center justify-between"
             >
-              <span className="text-xs text-muted-foreground">비교할 카테고리 {rows.length}개</span>
+              {isTotalMode ? null : (
+                <span className="text-xs text-muted-foreground">
+                  비교할 카테고리 {rows.length}개
+                </span>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onSelectCategoriesClick}
                 data-testid="compare-category-button"
-                className="h-7 gap-0.5 px-2 text-xs"
+                className="ml-auto h-7 gap-0.5 px-2 text-xs"
               >
                 카테고리 선택
                 <ChevronRight size={14} />

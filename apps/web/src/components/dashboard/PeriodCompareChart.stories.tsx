@@ -101,6 +101,22 @@ export const LongCategoryNames: Story = {
   },
 };
 
+// 고정/변동 탭: 카테고리를 고르지 않으면 세부 그룹 총액 1줄로 비교
+export const TotalWhenNoneSelected: Story = {
+  args: { comparison: expenseComparison, totalRowLabel: '전체 고정 지출' },
+  render: (args) => <WithSelection {...args} initialSelected={[]} />,
+};
+
+// 지출·수입 '전체' 탭: 총액만 비교하고 카테고리 선택 영역이 없다
+export const TotalOnly: Story = {
+  args: {
+    comparison: expenseComparison,
+    totalRowLabel: '전체 지출',
+    onSelectCategoriesClick: undefined,
+  },
+  render: (args) => <WithSelection {...args} initialSelected={[]} />,
+};
+
 export const NoCategorySelected: Story = {
   args: { comparison: expenseComparison },
   render: (args) => <WithSelection {...args} initialSelected={[]} />,

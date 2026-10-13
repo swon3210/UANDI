@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
-import { EmptyState, Sheet, SheetContent, SheetHeader, SheetTitle, Skeleton } from '@uandi/ui';
+import {
+  Button,
+  EmptyState,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  Skeleton,
+} from '@uandi/ui';
 import {
   supportsSubGroup,
   useDashboardData,
@@ -13,6 +20,7 @@ import {
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 import {
@@ -54,7 +62,13 @@ const SUB_GROUP_PREFIX: Record<Exclude<SubGroupFilter, 'all'>, string> = {
   variable: '변동',
 };
 
-// 기간 비교 차트에 기본으로 표시할 카테고리 수 (현재 기간 금액 상위)
+const GROUP_NAME: Record<'expense' | 'income', string> = {
+  expense: '지출',
+  income: '수입',
+};
+
+// FLEX 탭 기간 비교 차트에 기본으로 표시할 카테고리 수 (현재 기간 금액 상위).
+// 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다.
 const DEFAULT_COMPARE_TOP_N = 3;
 // 비교 기간에만 있는(도넛 팔레트에 없는) 카테고리 칩 색
 const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
@@ -97,15 +111,10 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGrou
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
-  const [period, setPeriod] = useState<PeriodKind>('weekly');
-  const [group, setGroup] = useState<GroupFilter>('all');
-  const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
-  const [subGroup, setSubGroup] = useState<SubGroupFilter>('all');
-  // null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간
-  const [compareSelection, setCompareSelection] = useState<Dayjs | null>(null);
-
-  // null = 기본(현재 기간 상위 N개), 배열 = 사용자가 직접 고른 비교 대상 카테고리
-  const [categorySelection, setCategorySelection] = useState<string[] | null>(null);
+  // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
+  const [filters, updateFilters] = useDashboardFilters();
+  const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
+    filters;
 
   const isDefaultCompare = compareSelection === null;
   const compareCursor = compareSelection ?? shiftPeriod(period, cursor, -1);
@@ -117,6 +126,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     byCategory,
     byParent,
     byType,
+    byFixedVariable,
     total,
     hasEntries,
     comparison,
@@ -133,33 +143,27 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   // 기간 단위/기준 기간이 바뀌면 비교 기간과 비교 대상 카테고리는 기본값으로 돌아간다.
   // (비교 기간만 바꿀 때는 고른 카테고리를 유지해 같은 카테고리를 여러 기간과 비교할 수 있게 한다)
-  const resetCompareSelection = () => {
-    setCompareSelection(null);
-    setCategorySelection(null);
-  };
+  const RESET_SELECTION = {
+    compareSelection: null,
+    categorySelection: null,
+    donutSelection: [],
+  } satisfies Partial<typeof filters>;
 
   const handlePeriodChange = (next: PeriodKind) => {
-    setPeriod(next);
-    setCursor((prev) => normalizeCursor(next, prev));
-    resetCompareSelection();
+    updateFilters({ period: next, cursor: normalizeCursor(next, cursor), ...RESET_SELECTION });
   };
   const handleGroupChange = (next: GroupFilter) => {
-    setGroup(next);
-    setSubGroup('all');
-    setCategorySelection(null);
+    updateFilters({ group: next, subGroup: 'all', categorySelection: null, donutSelection: [] });
   };
   const handleSubGroupChange = (next: SubGroupFilter) => {
-    setSubGroup(next);
-    setCategorySelection(null);
+    updateFilters({ subGroup: next, categorySelection: null, donutSelection: [] });
   };
   const handlePrev = () => {
-    setCursor((prev) => shiftPeriod(period, prev, -1));
-    resetCompareSelection();
+    updateFilters({ cursor: shiftPeriod(period, cursor, -1), ...RESET_SELECTION });
   };
   const handleNext = () => {
     if (!isCurrentPeriod(period, cursor)) {
-      setCursor((prev) => shiftPeriod(period, prev, 1));
-      resetCompareSelection();
+      updateFilters({ cursor: shiftPeriod(period, cursor, 1), ...RESET_SELECTION });
     }
   };
 
@@ -184,8 +188,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                 kind={period}
                 value={cursor}
                 onSelect={(next) => {
-                  setCursor(normalizeCursor(period, next));
-                  resetCompareSelection();
+                  updateFilters({ cursor: normalizeCursor(period, next), ...RESET_SELECTION });
                   closeAndUnmount();
                 }}
               />
@@ -220,7 +223,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                   const normalized = normalizeCursor(period, next);
                   // 직전 기간을 다시 고르면 기본값으로 되돌려 기간 이동 시에도 "직전 기간"을 따라가게 한다.
                   const isPrev = normalized.isSame(shiftPeriod(period, cursor, -1), 'day');
-                  setCompareSelection(isPrev ? null : normalized);
+                  updateFilters({ compareSelection: isPrev ? null : normalized });
                   closeAndUnmount();
                 }}
               />
@@ -248,10 +251,48 @@ export function BudgetDashboard({ coupleId }: Props) {
     color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
     parent: parentNameOf(r.category),
   }));
-  const defaultCategorySelection = comparison.rows
-    .slice(0, DEFAULT_COMPARE_TOP_N)
-    .map((r) => r.category);
+  const defaultCategorySelection = supportsSubGroup(group)
+    ? []
+    : comparison.rows.slice(0, DEFAULT_COMPARE_TOP_N).map((r) => r.category);
   const selectedCategories = categorySelection ?? defaultCategorySelection;
+
+  // 지출·수입 '전체': 도넛은 기본 고정/변동, 고른 카테고리가 있으면 그 카테고리들만 (합계도 함께)
+  const isGroupOverview = supportsSubGroup(group) && subGroup === 'all';
+  const donutSlices = byCategory.filter((c) => donutSelection.includes(c.category));
+  const isDonutFiltered = isGroupOverview && donutSlices.length > 0;
+  const displayTotal = isDonutFiltered ? donutSlices.reduce((sum, c) => sum + c.amount, 0) : total;
+  const donutOptions: CompareCategoryOption[] = byCategory.map((c) => ({
+    name: c.category,
+    color: c.color,
+    parent: parentNameOf(c.category),
+  }));
+
+  const handleOpenDonutCategorySheet = () => {
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <CompareCategorySheet
+            title="표시할 카테고리 선택"
+            options={donutOptions}
+            initialSelected={donutSlices.map((c) => c.category)}
+            onApply={(names) => updateFilters({ donutSelection: names })}
+            onClose={closeAndUnmount}
+          />
+        </Sheet>
+      );
+    });
+  };
+
+  // 기간 비교: 지출·수입 '전체'는 총액만, 고정/변동은 선택이 없을 때 그 합계 1줄로 비교한다
+  const compareTotalRowLabel = supportsSubGroup(group)
+    ? subGroup === 'all'
+      ? `전체 ${GROUP_NAME[group]}`
+      : `전체 ${SUB_GROUP_PREFIX[subGroup]} ${GROUP_NAME[group]}`
+    : undefined;
 
   const handleOpenCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
@@ -264,7 +305,7 @@ export function BudgetDashboard({ coupleId }: Props) {
           <CompareCategorySheet
             options={categoryOptions}
             initialSelected={selectedCategories}
-            onApply={setCategorySelection}
+            onApply={(names) => updateFilters({ categorySelection: names })}
             onClose={closeAndUnmount}
           />
         </Sheet>
@@ -272,12 +313,15 @@ export function BudgetDashboard({ coupleId }: Props) {
     });
   };
 
-  const totalLabel =
+  const baseTotalLabel =
     group === 'all'
       ? ''
       : supportsSubGroup(group) && subGroup !== 'all'
         ? `${SUB_GROUP_PREFIX[subGroup]} ${TOTAL_LABEL[group]}`
         : TOTAL_LABEL[group];
+  const totalLabel = isDonutFiltered
+    ? `${baseTotalLabel} (카테고리 ${donutSlices.length}개)`
+    : baseTotalLabel;
 
   return (
     <section className="space-y-3">
@@ -313,7 +357,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             </span>
           </div>
           <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
-            {formatCurrency(total)}
+            {formatCurrency(displayTotal)}
           </div>
         </Link>
       ) : null}
@@ -338,11 +382,34 @@ export function BudgetDashboard({ coupleId }: Props) {
       ) : (
         <>
           <div className="rounded-xl border border-border bg-card p-4">
-            {/* 기간·그룹·세부 필터가 바뀌면 펼친 상위에서 다시 상위 화면으로 */}
-            <CategoryBreakdown
-              key={`${period}-${cursor.valueOf()}-${group}-${subGroup}`}
-              data={byParent}
-            />
+            {isGroupOverview ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground" data-testid="donut-caption">
+                    {isDonutFiltered
+                      ? `선택한 카테고리 ${donutSlices.length}개`
+                      : `고정·변동 ${GROUP_NAME[group]}`}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleOpenDonutCategorySheet}
+                    data-testid="donut-category-button"
+                    className="h-7 gap-0.5 px-2 text-xs"
+                  >
+                    카테고리 선택
+                    <ChevronRight size={14} />
+                  </Button>
+                </div>
+                <CategoryDonutChart data={isDonutFiltered ? donutSlices : byFixedVariable} />
+              </div>
+            ) : (
+              // 기간·그룹·세부 필터가 바뀌면 펼친 상위에서 다시 상위 화면으로
+              <CategoryBreakdown
+                key={`${period}-${cursor.valueOf()}-${group}-${subGroup}`}
+                data={byParent}
+              />
+            )}
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <PeriodCompareChart
@@ -353,8 +420,9 @@ export function BudgetDashboard({ coupleId }: Props) {
               compareLabel={getPeriodLabel(period, compareCursor)}
               compareHint={isDefaultCompare ? PREV_PERIOD_HINT[period] : undefined}
               onCompareClick={handleOpenComparePicker}
-              selectedCategories={selectedCategories}
-              onSelectCategoriesClick={handleOpenCategorySheet}
+              selectedCategories={isGroupOverview ? [] : selectedCategories}
+              totalRowLabel={compareTotalRowLabel}
+              onSelectCategoriesClick={isGroupOverview ? undefined : handleOpenCategorySheet}
             />
           </div>
         </>

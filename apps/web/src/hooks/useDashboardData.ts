@@ -50,6 +50,8 @@ export type DashboardData = {
   byParent: CategoryTreeSlice[];
   /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (금액 0인 유형은 제외) */
   byType: CategorySlice[];
+  /** 지출·수입의 세부 필터 '전체'용: 고정/변동 총량 (금액 0인 쪽은 제외) */
+  byFixedVariable: CategorySlice[];
   total: number;
   hasEntries: boolean;
   comparison: PeriodComparison;
@@ -167,6 +169,32 @@ function buildByType(entries: CashbookEntry[]): CategorySlice[] {
   })).filter((s) => s.amount > 0);
 }
 
+const FIXED_VARIABLE_LABEL: Record<'expense' | 'income', [string, string]> = {
+  expense: ['고정 지출', '변동 지출'],
+  income: ['고정 수입', '변동 수입'],
+};
+const FIXED_VARIABLE_COLOR: [string, string] = [CHART_PALETTE[0], CHART_PALETTE[2]];
+
+function buildByFixedVariable(
+  entries: CashbookEntry[],
+  group: GroupFilter,
+  fixedLookup: Set<string>
+): CategorySlice[] {
+  if (!supportsSubGroup(group)) return [];
+  let fixed = 0;
+  let variable = 0;
+  for (const e of entries) {
+    if (e.type !== group) continue;
+    if (fixedLookup.has(`${e.type}:${e.category}`)) fixed += e.amount;
+    else variable += e.amount;
+  }
+  const [fixedLabel, variableLabel] = FIXED_VARIABLE_LABEL[group];
+  return [
+    { category: fixedLabel, amount: fixed, color: FIXED_VARIABLE_COLOR[0] },
+    { category: variableLabel, amount: variable, color: FIXED_VARIABLE_COLOR[1] },
+  ].filter((s) => s.amount > 0);
+}
+
 function computeTotal(entries: CashbookEntry[]): number {
   return entries.reduce((sum, e) => sum + e.amount, 0);
 }
@@ -244,6 +272,7 @@ export function useDashboardData(args: {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
       byParent: buildByParent(filtered, categoriesQuery.data),
       byType: buildByType(entriesQuery.data ?? []),
+      byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup),
       total,
       hasEntries: filtered.length > 0,
       comparison: {
