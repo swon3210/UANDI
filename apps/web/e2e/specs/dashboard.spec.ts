@@ -191,11 +191,11 @@ test.describe('대시보드', () => {
 
     test('필터가 담긴 URL로 바로 들어오면 그 필터로 보여준다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
-      await authedPage.goto('/inner/cashbook?period=yearly&group=flex');
+      await authedPage.goto('/inner/cashbook?period=yearly&group=income');
 
       await expect(dashboard.periodTabYearly).toHaveAttribute('data-state', 'active');
       await expect(dashboard.periodNavLabel).toContainText(`${dayjs().year()}년`);
-      await expect(dashboard.groupTabFlex).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.groupTabIncome).toHaveAttribute('data-state', 'active');
     });
   });
 
@@ -304,14 +304,13 @@ test.describe('대시보드', () => {
       await expect(dashboard.totalAmount).toContainText('20,000');
     });
 
-    test('전체 탭은 수입 대비 지출 게이지만 보여준다 (FLEX 제외)', async ({ authedContext }) => {
+    test('전체 탭은 수입 대비 지출 게이지만 보여준다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       const today = dayjs().toISOString();
-      const rows: Array<['expense' | 'income' | 'flex', string, number]> = [
+      const rows: Array<['expense' | 'income', string, number]> = [
         ['expense', '식비', 300000],
         ['income', '정기급여', 1000000],
-        ['flex', '여행', 100000],
       ];
       for (const [type, category, amount] of rows) {
         await seedCashbookEntry(coupleId, uid, { type, amount, category, date: today });
@@ -439,14 +438,14 @@ test.describe('대시보드', () => {
       });
     }
 
-    test('지출 탭에서만 보이고 전체·FLEX 탭에서는 고정/변동 필터가 보이지 않는다', async ({
+    test('지출 탭에서는 보이고 전체 탭에서는 고정/변동 필터가 보이지 않는다', async ({
       authedPage,
     }) => {
       const dashboard = new DashboardPage(authedPage);
       await expect(dashboard.subGroupTabs).toBeHidden();
       await dashboard.groupTabExpense.click();
       await expect(dashboard.subGroupTabs).toBeVisible();
-      await dashboard.groupTabFlex.click();
+      await dashboard.groupTabAll.click();
       await expect(dashboard.subGroupTabs).toBeHidden();
     });
 

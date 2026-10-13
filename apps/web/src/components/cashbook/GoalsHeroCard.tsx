@@ -5,11 +5,10 @@ import { formatCurrencyMan } from '@/utils/currency';
 type GoalsHeroCardProps = {
   totalIncome: number;
   totalExpense: number;
-  flexTotal: number;
 };
 
-export function GoalsHeroCard({ totalIncome, totalExpense, flexTotal }: GoalsHeroCardProps) {
-  const net = totalIncome - totalExpense - flexTotal;
+export function GoalsHeroCard({ totalIncome, totalExpense }: GoalsHeroCardProps) {
+  const net = totalIncome - totalExpense;
 
   return (
     <div
@@ -30,7 +29,6 @@ export function GoalsHeroCard({ totalIncome, totalExpense, flexTotal }: GoalsHer
       <div className="flex justify-between">
         <HeroBreakdown label="수입 목표" value={totalIncome} sign="+" />
         <HeroBreakdown label="지출 한도" value={totalExpense} sign="-" />
-        <HeroBreakdown label="Flex 한도" value={flexTotal} sign="-" />
       </div>
     </div>
   );

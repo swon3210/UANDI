@@ -104,10 +104,7 @@ const RecordPreview: FC = () => (
   />
 );
 const BudgetPreview: FC = () => (
-  <ScreenshotPreview
-    src="/tour/cashbook-budget.webp"
-    alt="연간 예산 계획 화면 — 수입·지출·Flex 목표"
-  />
+  <ScreenshotPreview src="/tour/cashbook-budget.webp" alt="연간 예산 계획 화면 — 수입·지출 목표" />
 );
 const CashflowPreview: FC = () => (
   <ScreenshotPreview
@@ -118,7 +115,7 @@ const CashflowPreview: FC = () => (
 const SettlementPreview: FC = () => (
   <ScreenshotPreview
     src="/tour/cashbook-settlement.webp"
-    alt="점검 화면 — 수입·지출·Flex 요약과 카테고리별 예산 대비 실적"
+    alt="점검 화면 — 수입·지출 요약과 카테고리별 예산 대비 실적"
   />
 );
 

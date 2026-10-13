@@ -27,7 +27,7 @@ import {
 } from '@/constants/default-categories';
 import { CategoryIcon } from './CategoryIcon';
 
-const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
+const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 // 이 개수 이상일 때만 검색창을 노출(소수일 땐 드릴다운만으로 충분).
 const SHOW_SEARCH_THRESHOLD = 8;
 

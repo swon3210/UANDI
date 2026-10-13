@@ -12,7 +12,7 @@ type TypeFilterChipsProps = {
 };
 
 /**
- * 지출/수입/Flex 다중선택 칩. 선택된 칩은 강조 + 체크 표시.
+ * 지출/수입 다중선택 칩. 선택된 칩은 강조 + 체크 표시.
  * 빈 배열이면 전체를 의미하므로 별도 '전체' 칩은 두지 않는다.
  */
 export function TypeFilterChips({ value, onToggle }: TypeFilterChipsProps) {

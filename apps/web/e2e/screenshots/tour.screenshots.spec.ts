@@ -117,8 +117,8 @@ test('투어 가계부 스크린샷 캡처', async ({ page, context }) => {
   });
   await seedAnnualPlanItem(coupleId, planId, {
     categoryId: catIds['소비'],
-    group: 'flex',
-    subGroup: 'personal_flex',
+    group: 'expense',
+    subGroup: 'variable_personal',
     monthlyAmounts: Array(12).fill(300_000),
   });
 

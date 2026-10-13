@@ -49,15 +49,13 @@ function formatBarLabel(n: number): string {
 const CURRENT_COLOR: Record<CategoryGroup, string> = {
   expense: 'hsl(var(--expense))',
   income: 'hsl(var(--income))',
-  flex: 'hsl(var(--primary))',
 };
 const COMPARE_COLOR = 'hsl(var(--muted-foreground) / 0.35)';
 
-// 증가가 좋은 그룹(수입)과 나쁜 그룹(지출·FLEX)을 나눠 증감 색을 정한다.
+// 증가가 좋은 그룹(수입)과 나쁜 그룹(지출)을 나눠 증감 색을 정한다.
 const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = {
   expense: false,
   income: true,
-  flex: false,
 };
 
 const ROW_HEIGHT = 52;

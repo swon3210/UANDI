@@ -77,7 +77,14 @@ const baseRows: BulkEditRow[] = [
   },
   {
     itemId: 'item-personal',
-    category: category('cat-personal', '취미', 'flex', 'personal_flex', '#9C7AE8', 'sparkle'),
+    category: category(
+      'cat-personal',
+      '취미',
+      'expense',
+      'variable_personal',
+      '#D8635A',
+      'sparkle'
+    ),
     monthlyAmounts: Array(12).fill(150_000),
     baseline: Array(12).fill(150_000),
   },
@@ -176,8 +183,8 @@ export const ManyCategories: Story = {
         baseline: Array(12).fill(180_000),
       },
       {
-        itemId: 'item-joint-flex',
-        category: category('cat-joint-flex', '데이트', 'flex', 'joint_flex', '#9C7AE8', 'heart'),
+        itemId: 'item-date',
+        category: category('cat-date', '데이트', 'expense', 'variable_common', '#D8635A', 'heart'),
         monthlyAmounts: Array(12).fill(300_000),
         baseline: Array(12).fill(300_000),
       },

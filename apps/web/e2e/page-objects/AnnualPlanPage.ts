@@ -1,6 +1,6 @@
 import { type Page, type Locator } from '@playwright/test';
 
-type CategoryKey = 'income' | 'expense' | 'flex';
+type CategoryKey = 'income' | 'expense';
 
 export class AnnualPlanPage {
   readonly page: Page;
@@ -88,14 +88,6 @@ export class AnnualPlanPage {
 
   monthCheckbox(month: number) {
     return this.page.getByTestId(`month-checkbox-${month}`);
-  }
-
-  get flexAvailableDisplay() {
-    return this.page.getByTestId('flex-available');
-  }
-
-  get flexTotalDisplay() {
-    return this.page.getByTestId('flex-total');
   }
 
   get previousYearSuggestion() {

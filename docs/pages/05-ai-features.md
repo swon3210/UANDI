@@ -136,7 +136,7 @@ Response:
 ```ts
 {
   entries: {
-    type: CashbookEntryType;  // 'income' | 'expense' | 'investment' | 'flex'
+    type: CashbookEntryType;  // 'income' | 'expense'
     amount: number;
     category: string;         // categories 목록에서 가장 적합한 것 선택
     description: string;

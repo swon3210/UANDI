@@ -14,7 +14,7 @@ import type { CashbookCategory, CashbookEntryType, CategoryGroup } from '@/types
 import { GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryChips } from './CategoryChips';
 
-const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
+const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 
 type RemapCategorySheetProps = {
   fromName: string;

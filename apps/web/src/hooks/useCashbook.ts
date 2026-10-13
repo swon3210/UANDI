@@ -37,7 +37,7 @@ export type PeriodSelection =
 
 export type CashbookFilterState = {
   period: PeriodSelection;
-  /** 선택된 타입(지출/수입/flex). 빈 배열 = 전체(타입 무필터). 다중 선택 가능. */
+  /** 선택된 타입(지출/수입). 빈 배열 = 전체(타입 무필터). 다중 선택 가능. */
   selectedTypes: CashbookEntryType[];
   selectedCategoryNames: string[];
   /** 선택된 작성자 uid. 빈 배열 = 전체(작성자 무필터). 다중 선택 가능. */

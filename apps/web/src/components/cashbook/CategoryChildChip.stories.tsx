@@ -67,21 +67,6 @@ export const Fixed: Story = {
   },
 };
 
-export const FlexJoint: Story = {
-  args: {
-    category: {
-      ...base,
-      group: 'flex',
-      subGroup: 'joint_flex',
-      name: '여행',
-      icon: 'airplane',
-      color: '#F0A05E',
-    },
-    onEdit: () => {},
-    onDelete: () => {},
-  },
-};
-
 // 고정 지출의 자식: 정기 발생 배지("매월 N일")가 chip에 표시됨
 export const FixedWithRecurrence: Story = {
   args: {

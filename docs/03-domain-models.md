@@ -172,16 +172,14 @@ type CashbookEntry = {
 > 상세 UX와 프리셋 목록은 `pages/inner/cashbook-categories.md` 참고.
 
 ```ts
-type CategoryGroup = 'income' | 'expense' | 'flex';
+type CategoryGroup = 'income' | 'expense';
 
 type CategorySubGroup =
   | 'regular_income'
   | 'irregular_income'
   | 'fixed_expense'
   | 'variable_common'
-  | 'variable_personal'
-  | 'joint_flex'
-  | 'personal_flex';
+  | 'variable_personal';
 
 type CashbookCategory = {
   id: string;

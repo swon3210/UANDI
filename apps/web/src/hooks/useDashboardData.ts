@@ -5,13 +5,13 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
-/** 'all'(전체)은 지출·수입·FLEX 총량 비교 전용 탭이다. */
+/** 'all'(전체)은 지출·수입 총량 비교 전용 탭이다. */
 export type GroupFilter = 'all' | CategoryGroup;
 
 /** 지출·수입 그룹 안에서 고정/변동만 따로 보기 위한 세부 필터. */
 export type SubGroupFilter = 'all' | 'fixed' | 'variable';
 
-/** 고정/변동 세부 필터를 지원하는 그룹 (FLEX·전체는 고정/변동 구분이 없다) */
+/** 고정/변동 세부 필터를 지원하는 그룹 (전체 탭은 고정/변동 구분이 없다) */
 export function supportsSubGroup(group: GroupFilter): group is 'expense' | 'income' {
   return group === 'expense' || group === 'income';
 }
@@ -48,7 +48,7 @@ export type DashboardData = {
   byCategory: CategorySlice[];
   /** 도넛용: 하위 카테고리 금액을 상위로 합친 슬라이스 (금액 내림차순) */
   byParent: CategoryTreeSlice[];
-  /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (그룹 필터와 무관) */
+  /** 전체 탭용: 지출·수입 유형별 기간 총량 (그룹 필터와 무관) */
   typeTotals: Record<CategoryGroup, number>;
   /** 지출·수입의 세부 필터 '전체'용: 고정/변동 총량 (금액 0인 쪽은 제외) */
   byFixedVariable: CategorySlice[];
@@ -153,7 +153,7 @@ function buildByParent(
 }
 
 function buildTypeTotals(entries: CashbookEntry[]): Record<CategoryGroup, number> {
-  const totals: Record<CategoryGroup, number> = { expense: 0, income: 0, flex: 0 };
+  const totals: Record<CategoryGroup, number> = { expense: 0, income: 0 };
   for (const e of entries) totals[e.type] += e.amount;
   return totals;
 }

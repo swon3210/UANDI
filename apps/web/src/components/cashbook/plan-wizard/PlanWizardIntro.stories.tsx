@@ -14,8 +14,7 @@ export const Default: Story = {
   args: {
     year: 2026,
     incomeCount: 5,
-    expenseCount: 16,
-    flexCount: 4,
+    expenseCount: 20,
   },
 };
 
@@ -24,6 +23,5 @@ export const Empty: Story = {
     year: 2026,
     incomeCount: 0,
     expenseCount: 0,
-    flexCount: 0,
   },
 };

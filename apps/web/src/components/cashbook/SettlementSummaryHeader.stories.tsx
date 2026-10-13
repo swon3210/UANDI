@@ -13,16 +13,7 @@ type Story = StoryObj<typeof SettlementSummaryHeader>;
 export const Default: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
-      <SettlementSummaryHeader income={3_200_000} expense={1_840_000} flex={420_000} />
-    </div>
-  ),
-};
-
-// FLEX가 없는 달
-export const NoFlex: Story = {
-  render: () => (
-    <div className="mx-auto max-w-md">
-      <SettlementSummaryHeader income={2_800_000} expense={1_500_000} flex={0} />
+      <SettlementSummaryHeader income={3_200_000} expense={1_840_000} />
     </div>
   ),
 };
@@ -31,7 +22,7 @@ export const NoFlex: Story = {
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
-      <SettlementSummaryHeader income={0} expense={0} flex={0} />
+      <SettlementSummaryHeader income={0} expense={0} />
     </div>
   ),
 };
@@ -40,7 +31,7 @@ export const Empty: Story = {
 export const LargeAmounts: Story = {
   render: () => (
     <div className="mx-auto max-w-md">
-      <SettlementSummaryHeader income={120_000_000} expense={85_400_000} flex={12_300_000} />
+      <SettlementSummaryHeader income={120_000_000} expense={85_400_000} />
     </div>
   ),
 };

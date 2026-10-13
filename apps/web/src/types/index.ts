@@ -111,8 +111,8 @@ export type AnnualPlanRevision = {
   before: Record<string, number[]>;
   after: Record<string, number[]>;
   totals: {
-    before: { income: number; expense: number; flex: number };
-    after: { income: number; expense: number; flex: number };
+    before: { income: number; expense: number };
+    after: { income: number; expense: number };
   };
 };
 
@@ -162,13 +162,13 @@ export type SettlementAttachment = {
 
 // 결산 완료 시 박제되는 보고서 스냅샷 (차트 데이터 사전 계산 — 재조회 시 내역 쿼리 불필요)
 export type SettlementReportSnapshot = {
-  totals: { income: number; expense: number; flex: number };
-  spending: number; // expense + flex (지출 분석 기준값)
-  budgetCeiling: number; // 완료 시점 (지출+FLEX) 예산 합
+  totals: { income: number; expense: number };
+  spending: number; // 지출 분석 기준값 (= expense)
+  budgetCeiling: number; // 완료 시점 지출 예산 합
   spentPct: number | null;
   barData: { category: string; budget: number; actual: number }[]; // 예산 대비 실적
-  pieData: { name: string; value: number }[]; // 수입/지출/FLEX 슬라이스
-  dailyData: { day: number; cumulative: number | null }[]; // 일별 누적 (지출+FLEX)
+  pieData: { name: string; value: number }[]; // 수입/지출 슬라이스
+  dailyData: { day: number; cumulative: number | null }[]; // 일별 누적 (지출)
   aiAnalysis: string; // 캡처한 AI 분석 마크다운 ('' 가능)
   entryCount: number;
   completedAt: Timestamp;

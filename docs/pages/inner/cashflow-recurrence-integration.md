@@ -287,7 +287,7 @@ Phase 5로 자동감지를 제거하자 **미선언 반복 항목(예: 공과금
 ### 동작
 
 - **감지**: `detectRecurringPatterns`(과거 6개월, `MIN_OCCURRENCES=3`·`AMOUNT_TOLERANCE=0.1`·`DAY_TOLERANCE=2`) 재사용.
-  flex 제외, 카테고리(이름+타입)당 가장 강한 dayOfMonth 클러스터 1개.
+  카테고리(이름+타입)당 가장 강한 dayOfMonth 클러스터 1개.
 - **제안 대상 필터**: 패턴의 카테고리가 (a) **실제로 존재**(이름+group 매칭)하고, (b) `recurrence.enabled`가 아니며,
   (c) `recurrenceSuggestionDismissed`가 아닌 것만.
 - **위치**: 현금흐름 캘린더(`/inner/cashbook/cashflow`) 카드 목록 위 제안 섹션.

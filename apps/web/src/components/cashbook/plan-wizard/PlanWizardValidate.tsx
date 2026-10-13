@@ -12,7 +12,7 @@ type PlanWizardValidateProps = {
 
 export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
   const { ok, deficit, totals, monthly, deficitMonths } = validation;
-  const surplus = totals.income - totals.expense - totals.flex;
+  const surplus = totals.income - totals.expense;
   const annualOk = deficit <= 0;
   // 연간은 흑자인데 특정 달만 적자인 경우 메시지를 분기한다.
   const monthlyOnlyIssue = annualOk && deficitMonths.length > 0;
@@ -20,14 +20,14 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
   return (
     <div className="space-y-5" data-testid="wizard-validate">
       <header>
-        <div className="text-[12px] font-medium text-stone-500">5단계 · 검증</div>
+        <div className="text-[12px] font-medium text-stone-500">4단계 · 검증</div>
         <h1 className="mt-1 text-[20px] font-bold leading-tight text-stone-900">
-          수입이 지출 + Flex를
+          수입이 지출을
           <br />
           감당할 수 있는지 확인해요
         </h1>
         <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
-          연간 합계도, 매달 들어오는 돈도 지출 + Flex 이상일 때만 다음 단계로 넘어갈 수 있어요.
+          연간 합계도, 매달 들어오는 돈도 지출 이상일 때만 다음 단계로 넘어갈 수 있어요.
         </p>
       </header>
 
@@ -55,10 +55,10 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
               )}
             >
               {ok
-                ? `수입에서 지출과 Flex를 빼고 ${formatCurrencyMan(surplus)}원이 남아요.`
+                ? `수입에서 지출을 빼고 ${formatCurrencyMan(surplus)}원이 남아요.`
                 : monthlyOnlyIssue
                   ? `연간 합계는 흑자지만 ${deficitMonths.length}개월은 나가는 돈이 더 많아요.`
-                  : `지출 + Flex 합계가 수입보다 ${formatCurrencyMan(deficit)}원 더 많아요.`}
+                  : `지출 합계가 수입보다 ${formatCurrencyMan(deficit)}원 더 많아요.`}
             </div>
           </div>
         </div>
@@ -67,7 +67,6 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
       <section className="space-y-2">
         <TotalRow label="연간 수입" amount={totals.income} sign="+" tone="income" />
         <TotalRow label="연간 지출" amount={totals.expense} sign="-" tone="expense" />
-        <TotalRow label="연간 Flex" amount={totals.flex} sign="-" tone="flex" />
         <div className="my-1.5 h-px bg-stone-200" />
         <TotalRow
           label={ok ? '잉여' : '부족'}
@@ -103,7 +102,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
 
       {!ok && (
         <p className="text-center text-[12px] leading-relaxed text-stone-500">
-          이전 단계로 돌아가 지출/Flex 항목을 줄이거나
+          이전 단계로 돌아가 지출 항목을 줄이거나
           <br />
           수입 항목을 늘려보세요.
         </p>
@@ -112,7 +111,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
   );
 }
 
-type Tone = 'income' | 'expense' | 'flex' | 'surplus' | 'deficit';
+type Tone = 'income' | 'expense' | 'surplus' | 'deficit';
 
 function TotalRow({
   label,
@@ -130,7 +129,6 @@ function TotalRow({
   const colorClass = {
     income: 'text-sage-600',
     expense: 'text-coral-600',
-    flex: 'text-violet-500',
     surplus: 'text-sage-700',
     deficit: 'text-coral-700',
   }[tone];

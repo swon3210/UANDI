@@ -18,9 +18,8 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
   const totals = {
     income: monthlyByGroup.income.reduce((s, v) => s + v, 0),
     expense: monthlyByGroup.expense.reduce((s, v) => s + v, 0),
-    flex: monthlyByGroup.flex.reduce((s, v) => s + v, 0),
   };
-  const surplus = totals.income - totals.expense - totals.flex;
+  const surplus = totals.income - totals.expense;
   const peakMonthIdx = peakMonth(monthlyByGroup);
 
   return (
@@ -40,10 +39,9 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
         </p>
       </header>
 
-      <section className="grid grid-cols-3 gap-2">
+      <section className="grid grid-cols-2 gap-2">
         <SummaryStat label="연간 수입" amount={totals.income} tone="income" />
         <SummaryStat label="연간 지출" amount={totals.expense} tone="expense" />
-        <SummaryStat label="연간 Flex" amount={totals.flex} tone="flex" />
       </section>
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4">
@@ -58,7 +56,6 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
               monthIdx={m}
               income={monthlyByGroup.income[m]}
               expense={monthlyByGroup.expense[m]}
-              flex={monthlyByGroup.flex[m]}
               isPeak={m === peakMonthIdx}
             />
           ))}
@@ -79,12 +76,11 @@ function SummaryStat({
 }: {
   label: string;
   amount: number;
-  tone: 'income' | 'expense' | 'flex';
+  tone: 'income' | 'expense';
 }) {
   const cls = {
     income: 'border-sage-200 bg-sage-50 text-sage-700',
     expense: 'border-coral-200 bg-coral-50 text-coral-700',
-    flex: 'border-violet-200 bg-violet-50 text-violet-700',
   }[tone];
   return (
     <div className={cn('rounded-xl border px-3 py-3 text-center', cls)}>
@@ -98,16 +94,14 @@ function MonthRow({
   monthIdx,
   income,
   expense,
-  flex,
   isPeak,
 }: {
   monthIdx: number;
   income: number;
   expense: number;
-  flex: number;
   isPeak: boolean;
 }) {
-  const monthSurplus = income - expense - flex;
+  const monthSurplus = income - expense;
   return (
     <div
       className={cn(
@@ -118,7 +112,6 @@ function MonthRow({
       <span className="w-9 shrink-0 font-semibold text-stone-700">{MONTH_LABELS[monthIdx]}</span>
       <span className="flex-1 text-right text-sage-600">+{formatCurrencyMan(income)}</span>
       <span className="flex-1 text-right text-coral-600">-{formatCurrencyMan(expense)}</span>
-      <span className="flex-1 text-right text-violet-500">-{formatCurrencyMan(flex)}</span>
       <span
         className={cn(
           'w-16 shrink-0 text-right font-semibold',
@@ -136,7 +129,6 @@ function computeMonthlyByGroup(items: AnnualPlanItem[]) {
   const result = {
     income: Array(12).fill(0) as number[],
     expense: Array(12).fill(0) as number[],
-    flex: Array(12).fill(0) as number[],
   };
   for (const item of items) {
     const arr = result[item.group];
@@ -152,7 +144,7 @@ function peakMonth(monthly: ReturnType<typeof computeMonthlyByGroup>): number {
   let bestIdx = 0;
   let bestVal = -Infinity;
   for (let m = 0; m < 12; m += 1) {
-    const out = monthly.expense[m] + monthly.flex[m];
+    const out = monthly.expense[m];
     if (out > bestVal) {
       bestVal = out;
       bestIdx = m;

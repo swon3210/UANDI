@@ -9,7 +9,7 @@ import { analyzeSpendingMaxTokens, buildAnalyzeSpendingGuidance } from '@/lib/ai
 const ANALYZE_MODEL = 'gpt-5.6-luna';
 
 const entrySchema = z.object({
-  type: z.enum(['income', 'expense', 'flex']),
+  type: z.enum(['income', 'expense']),
   amount: z.number(),
   category: z.string(),
   date: z.string(),

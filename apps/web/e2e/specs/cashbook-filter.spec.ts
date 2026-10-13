@@ -562,39 +562,6 @@ test.describe('가계부 내역 필터', () => {
     await expect(cashbook.filterCount).toHaveText('2');
   });
 
-  test('타입을 여러 개 선택하면 선택한 타입만 함께 표시된다', async ({ authedContext }) => {
-    const { page, uid, coupleId } = authedContext;
-    await seedDefaultCategories(coupleId);
-    const expenseId = await seedCashbookEntry(coupleId, uid, {
-      type: 'expense',
-      amount: 45000,
-      category: '식비',
-    });
-    const incomeId = await seedCashbookEntry(coupleId, uid, {
-      type: 'income',
-      amount: 3000000,
-      category: '정기급여',
-    });
-    const flexId = await seedCashbookEntry(coupleId, uid, {
-      type: 'flex',
-      amount: 200000,
-      category: '여행',
-    });
-
-    const cashbook = new CashbookPage(page);
-    await cashbook.goto();
-
-    await cashbook.openFilter();
-    await cashbook.typeFilter('expense').click();
-    await cashbook.typeFilter('income').click();
-    await cashbook.applyFilter();
-
-    // 지출 + 수입은 함께 보이고, flex만 숨겨진다.
-    await expect(cashbook.entryCard(expenseId)).toBeVisible();
-    await expect(cashbook.entryCard(incomeId)).toBeVisible();
-    await expect(cashbook.entryCard(flexId)).not.toBeVisible();
-  });
-
   test('카테고리 시트의 전체 선택 토글로 현재 타입 카테고리를 한 번에 선택한다', async ({
     authedContext,
   }) => {

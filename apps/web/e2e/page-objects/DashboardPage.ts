@@ -35,7 +35,6 @@ export class DashboardPage {
   readonly groupTabAll: Locator;
   readonly groupTabIncome: Locator;
   readonly groupTabExpense: Locator;
-  readonly groupTabFlex: Locator;
   readonly groupTabInvestment: Locator;
 
   readonly subGroupTabs: Locator;
@@ -115,7 +114,6 @@ export class DashboardPage {
     this.groupTabAll = this.groupTabs.getByRole('tab', { name: '전체' });
     this.groupTabIncome = this.groupTabs.getByRole('tab', { name: '수입' });
     this.groupTabExpense = this.groupTabs.getByRole('tab', { name: '지출' });
-    this.groupTabFlex = this.groupTabs.getByRole('tab', { name: 'FLEX' });
     this.groupTabInvestment = this.groupTabs.getByRole('tab', { name: '투자' });
 
     this.subGroupTabs = page.getByTestId('subgroup-tabs');

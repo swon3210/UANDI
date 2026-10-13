@@ -80,7 +80,7 @@ function FilterSheetContent({
 }
 
 const DEEP_LINK_KEYS = ['category', 'year', 'month', 'start', 'end', 'type'] as const;
-const ENTRY_TYPES: readonly CashbookEntryType[] = ['expense', 'income', 'flex'];
+const ENTRY_TYPES: readonly CashbookEntryType[] = ['expense', 'income'];
 const DATE_PARAM_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
@@ -309,7 +309,7 @@ export default function CashbookPage() {
     quickAddHandledRef.current = true;
 
     const qaType = searchParams.get('qaType');
-    const type: CashbookEntryType = qaType === 'income' || qaType === 'flex' ? qaType : 'expense';
+    const type: CashbookEntryType = qaType === 'income' ? 'income' : 'expense';
     const amountRaw = searchParams.get('qaAmount');
     const amount = amountRaw && Number.isFinite(Number(amountRaw)) ? Number(amountRaw) : undefined;
 

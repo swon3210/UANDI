@@ -49,13 +49,11 @@ type Props = {
 const TOTAL_LABEL: Record<CategoryGroup, string> = {
   expense: '지출 합계',
   income: '수입 합계',
-  flex: 'FLEX 합계',
 };
 
 const TOTAL_COLOR: Record<CategoryGroup, string> = {
   expense: 'text-expense',
   income: 'text-income',
-  flex: 'text-foreground',
 };
 
 const SUB_GROUP_PREFIX: Record<Exclude<SubGroupFilter, 'all'>, string> = {
@@ -68,9 +66,6 @@ const GROUP_NAME: Record<'expense' | 'income', string> = {
   income: '수입',
 };
 
-// FLEX 탭 기간 비교 차트에 기본으로 표시할 카테고리 수 (현재 기간 금액 상위).
-// 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다.
-const DEFAULT_COMPARE_TOP_N = 3;
 // 비교 기간에만 있는(도넛 팔레트에 없는) 카테고리 칩 색
 const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
@@ -252,10 +247,8 @@ export function BudgetDashboard({ coupleId }: Props) {
     color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
     parent: parentNameOf(r.category),
   }));
-  const defaultCategorySelection = supportsSubGroup(group)
-    ? []
-    : comparison.rows.slice(0, DEFAULT_COMPARE_TOP_N).map((r) => r.category);
-  const selectedCategories = categorySelection ?? defaultCategorySelection;
+  // 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다
+  const selectedCategories = categorySelection ?? [];
 
   // 지출·수입 '전체': 도넛은 기본 고정/변동, 고른 카테고리가 있으면 그 카테고리들만 (합계도 함께)
   const isGroupOverview = supportsSubGroup(group) && subGroup === 'all';

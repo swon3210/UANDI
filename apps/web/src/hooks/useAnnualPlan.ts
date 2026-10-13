@@ -142,10 +142,10 @@ export type AnnualSummary = AnnualPlanTotals & {
 export function useAnnualSummary(items: AnnualPlanItem[] | undefined): AnnualSummary {
   return useMemo(() => {
     if (!items || items.length === 0) {
-      return { income: 0, expense: 0, flex: 0, surplus: 0 };
+      return { income: 0, expense: 0, surplus: 0 };
     }
     const totals = totalsFromItems(items);
-    return { ...totals, surplus: totals.income - totals.expense - totals.flex };
+    return { ...totals, surplus: totals.income - totals.expense };
   }, [items]);
 }
 
@@ -155,7 +155,7 @@ export function useValidateAnnualPlan(items: AnnualPlanItem[] | undefined): Annu
       return {
         ok: true,
         deficit: 0,
-        totals: { income: 0, expense: 0, flex: 0 },
+        totals: { income: 0, expense: 0 },
         monthly: [],
         deficitMonths: [],
       };

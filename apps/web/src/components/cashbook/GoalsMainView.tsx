@@ -28,11 +28,7 @@ export function GoalsMainView({ items, actuals, onSelectCategory }: GoalsMainVie
 
   return (
     <div className="space-y-3">
-      <GoalsHeroCard
-        totalIncome={totals.income.goal}
-        totalExpense={totals.expense.goal}
-        flexTotal={totals.flex.goal}
-      />
+      <GoalsHeroCard totalIncome={totals.income.goal} totalExpense={totals.expense.goal} />
 
       <div className="pt-2 text-[13px] font-semibold tracking-wide text-stone-500">목표 설정</div>
 

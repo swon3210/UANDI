@@ -24,7 +24,7 @@ const categories: CashbookCategory[] = [
   { ...base, id: '3', group: 'expense', subGroup: 'fixed_expense', name: '월세', icon: 'house', color: '#A05ED8', sortOrder: 2 },
   { ...base, id: '4', group: 'expense', subGroup: 'fixed_expense', name: '보험', icon: 'shield_check', color: '#5ED8A0', sortOrder: 3 },
   { ...base, id: '5', group: 'income', subGroup: 'regular_income', name: '정기급여', icon: 'wallet', color: '#5AA1D8', sortOrder: 0 },
-  { ...base, id: '6', group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', color: '#F0A05E', sortOrder: 0 },
+  { ...base, id: '6', group: 'expense', subGroup: 'variable_common', name: '여행', icon: 'airplane', color: '#D8635A', sortOrder: 0 },
 ];
 
 const members: FilterMember[] = [

@@ -60,14 +60,14 @@ export const VariableCommon: Story = {
   ),
 };
 
-export const FlexTravel: Story = {
+export const Travel: Story = {
   render: () => (
     <Demo
       category={{
         ...sampleCategory,
         id: 'cat-3',
-        group: 'flex',
-        subGroup: 'joint_flex',
+        group: 'expense',
+        subGroup: 'variable_common',
         name: '여행',
         icon: 'airplane',
         color: '#F0A05E',

@@ -75,16 +75,14 @@ export default function SettlementEntriesPage() {
   const groups = useGroupedEntries(entries, 'latest');
   const attachments = settlement?.attachments ?? [];
 
-  const { income, expense, flex } = useMemo(() => {
+  const { income, expense } = useMemo(() => {
     let i = 0;
     let e = 0;
-    let f = 0;
     for (const entry of entries ?? []) {
       if (entry.type === 'income') i += entry.amount;
       else if (entry.type === 'expense') e += entry.amount;
-      else if (entry.type === 'flex') f += entry.amount;
     }
-    return { income: i, expense: e, flex: f };
+    return { income: i, expense: e };
   }, [entries]);
 
   // 첨부 전용: 파일 선택 → 압축 → Storage 업로드 (파싱은 "전체 분석 & 동기화"에서만)
@@ -197,7 +195,7 @@ export default function SettlementEntriesPage() {
       ) : (
         <>
           <div className="mt-4">
-            <SettlementSummaryHeader income={income} expense={expense} flex={flex} />
+            <SettlementSummaryHeader income={income} expense={expense} />
           </div>
 
           {/* 첨부 갤러리 — 계좌/카드 목록별 "이미지 추가"(첨부 전용) */}

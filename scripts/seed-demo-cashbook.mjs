@@ -88,9 +88,9 @@ const VAR = [
   { cat: '사회생활', type: 'expense', min: 14000, max: 72000, desc: ['회식', '팀 점심', '모임'] },
   { cat: '자기계발', type: 'expense', min: 11000, max: 46000, desc: ['책', '인강', '자격증'] },
 ];
-const FLEX = [
-  { cat: '여가', type: 'flex', min: 12000, max: 58000, desc: ['영화', '공연', '게임'] },
-  { cat: '소비', type: 'flex', min: 15000, max: 92000, desc: ['쇼핑', '취미용품'] },
+const LEISURE = [
+  { cat: '여가', type: 'expense', min: 12000, max: 58000, desc: ['영화', '공연', '게임'] },
+  { cat: '소비', type: 'expense', min: 15000, max: 92000, desc: ['쇼핑', '취미용품'] },
 ];
 
 const entries = [];
@@ -114,10 +114,10 @@ function seedMonth(year, monthIdx, uidA, uidB, { dense = false } = {}) {
     const by = Math.random() < 0.5 ? uidA : uidB;
     push(atDay(year, monthIdx, clampDay(year, monthIdx, day), 8 + Math.floor(rand(0, 12))), p.type, p.cat, money(p.min, p.max), pick(p.desc), by);
   }
-  // Flex 2~3건
+  // 여가·소비 2~3건
   for (let i = 0; i < (dense ? 3 : 2); i++) {
     const day = 1 + Math.floor(rand(0, lastDay));
-    const p = pick(FLEX);
+    const p = pick(LEISURE);
     const by = Math.random() < 0.5 ? uidA : uidB;
     push(atDay(year, monthIdx, clampDay(year, monthIdx, day), 15), p.type, p.cat, money(p.min, p.max), pick(p.desc), by);
   }
@@ -136,7 +136,7 @@ function seedCurrentWeek(uidA, uidB) {
   for (let d = new Date(sow); d <= today; d.setDate(d.getDate() + 1)) {
     const n = 1 + (Math.random() < 0.5 ? 1 : 0);
     for (let i = 0; i < n; i++) {
-      const p = Math.random() < 0.8 ? pick(VAR) : pick(FLEX);
+      const p = Math.random() < 0.8 ? pick(VAR) : pick(LEISURE);
       const by = Math.random() < 0.5 ? uidA : uidB;
       const hour = 8 + Math.floor(rand(0, 12));
       push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour, 0, 0, 0), p.type, p.cat, money(p.min, p.max), pick(p.desc), by);

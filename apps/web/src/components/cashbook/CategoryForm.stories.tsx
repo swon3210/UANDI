@@ -86,11 +86,3 @@ export const EditCategory: Story = {
     onClose: () => {},
   },
 };
-
-export const FlexGroup: Story = {
-  args: {
-    group: 'flex',
-    onSubmit: noop,
-    onClose: () => {},
-  },
-};

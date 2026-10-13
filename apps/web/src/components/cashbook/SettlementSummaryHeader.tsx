@@ -5,7 +5,6 @@ import { formatCurrency } from '@/utils/currency';
 export type SettlementSummaryHeaderProps = {
   income: number;
   expense: number;
-  flex: number;
 };
 
 type Tile = {
@@ -16,8 +15,8 @@ type Tile = {
   testId: string;
 };
 
-/** 월 결산: 수입 · 지출 · FLEX 3지표를 한눈에 보여주는 헤더. */
-export function SettlementSummaryHeader({ income, expense, flex }: SettlementSummaryHeaderProps) {
+/** 월 결산: 수입 · 지출 2지표를 한눈에 보여주는 헤더. */
+export function SettlementSummaryHeader({ income, expense }: SettlementSummaryHeaderProps) {
   const tiles: Tile[] = [
     {
       label: '수입',
@@ -33,18 +32,11 @@ export function SettlementSummaryHeader({ income, expense, flex }: SettlementSum
       className: 'text-expense',
       testId: 'settlement-summary-expense',
     },
-    {
-      label: 'FLEX',
-      value: flex,
-      prefix: '',
-      className: 'text-[#6366f1]',
-      testId: 'settlement-summary-flex',
-    },
   ];
 
   return (
     <div
-      className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-card p-3"
+      className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3"
       data-testid="settlement-summary-header"
     >
       {tiles.map((tile) => (

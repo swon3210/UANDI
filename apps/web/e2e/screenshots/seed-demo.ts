@@ -16,7 +16,7 @@ const daysAgo = (n: number) => new Date(now - n * DAY).toISOString();
 const daysAhead = (n: number) => new Date(now + n * DAY).toISOString();
 
 type Entry = {
-  type: 'income' | 'expense' | 'flex';
+  type: 'income' | 'expense';
   amount: number;
   category: string;
   description: string;
@@ -145,17 +145,24 @@ const ENTRIES: Entry[] = [
     ageDays: 33,
     by: 2,
   },
-  // Flex
+  // 여행·소비
   {
-    type: 'flex',
+    type: 'expense',
     amount: 480_000,
     category: '여행',
     description: '제주 항공권',
     ageDays: 20,
     by: 1,
   },
-  { type: 'flex', amount: 89_000, category: '소비', description: '데이트', ageDays: 6, by: 2 },
-  { type: 'flex', amount: 120_000, category: '소비', description: '생일 선물', ageDays: 22, by: 1 },
+  { type: 'expense', amount: 89_000, category: '소비', description: '데이트', ageDays: 6, by: 2 },
+  {
+    type: 'expense',
+    amount: 120_000,
+    category: '소비',
+    description: '생일 선물',
+    ageDays: 22,
+    by: 1,
+  },
 ];
 
 export async function seedDemoData(coupleId: string, uid1: string, uid2: string): Promise<void> {
@@ -178,7 +185,7 @@ export async function seedDemoData(coupleId: string, uid1: string, uid2: string)
     paydays: [{ id: 'pay-1', label: '급여일', dayOfMonth: 25 }],
   });
   const predictions: Array<{
-    type: 'income' | 'expense' | 'flex';
+    type: 'income' | 'expense';
     amount: number;
     category: string;
     description: string;
@@ -245,7 +252,7 @@ export async function seedDemoData(coupleId: string, uid1: string, uid2: string)
     type: 'user',
     status: 'published',
     title: '신혼여행 경비 이렇게 정산했어요',
-    body: '여행 동안 쓴 돈을 Flex로 묶어두니 정산이 깔끔하더라고요. 카드별로 누가 얼마 썼는지도 자동으로 나뉘어요.',
+    body: '여행 동안 쓴 돈을 여행 카테고리로 묶어두니 정산이 깔끔하더라고요. 카드별로 누가 얼마 썼는지도 자동으로 나뉘어요.',
     publishedAt: daysAgo(6),
     author: { uid: uid1, coupleId, displayName: '지수' },
   });

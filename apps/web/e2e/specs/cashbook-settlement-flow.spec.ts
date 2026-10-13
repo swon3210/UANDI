@@ -4,7 +4,7 @@ import { seedDefaultCategories, seedCashbookEntry, seedSettlement } from '../hel
 
 /**
  * 월 결산 개선 플로우:
- *  - 수입/지출/FLEX 한눈에
+ *  - 수입/지출 한눈에
  *  - 영수증·스크린샷 첨부로 내역 추가(내역 페이지와 동일한 중복 검사)
  *  - 첨부 이미지는 결산 완료 전까지 유지(새로고침에도)
  *  - 결산 완료 → 첨부 삭제 + 보고서 스냅샷 저장
@@ -41,7 +41,7 @@ function prevMonthKey(): { key: string; year: number; month: number } {
 }
 
 test.describe('월 결산 — 작업/완료/보관 플로우', () => {
-  test('수입·지출·FLEX를 한눈에 보고, 파이에 FLEX 슬라이스가 표시된다', async ({
+  test('수입·지출을 한눈에 보고, 파이에 수입·지출 슬라이스가 표시된다', async ({
     authedContext,
   }) => {
     const { page, coupleId, uid } = authedContext;
@@ -59,7 +59,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       description: '외식',
     });
     await seedCashbookEntry(coupleId, uid, {
-      type: 'flex',
+      type: 'expense',
       amount: 80_000,
       category: '여행',
       description: '주말 나들이',
@@ -68,16 +68,16 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
     await page.goto('/inner/cashbook/review');
     await page.waitForSelector('[data-testid="cashbook-header"]');
 
-    // 3지표 요약
+    // 2지표 요약
     await expect(page.getByTestId('settlement-summary-header')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('settlement-summary-income')).toBeVisible();
     await expect(page.getByTestId('settlement-summary-expense')).toBeVisible();
-    await expect(page.getByTestId('settlement-summary-flex')).toBeVisible();
 
-    // 파이에 FLEX 슬라이스(범례) 포함
+    // 파이에 수입·지출 슬라이스(범례) 포함
     const pie = page.getByTestId('income-expense-pie');
     await expect(pie).toBeVisible();
-    await expect(pie).toContainText('FLEX');
+    await expect(pie).toContainText('수입');
+    await expect(pie).toContainText('지출');
   });
 
   test('첨부한 이미지는 새로고침 후에도 유지된다(결산 완료 전까지)', async ({ authedContext }) => {
@@ -117,7 +117,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       description: '외식',
     });
     await seedCashbookEntry(coupleId, uid, {
-      type: 'flex',
+      type: 'expense',
       amount: 30_000,
       category: '여행',
       description: '카페',
@@ -160,7 +160,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       year: prev.year,
       month: prev.month,
       status: 'completed',
-      totals: { income: 3_000_000, expense: 1_200_000, flex: 200_000 },
+      totals: { income: 3_000_000, expense: 1_400_000 },
       aiAnalysis: '## 지난 달 결산\n\n전반적으로 예산 내에서 잘 관리됐어요.',
     });
 
@@ -169,7 +169,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
 
     await expect(page.getByTestId('settlement-report-view')).toBeVisible({ timeout: 5000 });
     await expect(page.getByTestId('settlement-report-ai')).toContainText('지난 달 결산');
-    await expect(page.getByTestId('income-expense-pie')).toContainText('FLEX');
+    await expect(page.getByTestId('income-expense-pie')).toContainText('지출');
   });
 
   test('워크스페이스에서 내역 보기로 이동하면 그 달 내역 리스트가 보이고 첨부·추가할 수 있다', async ({
@@ -243,7 +243,7 @@ test.describe('월 결산 — 작업/완료/보관 플로우', () => {
       year: cur.year,
       month: cur.month,
       status: 'completed',
-      totals: { income: 2_000_000, expense: 800_000, flex: 100_000 },
+      totals: { income: 2_000_000, expense: 900_000 },
     });
 
     await page.goto('/inner/cashbook/review');

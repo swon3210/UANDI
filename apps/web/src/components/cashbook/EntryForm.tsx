@@ -34,7 +34,7 @@ import { CategoryChips } from './CategoryChips';
 import { CategoryForm } from './CategoryForm';
 import { AuthorAvatar } from './AuthorAvatar';
 
-const TAB_ORDER: CashbookEntryType[] = ['expense', 'income', 'flex'];
+const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 
 const schema = z.object({
   amount: z

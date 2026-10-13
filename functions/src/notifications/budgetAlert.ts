@@ -27,7 +27,7 @@ function getBudgetThreshold(budget: number, actual: number): Threshold {
 
 type Entry = {
   id?: string;
-  type: 'income' | 'expense' | 'flex';
+  type: 'income' | 'expense';
   amount: number;
   category: string;
 };
@@ -36,7 +36,7 @@ type Category = { id: string; name: string; parentCategoryId?: string | null };
 
 type AnnualPlanItem = {
   categoryId: string;
-  group: 'income' | 'expense' | 'flex';
+  group: 'income' | 'expense';
   monthlyAmounts?: number[];
   monthlyAmount?: number | null;
   annualAmount?: number;
