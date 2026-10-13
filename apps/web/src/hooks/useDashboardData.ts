@@ -48,8 +48,8 @@ export type DashboardData = {
   byCategory: CategorySlice[];
   /** 도넛용: 하위 카테고리 금액을 상위로 합친 슬라이스 (금액 내림차순) */
   byParent: CategoryTreeSlice[];
-  /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (금액 0인 유형은 제외) */
-  byType: CategorySlice[];
+  /** 전체 탭용: 지출·수입·FLEX 유형별 기간 총량 (그룹 필터와 무관) */
+  typeTotals: Record<CategoryGroup, number>;
   /** 지출·수입의 세부 필터 '전체'용: 고정/변동 총량 (금액 0인 쪽은 제외) */
   byFixedVariable: CategorySlice[];
   total: number;
@@ -152,21 +152,10 @@ function buildByParent(
     .map((s, i) => ({ ...s, color: CHART_PALETTE[i % CHART_PALETTE.length] }));
 }
 
-// 유형 시맨틱 색 (지출=coral, 수입=sage, FLEX=amber — 기본 카테고리 색과 동일)
-const TYPE_SLICES: Array<{ type: CategoryGroup; label: string; color: string }> = [
-  { type: 'expense', label: '지출', color: '#D8635A' },
-  { type: 'income', label: '수입', color: '#4CAF86' },
-  { type: 'flex', label: 'FLEX', color: '#F0A05E' },
-];
-
-function buildByType(entries: CashbookEntry[]): CategorySlice[] {
-  const sums = new Map<CategoryGroup, number>();
-  for (const e of entries) sums.set(e.type, (sums.get(e.type) ?? 0) + e.amount);
-  return TYPE_SLICES.map((t) => ({
-    category: t.label,
-    amount: sums.get(t.type) ?? 0,
-    color: t.color,
-  })).filter((s) => s.amount > 0);
+function buildTypeTotals(entries: CashbookEntry[]): Record<CategoryGroup, number> {
+  const totals: Record<CategoryGroup, number> = { expense: 0, income: 0, flex: 0 };
+  for (const e of entries) totals[e.type] += e.amount;
+  return totals;
 }
 
 const FIXED_VARIABLE_LABEL: Record<'expense' | 'income', [string, string]> = {
@@ -271,7 +260,7 @@ export function useDashboardData(args: {
     return {
       byCategory: buildByCategory(filtered, categoriesQuery.data),
       byParent: buildByParent(filtered, categoriesQuery.data),
-      byType: buildByType(entriesQuery.data ?? []),
+      typeTotals: buildTypeTotals(entriesQuery.data ?? []),
       byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup),
       total,
       hasEntries: filtered.length > 0,

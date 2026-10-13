@@ -38,6 +38,7 @@ import { GroupTabs } from './GroupTabs';
 import { SubGroupTabs } from './SubGroupTabs';
 import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
+import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 
@@ -125,7 +126,7 @@ export function BudgetDashboard({ coupleId }: Props) {
   const {
     byCategory,
     byParent,
-    byType,
+    typeTotals,
     byFixedVariable,
     total,
     hasEntries,
@@ -342,7 +343,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         />
       ) : null}
 
-      {/* 전체 탭은 지출·수입·FLEX 총량 파이 차트만 보여준다 (합계 카드·기간 비교 없음) */}
+      {/* 전체 탭은 수입 대비 지출 게이지만 보여준다 (합계 카드·기간 비교 없음) */}
       {group !== 'all' ? (
         <Link
           href={buildHistoryHref(period, cursor, group)}
@@ -377,7 +378,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         </div>
       ) : group === 'all' ? (
         <div className="rounded-xl border border-border bg-card p-4">
-          <CategoryDonutChart data={byType} />
+          <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
         </div>
       ) : (
         <>
