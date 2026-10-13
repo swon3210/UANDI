@@ -170,7 +170,10 @@ export function PeriodCompareChart({
                   </div>
                 </div>
               </div>
-              <div data-testid="compare-delta" className="text-sm font-semibold">
+              <div
+                data-testid="compare-delta"
+                className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
+              >
                 <span className="text-muted-foreground">{compareLabel} 대비 </span>
                 <DeltaText current={currentTotal} compare={compareTotal} group={group} />
               </div>
