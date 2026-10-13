@@ -167,6 +167,28 @@ test.describe('대시보드', () => {
       await expect(dashboard.subGroupTab('고정 지출')).toHaveAttribute('data-state', 'active');
     });
 
+    test('필터를 연달아 바꾼 뒤 다녀와도 마지막 필터가 유지된다 (반복)', async ({ authedPage }) => {
+      // 필터 변경마다 라우터 내비게이션을 하면 서로 경합해 히스토리에 중간 상태가 남던 회귀 방지
+      const dashboard = new DashboardPage(authedPage);
+      for (let round = 0; round < 4; round++) {
+        await dashboard.periodTabMonthly.click();
+        await dashboard.groupTabExpense.click();
+        await expect(authedPage).toHaveURL(/group=expense/);
+
+        await authedPage.getByTestId('cashbook-tab-history').click();
+        await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+        await authedPage.goBack();
+
+        await expect(authedPage).toHaveURL(/period=monthly&group=expense/);
+        await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+        await expect(dashboard.groupTabExpense).toHaveAttribute('data-state', 'active');
+
+        await dashboard.periodTabWeekly.click();
+        await dashboard.groupTabAll.click();
+        await expect(authedPage).not.toHaveURL(/group=/);
+      }
+    });
+
     test('필터가 담긴 URL로 바로 들어오면 그 필터로 보여준다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await authedPage.goto('/inner/cashbook?period=yearly&group=flex');

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import dayjs, { type Dayjs } from 'dayjs';
 import { supportsSubGroup, type GroupFilter, type SubGroupFilter } from '@/hooks/useDashboardData';
 import { isCurrentPeriod, normalizeCursor, type PeriodKind } from '@/utils/date';
@@ -73,14 +73,13 @@ function serializeFilters(f: DashboardFilters): string {
  * 다른 페이지에 다녀와도(뒤로 가기·탭 이동) 필터가 초기화되지 않게 하기 위함이다.
  *
  * 연속 클릭에도 변경이 유실되지 않도록 필터는 React 상태로 들고(즉시 반영),
- * URL은 상태를 따라가게 동기화한다. (router.replace는 비동기라 URL을 원본으로 쓰면
+ * URL은 상태를 따라가게 동기화한다. (URL 반영은 렌더 이후라 URL을 원본으로 쓰면
  * 반영 전 다음 클릭이 이전 값을 덮어쓴다)
  */
 export function useDashboardFilters(): [
   DashboardFilters,
   (patch: Partial<DashboardFilters>) => void,
 ] {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.toString();
@@ -98,9 +97,12 @@ export function useDashboardFilters(): [
   const query = serializeFilters(filters);
   useEffect(() => {
     if (query !== urlQuery) {
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      // router.replace는 서버 왕복이 있는 내비게이션이라 연속 변경 시 서로 경합해
+      // 히스토리 항목에 중간 상태가 남는다(뒤로 가기 시 필터 일부 유실). URL만 바꾸는
+      // history.replaceState를 쓴다 — Next.js가 useSearchParams와 동기화해 준다.
+      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname);
     }
-  }, [query, urlQuery, pathname, router]);
+  }, [query, urlQuery, pathname]);
 
   return [filters, update];
 }

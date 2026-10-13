@@ -125,7 +125,7 @@ query(
   - `period`(weekly 기본 생략), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키)
   - 잘못된 값·미래 날짜는 무시하고 기본값
 - 쿼리 없이 진입하면(상단 탭·사이드바 링크 등) 기본 필터로 시작한다
-- 필터는 React 상태로 즉시 반영하고 URL은 `router.replace`로 뒤따라 맞춘다 (연속 클릭 유실 방지)
+- 필터는 React 상태로 즉시 반영하고 URL은 `window.history.replaceState`로 뒤따라 맞춘다 (연속 클릭 유실 방지). `router.replace`는 필터마다 서버 왕복 내비게이션이 경합해 히스토리에 중간 상태가 남으므로 쓰지 않는다
 
 ### 기간 선택기 (`PeriodSelector`)
 
