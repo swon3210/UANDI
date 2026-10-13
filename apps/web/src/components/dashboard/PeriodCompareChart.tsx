@@ -78,7 +78,7 @@ function DeltaText({
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   const rate = compare !== 0 ? Math.round((delta / Math.abs(compare)) * 100) : null;
   return (
-    <span className={cn('font-semibold tabular-nums', good ? 'text-income' : 'text-expense')}>
+    <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
       {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
       {rate !== null ? ` (${Math.abs(rate)}%)` : ''}
     </span>
@@ -170,7 +170,7 @@ export function PeriodCompareChart({
                   </div>
                 </div>
               </div>
-              <div data-testid="compare-delta" className="text-sm">
+              <div data-testid="compare-delta" className="text-sm font-semibold">
                 <span className="text-muted-foreground">{compareLabel} 대비 </span>
                 <DeltaText current={currentTotal} compare={compareTotal} group={group} />
               </div>
