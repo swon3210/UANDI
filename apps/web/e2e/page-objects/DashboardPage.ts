@@ -69,6 +69,10 @@ export class DashboardPage {
   readonly compareCategoryClear: Locator;
   readonly compareSummaryCaption: Locator;
   readonly donutCategoryButton: Locator;
+  readonly meterPercent: Locator;
+  readonly meterIncome: Locator;
+  readonly meterExpense: Locator;
+  readonly meterStatus: Locator;
 
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
@@ -136,6 +140,10 @@ export class DashboardPage {
     this.compareCategoryClear = page.getByTestId('compare-category-clear');
     this.compareSummaryCaption = page.getByTestId('compare-summary-caption');
     this.donutCategoryButton = page.getByTestId('donut-category-button');
+    this.meterPercent = page.getByTestId('meter-percent');
+    this.meterIncome = page.getByTestId('meter-income');
+    this.meterExpense = page.getByTestId('meter-expense');
+    this.meterStatus = page.getByTestId('meter-status');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

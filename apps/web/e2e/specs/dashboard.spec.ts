@@ -304,42 +304,76 @@ test.describe('대시보드', () => {
       await expect(dashboard.totalAmount).toContainText('20,000');
     });
 
-    test('전체 탭은 지출·수입·FLEX 총량 파이 차트만 보여준다', async ({ authedContext }) => {
+    test('전체 탭은 수입 대비 지출 게이지만 보여준다 (FLEX 제외)', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       const today = dayjs().toISOString();
+      const rows: Array<['expense' | 'income' | 'flex', string, number]> = [
+        ['expense', '식비', 300000],
+        ['income', '정기급여', 1000000],
+        ['flex', '여행', 100000],
+      ];
+      for (const [type, category, amount] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type, amount, category, date: today });
+      }
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.groupTabAll).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.meterPercent).toHaveText('30%');
+      await expect(dashboard.meterIncome).toContainText('1,000,000');
+      await expect(dashboard.meterExpense).toContainText('300,000');
+      await expect(dashboard.meterStatus).toContainText('남은 금액');
+      await expect(dashboard.meterStatus).toContainText('700,000');
+      await expect(dashboard.categoryDonut).toBeHidden();
+      // 합계 카드·고정/변동 필터·기간 비교는 전체 탭에서 숨김
+      await expect(dashboard.totalAmount).toBeHidden();
+      await expect(dashboard.subGroupTabs).toBeHidden();
+      await expect(dashboard.periodCompare).toBeHidden();
+    });
+
+    test('지출이 수입을 넘기면 초과 금액을 알린다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      const today = dayjs().toISOString();
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 200000,
+        category: '정기급여',
+        date: today,
+      });
       await seedCashbookEntry(coupleId, uid, {
         type: 'expense',
         amount: 300000,
         category: '식비',
         date: today,
       });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.meterPercent).toHaveText('150%');
+      await expect(dashboard.meterStatus).toContainText('🚨');
+      await expect(dashboard.meterStatus).toContainText('100,000');
+      await expect(dashboard.meterStatus).toContainText('더 썼어요');
+    });
+
+    test('수입이 없으면 수입이 없다고 알린다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
       await seedCashbookEntry(coupleId, uid, {
-        type: 'income',
-        amount: 1000000,
-        category: '정기급여',
-        date: today,
-      });
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'flex',
-        amount: 100000,
-        category: '여행',
-        date: today,
+        type: 'expense',
+        amount: 50000,
+        category: '식비',
+        date: dayjs().toISOString(),
       });
 
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
 
-      await expect(dashboard.groupTabAll).toHaveAttribute('data-state', 'active');
-      await expect(dashboard.categoryDonut).toContainText('지출');
-      await expect(dashboard.categoryDonut).toContainText('수입');
-      await expect(dashboard.categoryDonut).toContainText('FLEX');
-      // 카테고리 이름이 아니라 유형으로 묶인다
-      await expect(dashboard.categoryDonut).not.toContainText('식비');
-      // 합계 카드·고정/변동 필터·기간 비교는 전체 탭에서 숨김
-      await expect(dashboard.totalAmount).toBeHidden();
-      await expect(dashboard.subGroupTabs).toBeHidden();
-      await expect(dashboard.periodCompare).toBeHidden();
+      await expect(dashboard.meterPercent).toHaveText('—');
+      await expect(dashboard.meterStatus).toContainText('수입이 없어요');
     });
 
     test('지출 탭으로 전환 시 카테고리 도넛에 지출 카테고리만 표시된다', async ({
