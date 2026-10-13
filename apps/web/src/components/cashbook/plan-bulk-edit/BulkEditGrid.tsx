@@ -35,7 +35,6 @@ type Section = {
 const GROUP_TONE: Record<CategoryGroup, string> = {
   income: 'text-sage-700 bg-sage-50',
   expense: 'text-coral-700 bg-coral-50',
-  flex: 'text-violet-700 bg-violet-50',
 };
 
 export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProps) {
@@ -297,7 +296,7 @@ function BulkEditCell({ value, changed, testId, onChange }: BulkEditCellProps) {
 }
 
 function buildSections(rows: BulkEditRow[]): Section[] {
-  const order: CategoryGroup[] = ['income', 'expense', 'flex'];
+  const order: CategoryGroup[] = ['income', 'expense'];
   const map = new Map<CategoryGroup, Map<CategorySubGroup, BulkEditRow[]>>();
   for (const row of rows) {
     if (!map.has(row.category.group)) {

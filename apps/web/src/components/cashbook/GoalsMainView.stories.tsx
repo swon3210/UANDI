@@ -64,14 +64,14 @@ const sampleItems: AnnualPlanItem[] = [
   }),
   makeItem({
     id: '5',
-    group: 'flex',
-    subGroup: 'joint_flex',
+    group: 'expense',
+    subGroup: 'variable_common',
     monthlyAmounts: Array(12).fill(330_000),
   }),
   makeItem({
     id: '6',
-    group: 'flex',
-    subGroup: 'personal_flex',
+    group: 'expense',
+    subGroup: 'variable_personal',
     monthlyAmounts: Array(12).fill(170_000),
   }),
 ];
@@ -81,8 +81,7 @@ export const Default: Story = {
     items: sampleItems,
     actuals: {
       income: 50_000_000,
-      expense: 12_000_000,
-      flex: 1_500_000,
+      expense: 13_500_000,
     },
     onSelectCategory: () => {},
   },

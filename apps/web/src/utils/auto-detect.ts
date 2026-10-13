@@ -24,12 +24,11 @@ function ym(e: CashbookEntry): string {
 
 /**
  * §7-1: 같은 카테고리 + 금액 ±10% + 일자 ±2일이 3개 이상의 서로 다른 달에 반복되면 패턴으로 본다.
- * 카테고리(타입+이름)당 가장 강한 클러스터 1개를 반환. flex는 제외(고정지출/정기수입 대상).
+ * 카테고리(타입+이름)당 가장 강한 클러스터 1개를 반환.
  */
 export function detectRecurringPatterns(entries: CashbookEntry[]): RecurringPattern[] {
   const groups = new Map<string, CashbookEntry[]>();
   for (const e of entries) {
-    if (e.type === 'flex') continue;
     const key = `${e.type}|${e.category}`;
     const arr = groups.get(key);
     if (arr) arr.push(e);

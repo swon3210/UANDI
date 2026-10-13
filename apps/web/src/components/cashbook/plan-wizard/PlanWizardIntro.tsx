@@ -4,16 +4,10 @@ type PlanWizardIntroProps = {
   year: number;
   incomeCount: number;
   expenseCount: number;
-  flexCount: number;
 };
 
-export function PlanWizardIntro({
-  year,
-  incomeCount,
-  expenseCount,
-  flexCount,
-}: PlanWizardIntroProps) {
-  const total = incomeCount + expenseCount + flexCount;
+export function PlanWizardIntro({ year, incomeCount, expenseCount }: PlanWizardIntroProps) {
+  const total = incomeCount + expenseCount;
 
   return (
     <div className="space-y-5" data-testid="wizard-intro">
@@ -25,7 +19,7 @@ export function PlanWizardIntro({
           단계별로 세워볼게요
         </h1>
         <p className="mt-3 text-[13px] leading-relaxed opacity-90">
-          수입 → 지출 → Flex 순서로 카테고리별 월 금액을 입력하면
+          수입 → 지출 순서로 카테고리별 월 금액을 입력하면
           <br />
           연간 합계와 잉여를 자동으로 보여드려요.
         </p>
@@ -44,13 +38,8 @@ export function PlanWizardIntro({
             label={`지출 카테고리 ${expenseCount}개 입력`}
             hint="고정 지출은 평균 입력, 변동/명절은 그리드 직접"
           />
-          <FlowItem
-            num={3}
-            label={`Flex 카테고리 ${flexCount}개 입력`}
-            hint="여행·각자 소비 등 자유 지출"
-          />
-          <FlowItem num={4} label="검증" hint="수입 ≥ 지출 + Flex 인지 확인" />
-          <FlowItem num={5} label="완료" hint="결과 요약 후 메인으로" />
+          <FlowItem num={3} label="검증" hint="수입 ≥ 지출 인지 확인" />
+          <FlowItem num={4} label="완료" hint="결과 요약 후 메인으로" />
         </ol>
       </section>
 

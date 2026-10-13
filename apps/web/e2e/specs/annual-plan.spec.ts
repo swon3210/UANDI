@@ -8,7 +8,7 @@ import { seedDefaultCategories } from '../helpers/emulator';
 
 test.describe('연간 경제 목표', () => {
   test.describe('목표 메인', () => {
-    test('메인 진입 시 hero 카드와 3개 카테고리 카드(수입/지출/Flex)가 표시된다', async ({
+    test('메인 진입 시 hero 카드와 2개 카테고리 카드(수입/지출)가 표시된다', async ({
       authedContext,
     }) => {
       const { page, coupleId } = authedContext;
@@ -20,7 +20,6 @@ test.describe('연간 경제 목표', () => {
       await expect(annualPage.heroCard).toBeVisible();
       await expect(annualPage.goalCard('income')).toBeVisible();
       await expect(annualPage.goalCard('expense')).toBeVisible();
-      await expect(annualPage.goalCard('flex')).toBeVisible();
     });
   });
 });

@@ -55,7 +55,7 @@ function sortItemsForWizard(
 }
 
 function isWizardGroup(v: unknown): v is WizardGroup {
-  return v === 'income' || v === 'expense' || v === 'flex';
+  return v === 'income' || v === 'expense';
 }
 
 export function usePlanWizard(
@@ -71,7 +71,6 @@ export function usePlanWizard(
     const itemsByGroup: Record<WizardGroup, AnnualPlanItem[]> = {
       income: [],
       expense: [],
-      flex: [],
     };
     for (const group of WIZARD_GROUP_ORDER) {
       itemsByGroup[group] = sortItemsForWizard(

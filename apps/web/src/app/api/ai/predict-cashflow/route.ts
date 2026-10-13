@@ -13,7 +13,7 @@ import { buildPredictionGuidance } from '@/lib/ai/preferences';
 // 패턴: analyze-spending/route.ts와 동일 — verifyAuth → zod → rate-limit → mock 분기 → OpenAI.
 
 const entrySchema = z.object({
-  type: z.enum(['income', 'expense', 'flex']),
+  type: z.enum(['income', 'expense']),
   amount: z.number(),
   category: z.string(),
   date: z.string(),
@@ -100,7 +100,6 @@ export async function POST(req: NextRequest) {
   // 카테고리별 월별 집계로 요약(토큰 절약). 같은 카테고리가 여러 달 반복되는지 보이게 한다.
   const byCatMonth = new Map<string, { type: string; total: number; count: number }>();
   for (const e of entries) {
-    if (e.type === 'flex') continue;
     const month = dayjs(e.date).format('YYYY-MM');
     const key = `${e.type}|${e.category}|${month}`;
     const agg = byCatMonth.get(key) ?? { type: e.type, total: 0, count: 0 };

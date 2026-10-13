@@ -19,7 +19,7 @@ export type DashboardFilters = {
 };
 
 const PERIODS: readonly PeriodKind[] = ['weekly', 'monthly', 'yearly'];
-const GROUPS: readonly GroupFilter[] = ['all', 'expense', 'income', 'flex'];
+const GROUPS: readonly GroupFilter[] = ['all', 'expense', 'income'];
 const SUB_GROUPS: readonly SubGroupFilter[] = ['all', 'fixed', 'variable'];
 const DATE_FORMAT = 'YYYY-MM-DD';
 

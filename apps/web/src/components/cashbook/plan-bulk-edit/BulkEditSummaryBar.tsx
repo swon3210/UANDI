@@ -8,7 +8,6 @@ import type { AnnualPlanValidation } from '@/services/annual-plan';
 export type BulkEditTotals = {
   income: number;
   expense: number;
-  flex: number;
 };
 
 type BulkEditSummaryBarProps = {
@@ -41,7 +40,7 @@ export function BulkEditSummaryBar({
     >
       <div className="mx-auto w-full max-w-3xl px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))]">
         <ValidationLine validation={validation} hasChanges={hasChanges} />
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <DeltaPill
             label="수입"
             before={totalsBefore.income}
@@ -55,13 +54,6 @@ export function BulkEditSummaryBar({
             after={totalsAfter.expense}
             tone="expense"
             testId="bulk-edit-delta-expense"
-          />
-          <DeltaPill
-            label="Flex"
-            before={totalsBefore.flex}
-            after={totalsAfter.flex}
-            tone="flex"
-            testId="bulk-edit-delta-flex"
           />
         </div>
         <div className="mt-3 flex items-center gap-2">
@@ -99,7 +91,7 @@ function ValidationLine({
   hasChanges: boolean;
 }) {
   const { ok, deficit, totals, deficitMonths } = validation;
-  const surplus = totals.income - totals.expense - totals.flex;
+  const surplus = totals.income - totals.expense;
   const monthlyOnlyIssue = deficit <= 0 && deficitMonths.length > 0;
 
   if (!hasChanges) {
@@ -137,12 +129,11 @@ function ValidationLine({
   );
 }
 
-type DeltaTone = 'income' | 'expense' | 'flex';
+type DeltaTone = 'income' | 'expense';
 
 const DELTA_TONE_CLASS: Record<DeltaTone, string> = {
   income: 'border-sage-200 bg-sage-50 text-sage-700',
   expense: 'border-coral-200 bg-coral-50 text-coral-700',
-  flex: 'border-violet-200 bg-violet-50 text-violet-700',
 };
 
 function DeltaPill({

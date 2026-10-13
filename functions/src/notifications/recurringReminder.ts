@@ -23,7 +23,7 @@ type RecurringSchedule = {
 
 type CategoryDoc = {
   name?: string;
-  group?: 'income' | 'expense' | 'flex';
+  group?: 'income' | 'expense';
   recurrence?: RecurringSchedule | null;
 };
 

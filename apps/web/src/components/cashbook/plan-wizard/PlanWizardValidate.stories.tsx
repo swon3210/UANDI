@@ -15,7 +15,7 @@ export const Pass: Story = {
     validation: {
       ok: true,
       deficit: -8_000_000,
-      totals: { income: 60_000_000, expense: 48_000_000, flex: 4_000_000 },
+      totals: { income: 60_000_000, expense: 52_000_000 },
     },
   },
 };
@@ -25,7 +25,7 @@ export const PassTight: Story = {
     validation: {
       ok: true,
       deficit: 0,
-      totals: { income: 50_000_000, expense: 46_000_000, flex: 4_000_000 },
+      totals: { income: 50_000_000, expense: 50_000_000 },
     },
   },
 };
@@ -35,7 +35,7 @@ export const Fail: Story = {
     validation: {
       ok: false,
       deficit: 1_200_000,
-      totals: { income: 50_000_000, expense: 47_000_000, flex: 4_200_000 },
+      totals: { income: 50_000_000, expense: 51_200_000 },
     },
   },
 };
@@ -45,7 +45,7 @@ export const FailLarge: Story = {
     validation: {
       ok: false,
       deficit: 12_000_000,
-      totals: { income: 40_000_000, expense: 46_000_000, flex: 6_000_000 },
+      totals: { income: 40_000_000, expense: 52_000_000 },
     },
   },
 };
@@ -55,7 +55,7 @@ export const Empty: Story = {
     validation: {
       ok: true,
       deficit: 0,
-      totals: { income: 0, expense: 0, flex: 0 },
+      totals: { income: 0, expense: 0 },
     },
   },
 };

@@ -280,7 +280,7 @@ test.describe('과거 내역 기반 카테고리 힌트', () => {
       date: monthsAgo(7), // 기준점에서 2개월 전 → 포함
     });
     await seedCashbookEntry(coupleId, uid, {
-      type: 'flex',
+      type: 'expense',
       amount: 30000,
       category: '소비',
       description: '옛날가게',

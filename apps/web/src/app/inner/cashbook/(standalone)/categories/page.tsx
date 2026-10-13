@@ -34,7 +34,7 @@ import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
 import type { CashbookCategory, CategoryGroup, RecurringSchedule } from '@/types';
 
-const TAB_ORDER: CategoryGroup[] = ['income', 'expense', 'flex'];
+const TAB_ORDER: CategoryGroup[] = ['income', 'expense'];
 
 const RECURRENCE_SUBGROUPS: CashbookCategory['subGroup'][] = ['fixed_expense', 'regular_income'];
 

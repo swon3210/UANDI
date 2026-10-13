@@ -39,8 +39,3 @@ export const SingleSelected: Story = {
 export const MultiSelected: Story = {
   render: () => <Interactive initial={['expense', 'income']} />,
 };
-
-/** 셋 다 선택. */
-export const AllSelected: Story = {
-  render: () => <Interactive initial={['expense', 'income', 'flex']} />,
-};

@@ -22,7 +22,7 @@ const flat: CashbookCategory[] = [
   { ...base, id: 'e3', group: 'expense', subGroup: 'variable_common', name: '식비', icon: 'bowl_food', color: '#D8635A', sortOrder: 0 },
   { ...base, id: 'e4', group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', color: '#D8635A', sortOrder: 0 },
   { ...base, id: 'i1', group: 'income', subGroup: 'regular_income', name: '정기급여', icon: 'wallet', color: '#4CAF86', sortOrder: 0 },
-  { ...base, id: 'f1', group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', color: '#F0A05E', sortOrder: 0 },
+  { ...base, id: 'f1', group: 'expense', subGroup: 'variable_common', name: '여행', icon: 'airplane', color: '#D8635A', sortOrder: 0 },
 ];
 
 // '식비' 대분류 아래에 소분류(외식/장보기)가 있는 계층 세트 → 드릴다운 확인용.
@@ -73,5 +73,9 @@ export const WithChildren: Story = {
 
 /** 해당 타입에 카테고리가 없을 때. */
 export const EmptyType: Story = {
-  args: { categories: flat, initialSelected: [], initialType: 'flex' },
+  args: {
+    categories: flat.filter((c) => c.group !== 'income'),
+    initialSelected: [],
+    initialType: 'income',
+  },
 };

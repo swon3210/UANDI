@@ -6,7 +6,7 @@ import { formatCurrency } from '@/utils/currency';
 type Props = {
   /** 기간 수입 합계 */
   income: number;
-  /** 기간 지출 합계 (FLEX 제외) */
+  /** 기간 지출 합계 */
   expense: number;
 };
 

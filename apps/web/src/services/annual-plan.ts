@@ -221,11 +221,10 @@ export async function createPlanRevision(
 export type AnnualPlanTotals = {
   income: number;
   expense: number;
-  flex: number;
 };
 
 export function totalsFromItems(items: AnnualPlanItem[]): AnnualPlanTotals {
-  const totals: AnnualPlanTotals = { income: 0, expense: 0, flex: 0 };
+  const totals: AnnualPlanTotals = { income: 0, expense: 0 };
   for (const it of items) {
     if (it.group in totals) {
       totals[it.group as keyof AnnualPlanTotals] += it.annualAmount;
@@ -234,12 +233,11 @@ export function totalsFromItems(items: AnnualPlanItem[]): AnnualPlanTotals {
   return totals;
 }
 
-/** 한 달의 수입/지출/Flex 합계와 잉여(수입 - 지출 - Flex). */
+/** 한 달의 수입/지출 합계와 잉여(수입 - 지출). */
 export type MonthlyFlow = {
   income: number;
   expense: number;
-  flex: number;
-  /** 수입 - 지출 - Flex. 음수면 그 달은 적자. */
+  /** 수입 - 지출. 음수면 그 달은 적자. */
   surplus: number;
 };
 
@@ -248,17 +246,16 @@ export function monthlyFlowsFromItems(items: AnnualPlanItem[]): MonthlyFlow[] {
   const flows: MonthlyFlow[] = Array.from({ length: 12 }, () => ({
     income: 0,
     expense: 0,
-    flex: 0,
     surplus: 0,
   }));
   for (const it of items) {
-    if (it.group !== 'income' && it.group !== 'expense' && it.group !== 'flex') continue;
+    if (it.group !== 'income' && it.group !== 'expense') continue;
     const amounts = Array.isArray(it.monthlyAmounts) ? it.monthlyAmounts : [];
     for (let m = 0; m < 12; m += 1) {
       flows[m][it.group] += amounts[m] ?? 0;
     }
   }
-  for (const f of flows) f.surplus = f.income - f.expense - f.flex;
+  for (const f of flows) f.surplus = f.income - f.expense;
   return flows;
 }
 
@@ -275,7 +272,7 @@ export type AnnualPlanValidation = {
 
 export function validateAnnualPlan(items: AnnualPlanItem[]): AnnualPlanValidation {
   const totals = totalsFromItems(items);
-  const deficit = totals.expense + totals.flex - totals.income;
+  const deficit = totals.expense - totals.income;
   const monthly = monthlyFlowsFromItems(items);
   const deficitMonths = monthly.reduce<number[]>((acc, f, i) => {
     if (f.surplus < 0) acc.push(i);

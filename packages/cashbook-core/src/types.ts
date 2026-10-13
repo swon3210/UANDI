@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type CashbookEntryType = 'income' | 'expense' | 'flex';
+export type CashbookEntryType = 'income' | 'expense';
 
 export type CashbookEntry = {
   id: string;
@@ -14,7 +14,7 @@ export type CashbookEntry = {
   createdAt: Timestamp;
 };
 
-export type CategoryGroup = 'income' | 'expense' | 'flex';
+export type CategoryGroup = 'income' | 'expense';
 
 export type CategorySubGroup =
   // 수입
@@ -23,10 +23,7 @@ export type CategorySubGroup =
   // 지출
   | 'fixed_expense'
   | 'variable_common'
-  | 'variable_personal'
-  // Flex
-  | 'joint_flex'
-  | 'personal_flex';
+  | 'variable_personal';
 
 export type RecurringScheduleKind = 'dayOfMonth' | 'nthWeekday';
 

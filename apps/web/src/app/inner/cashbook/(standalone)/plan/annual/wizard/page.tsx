@@ -226,7 +226,6 @@ function WizardPageInner() {
   const counts = {
     income: wizard.itemsByGroup.income.length,
     expense: wizard.itemsByGroup.expense.length,
-    flex: wizard.itemsByGroup.flex.length,
   };
 
   const rendered = renderStep({
@@ -281,7 +280,7 @@ type RenderStepArgs = {
   wizard: ReturnType<typeof usePlanWizard>;
   validation: ReturnType<typeof useValidateAnnualPlan>;
   year: number;
-  counts: { income: number; expense: number; flex: number };
+  counts: { income: number; expense: number };
   items: AnnualPlanItem[];
   onChangeAvg: (value: number) => void;
   onChangeMonthly: (values: number[]) => void;
@@ -312,12 +311,7 @@ function renderStep({
       nextLabel: '시작하기',
       nextDisabled: false,
       body: (
-        <PlanWizardIntro
-          year={year}
-          incomeCount={counts.income}
-          expenseCount={counts.expense}
-          flexCount={counts.flex}
-        />
+        <PlanWizardIntro year={year} incomeCount={counts.income} expenseCount={counts.expense} />
       ),
     };
   }
@@ -350,7 +344,7 @@ function renderStep({
   if (current.kind === 'validate') {
     return {
       title: '예산 검증',
-      subtitle: '수입 ≥ 지출 + Flex',
+      subtitle: '수입 ≥ 지출',
       nextLabel: '다음',
       nextDisabled: !validation.ok,
       body: <PlanWizardValidate validation={validation} />,

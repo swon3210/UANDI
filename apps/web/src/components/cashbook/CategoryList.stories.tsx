@@ -138,7 +138,7 @@ export const ExpenseWithChildren: Story = {
 export const Empty: Story = {
   args: {
     categories: [],
-    group: 'flex',
+    group: 'income',
     onEdit: noop,
     onDelete: noop,
     onAddChild: noop,

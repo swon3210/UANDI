@@ -71,15 +71,15 @@ const sampleItems: AnnualPlanItem[] = [
     monthlyAmounts: [500_000, 0, 0, 0, 0, 0, 0, 0, 500_000, 0, 0, 0],
   }),
   makeItem({
-    id: 'f-1',
-    group: 'flex',
-    subGroup: 'joint_flex',
+    id: 'e-4',
+    group: 'expense',
+    subGroup: 'variable_common',
     monthlyAmounts: [0, 0, 0, 0, 1_500_000, 0, 0, 2_000_000, 0, 0, 0, 0],
   }),
   makeItem({
-    id: 'f-2',
-    group: 'flex',
-    subGroup: 'personal_flex',
+    id: 'e-5',
+    group: 'expense',
+    subGroup: 'variable_personal',
     monthlyAmounts: Array(12).fill(300_000),
   }),
 ];

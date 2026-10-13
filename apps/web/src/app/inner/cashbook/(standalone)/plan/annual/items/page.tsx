@@ -44,7 +44,7 @@ import { formatCurrencyMan } from '@/utils/currency';
 import { MascotLoader } from '@/components/MascotLoader';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
 
-const VALID_GROUPS: GoalCategoryKey[] = ['income', 'expense', 'flex'];
+const VALID_GROUPS: GoalCategoryKey[] = ['income', 'expense'];
 const ANNUAL_MAIN = '/inner/cashbook/plan/annual';
 const WIZARD_INTRO = `${ANNUAL_MAIN}/wizard?step=intro`;
 

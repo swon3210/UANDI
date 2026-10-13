@@ -10,7 +10,7 @@ type SeedHandles = {
   catIncomeIrregular: string; // 상여 — has item
   catIncomeUnplanned: string; // 중고거래 — no item (for add test)
   catExpense: string;
-  catFlex: string;
+  catExpenseVariable: string; // 여행 — variable_common, has item
 };
 
 async function seedAnnualPlanWithItems(coupleId: string, uid: string): Promise<SeedHandles> {
@@ -45,9 +45,9 @@ async function seedAnnualPlanWithItems(coupleId: string, uid: string): Promise<S
     icon: 'house',
     sortOrder: 0,
   });
-  const catFlex = await seedCashbookCategory(coupleId, {
-    group: 'flex',
-    subGroup: 'joint_flex',
+  const catExpenseVariable = await seedCashbookCategory(coupleId, {
+    group: 'expense',
+    subGroup: 'variable_common',
     name: '여행',
     icon: 'airplane',
     sortOrder: 0,
@@ -77,9 +77,9 @@ async function seedAnnualPlanWithItems(coupleId: string, uid: string): Promise<S
     baseMonthlyAmount: 800_000,
   });
   await seedAnnualPlanItem(coupleId, planId, {
-    categoryId: catFlex,
-    group: 'flex',
-    subGroup: 'joint_flex',
+    categoryId: catExpenseVariable,
+    group: 'expense',
+    subGroup: 'variable_common',
     monthlyAmounts: Array(12)
       .fill(0)
       .map((_, i) => (i === 5 ? 2_000_000 : 0)),
@@ -92,7 +92,7 @@ async function seedAnnualPlanWithItems(coupleId: string, uid: string): Promise<S
     catIncomeIrregular,
     catIncomeUnplanned,
     catExpense,
-    catFlex,
+    catExpenseVariable,
   };
 }
 

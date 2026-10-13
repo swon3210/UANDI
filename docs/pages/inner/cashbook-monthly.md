@@ -295,7 +295,7 @@
 
 ```ts
 // CashbookEntry.type 확장
-type EntryType = 'income' | 'expense' | 'investment' | 'flex';
+type EntryType = 'income' | 'expense';
 
 // 투자 항목 추가 필드
 type InvestmentEntry = CashbookEntry & {

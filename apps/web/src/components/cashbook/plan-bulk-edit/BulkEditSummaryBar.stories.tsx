@@ -19,7 +19,7 @@ const meta: Meta<typeof BulkEditSummaryBar> = {
 export default meta;
 type Story = StoryObj<typeof BulkEditSummaryBar>;
 
-const baseTotals = { income: 60_000_000, expense: 36_000_000, flex: 7_200_000 };
+const baseTotals = { income: 60_000_000, expense: 43_200_000 };
 
 export const NoChanges: Story = {
   args: {
@@ -40,11 +40,11 @@ export const NoChanges: Story = {
 export const ValidPass: Story = {
   args: {
     totalsBefore: baseTotals,
-    totalsAfter: { income: 62_000_000, expense: 35_000_000, flex: 7_200_000 },
+    totalsAfter: { income: 62_000_000, expense: 42_200_000 },
     validation: {
       ok: true,
       deficit: -19_800_000,
-      totals: { income: 62_000_000, expense: 35_000_000, flex: 7_200_000 },
+      totals: { income: 62_000_000, expense: 42_200_000 },
     },
     changedCount: 3,
     saving: false,
@@ -56,11 +56,11 @@ export const ValidPass: Story = {
 export const ValidationFail: Story = {
   args: {
     totalsBefore: baseTotals,
-    totalsAfter: { income: 60_000_000, expense: 50_000_000, flex: 14_000_000 },
+    totalsAfter: { income: 60_000_000, expense: 64_000_000 },
     validation: {
       ok: false,
       deficit: 4_000_000,
-      totals: { income: 60_000_000, expense: 50_000_000, flex: 14_000_000 },
+      totals: { income: 60_000_000, expense: 64_000_000 },
     },
     changedCount: 5,
     saving: false,
@@ -72,11 +72,11 @@ export const ValidationFail: Story = {
 export const Saving: Story = {
   args: {
     totalsBefore: baseTotals,
-    totalsAfter: { income: 62_000_000, expense: 35_000_000, flex: 7_200_000 },
+    totalsAfter: { income: 62_000_000, expense: 42_200_000 },
     validation: {
       ok: true,
       deficit: -19_800_000,
-      totals: { income: 62_000_000, expense: 35_000_000, flex: 7_200_000 },
+      totals: { income: 62_000_000, expense: 42_200_000 },
     },
     changedCount: 3,
     saving: true,

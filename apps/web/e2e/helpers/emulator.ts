@@ -307,9 +307,14 @@ export async function seedDefaultCategories(coupleId: string): Promise<void> {
       sortOrder: 0,
     },
     { group: 'expense', subGroup: 'variable_personal', name: '교통', icon: 'bus', sortOrder: 0 },
-    // Flex
-    { group: 'flex', subGroup: 'joint_flex', name: '여행', icon: 'airplane', sortOrder: 0 },
-    { group: 'flex', subGroup: 'personal_flex', name: '소비', icon: 'shopping_bag', sortOrder: 0 },
+    { group: 'expense', subGroup: 'variable_common', name: '여행', icon: 'airplane', sortOrder: 1 },
+    {
+      group: 'expense',
+      subGroup: 'variable_personal',
+      name: '소비',
+      icon: 'shopping_bag',
+      sortOrder: 1,
+    },
   ];
 
   for (const cat of categories) {
@@ -348,7 +353,7 @@ export async function seedAnnualPlanItem(
   planId: string,
   options: {
     categoryId: string;
-    group: 'income' | 'expense' | 'flex';
+    group: 'income' | 'expense';
     subGroup: string;
     monthlyAmounts: number[];
     inputMode?: 'regular' | 'irregular';
@@ -397,7 +402,7 @@ export async function seedCashbookEntry(
   coupleId: string,
   createdBy: string,
   options: {
-    type: 'income' | 'expense' | 'flex';
+    type: 'income' | 'expense';
     amount: number;
     category?: string;
     description?: string;
@@ -436,7 +441,7 @@ export async function seedPrediction(
   coupleId: string,
   createdBy: string,
   options: {
-    type: 'income' | 'expense' | 'flex';
+    type: 'income' | 'expense';
     amount: number;
     category?: string;
     description?: string;
@@ -600,7 +605,7 @@ export async function seedSettlement(
     year: number;
     month: number; // 1-indexed
     status: 'draft' | 'completed';
-    totals?: { income: number; expense: number; flex: number };
+    totals?: { income: number; expense: number };
     aiAnalysis?: string;
   }
 ): Promise<void> {
@@ -609,7 +614,7 @@ export async function seedSettlement(
     year,
     month,
     status,
-    totals = { income: 0, expense: 0, flex: 0 },
+    totals = { income: 0, expense: 0 },
     aiAnalysis = '',
   } = options;
   const now = new Date().toISOString();
@@ -630,7 +635,6 @@ export async function seedSettlement(
     const pieValues = [
       totals.income > 0 ? pieSliceValue('수입', totals.income) : null,
       totals.expense > 0 ? pieSliceValue('지출', totals.expense) : null,
-      totals.flex > 0 ? pieSliceValue('FLEX', totals.flex) : null,
     ].filter(Boolean);
 
     fields.report = {
@@ -641,11 +645,10 @@ export async function seedSettlement(
               fields: {
                 income: { integerValue: String(totals.income) },
                 expense: { integerValue: String(totals.expense) },
-                flex: { integerValue: String(totals.flex) },
               },
             },
           },
-          spending: { integerValue: String(totals.expense + totals.flex) },
+          spending: { integerValue: String(totals.expense) },
           budgetCeiling: { integerValue: '0' },
           spentPct: { nullValue: null },
           barData: { arrayValue: { values: [] } },

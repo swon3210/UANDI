@@ -84,7 +84,7 @@ export function SettlementReportView({
       const imageBlocks: string[] = [];
       const charts: { title: string; node: HTMLElement | null }[] = [
         { title: '카테고리별 예산 vs 실적', node: budgetChartRef.current },
-        { title: '수입 · 지출 · FLEX 구성', node: pieChartRef.current },
+        { title: '수입 · 지출 구성', node: pieChartRef.current },
         { title: '일별 누적 지출', node: dailyChartRef.current },
       ];
       for (const chart of charts) {
@@ -132,11 +132,7 @@ export function SettlementReportView({
         </span>
       </div>
 
-      <SettlementSummaryHeader
-        income={report.totals.income}
-        expense={report.totals.expense}
-        flex={report.totals.flex}
-      />
+      <SettlementSummaryHeader income={report.totals.income} expense={report.totals.expense} />
 
       {/* 차트 */}
       {hasBudget && (
@@ -154,7 +150,7 @@ export function SettlementReportView({
       {hasPie && (
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold">수입 · 지출 · FLEX 구성</h2>
+            <h2 className="text-sm font-semibold">수입 · 지출 구성</h2>
             {pngButton('pie', 'income-expense', () => pieChartRef.current)}
           </div>
           <div ref={pieChartRef} className="rounded-xl bg-card p-2">

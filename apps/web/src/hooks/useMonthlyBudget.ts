@@ -97,7 +97,7 @@ export function useCategoryBudgetSummaries(
   budgetItems: MonthlyBudgetItem[] | undefined,
   entries: CashbookEntry[] | undefined,
   categories: CashbookCategory[] | undefined,
-  /** 집계 대상 그룹. 월 결산은 ['expense','flex']로 FLEX까지 합산한다. */
+  /** 집계 대상 그룹. */
   groups: CategoryGroup[] = DEFAULT_SUMMARY_GROUPS
 ): CategoryBudgetSummary[] {
   return useMemo(() => {

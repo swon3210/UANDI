@@ -42,8 +42,8 @@ import { analyzeSpending } from '@/services/ai';
 import { downloadElementAsPng } from '@/lib/export/report';
 import type { CategoryGroup, SettlementReportSnapshot } from '@/types';
 
-// 지출 분석 대상 그룹 — 지출 + FLEX (참조 안정성 위해 모듈 상수)
-const SPENDING_GROUPS: CategoryGroup[] = ['expense', 'flex'];
+// 지출 분석 대상 그룹 (참조 안정성 위해 모듈 상수)
+const SPENDING_GROUPS: CategoryGroup[] = ['expense'];
 
 function parseMonthParam(value: string | null): Date | null {
   if (!value || !/^\d{4}-\d{2}$/.test(value)) return null;
@@ -101,30 +101,28 @@ export default function CashbookSettlementPage() {
   const [exportingChart, setExportingChart] = useState<string | null>(null);
 
   // 직접 집계 (예산 유무와 무관하게 항상 계산)
-  const { incomeActual, expenseActual, flexActual } = useMemo(() => {
+  const { incomeActual, expenseActual } = useMemo(() => {
     let income = 0;
     let expense = 0;
-    let flex = 0;
     for (const e of entries ?? []) {
       if (e.type === 'income') income += e.amount;
       else if (e.type === 'expense') expense += e.amount;
-      else if (e.type === 'flex') flex += e.amount;
     }
-    return { incomeActual: income, expenseActual: expense, flexActual: flex };
+    return { incomeActual: income, expenseActual: expense };
   }, [entries]);
 
-  const spendingActual = expenseActual + flexActual;
+  const spendingActual = expenseActual;
 
-  // 지출 천장 = 지출 + FLEX 예산 합
+  // 지출 천장 = 지출 예산 합
   const spendingBudget = useMemo(
     () =>
       (budgetItems ?? [])
-        .filter((b) => b.group === 'expense' || b.group === 'flex')
+        .filter((b) => b.group === 'expense')
         .reduce((sum, b) => sum + b.budgetAmount, 0),
     [budgetItems]
   );
 
-  // 일별 누적 (지출 + FLEX, 오늘 이후 날짜는 null → 라인이 오늘에서 멈춤)
+  // 일별 누적 (지출, 오늘 이후 날짜는 null → 라인이 오늘에서 멈춤)
   const dailyData = useMemo(() => {
     const daysInMonth = new Date(year, month1, 0).getDate();
     const now = new Date();
@@ -135,7 +133,7 @@ export default function CashbookSettlementPage() {
 
     const byDay = new Array(daysInMonth + 1).fill(0);
     for (const e of entries ?? []) {
-      if (e.type !== 'expense' && e.type !== 'flex') continue;
+      if (e.type !== 'expense') continue;
       const d = e.date.toDate().getDate();
       if (d >= 1 && d <= daysInMonth) byDay[d] += e.amount;
     }
@@ -165,9 +163,8 @@ export default function CashbookSettlementPage() {
     const slices = [];
     if (incomeActual > 0) slices.push({ name: '수입', value: incomeActual });
     if (expenseActual > 0) slices.push({ name: '지출', value: expenseActual });
-    if (flexActual > 0) slices.push({ name: 'FLEX', value: flexActual });
     return slices;
-  }, [incomeActual, expenseActual, flexActual]);
+  }, [incomeActual, expenseActual]);
 
   const spentPct = spendingBudget > 0 ? Math.round((spendingActual / spendingBudget) * 100) : null;
 
@@ -186,7 +183,7 @@ export default function CashbookSettlementPage() {
       year,
       month: month1,
       budget: (budgetItems ?? [])
-        .filter((b) => b.group === 'expense' || b.group === 'flex')
+        .filter((b) => b.group === 'expense')
         .map((b) => {
           const cat = (categories ?? []).find((c) => c.id === b.categoryId);
           return {
@@ -204,7 +201,7 @@ export default function CashbookSettlementPage() {
   if (showBudgetChart)
     reportCharts.push({ title: '카테고리별 예산 vs 실적', getNode: () => budgetChartRef.current });
   if (pieData.length > 0)
-    reportCharts.push({ title: '수입 · 지출 · FLEX 구성', getNode: () => pieChartRef.current });
+    reportCharts.push({ title: '수입 · 지출 구성', getNode: () => pieChartRef.current });
   if (hasEntries)
     reportCharts.push({ title: '일별 누적 지출', getNode: () => dailyChartRef.current });
 
@@ -221,7 +218,7 @@ export default function CashbookSettlementPage() {
   };
 
   const buildReport = (): Omit<SettlementReportSnapshot, 'completedAt'> => ({
-    totals: { income: incomeActual, expense: expenseActual, flex: flexActual },
+    totals: { income: incomeActual, expense: expenseActual },
     spending: spendingActual,
     budgetCeiling: spendingBudget,
     spentPct,
@@ -308,13 +305,9 @@ export default function CashbookSettlementPage() {
           </div>
         ) : (
           <>
-            {/* 수입 · 지출 · FLEX 요약 */}
+            {/* 수입 · 지출 요약 */}
             <div className="mt-2">
-              <SettlementSummaryHeader
-                income={incomeActual}
-                expense={expenseActual}
-                flex={flexActual}
-              />
+              <SettlementSummaryHeader income={incomeActual} expense={expenseActual} />
             </div>
 
             {/* 이번 달 내역 확인·추가 (별도 페이지에서 영수증 첨부·내역 추가) */}
@@ -371,11 +364,11 @@ export default function CashbookSettlementPage() {
                 )}
               </div>
 
-              {/* 수입 · 지출 · FLEX */}
+              {/* 수입 · 지출 */}
               {pieData.length > 0 && (
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold">수입 · 지출 · FLEX 구성</h2>
+                    <h2 className="text-sm font-semibold">수입 · 지출 구성</h2>
                     {pngButton('pie', 'income-expense', () => pieChartRef.current)}
                   </div>
                   <div ref={pieChartRef} className="rounded-xl bg-card p-2">

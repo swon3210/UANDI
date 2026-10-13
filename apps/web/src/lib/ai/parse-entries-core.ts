@@ -64,7 +64,7 @@ export type ImageKind = 'account' | 'card';
 
 // 단일 파싱 entry 스키마. isTransfer는 계좌 내역의 단순 송금 여부(확인 필요 그룹용).
 export const parsedEntrySchema = z.object({
-  type: z.enum(['income', 'expense', 'flex']),
+  type: z.enum(['income', 'expense']),
   amount: z.number().positive(),
   category: z.string(),
   description: z.string(),
@@ -192,7 +192,7 @@ ${categories.join(', ')}
 {
   "entries": [
     {
-      "type": "income" | "expense" | "flex",
+      "type": "income" | "expense",
       "amount": number,
       "category": "카테고리 목록에서 가장 적합한 것",
       "description": "항목 설명 (영수증이면 상호명 + 대표 품목)",
