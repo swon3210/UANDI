@@ -217,17 +217,17 @@ export function PeriodCompareChart({
               data-testid="compare-category-section"
               className="flex items-center justify-between"
             >
-              <span className="text-xs text-muted-foreground">
-                {isTotalMode
-                  ? '카테고리를 고르면 카테고리끼리 비교해요'
-                  : `비교할 카테고리 ${rows.length}개`}
-              </span>
+              {isTotalMode ? null : (
+                <span className="text-xs text-muted-foreground">
+                  비교할 카테고리 {rows.length}개
+                </span>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onSelectCategoriesClick}
                 data-testid="compare-category-button"
-                className="h-7 gap-0.5 px-2 text-xs"
+                className="ml-auto h-7 gap-0.5 px-2 text-xs"
               >
                 카테고리 선택
                 <ChevronRight size={14} />
