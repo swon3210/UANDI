@@ -51,6 +51,17 @@ export const ExpenseIncreased: Story = {
   args: { comparison: expenseComparison },
 };
 
+export const ExpenseDecreased: Story = {
+  args: {
+    comparison: {
+      rows: [
+        { category: '식비', current: 280_000, compare: 420_000 },
+        { category: '교통', current: 120_000, compare: 160_000 },
+      ],
+    },
+  },
+};
+
 export const IncomeDecreased: Story = {
   args: {
     group: 'income',

@@ -438,6 +438,36 @@ test.describe('대시보드', () => {
       await expect(dashboard.compareSummary).toContainText('30,000');
       await expect(dashboard.compareDelta).toContainText('20,000');
       await expect(dashboard.compareDelta).toContainText('67%');
+      // 지출 증가는 경고 이모지
+      await expect(dashboard.compareDeltaEmoji).toHaveText(/🚨/);
+    });
+
+    test('지출이 줄면 😎, 수입이 줄면 🚨 이모지를 붙인다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      const thisMonth = dayjs().startOf('month').add(12, 'hour').toISOString();
+      const lastMonth = dayjs().subtract(1, 'month').startOf('month').add(12, 'hour').toISOString();
+      const rows: Array<['expense' | 'income', string, number, string]> = [
+        ['expense', '식비', 20000, thisMonth],
+        ['expense', '식비', 50000, lastMonth],
+        ['income', '정기급여', 1000000, thisMonth],
+        ['income', '정기급여', 2000000, lastMonth],
+      ];
+      for (const [type, category, amount, date] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type, amount, category, date });
+      }
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+
+      await dashboard.groupTabExpense.click();
+      await expect(dashboard.compareDelta).toContainText('30,000');
+      await expect(dashboard.compareDeltaEmoji).toHaveText(/😎/);
+
+      await dashboard.groupTabIncome.click();
+      await expect(dashboard.compareDelta).toContainText('1,000,000');
+      await expect(dashboard.compareDeltaEmoji).toHaveText(/🚨/);
     });
 
     test('비교할 기간을 직접 선택할 수 있다', async ({ authedContext }) => {

@@ -61,6 +61,7 @@ export class DashboardPage {
   readonly comparePickerSheet: Locator;
   readonly compareSummary: Locator;
   readonly compareDelta: Locator;
+  readonly compareDeltaEmoji: Locator;
   readonly compareCategoryButton: Locator;
   readonly compareCategorySheet: Locator;
   readonly compareCategorySearch: Locator;
@@ -124,6 +125,7 @@ export class DashboardPage {
     this.comparePickerSheet = page.getByTestId('compare-picker-sheet');
     this.compareSummary = page.getByTestId('compare-summary');
     this.compareDelta = page.getByTestId('compare-delta');
+    this.compareDeltaEmoji = page.getByTestId('compare-delta-emoji');
     this.compareCategoryButton = page.getByTestId('compare-category-button');
     this.compareCategorySheet = page.getByTestId('compare-category-sheet');
     this.compareCategorySearch = page.getByTestId('compare-category-search');

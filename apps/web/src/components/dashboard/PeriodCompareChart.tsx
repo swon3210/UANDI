@@ -62,26 +62,33 @@ function truncateLabel(label: string): string {
   return label.length > MAX_LABEL_CHARS ? `${label.slice(0, MAX_LABEL_CHARS - 1)}…` : label;
 }
 
-function DeltaText({
+function DeltaSummary({
   current,
   compare,
   group,
+  compareLabel,
 }: {
   current: number;
   compare: number;
   group: CategoryGroup;
+  compareLabel: string;
 }) {
   const delta = current - compare;
   if (delta === 0) {
-    return <span className="text-muted-foreground">변동 없음</span>;
+    return <span className="text-muted-foreground">{compareLabel} 대비 변동 없음</span>;
   }
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   const rate = compare !== 0 ? Math.round((delta / Math.abs(compare)) * 100) : null;
   return (
-    <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
-      {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
-      {rate !== null ? ` (${Math.abs(rate)}%)` : ''}
-    </span>
+    <>
+      {/* 좋은 변화(지출 감소·수입 증가)는 😎, 나쁜 변화는 🚨 */}
+      <span data-testid="compare-delta-emoji">{good ? '😎' : '🚨'} </span>
+      <span className="text-muted-foreground">{compareLabel} 대비 </span>
+      <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
+        {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
+        {rate !== null ? ` (${Math.abs(rate)}%)` : ''}
+      </span>
+    </>
   );
 }
 
@@ -174,8 +181,12 @@ export function PeriodCompareChart({
                 data-testid="compare-delta"
                 className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
               >
-                <span className="text-muted-foreground">{compareLabel} 대비 </span>
-                <DeltaText current={currentTotal} compare={compareTotal} group={group} />
+                <DeltaSummary
+                  current={currentTotal}
+                  compare={compareTotal}
+                  group={group}
+                  compareLabel={compareLabel}
+                />
               </div>
             </>
           ) : null}
