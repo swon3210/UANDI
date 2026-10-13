@@ -97,7 +97,7 @@ export type CashflowCardData = {
   /** 결제일 유형(아이콘/틴트 선택). 주 단위 폴백은 미지정. */
   paydayType?: CashflowPaydayType;
   inflow: number; // 들어올 돈 (income 합)
-  outflow: number; // 나갈 돈 (expense + flex 합)
+  outflow: number; // 나갈 돈 (expense 합)
   balance: number; // 남는 돈 (누적, 합계)
   /**
    * 사람별 남는 돈(uid→누적 잔액). 멤버 정보가 없으면 빈 객체.
@@ -265,7 +265,7 @@ export function buildCashflowCards(
     const attributedNet: Record<string, number> = {};
 
     for (const t of txns) {
-      const signed = t.type === 'income' ? t.amount : -t.amount; // expense + flex는 음수
+      const signed = t.type === 'income' ? t.amount : -t.amount // expense는 음수
       if (t.type === 'income') inflow += t.amount;
       else outflow += t.amount;
 

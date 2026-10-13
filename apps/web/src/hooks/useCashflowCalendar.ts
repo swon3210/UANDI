@@ -113,7 +113,7 @@ export function useCashflowCalendar(
     let balance = settings?.initialCash ?? 0;
     for (const e of accumEntries ?? []) {
       if (e.type === 'income') balance += e.amount;
-      else balance -= e.amount; // expense + flex
+      else balance -= e.amount; // expense
     }
     return balance;
   }, [settings, accumEntries]);
