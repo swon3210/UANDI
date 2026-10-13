@@ -119,6 +119,14 @@ query(
     - `&type=expense|income|flex` (현재 그룹) → 타입 필터 (합계 카드는 전체 탭에 없으므로 항상 지정됨)
     - 내역 페이지는 최초 렌더에서 한 번만 반영하고 URL에서 파라미터를 제거한다
 
+### 필터 유지 (URL 쿼리, `useDashboardFilters`)
+
+- 기간 단위·기준 기간·그룹·세부 필터·비교 기간·선택 카테고리를 `/inner/cashbook` 쿼리에 저장해 다른 페이지에 다녀와도 유지
+  - `period`(weekly 기본 생략), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키)
+  - 잘못된 값·미래 날짜는 무시하고 기본값
+- 마지막 쿼리를 sessionStorage에도 저장 → 상단 탭·사이드바처럼 쿼리 없는 링크로 돌아와도 같은 필터로 복원
+- 필터는 React 상태로 즉시 반영하고 URL은 `router.replace`로 뒤따라 맞춘다 (연속 클릭 유실 방지)
+
 ### 기간 선택기 (`PeriodSelector`)
 
 - shadcn `Tabs` 또는 ToggleGroup, `weekly | monthly | yearly`

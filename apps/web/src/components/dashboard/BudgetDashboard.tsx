@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
@@ -21,6 +20,7 @@ import {
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 import {
@@ -111,17 +111,10 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGrou
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
-  const [period, setPeriod] = useState<PeriodKind>('weekly');
-  const [group, setGroup] = useState<GroupFilter>('all');
-  const [cursor, setCursor] = useState<Dayjs>(() => dayjs());
-  const [subGroup, setSubGroup] = useState<SubGroupFilter>('all');
-  // null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간
-  const [compareSelection, setCompareSelection] = useState<Dayjs | null>(null);
-
-  // null = 기본(FLEX는 현재 기간 상위 N개, 지출·수입은 선택 없음), 배열 = 사용자가 직접 고른 비교 대상
-  const [categorySelection, setCategorySelection] = useState<string[] | null>(null);
-  // 지출·수입 '전체' 도넛에 표시할 카테고리. 빈 배열 = 기본(고정/변동 2조각)
-  const [donutSelection, setDonutSelection] = useState<string[]>([]);
+  // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
+  const [filters, updateFilters] = useDashboardFilters();
+  const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
+    filters;
 
   const isDefaultCompare = compareSelection === null;
   const compareCursor = compareSelection ?? shiftPeriod(period, cursor, -1);
@@ -150,36 +143,27 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   // 기간 단위/기준 기간이 바뀌면 비교 기간과 비교 대상 카테고리는 기본값으로 돌아간다.
   // (비교 기간만 바꿀 때는 고른 카테고리를 유지해 같은 카테고리를 여러 기간과 비교할 수 있게 한다)
-  const resetCompareSelection = () => {
-    setCompareSelection(null);
-    setCategorySelection(null);
-    setDonutSelection([]);
-  };
+  const RESET_SELECTION = {
+    compareSelection: null,
+    categorySelection: null,
+    donutSelection: [],
+  } satisfies Partial<typeof filters>;
 
   const handlePeriodChange = (next: PeriodKind) => {
-    setPeriod(next);
-    setCursor((prev) => normalizeCursor(next, prev));
-    resetCompareSelection();
+    updateFilters({ period: next, cursor: normalizeCursor(next, cursor), ...RESET_SELECTION });
   };
   const handleGroupChange = (next: GroupFilter) => {
-    setGroup(next);
-    setSubGroup('all');
-    setCategorySelection(null);
-    setDonutSelection([]);
+    updateFilters({ group: next, subGroup: 'all', categorySelection: null, donutSelection: [] });
   };
   const handleSubGroupChange = (next: SubGroupFilter) => {
-    setSubGroup(next);
-    setCategorySelection(null);
-    setDonutSelection([]);
+    updateFilters({ subGroup: next, categorySelection: null, donutSelection: [] });
   };
   const handlePrev = () => {
-    setCursor((prev) => shiftPeriod(period, prev, -1));
-    resetCompareSelection();
+    updateFilters({ cursor: shiftPeriod(period, cursor, -1), ...RESET_SELECTION });
   };
   const handleNext = () => {
     if (!isCurrentPeriod(period, cursor)) {
-      setCursor((prev) => shiftPeriod(period, prev, 1));
-      resetCompareSelection();
+      updateFilters({ cursor: shiftPeriod(period, cursor, 1), ...RESET_SELECTION });
     }
   };
 
@@ -204,8 +188,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                 kind={period}
                 value={cursor}
                 onSelect={(next) => {
-                  setCursor(normalizeCursor(period, next));
-                  resetCompareSelection();
+                  updateFilters({ cursor: normalizeCursor(period, next), ...RESET_SELECTION });
                   closeAndUnmount();
                 }}
               />
@@ -240,7 +223,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                   const normalized = normalizeCursor(period, next);
                   // 직전 기간을 다시 고르면 기본값으로 되돌려 기간 이동 시에도 "직전 기간"을 따라가게 한다.
                   const isPrev = normalized.isSame(shiftPeriod(period, cursor, -1), 'day');
-                  setCompareSelection(isPrev ? null : normalized);
+                  updateFilters({ compareSelection: isPrev ? null : normalized });
                   closeAndUnmount();
                 }}
               />
@@ -296,7 +279,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             title="표시할 카테고리 선택"
             options={donutOptions}
             initialSelected={donutSlices.map((c) => c.category)}
-            onApply={setDonutSelection}
+            onApply={(names) => updateFilters({ donutSelection: names })}
             onClose={closeAndUnmount}
           />
         </Sheet>
@@ -322,7 +305,7 @@ export function BudgetDashboard({ coupleId }: Props) {
           <CompareCategorySheet
             options={categoryOptions}
             initialSelected={selectedCategories}
-            onApply={setCategorySelection}
+            onApply={(names) => updateFilters({ categorySelection: names })}
             onClose={closeAndUnmount}
           />
         </Sheet>

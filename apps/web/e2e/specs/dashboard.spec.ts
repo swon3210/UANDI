@@ -133,6 +133,66 @@ test.describe('대시보드', () => {
     });
   });
 
+  test.describe('가계부 대시보드 — 필터 유지 (URL)', () => {
+    test('필터를 바꾸면 URL 쿼리에 저장된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.periodPrevButton.click();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('고정 지출').click();
+
+      const prevMonth = dayjs().subtract(1, 'month').startOf('month');
+      await expect(authedPage).toHaveURL(/period=monthly/);
+      await expect(authedPage).toHaveURL(new RegExp(`at=${prevMonth.format('YYYY-MM-DD')}`));
+      await expect(authedPage).toHaveURL(/group=expense/);
+      await expect(authedPage).toHaveURL(/sub=fixed/);
+    });
+
+    test('다른 페이지에 다녀와도(뒤로 가기) 필터가 유지된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.periodPrevButton.click();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('고정 지출').click();
+      await expect(authedPage).toHaveURL(/sub=fixed/);
+
+      await dashboard.totalAmount.click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+      await authedPage.goBack();
+
+      const prevMonth = dayjs().subtract(1, 'month');
+      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodNavLabel).toContainText(prevMonth.format('YYYY년 M월'));
+      await expect(dashboard.groupTabExpense).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.subGroupTab('고정 지출')).toHaveAttribute('data-state', 'active');
+    });
+
+    test('가계부 탭으로 다른 화면에 갔다가 대시보드 탭으로 돌아와도 필터가 유지된다', async ({
+      authedPage,
+    }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabIncome.click();
+      await expect(authedPage).toHaveURL(/group=income/);
+
+      await authedPage.getByTestId('cashbook-tab-history').click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+      await authedPage.getByTestId('cashbook-tab-dashboard').click();
+
+      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.groupTabIncome).toHaveAttribute('data-state', 'active');
+    });
+
+    test('필터가 담긴 URL로 바로 들어오면 그 필터로 보여준다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await authedPage.goto('/inner/cashbook?period=yearly&group=flex');
+
+      await expect(dashboard.periodTabYearly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodNavLabel).toContainText(`${dayjs().year()}년`);
+      await expect(dashboard.groupTabFlex).toHaveAttribute('data-state', 'active');
+    });
+  });
+
   test.describe('가계부 대시보드 — 기간 직접 선택', () => {
     test('월간: 라벨 클릭 시 월 선택 시트가 열리고 고른 월로 이동한다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
