@@ -23,25 +23,6 @@ const GROUPS: readonly GroupFilter[] = ['all', 'expense', 'income', 'flex'];
 const SUB_GROUPS: readonly SubGroupFilter[] = ['all', 'fixed', 'variable'];
 const DATE_FORMAT = 'YYYY-MM-DD';
 
-// 다른 페이지에 갔다가 탭·사이드바(쿼리 없는 링크)로 돌아와도 필터가 남도록 마지막 쿼리를 기억한다.
-const STORAGE_KEY = 'uandi:dashboard-filters';
-
-function readStoredQuery(): string {
-  try {
-    return window.sessionStorage.getItem(STORAGE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
-
-function writeStoredQuery(query: string) {
-  try {
-    window.sessionStorage.setItem(STORAGE_KEY, query);
-  } catch {
-    // 저장소를 쓸 수 없으면 URL만으로 유지한다
-  }
-}
-
 function parseDate(value: string | null): Dayjs | null {
   if (!value) return null;
   const date = dayjs(value);
@@ -90,10 +71,9 @@ function serializeFilters(f: DashboardFilters): string {
 /**
  * 대시보드 필터(기간·그룹·세부 필터·비교 기간·선택 카테고리)를 URL 쿼리에 저장한다.
  * 다른 페이지에 다녀와도(뒤로 가기·탭 이동) 필터가 초기화되지 않게 하기 위함이다.
- * URL에 필터가 없으면 이번 세션에서 마지막으로 쓴 필터를 이어서 쓴다.
  *
  * 연속 클릭에도 변경이 유실되지 않도록 필터는 React 상태로 들고(즉시 반영),
- * URL·sessionStorage는 상태를 따라가게 동기화한다. (router.replace는 비동기라 URL을 원본으로 쓰면
+ * URL은 상태를 따라가게 동기화한다. (router.replace는 비동기라 URL을 원본으로 쓰면
  * 반영 전 다음 클릭이 이전 값을 덮어쓴다)
  */
 export function useDashboardFilters(): [
@@ -105,19 +85,18 @@ export function useDashboardFilters(): [
   const searchParams = useSearchParams();
   const urlQuery = searchParams.toString();
 
-  // 마운트 시점의 URL(없으면 세션에 기억한 값)로 시작한다
+  // 마운트 시점의 URL 쿼리로 시작한다 (쿼리가 없으면 기본값)
   const [filters, setFilters] = useState<DashboardFilters>(() =>
-    parseFilters(new URLSearchParams(urlQuery || readStoredQuery()))
+    parseFilters(new URLSearchParams(urlQuery))
   );
 
   const update = useCallback((patch: Partial<DashboardFilters>) => {
     setFilters((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  // 외부 시스템(URL·sessionStorage)을 필터 상태에 맞춘다
+  // 외부 시스템(URL)을 필터 상태에 맞춘다
   const query = serializeFilters(filters);
   useEffect(() => {
-    writeStoredQuery(query);
     if (query !== urlQuery) {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     }

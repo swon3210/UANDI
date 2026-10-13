@@ -167,22 +167,6 @@ test.describe('대시보드', () => {
       await expect(dashboard.subGroupTab('고정 지출')).toHaveAttribute('data-state', 'active');
     });
 
-    test('가계부 탭으로 다른 화면에 갔다가 대시보드 탭으로 돌아와도 필터가 유지된다', async ({
-      authedPage,
-    }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.periodTabMonthly.click();
-      await dashboard.groupTabIncome.click();
-      await expect(authedPage).toHaveURL(/group=income/);
-
-      await authedPage.getByTestId('cashbook-tab-history').click();
-      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
-      await authedPage.getByTestId('cashbook-tab-dashboard').click();
-
-      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
-      await expect(dashboard.groupTabIncome).toHaveAttribute('data-state', 'active');
-    });
-
     test('필터가 담긴 URL로 바로 들어오면 그 필터로 보여준다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await authedPage.goto('/inner/cashbook?period=yearly&group=flex');
