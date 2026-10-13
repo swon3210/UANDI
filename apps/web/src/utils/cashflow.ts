@@ -265,7 +265,7 @@ export function buildCashflowCards(
     const attributedNet: Record<string, number> = {};
 
     for (const t of txns) {
-      const signed = t.type === 'income' ? t.amount : -t.amount // expense는 음수
+      const signed = t.type === 'income' ? t.amount : -t.amount; // expense는 음수
       if (t.type === 'income') inflow += t.amount;
       else outflow += t.amount;
 
