@@ -58,13 +58,21 @@ type Props = {
   initialSelected: string[];
   onApply: (names: string[]) => void;
   onClose: () => void;
+  /** 시트 제목 */
+  title?: string;
 };
 
 /**
- * 기간 비교 차트의 비교 대상 카테고리를 고르는 바텀시트.
+ * 카테고리를 고르는 바텀시트 (기간 비교 대상, 전체 탭 도넛 표시 대상).
  * 카테고리가 많아도 고르기 쉽게 검색 + 세로 목록으로 보여주고, '적용'을 눌러야 반영된다.
  */
-export function CompareCategorySheet({ options, initialSelected, onApply, onClose }: Props) {
+export function CompareCategorySheet({
+  options,
+  initialSelected,
+  onApply,
+  onClose,
+  title = '비교할 카테고리 선택',
+}: Props) {
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [search, setSearch] = useState('');
 
@@ -92,7 +100,7 @@ export function CompareCategorySheet({ options, initialSelected, onApply, onClos
       onOpenAutoFocus={(e) => e.preventDefault()}
     >
       <SheetHeader>
-        <SheetTitle>비교할 카테고리 선택</SheetTitle>
+        <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
 
       <div className="relative mt-3">
