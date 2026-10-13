@@ -1,29 +1,14 @@
-import { useState, type ComponentProps } from 'react';
+import type { ComponentProps } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import type { PeriodComparison } from '@/hooks/useDashboardData';
 
-const CHIP_COLORS = ['#D8635A', '#4CAF86', '#3B82F6', '#F59E0B', '#8B5CF6'];
-
 type ChartProps = ComponentProps<typeof PeriodCompareChart>;
 
-// 선택 칩의 X로 비교 대상을 빼볼 수 있게 상태를 들고 있는 래퍼 (시트 열기는 스토리에서 생략)
-function Interactive({ initialSelected, ...args }: ChartProps & { initialSelected?: string[] }) {
-  const rows = args.comparison.rows;
-  const [selected, setSelected] = useState<string[]>(
-    initialSelected ?? rows.slice(0, 3).map((r) => r.category)
-  );
-  return (
-    <PeriodCompareChart
-      {...args}
-      categoryColors={Object.fromEntries(
-        rows.map((r, i) => [r.category, CHIP_COLORS[i % CHIP_COLORS.length]])
-      )}
-      selectedCategories={selected}
-      onRemoveCategory={(name) => setSelected((prev) => prev.filter((n) => n !== name))}
-      onSelectCategoriesClick={() => {}}
-    />
-  );
+// 기본은 상위 3개 카테고리를 선택한 상태로 보여준다 (시트 열기는 스토리에서 생략)
+function WithSelection({ initialSelected, ...args }: ChartProps & { initialSelected?: string[] }) {
+  const selected = initialSelected ?? args.comparison.rows.slice(0, 3).map((r) => r.category);
+  return <PeriodCompareChart {...args} selectedCategories={selected} />;
 }
 
 const meta: Meta<typeof PeriodCompareChart> = {
@@ -43,12 +28,10 @@ const meta: Meta<typeof PeriodCompareChart> = {
     compareLabel: '2026년 9월',
     compareHint: '전월',
     onCompareClick: () => {},
-    categoryColors: {},
     selectedCategories: [],
-    onRemoveCategory: () => {},
     onSelectCategoriesClick: () => {},
   },
-  render: (args) => <Interactive {...args} />,
+  render: (args) => <WithSelection {...args} />,
 };
 export default meta;
 
@@ -66,6 +49,17 @@ const expenseComparison: PeriodComparison = {
 
 export const ExpenseIncreased: Story = {
   args: { comparison: expenseComparison },
+};
+
+export const ExpenseDecreased: Story = {
+  args: {
+    comparison: {
+      rows: [
+        { category: '식비', current: 280_000, compare: 420_000 },
+        { category: '교통', current: 120_000, compare: 160_000 },
+      ],
+    },
+  },
 };
 
 export const IncomeDecreased: Story = {
@@ -109,7 +103,7 @@ export const LongCategoryNames: Story = {
 
 export const NoCategorySelected: Story = {
   args: { comparison: expenseComparison },
-  render: (args) => <Interactive {...args} initialSelected={[]} />,
+  render: (args) => <WithSelection {...args} initialSelected={[]} />,
 };
 
 export const Empty: Story = {

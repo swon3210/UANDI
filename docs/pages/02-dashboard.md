@@ -167,10 +167,12 @@ query(
   - 기간 단위 변경·기준 기간 이동 시 비교 기간은 직전 기간으로 리셋
 - 요약(`compare-summary`): **선택한 비교 대상 카테고리의** 현재 기간 / 비교 기간 합계 (그룹·세부 필터 적용). 위에 `선택한 카테고리 N개 합계` 캡션, 선택 0개면 요약·증감 숨김
 - 증감(`compare-delta`): `▲/▼ 금액 (비율%)`. 수입은 증가=income 색, 지출·FLEX는 증가=expense 색
+  - 연한 배경 띠(`rounded-lg bg-muted/50`)로 감싸고 문구 전체 semibold, 금액은 extrabold
+  - 맨 앞 이모지(`compare-delta-emoji`): 좋은 변화(지출·FLEX 감소, 수입 증가)는 😎, 나쁜 변화는 🚨. 변동 없음이면 이모지 없음
 - 차트: `recharts BarChart`(가로) — 카테고리당 현재(그룹 시맨틱 색)·비교(회색) 막대 2개, 현재→비교 금액 내림차순
 - 막대 금액 라벨은 만원 단위 (`170만원`, `28만원`, 1만 미만은 `5,000원`)
 - 비교 대상 카테고리 선택
-  - 카드에는 **선택된 카테고리만** 칩(`compare-category-chip-{name}`)으로 표시, 칩의 ✕(`compare-category-remove-{name}`)로 바로 제외
+  - 카드에는 `비교할 카테고리 N개` 개수만 표시하고, 선택된 카테고리는 막대 차트로만 보여준다 (별도 칩 없음 — 추가/제외는 시트에서)
   - `카테고리 선택`(`compare-category-button`) → 바텀시트 `CompareCategorySheet`(`compare-category-sheet`)
     - 상단 검색창(`compare-category-search`, 이름 부분 일치) + 체크 목록(`compare-category-option-{name}`, 색 점 + 이름만 — 금액 비교는 차트에서 하므로 목록엔 표시하지 않음)
     - `전체 해제` / `N개 적용`(`compare-category-apply`). 적용을 눌러야 반영, 그냥 닫으면 변경 없음
