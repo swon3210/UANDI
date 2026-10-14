@@ -68,27 +68,24 @@ const GROUP_NAME: Record<'expense' | 'income', string> = {
 };
 
 const PICKER_TITLE: Record<PeriodKind, string> = {
-  weekly: '주 선택',
   monthly: '월 선택',
   yearly: '연도 선택',
 };
 
 const COMPARE_PICKER_TITLE: Record<PeriodKind, string> = {
-  weekly: '비교할 주 선택',
   monthly: '비교할 월 선택',
   yearly: '비교할 연도 선택',
 };
 
 // 비교 기간 기본값(직전 기간)의 보조 라벨
 const PREV_PERIOD_HINT: Record<PeriodKind, string> = {
-  weekly: '전주',
   monthly: '전월',
   yearly: '전년',
 };
 
 /**
  * 대시보드의 기간·그룹 상태를 내역 페이지 딥링크로 변환한다.
- * 월간은 월 스테퍼를 쓸 수 있도록 year/month로, 주간·연간은 start/end(커스텀 기간)로 넘긴다.
+ * 월간은 월 스테퍼를 쓸 수 있도록 year/month로, 연간은 start/end(커스텀 기간)로 넘긴다.
  */
 function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGroup): string {
   const params = new URLSearchParams();

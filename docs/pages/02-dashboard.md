@@ -8,7 +8,7 @@
 
 ## 사용자 스토리
 
-- 커플로서, 우리 가계부의 흐름을 주간/월간/연간으로 한눈에 보고 싶다.
+- 커플로서, 우리 가계부의 흐름을 월간/연간으로 한눈에 보고 싶다.
 - 커플로서, 카테고리별·유형별(지출/수입) 분포를 빠르게 파악하고 싶다.
 - 커플로서, 과거 기간의 가계부 추이를 좌우 화살표로 탐색하고 싶다.
 - 커플로서, 지출·수입을 고정/변동으로 나눠 따로 보고 싶다.
@@ -51,7 +51,7 @@
 │  │ 🎯 예산 설정     › │  │  ← 진입 카드 → /inner/cashbook/plan/annual
 │  └───────────────────┘  │
 │                         │
-│  [주간] [월간] [연간]    │  ← 기간 선택 (Tabs/ToggleGroup)
+│  [월간] [연간]           │  ← 기간 선택 (Tabs/ToggleGroup)
 │                         │
 │  ‹  2026년 5월  ›        │  ← 기간 네비게이터 (현재 기간이면 ›는 disabled)
 │                         │
@@ -115,21 +115,21 @@ query(
   - 카드 우상단에 `내역 보기 ›` 보조 라벨 표시, `data-testid="dashboard-total"` 유지
   - 현재 대시보드의 기간·그룹 상태를 쿼리 파라미터로 넘겨 내역 페이지 초기 필터로 적용
     - 월간: `?year=YYYY&month=M`(0-based) → 내역 페이지 월 모드(월 스테퍼 사용 가능)
-    - 주간·연간: `?start=YYYY-MM-DD&end=YYYY-MM-DD` → 내역 페이지 커스텀 기간
+    - 연간: `?start=YYYY-MM-DD&end=YYYY-MM-DD` → 내역 페이지 커스텀 기간
     - `&type=expense|income` (현재 그룹) → 타입 필터 (합계 카드는 전체 탭에 없으므로 항상 지정됨)
     - 내역 페이지는 최초 렌더에서 한 번만 반영하고 URL에서 파라미터를 제거한다
 
 ### 필터 유지 (URL 쿼리, `useDashboardFilters`)
 
 - 기간 단위·기준 기간·그룹·세부 필터·비교 기간·선택 카테고리를 `/inner/cashbook` 쿼리에 저장해 다른 페이지에 다녀와도 유지
-  - `period`(weekly 기본 생략), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키)
+  - `period`(monthly 기본 생략, 예전 `weekly` 값은 monthly로 처리), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키)
   - 잘못된 값·미래 날짜는 무시하고 기본값
 - 쿼리 없이 진입하면(상단 탭·사이드바 링크 등) 기본 필터로 시작한다
 - 필터는 React 상태로 즉시 반영하고 URL은 `window.history.replaceState`로 뒤따라 맞춘다 (연속 클릭 유실 방지). `router.replace`는 필터마다 서버 왕복 내비게이션이 경합해 히스토리에 중간 상태가 남으므로 쓰지 않는다
 
 ### 기간 선택기 (`PeriodSelector`)
 
-- shadcn `Tabs` 또는 ToggleGroup, `weekly | monthly | yearly`
+- shadcn `Tabs` 또는 ToggleGroup, `monthly | yearly` (주간 탭은 제거됨)
 - `data-testid="period-selector"`
 - 변경 시 cursor를 해당 단위로 정규화: `cursor.startOf(unit)`
 - 기본값: `monthly`
@@ -138,7 +138,6 @@ query(
 
 - `‹  {라벨}  ›` 형태, `data-testid="period-navigator"`
 - 라벨 형식:
-  - weekly: `M월 D일 ~ D일`
   - monthly: `YYYY년 M월`
   - yearly: `YYYY년`
 - 좌측 화살표(`prev`): cursor를 -1 unit 이동
@@ -172,7 +171,7 @@ query(
 ### 기간 비교 차트 (`PeriodCompareChart`)
 
 - `data-testid="period-compare"`, 막대 차트는 `data-testid="trend-chart"`
-- 비교 기간 기본값: 직전 기간 (주간=전주, 월간=전월, 연간=전년). 기본값일 땐 버튼에 `(전월)` 같은 보조 라벨 표시
+- 비교 기간 기본값: 직전 기간 (월간=전월, 연간=전년). 기본값일 땐 버튼에 `(전월)` 같은 보조 라벨 표시
 - 비교 기간 선택: 헤더 버튼(`compare-period-button`) → 바텀 시트(`compare-picker-sheet`)에서 `PeriodPicker`로 같은 단위의 기간 선택 (미래 기간 불가)
   - 직전 기간을 다시 고르면 기본값으로 되돌린다
   - 기간 단위 변경·기준 기간 이동 시 비교 기간은 직전 기간으로 리셋

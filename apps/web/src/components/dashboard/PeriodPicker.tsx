@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button, cn } from '@uandi/ui';
+import { Button } from '@uandi/ui';
 import type { PeriodKind } from '@/utils/date';
 
 type Props = {
@@ -18,7 +18,6 @@ type Props = {
 const YEARS_PER_PAGE = 12;
 
 export function PeriodPicker({ kind, value, today = dayjs(), onSelect }: Props) {
-  if (kind === 'weekly') return <WeekPicker value={value} today={today} onSelect={onSelect} />;
   if (kind === 'monthly') return <MonthPicker value={value} today={today} onSelect={onSelect} />;
   return <YearPicker value={value} today={today} onSelect={onSelect} />;
 }
@@ -60,60 +59,6 @@ function PickerNav({
       >
         <ChevronRight size={18} />
       </Button>
-    </div>
-  );
-}
-
-function WeekPicker({ value, today, onSelect }: PickerProps) {
-  const [viewMonth, setViewMonth] = useState(() => value.startOf('month'));
-
-  const gridStart = viewMonth.startOf('week');
-  const gridEnd = viewMonth.endOf('month').endOf('week');
-  const dayCount = gridEnd.diff(gridStart, 'day') + 1;
-  const days = Array.from({ length: dayCount }, (_, i) => gridStart.add(i, 'day'));
-  const weekdays = days.slice(0, 7).map((d) => d.format('dd'));
-
-  return (
-    <div className="space-y-2">
-      <PickerNav
-        title={viewMonth.format('YYYY년 M월')}
-        canGoNext={viewMonth.isBefore(today, 'month')}
-        onPrev={() => setViewMonth((m) => m.subtract(1, 'month'))}
-        onNext={() => setViewMonth((m) => m.add(1, 'month'))}
-      />
-      <div className="grid grid-cols-7 text-center text-xs text-muted-foreground">
-        {weekdays.map((w) => (
-          <span key={w} className="py-1">
-            {w}
-          </span>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-y-1">
-        {days.map((d) => {
-          const inSelectedWeek = d.isSame(value, 'week');
-          const isOutside = !d.isSame(viewMonth, 'month');
-          return (
-            <Button
-              key={d.valueOf()}
-              variant="ghost"
-              disabled={d.isAfter(today, 'day')}
-              onClick={() => onSelect(d.startOf('week'))}
-              data-testid={`period-picker-day-${d.format('YYYY-MM-DD')}`}
-              aria-pressed={inSelectedWeek}
-              className={cn(
-                'h-10 rounded-none p-0 text-sm tabular-nums',
-                isOutside && 'text-muted-foreground/60',
-                inSelectedWeek && 'bg-primary/15 text-primary hover:bg-primary/20',
-                inSelectedWeek && d.day() === gridStart.day() && 'rounded-l-lg',
-                inSelectedWeek && d.day() === gridEnd.day() && 'rounded-r-lg',
-                d.isSame(today, 'day') && 'font-bold underline underline-offset-4'
-              )}
-            >
-              {d.date()}
-            </Button>
-          );
-        })}
-      </div>
     </div>
   );
 }

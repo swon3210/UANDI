@@ -21,16 +21,6 @@ type Story = StoryObj<typeof PeriodPicker>;
 const today = dayjs('2026-10-09');
 const noop = () => {};
 
-export const Weekly: Story = {
-  render: () => (
-    <PeriodPicker kind="weekly" value={dayjs('2026-09-15')} today={today} onSelect={noop} />
-  ),
-};
-
-export const WeeklyCurrentMonth: Story = {
-  render: () => <PeriodPicker kind="weekly" value={today} today={today} onSelect={noop} />,
-};
-
 export const Monthly: Story = {
   render: () => (
     <PeriodPicker kind="monthly" value={dayjs('2026-03-01')} today={today} onSelect={noop} />
