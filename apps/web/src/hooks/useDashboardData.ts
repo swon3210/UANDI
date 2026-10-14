@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { type Dayjs } from 'dayjs';
+import { buildCategoryColorMap, distinctColors, getCategoryColor } from '@uandi/cashbook-core';
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
@@ -60,46 +61,33 @@ export type DashboardData = {
   isCompareLoading: boolean;
 };
 
-// 카테고리별 시각적 구분을 위한 고대비 팔레트.
-// 카테고리 메타의 color는 대부분 코랄 계열이라 라인/슬라이스가 구분이 안 되어
-// 차트 표시 시에는 메타 색상을 덮어쓴다.
-const CHART_PALETTE = [
-  '#D8635A', // coral red (지출 시맨틱)
-  '#4CAF86', // sage green (수입 시맨틱)
-  '#3B82F6', // blue
-  '#F59E0B', // amber
-  '#8B5CF6', // violet
-  '#EC4899', // pink
-  '#14B8A6', // teal
-  '#A855F7', // purple
-  '#F97316', // orange
-  '#0EA5E9', // sky
-];
-
-function categoryColor(
-  _name: string,
-  _categories: CashbookCategory[] | undefined,
-  index: number
-): string {
-  return CHART_PALETTE[index % CHART_PALETTE.length];
+/** 슬라이스 색을 한 차트 안에서 겹치지 않게 정리한다(같은 색은 같은 계열의 다른 명도로). */
+function withDistinctColors<T extends { color: string }>(slices: T[]): T[] {
+  const colors = distinctColors(slices.map((s) => s.color));
+  return slices.map((s, i) => ({ ...s, color: colors[i] }));
 }
 
 function buildByCategory(
   entries: CashbookEntry[],
-  categories: CashbookCategory[] | undefined
+  colorMap: ReadonlyMap<string, string>
 ): CategorySlice[] {
-  const sums = new Map<string, number>();
+  const sums = new Map<string, { group: CategoryGroup; amount: number }>();
   for (const entry of entries) {
-    sums.set(entry.category, (sums.get(entry.category) ?? 0) + entry.amount);
+    const prev = sums.get(entry.category);
+    sums.set(entry.category, {
+      group: prev?.group ?? entry.type,
+      amount: (prev?.amount ?? 0) + entry.amount,
+    });
   }
 
-  const slices: CategorySlice[] = [];
-  let i = 0;
-  for (const [category, amount] of sums.entries()) {
-    slices.push({ category, amount, color: categoryColor(category, categories, i) });
-    i++;
-  }
-  return slices.sort((a, b) => b.amount - a.amount);
+  const slices = [...sums.entries()]
+    .map(([category, { group, amount }]) => ({
+      category,
+      amount,
+      color: getCategoryColor(colorMap, group, category),
+    }))
+    .sort((a, b) => b.amount - a.amount);
+  return withDistinctColors(slices);
 }
 
 /** 상위에 직접 기록된 금액을 하위 목록에서 구분해 보여줄 때의 라벨 */
@@ -113,7 +101,8 @@ export function directParentLabel(parent: string): string {
  */
 function buildByParent(
   entries: CashbookEntry[],
-  categories: CashbookCategory[] | undefined
+  categories: CashbookCategory[] | undefined,
+  colorMap: ReadonlyMap<string, string>
 ): CategoryTreeSlice[] {
   const byId = new Map((categories ?? []).map((c) => [c.id, c]));
   const parentOf = new Map<string, string>();
@@ -124,14 +113,17 @@ function buildByParent(
 
   // 상위 → (하위 이름 → 금액). 상위 직접 기록분은 상위 이름 키로 담는다.
   const tree = new Map<string, Map<string, number>>();
+  const groupOf = new Map<string, CategoryGroup>();
   for (const e of entries) {
     const parent = parentOf.get(`${e.type}:${e.category}`) ?? e.category;
     const children = tree.get(parent) ?? new Map<string, number>();
     children.set(e.category, (children.get(e.category) ?? 0) + e.amount);
     tree.set(parent, children);
+    if (!groupOf.has(parent)) groupOf.set(parent, e.type);
   }
 
   const slices = [...tree.entries()].map(([parent, children]) => {
+    const group = groupOf.get(parent) ?? 'expense';
     const amount = [...children.values()].reduce((sum, v) => sum + v, 0);
     // 하위 없이 상위만 기록됐으면 펼칠 것이 없다.
     const isLeaf = children.size === 1 && children.has(parent);
@@ -141,15 +133,20 @@ function buildByParent(
           .map(([name, value]) => ({
             category: name === parent ? directParentLabel(parent) : name,
             amount: value,
+            // 상위 직접 기록분은 상위 색, 하위는 하위 카테고리 색
+            color: getCategoryColor(colorMap, group, name),
           }))
-          .sort((a, b) => b.amount - a.amount)
-          .map((c, i) => ({ ...c, color: CHART_PALETTE[i % CHART_PALETTE.length] }));
-    return { category: parent, amount, children: childSlices };
+          .sort((a, b) => b.amount - a.amount);
+    return {
+      category: parent,
+      amount,
+      color: getCategoryColor(colorMap, group, parent),
+      // 하위는 보통 상위 색을 물려받으므로 펼친 도넛에서는 같은 계열의 명도로 구분한다
+      children: withDistinctColors(childSlices),
+    };
   });
 
-  return slices
-    .sort((a, b) => b.amount - a.amount)
-    .map((s, i) => ({ ...s, color: CHART_PALETTE[i % CHART_PALETTE.length] }));
+  return withDistinctColors(slices.sort((a, b) => b.amount - a.amount));
 }
 
 function buildTypeTotals(entries: CashbookEntry[]): Record<CategoryGroup, number> {
@@ -162,7 +159,8 @@ const FIXED_VARIABLE_LABEL: Record<'expense' | 'income', [string, string]> = {
   expense: ['고정 지출', '변동 지출'],
   income: ['고정 수입', '변동 수입'],
 };
-const FIXED_VARIABLE_COLOR: [string, string] = [CHART_PALETTE[0], CHART_PALETTE[2]];
+// 고정/변동은 카테고리가 아닌 묶음이라 카테고리 색과 겹치지 않는 고정 색을 쓴다.
+const FIXED_VARIABLE_COLOR: [string, string] = ['#D8635A', '#3B82F6'];
 
 function buildByFixedVariable(
   entries: CashbookEntry[],
@@ -253,13 +251,14 @@ export function useDashboardData(args: {
 
   return useMemo(() => {
     const fixedLookup = buildFixedLookup(categoriesQuery.data);
+    const colorMap = buildCategoryColorMap(categoriesQuery.data);
     const filtered = filterEntries(entriesQuery.data ?? [], group, subGroup, fixedLookup);
     const compareFiltered = filterEntries(compareQuery.data ?? [], group, subGroup, fixedLookup);
     const total = computeTotal(filtered);
 
     return {
-      byCategory: buildByCategory(filtered, categoriesQuery.data),
-      byParent: buildByParent(filtered, categoriesQuery.data),
+      byCategory: buildByCategory(filtered, colorMap),
+      byParent: buildByParent(filtered, categoriesQuery.data, colorMap),
       typeTotals: buildTypeTotals(entriesQuery.data ?? []),
       byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup),
       total,

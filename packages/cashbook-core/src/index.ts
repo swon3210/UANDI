@@ -43,6 +43,15 @@ export {
 // Constants
 export type { DefaultCategory } from './constants/default-categories';
 export {
+  CATEGORY_COLOR_PALETTE,
+  FALLBACK_CATEGORY_COLOR,
+  categoryColorKey,
+  buildCategoryColorMap,
+  getCategoryColor,
+  shadeColor,
+  distinctColors,
+} from './constants/category-colors';
+export {
   DEFAULT_CATEGORIES,
   SUB_GROUP_LABELS,
   SUB_GROUP_SHORT_LABELS,

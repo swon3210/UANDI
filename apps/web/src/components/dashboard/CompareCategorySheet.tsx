@@ -15,6 +15,8 @@ export type CompareCategoryOption = {
   parent: string | null;
   /** 상위 카테고리 아이콘 키. 상위에 직접 기록된 내역이 없어 묶음 헤더만 그릴 때 쓴다 */
   parentIcon?: string;
+  /** 상위 카테고리 색. 묶음 헤더만 그릴 때 아이콘 색으로 쓴다 */
+  parentColor?: string;
 };
 
 type CategoryGroupNode = {
@@ -24,6 +26,8 @@ type CategoryGroupNode = {
   self: CompareCategoryOption | null;
   /** 상위 카테고리 아이콘 키 */
   icon?: string;
+  /** 상위 카테고리 색 */
+  color?: string;
   children: CompareCategoryOption[];
 };
 
@@ -48,6 +52,7 @@ function buildGroups(options: CompareCategoryOption[]): CategoryGroupNode[] {
       const g = groupOf(opt.parent);
       g.children.push(opt);
       g.icon ??= opt.parentIcon;
+      g.color ??= opt.parentColor;
     } else {
       const g = groupOf(opt.name);
       g.self = opt;
@@ -166,7 +171,12 @@ export function CompareCategorySheet({
               <li key={g.name} data-testid={`compare-category-group-${g.name}`}>
                 <OptionRow
                   option={
-                    g.self ?? { name: g.name, color: 'transparent', icon: g.icon, parent: null }
+                    g.self ?? {
+                      name: g.name,
+                      color: g.color ?? 'transparent',
+                      icon: g.icon,
+                      parent: null,
+                    }
                   }
                   state={groupState}
                   onClick={() => toggleGroup(names)}

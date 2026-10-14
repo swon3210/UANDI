@@ -406,6 +406,94 @@ test.describe('대시보드', () => {
     });
   });
 
+  test.describe('카테고리 색상', () => {
+    test('도넛 범례는 카테고리에 지정된 색을 그대로 쓴다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+        color: '#E5B53E',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_personal',
+        name: '교통',
+        icon: 'bus',
+        color: '#6A6FD8',
+      });
+      const today = dayjs().toISOString();
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 30000,
+        category: '식비',
+        date: today,
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 10000,
+        category: '교통',
+        date: today,
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('변동 지출').click();
+
+      await expect(page.getByTestId('category-donut-swatch-식비')).toHaveCSS(
+        'background-color',
+        'rgb(229, 181, 62)'
+      );
+      await expect(page.getByTestId('category-donut-swatch-교통')).toHaveCSS(
+        'background-color',
+        'rgb(106, 111, 216)'
+      );
+    });
+
+    test('같은 색 카테고리끼리는 같은 계열의 다른 명도로 구분한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      for (const name of ['식비', '교통']) {
+        await seedCashbookCategory(coupleId, {
+          group: 'expense',
+          subGroup: 'variable_common',
+          name,
+          icon: 'bowl_food',
+          color: '#6A6FD8',
+        });
+      }
+      const today = dayjs().toISOString();
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 30000,
+        category: '식비',
+        date: today,
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 10000,
+        category: '교통',
+        date: today,
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('변동 지출').click();
+
+      // 금액이 큰 식비가 원색, 교통은 같은 계열의 밝은 색
+      await expect(page.getByTestId('category-donut-swatch-식비')).toHaveCSS(
+        'background-color',
+        'rgb(106, 111, 216)'
+      );
+      await expect(page.getByTestId('category-donut-swatch-교통')).not.toHaveCSS(
+        'background-color',
+        'rgb(106, 111, 216)'
+      );
+    });
+  });
+
   test.describe('고정/변동 세부 필터', () => {
     async function seedFixedAndVariable(coupleId: string, uid: string) {
       await seedDefaultCategories(coupleId);

@@ -188,6 +188,7 @@ type CashbookCategory = {
   subGroup: CategorySubGroup;
   name: string;
   icon: string;
+  /** 카테고리 색 (hex). 모든 화면이 이 값을 그대로 쓴다 — `CATEGORY_COLOR_PALETTE` 중 하나 */
   color: string;
   isDefault: boolean;
   sortOrder: number;

@@ -219,7 +219,10 @@ query(
   - 상위에 직접 기록한 금액은 하위 목록에서 `{상위}(기타)`로 구분
   - 기간·그룹·세부 필터가 바뀌면 상위 화면으로 리셋
   - 기간 비교 막대는 이 합산과 무관하게 기록된 카테고리 단위 유지
-- 카테고리 메타 `color` 사용, 메타 없으면 fallback palette
+- 카테고리 메타 `color`를 그대로 사용 (메타 없으면 중립색). 하위 도넛도 하위 카테고리 색 사용
+  - 한 도넛 안에서 색이 겹치면 금액이 큰 쪽은 원색, 나머지는 같은 계열의 다른 명도 (`distinctColors`)
+  - 범례 색 칩 `category-donut-swatch-{이름}`
+  - 색 규칙 상세: `docs/pages/inner/cashbook-categories.md` 「2.3 카테고리 색상 규칙」
 - 우측 또는 하단에 범례(라벨+%)
 - 빈 데이터 처리:
   - 부모(`BudgetDashboard`)는 그룹 필터 적용 후 entries가 비면 `dashboard-empty` 통합 EmptyState로 차트 영역 전체를 대체한다.
