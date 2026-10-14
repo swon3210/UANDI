@@ -57,7 +57,7 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'right', className, children, style, ...props }, ref) => (
+>(({ side = 'right', className, children, style, onPointerDownOutside, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
@@ -67,6 +67,14 @@ const SheetContent = React.forwardRef<
       // 키보드가 없으면 0px이라 기존(bottom-0) 동작과 동일하다.
       style={side === 'bottom' ? { bottom: 'var(--keyboard-inset, 0px)', ...style } : style}
       {...props}
+      onPointerDownOutside={(event) => {
+        onPointerDownOutside?.(event);
+        // 위에 겹쳐 연 다른 시트/다이얼로그 안을 누른 것은 이 시트의 바깥 클릭이 아니다.
+        // 터치 입력에서 Radix는 바깥 클릭 판정을 click 시점으로 미루는데, 그 click으로 위 시트가
+        // 먼저 닫히면 이 시트가 최상위 레이어가 되어 함께 닫혀버린다(필터 → 카테고리 시트 등).
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('[role="dialog"], [role="alertdialog"]')) event.preventDefault();
+      }}
     >
       {children}
       <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
