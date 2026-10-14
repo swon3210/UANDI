@@ -140,8 +140,16 @@ export function BudgetDashboard({ coupleId }: Props) {
     donutSelection: [],
   } satisfies Partial<typeof filters>;
 
+  // 월간↔연간 전환 시 각 탭에서 마지막으로 보던 기간을 복원한다.
+  // 처음 여는 탭은 지금 보던 기간에서 파생한다(예: 2025년 3월 → 2025년).
   const handlePeriodChange = (next: PeriodKind) => {
-    updateFilters({ period: next, cursor: normalizeCursor(next, cursor), ...RESET_SELECTION });
+    if (next === period) return;
+    updateFilters({
+      period: next,
+      cursor: filters.altCursor ?? normalizeCursor(next, cursor),
+      altCursor: cursor,
+      ...RESET_SELECTION,
+    });
   };
   const handleGroupChange = (next: GroupFilter) => {
     updateFilters({ group: next, subGroup: 'all', categorySelection: null, donutSelection: [] });
