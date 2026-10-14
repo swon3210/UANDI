@@ -724,3 +724,59 @@ test.describe('가계부 내역 필터 (터치 입력)', () => {
     await expect(cashbook.entryCard(trafficId)).not.toBeVisible();
   });
 });
+
+test.describe('가계부 내역 필터 — 카테고리 정렬', () => {
+  test('카테고리 시트의 카테고리는 가나다 순으로 표시된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await cashbook.openFilter();
+    await cashbook.openCategoryPicker();
+
+    // 시드된 고정 지출은 sortOrder상 월세(0) → 보험(1) 순이다.
+    const names = await page
+      .getByTestId('category-filter-section-fixed_expense')
+      .locator('[data-testid^="filter-category-"]')
+      .allInnerTexts();
+    expect(names.map((n) => n.trim())).toEqual(['보험', '월세']);
+  });
+
+  test('하위 카테고리도 가나다 순으로 표시된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    const parentId = await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_common',
+      name: '식비',
+      icon: 'bowl_food',
+    });
+    const children: Array<[string, number]> = [
+      ['외식', 0],
+      ['배달', 1],
+      ['장보기', 2],
+    ];
+    for (const [name, sortOrder] of children) {
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name,
+        icon: 'bowl_food',
+        sortOrder,
+        parentCategoryId: parentId,
+      });
+    }
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await cashbook.openFilter();
+    await cashbook.openCategoryPicker();
+    await page.getByTestId('filter-category-parent-식비').click();
+
+    const names = await cashbook.categoryPickerSheet
+      .locator('[data-testid^="filter-category-option-"]')
+      .allInnerTexts();
+    // '식비 전체'는 맨 앞에 고정, 하위는 가나다 순
+    expect(names.map((n) => n.trim())).toEqual(['식비 전체', '배달', '외식', '장보기']);
+  });
+});

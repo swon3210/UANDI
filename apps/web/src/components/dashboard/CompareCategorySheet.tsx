@@ -3,12 +3,18 @@
 import { useState } from 'react';
 import { Check, Minus, Search } from 'lucide-react';
 import { Button, cn, Input, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
+import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
+import { CATEGORY_ICON_MAP } from '@/constants/category-icons';
 
 export type CompareCategoryOption = {
   name: string;
   color: string;
+  /** 카테고리 아이콘 키. 메타에 없는 카테고리(삭제됨 등)는 생략 → 색 점으로 대체 */
+  icon?: string;
   /** 상위(레벨 1) 카테고리 이름. 본인이 상위이거나 메타에 없으면 null */
   parent: string | null;
+  /** 상위 카테고리 아이콘 키. 상위에 직접 기록된 내역이 없어 묶음 헤더만 그릴 때 쓴다 */
+  parentIcon?: string;
 };
 
 type CategoryGroupNode = {
@@ -16,11 +22,15 @@ type CategoryGroupNode = {
   name: string;
   /** 상위 카테고리 자체가 선택 가능한 옵션이면 그 옵션 (상위에 직접 기록된 내역이 있을 때) */
   self: CompareCategoryOption | null;
+  /** 상위 카테고리 아이콘 키 */
+  icon?: string;
   children: CompareCategoryOption[];
 };
 
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'ko');
+
 /**
- * 옵션을 상위 → 하위 2단계로 묶는다. 순서는 options(금액 내림차순)에서 그룹이 처음 등장한 순서를 따른다.
+ * 옵션을 상위 → 하위 2단계로 묶는다. 상위·하위 모두 이름 가나다 순으로 정렬한다.
  * 하위만 있고 상위에 직접 기록된 내역이 없으면 상위는 선택 대상이 아닌 묶음 헤더(self=null)로만 쓴다.
  */
 function buildGroups(options: CompareCategoryOption[]): CategoryGroupNode[] {
@@ -34,10 +44,19 @@ function buildGroups(options: CompareCategoryOption[]): CategoryGroupNode[] {
     return g;
   };
   for (const opt of options) {
-    if (opt.parent) groupOf(opt.parent).children.push(opt);
-    else groupOf(opt.name).self = opt;
+    if (opt.parent) {
+      const g = groupOf(opt.parent);
+      g.children.push(opt);
+      g.icon ??= opt.parentIcon;
+    } else {
+      const g = groupOf(opt.name);
+      g.self = opt;
+      g.icon = opt.icon;
+    }
   }
-  return [...groups.values()];
+  const sorted = [...groups.values()].sort(byName);
+  for (const g of sorted) g.children.sort(byName);
+  return sorted;
 }
 
 /** 검색어로 그룹을 거른다. 상위 이름이 맞으면 하위 전체를, 아니면 이름이 맞는 하위만 남긴다. */
@@ -52,7 +71,7 @@ function filterGroups(groups: CategoryGroupNode[], query: string): CategoryGroup
 }
 
 type Props = {
-  /** 선택 가능한 카테고리 (금액 내림차순 권장) */
+  /** 선택 가능한 카테고리. 표시 순서는 시트가 가나다 순으로 정한다 */
   options: CompareCategoryOption[];
   /** 이미 선택된 카테고리. 시트는 이 값을 draft로 복제해 편집한다. */
   initialSelected: string[];
@@ -146,7 +165,9 @@ export function CompareCategorySheet({
             return (
               <li key={g.name} data-testid={`compare-category-group-${g.name}`}>
                 <OptionRow
-                  option={g.self ?? { name: g.name, color: 'transparent', parent: null }}
+                  option={
+                    g.self ?? { name: g.name, color: 'transparent', icon: g.icon, parent: null }
+                  }
                   state={groupState}
                   onClick={() => toggleGroup(names)}
                   isGroup
@@ -240,10 +261,34 @@ function OptionRow({
         {state === 'selected' ? <Check size={13} aria-hidden /> : null}
         {state === 'partial' ? <Minus size={13} aria-hidden /> : null}
       </span>
-      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: option.color }} />
+      <OptionIcon option={option} />
       <span className={cn('min-w-0 flex-1 truncate text-sm', isGroup && 'font-medium')}>
         {option.name}
       </span>
     </button>
+  );
+}
+
+/** 카테고리 아이콘(카테고리 색). 아이콘을 모르는 카테고리는 기존처럼 색 점으로 표시한다. */
+function OptionIcon({ option }: { option: CompareCategoryOption }) {
+  if (option.icon && CATEGORY_ICON_MAP[option.icon]) {
+    return (
+      <span
+        data-testid={`compare-category-icon-${option.name}`}
+        className="flex h-5 w-5 shrink-0 items-center justify-center"
+        aria-hidden
+      >
+        <CategoryIcon
+          name={option.icon}
+          size={18}
+          color={option.color === 'transparent' ? undefined : option.color}
+        />
+      </span>
+    );
+  }
+  return (
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center" aria-hidden>
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: option.color }} />
+    </span>
   );
 }

@@ -918,14 +918,14 @@ test.describe('대시보드', () => {
         group: 'expense',
         subGroup: 'variable_common',
         name: '생활비',
-        icon: 'basket',
+        icon: 'shopping_bag',
       });
       for (const name of ['외식', '장보기']) {
         await seedCashbookCategory(coupleId, {
           group: 'expense',
           subGroup: 'variable_common',
           name,
-          icon: 'basket',
+          icon: 'shopping_bag',
           parentCategoryId: parentId,
         });
       }
@@ -958,6 +958,32 @@ test.describe('대시보드', () => {
       // 하위가 없는 카테고리는 묶음 없이 단독 항목
       await expect(dashboard.compareCategoryOption('교통')).toBeVisible();
       await expect(dashboard.compareCategoryGroup('교통')).toHaveCount(0);
+    });
+
+    test('카테고리는 가나다 순으로 정렬되고 색 점 대신 아이콘으로 표시된다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedNested(coupleId, uid);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await dashboard.subGroupTab('변동 지출').click();
+      await dashboard.compareCategoryButton.click();
+
+      // 금액순(생활비 50,000 > 교통 10,000)이 아니라 가나다 순
+      const rows = await page
+        .getByTestId('compare-category-list')
+        .locator(
+          '[data-testid^="compare-category-option-"], [data-testid^="compare-category-group-toggle-"]'
+        )
+        .allInnerTexts();
+      expect(rows.map((r) => r.trim())).toEqual(['교통', '생활비', '외식', '장보기']);
+
+      await expect(page.getByTestId('compare-category-icon-교통')).toBeVisible();
+      await expect(page.getByTestId('compare-category-icon-생활비')).toBeVisible();
+      await expect(page.getByTestId('compare-category-icon-외식')).toBeVisible();
     });
 
     test('상위 카테고리를 누르면 하위 전체가 선택/해제된다', async ({ authedContext }) => {
