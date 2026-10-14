@@ -679,3 +679,48 @@ test.describe('가계부 내역 필터', () => {
     await expect(cashbook.predictionPrompt).toHaveCount(0);
   });
 });
+
+// 실제 모바일 기기처럼 터치(tap)로 조작한다. Radix는 터치 입력의 바깥 클릭 판정을
+// click 시점까지 미루므로, 마우스 click으로는 재현되지 않는 회귀를 잡기 위한 블록이다.
+test.describe('가계부 내역 필터 (터치 입력)', () => {
+  test.use({ hasTouch: true });
+
+  test('카테고리 시트에서 적용을 탭해도 필터 시트가 닫히지 않고 선택이 반영된다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const sikbiId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 45000,
+      category: '식비',
+    });
+    const trafficId = await seedCashbookEntry(coupleId, uid, {
+      type: 'expense',
+      amount: 3000,
+      category: '교통',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await expect(cashbook.entryCard(trafficId)).toBeVisible();
+
+    await cashbook.filterTrigger.tap();
+    await cashbook.filterSheet.waitFor({ state: 'visible' });
+    await cashbook.categoryPickerTrigger.tap();
+    await cashbook.categoryPickerSheet.waitFor({ state: 'visible' });
+    await cashbook.categoryPickerOption('식비').tap();
+    await cashbook.categoryPickerApply.tap();
+    await cashbook.categoryPickerSheet.waitFor({ state: 'hidden' });
+
+    // 중첩 시트를 닫는 탭이 아래의 필터 시트까지 닫아버리면 선택이 유실된다.
+    await expect(cashbook.filterSheet).toBeVisible();
+    await expect(page.getByTestId('filter-selected-category-식비')).toBeVisible();
+
+    await cashbook.applyButton.tap();
+    await cashbook.filterSheet.waitFor({ state: 'hidden' });
+
+    await expect(cashbook.entryCard(sikbiId)).toBeVisible();
+    await expect(cashbook.entryCard(trafficId)).not.toBeVisible();
+  });
+});
