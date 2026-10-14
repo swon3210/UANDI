@@ -24,6 +24,5 @@ function Interactive(initial: PeriodKind) {
   return <PeriodSelector value={value} onChange={setValue} />;
 }
 
-export const Weekly: Story = { render: () => Interactive('weekly') };
 export const Monthly: Story = { render: () => Interactive('monthly') };
 export const Yearly: Story = { render: () => Interactive('yearly') };

@@ -27,10 +27,9 @@ export function formatDay(date: Date | Timestamp): string {
   return dayjs(d).format('M월 D일');
 }
 
-export type PeriodKind = 'weekly' | 'monthly' | 'yearly';
+export type PeriodKind = 'monthly' | 'yearly';
 
-const UNIT_BY_PERIOD: Record<PeriodKind, 'week' | 'month' | 'year'> = {
-  weekly: 'week',
+const UNIT_BY_PERIOD: Record<PeriodKind, 'month' | 'year'> = {
   monthly: 'month',
   yearly: 'year',
 };
@@ -44,11 +43,6 @@ export function getPeriodRange(kind: PeriodKind, cursor: Dayjs): { start: Date; 
 }
 
 export function getPeriodLabel(kind: PeriodKind, cursor: Dayjs): string {
-  if (kind === 'weekly') {
-    const start = cursor.startOf('week');
-    const end = cursor.endOf('week');
-    return `${start.format('M월 D일')} ~ ${end.format('D일')}`;
-  }
   if (kind === 'monthly') {
     return cursor.format('YYYY년 M월');
   }

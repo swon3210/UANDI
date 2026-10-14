@@ -18,7 +18,7 @@ export type DashboardFilters = {
   donutSelection: string[];
 };
 
-const PERIODS: readonly PeriodKind[] = ['weekly', 'monthly', 'yearly'];
+const PERIODS: readonly PeriodKind[] = ['monthly', 'yearly'];
 const GROUPS: readonly GroupFilter[] = ['all', 'expense', 'income'];
 const SUB_GROUPS: readonly SubGroupFilter[] = ['all', 'fixed', 'variable'];
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -32,7 +32,7 @@ function parseDate(value: string | null): Dayjs | null {
 
 function parseFilters(params: URLSearchParams): DashboardFilters {
   const periodParam = params.get('period') as PeriodKind | null;
-  const period = periodParam && PERIODS.includes(periodParam) ? periodParam : 'weekly';
+  const period = periodParam && PERIODS.includes(periodParam) ? periodParam : 'monthly';
   const at = parseDate(params.get('at'));
   const groupParam = params.get('group') as GroupFilter | null;
   const group = groupParam && GROUPS.includes(groupParam) ? groupParam : 'all';
@@ -43,7 +43,8 @@ function parseFilters(params: URLSearchParams): DashboardFilters {
 
   return {
     period,
-    cursor: at ? normalizeCursor(period, at) : dayjs(),
+    // 기간 시작일로 맞춰 둬야 이동 후 URL의 at이 기간 시작일로 남는다
+    cursor: normalizeCursor(period, at ?? dayjs()),
     group,
     subGroup,
     compareSelection: cmp ? normalizeCursor(period, cmp) : null,
@@ -55,7 +56,7 @@ function parseFilters(params: URLSearchParams): DashboardFilters {
 
 function serializeFilters(f: DashboardFilters): string {
   const params = new URLSearchParams();
-  if (f.period !== 'weekly') params.set('period', f.period);
+  if (f.period !== 'monthly') params.set('period', f.period);
   if (!isCurrentPeriod(f.period, f.cursor)) params.set('at', f.cursor.format(DATE_FORMAT));
   if (f.group !== 'all') params.set('group', f.group);
   if (f.subGroup !== 'all') params.set('sub', f.subGroup);

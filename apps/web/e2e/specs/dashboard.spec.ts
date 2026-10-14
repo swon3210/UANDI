@@ -34,16 +34,14 @@ test.describe('대시보드', () => {
       await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
     });
 
-    test('주간 기간이 내역 페이지에 그대로 적용된다', async ({ authedPage }) => {
+    test('기본(이번 달) 기간이 내역 페이지에 그대로 적용된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await dashboard.groupTabExpense.click();
       await dashboard.totalAmount.click();
       await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
 
-      const start = dayjs().startOf('week');
-      const end = dayjs().endOf('week');
       await expect(authedPage.getByTestId('cashbook-period-label')).toHaveText(
-        `${start.format('YYYY. M. D.')} ~ ${end.format('YYYY. M. D.')}`
+        `${dayjs().month() + 1}월`
       );
       // 지출 탭 → 내역 페이지에 지출 타입 필터 1개 적용
       await expect(authedPage.getByTestId('cashbook-filter-count')).toHaveText('1');
@@ -85,18 +83,29 @@ test.describe('대시보드', () => {
   });
 
   test.describe('가계부 대시보드 — 컨트롤', () => {
-    test('기본값으로 주간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
+    test('기본값으로 월간 + 전체 탭이 활성화된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
       await expect(dashboard.periodSelector).toBeVisible();
       await expect(dashboard.groupTabs).toBeVisible();
-      await expect(dashboard.periodTabWeekly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
       await expect(dashboard.groupTabAll).toHaveAttribute('data-state', 'active');
     });
 
-    test('기간 네비게이터에 현재 주 라벨이 표시된다', async ({ authedPage }) => {
+    test('기간 탭은 월간·연간만 있고 주간 탭은 없다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
-      // weekly 라벨은 'M월 D일 ~ D일' 패턴
-      await expect(dashboard.periodNavLabel).toContainText(/\d+월 \d+일\s*~\s*\d+일/);
+      await expect(dashboard.periodSelector.getByRole('tab')).toHaveText(['월간', '연간']);
+    });
+
+    test('예전 주간 URL로 들어오면 월간으로 보여준다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await authedPage.goto('/inner/cashbook?period=weekly');
+      await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodNavLabel).toContainText(dayjs().format('YYYY년 M월'));
+    });
+
+    test('기간 네비게이터에 현재 월 라벨이 표시된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      await expect(dashboard.periodNavLabel).toContainText(dayjs().format('YYYY년 M월'));
     });
 
     test('우측 화살표는 현재 기간일 때 비활성화된다', async ({ authedPage }) => {
@@ -104,24 +113,25 @@ test.describe('대시보드', () => {
       await expect(dashboard.periodNextButton).toBeDisabled();
     });
 
-    test('좌측 화살표 클릭 시 이전 주로 이동하고 우측 화살표가 활성화된다', async ({
+    test('좌측 화살표 클릭 시 이전 달로 이동하고 우측 화살표가 활성화된다', async ({
       authedPage,
     }) => {
       const dashboard = new DashboardPage(authedPage);
 
       await dashboard.periodPrevButton.click();
 
-      // 여전히 주 단위 라벨 패턴 유지
-      await expect(dashboard.periodNavLabel).toContainText(/\d+월 \d+일\s*~\s*\d+일/);
+      const prevMonth = dayjs().subtract(1, 'month');
+      await expect(dashboard.periodNavLabel).toContainText(prevMonth.format('YYYY년 M월'));
       await expect(dashboard.periodNextButton).toBeEnabled();
     });
 
-    test('월간 탭 선택 시 라벨이 월 단위로 바뀐다', async ({ authedPage }) => {
+    test('연간 탭에서 월간 탭으로 돌아오면 라벨이 월 단위로 바뀐다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);
+      await dashboard.periodTabYearly.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${dayjs().year()}년`);
       await dashboard.periodTabMonthly.click();
 
-      const expected = dayjs().format('YYYY년 M월');
-      await expect(dashboard.periodNavLabel).toContainText(expected);
+      await expect(dashboard.periodNavLabel).toHaveText(/^\d{4}년 \d{1,2}월$/);
     });
 
     test('연간 탭 선택 시 라벨이 연도로 바뀐다', async ({ authedPage }) => {
@@ -142,7 +152,8 @@ test.describe('대시보드', () => {
       await dashboard.subGroupTab('고정 지출').click();
 
       const prevMonth = dayjs().subtract(1, 'month').startOf('month');
-      await expect(authedPage).toHaveURL(/period=monthly/);
+      // 월간은 기본값이라 period는 생략된다
+      await expect(authedPage).not.toHaveURL(/period=/);
       await expect(authedPage).toHaveURL(new RegExp(`at=${prevMonth.format('YYYY-MM-DD')}`));
       await expect(authedPage).toHaveURL(/group=expense/);
       await expect(authedPage).toHaveURL(/sub=fixed/);
@@ -171,7 +182,7 @@ test.describe('대시보드', () => {
       // 필터 변경마다 라우터 내비게이션을 하면 서로 경합해 히스토리에 중간 상태가 남던 회귀 방지
       const dashboard = new DashboardPage(authedPage);
       for (let round = 0; round < 4; round++) {
-        await dashboard.periodTabMonthly.click();
+        await dashboard.periodTabYearly.click();
         await dashboard.groupTabExpense.click();
         await expect(authedPage).toHaveURL(/group=expense/);
 
@@ -179,13 +190,13 @@ test.describe('대시보드', () => {
         await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
         await authedPage.goBack();
 
-        await expect(authedPage).toHaveURL(/period=monthly&group=expense/);
-        await expect(dashboard.periodTabMonthly).toHaveAttribute('data-state', 'active');
+        await expect(authedPage).toHaveURL(/period=yearly&group=expense/);
+        await expect(dashboard.periodTabYearly).toHaveAttribute('data-state', 'active');
         await expect(dashboard.groupTabExpense).toHaveAttribute('data-state', 'active');
 
-        await dashboard.periodTabWeekly.click();
+        await dashboard.periodTabMonthly.click();
         await dashboard.groupTabAll.click();
-        await expect(authedPage).not.toHaveURL(/group=/);
+        await expect(authedPage).not.toHaveURL(/group=|period=/);
       }
     });
 
@@ -229,23 +240,6 @@ test.describe('대시보드', () => {
         await expect(dashboard.periodPickerMonth(now.month() + 2)).toBeDisabled();
       }
       await expect(dashboard.periodPickerMonth(now.month() + 1)).toBeEnabled();
-    });
-
-    test('주간: 달력에서 날짜를 고르면 그 날짜가 속한 주로 이동한다', async ({ authedPage }) => {
-      const dashboard = new DashboardPage(authedPage);
-      await dashboard.periodNavLabel.click();
-      await expect(dashboard.periodPickerSheet).toBeVisible();
-
-      await dashboard.periodPickerPrev.click();
-      const target = dayjs().subtract(1, 'month').date(15);
-      await dashboard.periodPickerDay(target.format('YYYY-MM-DD')).click();
-
-      await expect(dashboard.periodPickerSheet).toBeHidden();
-      const start = target.startOf('week');
-      const end = target.endOf('week');
-      await expect(dashboard.periodNavLabel).toHaveText(
-        `${start.format('M월 D일')} ~ ${end.format('D일')}`
-      );
     });
 
     test('연간: 연도 목록에서 고른 연도로 이동한다', async ({ authedPage }) => {

@@ -6,7 +6,6 @@ export class DashboardPage {
 
   // 가계부 대시보드
   readonly periodSelector: Locator;
-  readonly periodTabWeekly: Locator;
   readonly periodTabMonthly: Locator;
   readonly periodTabYearly: Locator;
 
@@ -25,10 +24,6 @@ export class DashboardPage {
 
   periodPickerYear(year: number): Locator {
     return this.page.getByTestId(`period-picker-year-${year}`);
-  }
-
-  periodPickerDay(date: string): Locator {
-    return this.page.getByTestId(`period-picker-day-${date}`);
   }
 
   readonly groupTabs: Locator;
@@ -97,7 +92,6 @@ export class DashboardPage {
     this.header = page.getByTestId('dashboard-header');
 
     this.periodSelector = page.getByTestId('period-selector');
-    this.periodTabWeekly = this.periodSelector.getByRole('tab', { name: '주간' });
     this.periodTabMonthly = this.periodSelector.getByRole('tab', { name: '월간' });
     this.periodTabYearly = this.periodSelector.getByRole('tab', { name: '연간' });
 
