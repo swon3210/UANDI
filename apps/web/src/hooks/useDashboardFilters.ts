@@ -8,6 +8,11 @@ export type DashboardFilters = {
   period: PeriodKind;
   /** 기준 기간 커서 */
   cursor: Dayjs;
+  /**
+   * 반대쪽 탭(월간↔연간)에서 마지막으로 보던 기간 커서. 탭을 오갈 때 복원한다.
+   * null = 아직 그 탭에서 기간을 정한 적 없음 → 현재 커서에서 파생
+   */
+  altCursor: Dayjs | null;
   group: GroupFilter;
   subGroup: SubGroupFilter;
   /** null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간 */
@@ -30,10 +35,15 @@ function parseDate(value: string | null): Dayjs | null {
   return date;
 }
 
+function otherPeriod(period: PeriodKind): PeriodKind {
+  return period === 'monthly' ? 'yearly' : 'monthly';
+}
+
 function parseFilters(params: URLSearchParams): DashboardFilters {
   const periodParam = params.get('period') as PeriodKind | null;
   const period = periodParam && PERIODS.includes(periodParam) ? periodParam : 'monthly';
   const at = parseDate(params.get('at'));
+  const alt = parseDate(params.get('alt'));
   const groupParam = params.get('group') as GroupFilter | null;
   const group = groupParam && GROUPS.includes(groupParam) ? groupParam : 'all';
   const subParam = params.get('sub') as SubGroupFilter | null;
@@ -45,6 +55,7 @@ function parseFilters(params: URLSearchParams): DashboardFilters {
     period,
     // 기간 시작일로 맞춰 둬야 이동 후 URL의 at이 기간 시작일로 남는다
     cursor: normalizeCursor(period, at ?? dayjs()),
+    altCursor: alt ? normalizeCursor(otherPeriod(period), alt) : null,
     group,
     subGroup,
     compareSelection: cmp ? normalizeCursor(period, cmp) : null,
@@ -66,6 +77,8 @@ function serializeFilters(f: DashboardFilters): string {
     for (const name of f.categorySelection) params.append('cat', name);
   }
   for (const name of f.donutSelection) params.append('donut', name);
+  // 반대쪽 탭에서 보던 기간(탭 전환 시 복원용)은 부가 정보라 맨 뒤에 둔다
+  if (f.altCursor) params.set('alt', f.altCursor.format(DATE_FORMAT));
   return params.toString();
 }
 

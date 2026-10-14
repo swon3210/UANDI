@@ -143,6 +143,62 @@ test.describe('대시보드', () => {
     });
   });
 
+  test.describe('가계부 대시보드 — 월간/연간 탭별 기간 유지', () => {
+    test('탭을 오가도 각 탭에서 보던 기간이 그대로 남는다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      const month = dayjs().subtract(2, 'month');
+      const year = dayjs().year() - 1;
+
+      await dashboard.periodPrevButton.click();
+      await dashboard.periodPrevButton.click();
+      await expect(dashboard.periodNavLabel).toHaveText(month.format('YYYY년 M월'));
+
+      await dashboard.periodTabYearly.click();
+      await dashboard.periodPrevButton.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${year}년`);
+
+      for (let round = 0; round < 2; round++) {
+        await dashboard.periodTabMonthly.click();
+        await expect(dashboard.periodNavLabel).toHaveText(month.format('YYYY년 M월'));
+        await dashboard.periodTabYearly.click();
+        await expect(dashboard.periodNavLabel).toHaveText(`${year}년`);
+      }
+    });
+
+    test('연간 탭을 처음 열면 월간에서 보던 달의 연도로 열린다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      const lastYear = dayjs().year() - 1;
+      await dashboard.periodNavLabel.click();
+      await dashboard.periodPickerPrev.click();
+      await dashboard.periodPickerMonth(3).click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${lastYear}년 3월`);
+
+      await dashboard.periodTabYearly.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${lastYear}년`);
+    });
+
+    test('다른 페이지에 다녀와도 탭별 기간이 유지된다', async ({ authedPage }) => {
+      const dashboard = new DashboardPage(authedPage);
+      const month = dayjs().subtract(1, 'month');
+      const year = dayjs().year() - 2;
+
+      await dashboard.periodPrevButton.click();
+      await dashboard.periodTabYearly.click();
+      await dashboard.periodPrevButton.click();
+      await dashboard.periodPrevButton.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${year}년`);
+
+      await authedPage.getByTestId('cashbook-tab-history').click();
+      await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+      await authedPage.goBack();
+
+      await expect(dashboard.periodTabYearly).toHaveAttribute('data-state', 'active');
+      await expect(dashboard.periodNavLabel).toHaveText(`${year}년`);
+      await dashboard.periodTabMonthly.click();
+      await expect(dashboard.periodNavLabel).toHaveText(month.format('YYYY년 M월'));
+    });
+  });
+
   test.describe('가계부 대시보드 — 필터 유지 (URL)', () => {
     test('필터를 바꾸면 URL 쿼리에 저장된다', async ({ authedPage }) => {
       const dashboard = new DashboardPage(authedPage);

@@ -122,7 +122,7 @@ query(
 ### 필터 유지 (URL 쿼리, `useDashboardFilters`)
 
 - 기간 단위·기준 기간·그룹·세부 필터·비교 기간·선택 카테고리를 `/inner/cashbook` 쿼리에 저장해 다른 페이지에 다녀와도 유지
-  - `period`(monthly 기본 생략, 예전 `weekly` 값은 monthly로 처리), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키)
+  - `period`(monthly 기본 생략, 예전 `weekly` 값은 monthly로 처리), `at`(기준 기간 시작일 `YYYY-MM-DD`, 현재 기간이면 생략), `group`, `sub`, `cmp`(직접 고른 비교 기간), `cat`(비교 대상 카테고리, 반복 키, 빈 값=모두 해제), `donut`(전체 도넛 표시 카테고리, 반복 키), `alt`(반대쪽 탭(월간↔연간)에서 마지막으로 보던 기간 시작일, 탭 전환 시 복원)
   - 잘못된 값·미래 날짜는 무시하고 기본값
 - 쿼리 없이 진입하면(상단 탭·사이드바 링크 등) 기본 필터로 시작한다
 - 필터는 React 상태로 즉시 반영하고 URL은 `window.history.replaceState`로 뒤따라 맞춘다 (연속 클릭 유실 방지). `router.replace`는 필터마다 서버 왕복 내비게이션이 경합해 히스토리에 중간 상태가 남으므로 쓰지 않는다
@@ -131,7 +131,7 @@ query(
 
 - shadcn `Tabs` 또는 ToggleGroup, `monthly | yearly` (주간 탭은 제거됨)
 - `data-testid="period-selector"`
-- 변경 시 cursor를 해당 단위로 정규화: `cursor.startOf(unit)`
+- 탭을 오가면 각 탭에서 마지막으로 보던 기간을 복원한다. 처음 여는 탭은 현재 cursor를 해당 단위로 정규화: `cursor.startOf(unit)` (예: 2025년 3월 → 2025년)
 - 기본값: `monthly`
 
 ### 기간 네비게이터 (`PeriodNavigator`)
