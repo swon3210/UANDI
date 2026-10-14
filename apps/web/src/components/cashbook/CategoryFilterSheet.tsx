@@ -14,12 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@uandi/ui';
-import type {
-  CashbookCategory,
-  CashbookEntryType,
-  CategoryGroup,
-  CategorySubGroup,
-} from '@/types';
+import type { CashbookCategory, CashbookEntryType, CategoryGroup, CategorySubGroup } from '@/types';
 import {
   GROUP_LABELS,
   SUB_GROUP_LABELS,
@@ -30,6 +25,9 @@ import { CategoryIcon } from './CategoryIcon';
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 // 이 개수 이상일 때만 검색창을 노출(소수일 땐 드릴다운만으로 충분).
 const SHOW_SEARCH_THRESHOLD = 8;
+
+// 카테고리는 이름 가나다 순으로 보여준다.
+const byName = (a: CashbookCategory, b: CashbookCategory) => a.name.localeCompare(b.name, 'ko');
 
 type CategoryFilterSheetProps = {
   categories: CashbookCategory[];
@@ -97,16 +95,18 @@ export function CategoryFilterSheet({
   const showSearch = typeCategories.length >= SHOW_SEARCH_THRESHOLD;
   const query = search.trim().toLowerCase();
   const searchResults = query
-    ? typeCategories.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query) ||
-          c.examples.some((ex) => ex.toLowerCase().includes(query))
-      )
+    ? typeCategories
+        .filter(
+          (c) =>
+            c.name.toLowerCase().includes(query) ||
+            c.examples.some((ex) => ex.toLowerCase().includes(query))
+        )
+        .sort(byName)
     : [];
 
   const drilledParent = drilledParentId ? parentById.get(drilledParentId) : undefined;
   const drilledChildren = drilledParent
-    ? (childrenByParent.get(drilledParent.id) ?? []).sort((a, b) => a.sortOrder - b.sortOrder)
+    ? [...(childrenByParent.get(drilledParent.id) ?? [])].sort(byName)
     : [];
 
   const switchType = (t: CashbookEntryType) => {
@@ -220,12 +220,10 @@ export function CategoryFilterSheet({
         ) : (
           <div className="space-y-3">
             {subGroups.map((sg) => {
-              const subParents = parents
-                .filter((c) => c.subGroup === sg)
-                .sort((a, b) => a.sortOrder - b.sortOrder);
+              const subParents = parents.filter((c) => c.subGroup === sg).sort(byName);
               if (subParents.length === 0) return null;
               return (
-                <div key={sg}>
+                <div key={sg} data-testid={`category-filter-section-${sg}`}>
                   <div className="mb-1 text-xs text-muted-foreground">
                     {SUB_GROUP_LABELS[sg as CategorySubGroup]}
                   </div>

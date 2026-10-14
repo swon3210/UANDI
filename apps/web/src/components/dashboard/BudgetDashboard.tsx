@@ -238,15 +238,24 @@ export function BudgetDashboard({ coupleId }: Props) {
   // 카테고리 선택 시트의 상위/하위 묶음용: 현재 그룹 카테고리 이름 → 상위 카테고리 이름
   const groupCategories = (categories ?? []).filter((c) => c.group === group);
   const categoryById = new Map(groupCategories.map((c) => [c.id, c]));
-  const parentNameOf = (name: string): string | null => {
+  const parentOf = (name: string) => {
     const parentId = groupCategories.find((c) => c.name === name)?.parentCategoryId;
-    return parentId ? (categoryById.get(parentId)?.name ?? null) : null;
+    return parentId ? categoryById.get(parentId) : undefined;
   };
-  const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) => ({
-    name: r.category,
-    color: categoryColors[r.category] ?? FALLBACK_CHIP_COLOR,
-    parent: parentNameOf(r.category),
-  }));
+  const iconOf = (name: string) => groupCategories.find((c) => c.name === name)?.icon;
+  const toOption = (name: string, color: string): CompareCategoryOption => {
+    const parent = parentOf(name);
+    return {
+      name,
+      color,
+      icon: iconOf(name),
+      parent: parent?.name ?? null,
+      parentIcon: parent?.icon,
+    };
+  };
+  const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) =>
+    toOption(r.category, categoryColors[r.category] ?? FALLBACK_CHIP_COLOR)
+  );
   // 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다
   const selectedCategories = categorySelection ?? [];
 
@@ -255,11 +264,9 @@ export function BudgetDashboard({ coupleId }: Props) {
   const donutSlices = byCategory.filter((c) => donutSelection.includes(c.category));
   const isDonutFiltered = isGroupOverview && donutSlices.length > 0;
   const displayTotal = isDonutFiltered ? donutSlices.reduce((sum, c) => sum + c.amount, 0) : total;
-  const donutOptions: CompareCategoryOption[] = byCategory.map((c) => ({
-    name: c.category,
-    color: c.color,
-    parent: parentNameOf(c.category),
-  }));
+  const donutOptions: CompareCategoryOption[] = byCategory.map((c) =>
+    toOption(c.category, c.color)
+  );
 
   const handleOpenDonutCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {

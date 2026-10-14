@@ -46,21 +46,37 @@ const NAMES = [
   '통신비',
 ];
 
+const ICONS = ['wallet', 'gift', 'airplane', 'bank', 'bowl_food', 'piggy_bank', 'heart'];
+
 const manyOptions: CompareCategoryOption[] = NAMES.map((name, i) => ({
   name,
   color: COLORS[i % COLORS.length],
+  icon: ICONS[i % ICONS.length],
   parent: null,
 }));
 
 // 상위(식비·주거) 아래 하위가 있는 2단계 구조. 식비는 상위에 직접 기록된 내역도 있다.
 const nestedOptions: CompareCategoryOption[] = [
-  { name: '식비', color: '#D8635A', parent: null },
-  { name: '외식', color: '#F59E0B', parent: '식비' },
-  { name: '장보기', color: '#4CAF86', parent: '식비' },
-  { name: '배달', color: '#3B82F6', parent: '식비' },
-  { name: '월세', color: '#8B5CF6', parent: '주거' },
-  { name: '관리비', color: '#EC4899', parent: '주거' },
-  { name: '교통', color: '#14B8A6', parent: null },
+  { name: '식비', color: '#D8635A', icon: 'bowl_food', parent: null },
+  { name: '외식', color: '#F59E0B', icon: 'fork_knife', parent: '식비', parentIcon: 'bowl_food' },
+  {
+    name: '장보기',
+    color: '#4CAF86',
+    icon: 'shopping_bag',
+    parent: '식비',
+    parentIcon: 'bowl_food',
+  },
+  { name: '배달', color: '#3B82F6', icon: 'bowl_food', parent: '식비', parentIcon: 'bowl_food' },
+  { name: '월세', color: '#8B5CF6', icon: 'house', parent: '주거', parentIcon: 'house' },
+  { name: '관리비', color: '#EC4899', icon: 'lightbulb', parent: '주거', parentIcon: 'house' },
+  { name: '교통', color: '#14B8A6', icon: 'bus', parent: null },
+];
+
+// 삭제된 카테고리처럼 아이콘을 모르는 항목은 색 점으로 표시된다.
+const withUnknownIconOptions: CompareCategoryOption[] = [
+  { name: '식비', color: '#D8635A', icon: 'bowl_food', parent: null },
+  { name: '삭제된 카테고리', color: '#9CA3AF', parent: null },
+  { name: '교통', color: '#14B8A6', icon: 'bus', parent: null },
 ];
 
 export const ManyCategories: Story = {
@@ -77,4 +93,8 @@ export const NothingSelected: Story = {
 
 export const FewCategories: Story = {
   args: { options: manyOptions.slice(0, 3), initialSelected: ['정기급여'] },
+};
+
+export const UnknownIconFallback: Story = {
+  args: { options: withUnknownIconOptions, initialSelected: [] },
 };
