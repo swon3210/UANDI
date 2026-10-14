@@ -743,6 +743,28 @@ test.describe('가계부 내역 필터 — 카테고리 정렬', () => {
     expect(names.map((n) => n.trim())).toEqual(['보험', '월세']);
   });
 
+  test('카테고리 시트의 아이콘은 카테고리에 지정된 색으로 표시된다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_personal',
+      name: '교통',
+      icon: 'bus',
+      color: '#6A6FD8',
+    });
+
+    const cashbook = new CashbookPage(page);
+    await cashbook.goto();
+    await cashbook.openFilter();
+    await cashbook.openCategoryPicker();
+
+    const option = cashbook.categoryPickerOption('교통');
+    await expect(option.locator('svg').first()).toHaveAttribute('fill', '#6A6FD8');
+    // 선택하면 primary 배경 위라 아이콘은 글자색을 따른다
+    await option.click();
+    await expect(option.locator('svg').first()).toHaveAttribute('fill', 'currentColor');
+  });
+
   test('하위 카테고리도 가나다 순으로 표시된다', async ({ authedContext }) => {
     const { page, coupleId } = authedContext;
     const parentId = await seedCashbookCategory(coupleId, {

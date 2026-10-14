@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
+import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
 import {
   Button,
   EmptyState,
@@ -65,9 +66,6 @@ const GROUP_NAME: Record<'expense' | 'income', string> = {
   expense: '지출',
   income: '수입',
 };
-
-// 비교 기간에만 있는(도넛 팔레트에 없는) 카테고리 칩 색
-const FALLBACK_CHIP_COLOR = 'hsl(var(--muted-foreground))';
 
 const PICKER_TITLE: Record<PeriodKind, string> = {
   weekly: '주 선택',
@@ -232,9 +230,13 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   const canGoNext = !isCurrentPeriod(period, cursor);
   const label = getPeriodLabel(period, cursor);
+  // 현재 기간 카테고리는 도넛과 같은 색, 비교 기간에만 있는 카테고리는 카테고리에 지정된 색
   const categoryColors: Record<string, string> = Object.fromEntries(
     byCategory.map((c) => [c.category, c.color])
   );
+  const colorMap = buildCategoryColorMap(categories);
+  const colorOf = (name: string) =>
+    categoryColors[name] ?? getCategoryColor(colorMap, group === 'all' ? 'expense' : group, name);
   // 카테고리 선택 시트의 상위/하위 묶음용: 현재 그룹 카테고리 이름 → 상위 카테고리 이름
   const groupCategories = (categories ?? []).filter((c) => c.group === group);
   const categoryById = new Map(groupCategories.map((c) => [c.id, c]));
@@ -251,10 +253,11 @@ export function BudgetDashboard({ coupleId }: Props) {
       icon: iconOf(name),
       parent: parent?.name ?? null,
       parentIcon: parent?.icon,
+      parentColor: parent?.color,
     };
   };
   const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) =>
-    toOption(r.category, categoryColors[r.category] ?? FALLBACK_CHIP_COLOR)
+    toOption(r.category, colorOf(r.category))
   );
   // 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다
   const selectedCategories = categorySelection ?? [];

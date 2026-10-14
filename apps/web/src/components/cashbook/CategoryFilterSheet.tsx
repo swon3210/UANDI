@@ -135,7 +135,8 @@ export function CategoryFilterSheet({
         className={chipClass(isSelected)}
         onClick={() => toggle(cat.name)}
       >
-        <CategoryIcon name={cat.icon} size={14} />
+        {/* 선택 칩은 primary 배경이라 아이콘을 글자색에 맞추고, 미선택일 때 카테고리 색을 쓴다 */}
+        <CategoryIcon name={cat.icon} size={14} color={isSelected ? undefined : cat.color} />
         {label ?? cat.name}
         {isSelected && <Check size={13} aria-hidden />}
       </button>
@@ -209,7 +210,7 @@ export function CategoryFilterSheet({
               대분류
             </button>
             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <CategoryIcon name={drilledParent.icon} size={14} />
+              <CategoryIcon name={drilledParent.icon} size={14} color={drilledParent.color} />
               {drilledParent.name}
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -244,7 +245,11 @@ export function CategoryFilterSheet({
                           className={chipClass(selectedInside > 0)}
                           onClick={() => setDrilledParentId(parent.id)}
                         >
-                          <CategoryIcon name={parent.icon} size={16} />
+                          <CategoryIcon
+                            name={parent.icon}
+                            size={16}
+                            color={selectedInside > 0 ? undefined : parent.color}
+                          />
                           {parent.name}
                           {selectedInside > 0 && (
                             <Badge

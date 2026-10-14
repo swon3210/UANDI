@@ -270,7 +270,7 @@ export function CashbookFilterSheet({
                     data-testid={`filter-selected-category-${name}`}
                     className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-primary"
                   >
-                    {cat && <CategoryIcon name={cat.icon} size={13} />}
+                    {cat && <CategoryIcon name={cat.icon} size={13} color={cat.color} />}
                     {name}
                     <button
                       type="button"

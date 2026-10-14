@@ -88,6 +88,7 @@ export function CategoryDonutChart({ data, expandable, onSelect }: Props) {
           const content = (
             <>
               <span
+                data-testid={`category-donut-swatch-${slice.category}`}
                 className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
                 style={{ backgroundColor: slice.color }}
               />
