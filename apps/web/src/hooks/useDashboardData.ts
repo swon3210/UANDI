@@ -7,9 +7,12 @@ import { getPeriodRange, isCurrentPeriod, type PeriodKind } from '@/utils/date';
 import {
   buildMonthProjection,
   buildUpcomingFixed,
+  buildUpcomingFixedYear,
+  buildYearProjection,
   pickUpcomingFixed,
   type MonthProjection,
   type UpcomingFixed,
+  type YearProjection,
 } from '@/utils/upcoming-fixed';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
@@ -64,15 +67,18 @@ export type DashboardData = {
   hasEntries: boolean;
   comparison: PeriodComparison;
   /**
-   * 월간 탭 + 이번 달일 때만: 아직 기록되지 않은 이달 고정 지출·수입 발생분(그룹 필터와 무관, 전체).
-   * 다른 달·연간 탭·로딩 중에는 null (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞이므로).
+   * 현재 기간일 때만(이번 달 또는 올해): 아직 기록되지 않은 고정 지출·수입 발생분(그룹 필터와 무관, 전체).
+   * 월간은 이달 남은 발생분, 연간은 오늘부터 12월까지. 과거 기간·로딩 중에는 null
+   * (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞이므로).
    */
   upcoming: UpcomingFixed | null;
   /**
-   * 지출·수입 탭 + 이번 달일 때만: 현재 필터(그룹·고정/변동)의 이달 누적 흐름과 예정 투영.
+   * 월간 탭의 지출·수입 탭 + 이번 달일 때만: 현재 필터(그룹·고정/변동)의 이달 누적 흐름과 예정 투영.
    * 변동 탭은 예정이 없어도 실제 누적만 담긴다. 전체 탭·다른 달·연간은 null.
    */
   projection: MonthProjection | null;
+  /** 연간 탭의 지출·수입 탭 + 올해일 때만: 현재 필터의 월별 실제·예정 투영. */
+  yearProjection: YearProjection | null;
   isLoading: boolean;
   /** 비교 기간 데이터 로딩 중 (현재 기간과 별도로 비교 기간만 바꿀 수 있어 분리) */
   isCompareLoading: boolean;
@@ -274,18 +280,24 @@ export function useDashboardData(args: {
     const total = computeTotal(filtered);
     const isLoading = entriesQuery.isLoading || categoriesQuery.isLoading;
     // 로딩 중엔 실거래(G1)가 아직 없어 예정 건수가 잠깐 부풀어 보이므로 숨긴다.
-    const upcoming =
-      !isLoading && period === 'monthly' && isCurrentPeriod(period, cursor)
+    const isCurrent = !isLoading && isCurrentPeriod(period, cursor);
+    const upcoming = !isCurrent
+      ? null
+      : period === 'monthly'
         ? buildUpcomingFixed(categoriesQuery.data ?? [], entriesQuery.data ?? [], dayjs())
-        : null;
-    // 투영은 합계 KPI와 같은 필터 기준. 변동 탭엔 예정 개념이 없으니 예정 없이 실제 누적만.
-    const projection =
+        : buildUpcomingFixedYear(categoriesQuery.data ?? [], entriesQuery.data ?? [], dayjs());
+    // 투영은 합계 KPI와 같은 필터 기준. 변동 탭엔 예정 개념이 없으니 예정 없이 실제만.
+    const upcomingForFilter =
       upcoming && supportsSubGroup(group)
-        ? buildMonthProjection(
-            filtered,
-            pickUpcomingFixed(upcoming, subGroup === 'variable' ? [] : [group], null).items,
-            dayjs()
-          )
+        ? pickUpcomingFixed(upcoming, subGroup === 'variable' ? [] : [group], null).items
+        : null;
+    const projection =
+      upcomingForFilter && period === 'monthly'
+        ? buildMonthProjection(filtered, upcomingForFilter, dayjs())
+        : null;
+    const yearProjection =
+      upcomingForFilter && period === 'yearly'
+        ? buildYearProjection(filtered, upcomingForFilter, dayjs())
         : null;
 
     return {
@@ -300,6 +312,7 @@ export function useDashboardData(args: {
       },
       upcoming,
       projection,
+      yearProjection,
       isLoading,
       isCompareLoading: compareQuery.isLoading,
     };

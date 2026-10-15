@@ -82,6 +82,18 @@ export class DashboardPage {
   readonly projectionUpcomingButton: Locator;
   readonly projectionEndLabel: Locator;
   readonly projectionOverdueHint: Locator;
+  readonly yearProjection: Locator;
+  readonly yearProjectionUpcomingButton: Locator;
+
+  /** 연간 막대 차트의 달별 예정(빗금) 구간 */
+  yearBarUpcoming(month: number): Locator {
+    return this.page.getByTestId(`year-bar-upcoming-${month}`);
+  }
+
+  /** 연간 막대 차트의 달별 실제 구간 */
+  yearBarActual(month: number): Locator {
+    return this.page.getByTestId(`year-bar-actual-${month}`);
+  }
   readonly upcomingSheet: Locator;
   readonly upcomingSheetList: Locator;
   readonly upcomingSheetOverdue: Locator;
@@ -176,6 +188,8 @@ export class DashboardPage {
     this.monthProjection = page.getByTestId('month-projection');
     this.projectionUpcomingButton = page.getByTestId('projection-upcoming-button');
     this.projectionEndLabel = page.getByTestId('projection-end-label');
+    this.yearProjection = page.getByTestId('year-projection');
+    this.yearProjectionUpcomingButton = page.getByTestId('year-projection-upcoming-button');
     this.projectionOverdueHint = page.getByTestId('projection-overdue-hint');
     this.upcomingSheet = page.getByTestId('upcoming-fixed-sheet');
     this.upcomingSheetList = page.getByTestId('upcoming-fixed-list');

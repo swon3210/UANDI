@@ -199,3 +199,96 @@ export function buildMonthProjection(
     projectedTotal: actualTotal + upcomingTotal,
   };
 }
+
+// ── 연간 탭: 올해 남은 예정 + 월별 투영 ──
+
+/**
+ * 오늘부터 올해 말까지의 고정 지출·수입 발생분 중 아직 기록되지 않은 것을 모은다.
+ * - 이번 달은 월간과 같은 규칙(오늘 이후 발생분, G1), 다음 달부터 12월까지는 달마다 발생분 전체.
+ * - G1은 올해 내역 전체로 판정한다(미래 날짜로 미리 기록해 둔 건도 제외된다).
+ * - 지난 발생분(overdue)은 연간에선 따지지 않는다. 지난 달들의 미기록까지 세면 안내가 아니라 잔소리가 된다.
+ */
+export function buildUpcomingFixedYear(
+  categories: CashbookCategory[],
+  yearEntries: CashbookEntry[],
+  today: Dayjs
+): UpcomingFixed {
+  const todayStart = today.startOf('day');
+  const monthsLeft = 12 - today.month(); // 이번 달 포함
+  const occurrences = buildRecurrenceOccurrences(categories, {
+    from: todayStart,
+    months: monthsLeft,
+  }).filter((o) => dayjs(o.date).isSame(today, 'year'));
+
+  const actualKeys = new Set<string>();
+  for (const e of yearEntries) actualKeys.add(recurrenceMonthKey(e.category, e.date.toDate()));
+
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const items: UpcomingFixedItem[] = [];
+  for (const o of occurrences) {
+    if (actualKeys.has(recurrenceMonthKey(o.categoryName, o.date))) continue; // G1
+    const category = byId.get(o.categoryId);
+    items.push({
+      categoryId: o.categoryId,
+      category: o.categoryName,
+      type: o.type,
+      amount: o.amount,
+      date: o.date,
+      note: o.note,
+      icon: category?.icon ?? '',
+      color: category?.color ?? '',
+    });
+  }
+  return { items, overdue: [], totals: sumTotals(items) };
+}
+
+export type YearProjectionMonth = {
+  /** 1 ~ 12 */
+  month: number;
+  /** 그 달의 실제 합계 (미래 달은 0) */
+  actual: number;
+  /** 그 달의 남은 예정 합계 (지난 달은 0) */
+  upcoming: number;
+};
+
+export type YearProjection = {
+  months: YearProjectionMonth[];
+  /** 1 ~ 12 */
+  currentMonth: number;
+  actualTotal: number;
+  upcomingTotal: number;
+  /** 연말 예상 합계 = 실제 + 예정 */
+  projectedTotal: number;
+};
+
+/**
+ * 1월부터 12월까지 달마다 실제 합계와 남은 예정 합계를 만든다.
+ * entries는 탭 필터가 적용된 올해 내역, items는 같은 기준으로 추린 올해 남은 예정이다.
+ */
+export function buildYearProjection(
+  entries: CashbookEntry[],
+  items: UpcomingFixedItem[],
+  today: Dayjs
+): YearProjection {
+  const months: YearProjectionMonth[] = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    actual: 0,
+    upcoming: 0,
+  }));
+  for (const e of entries) {
+    const d = dayjs(e.date.toDate());
+    if (!d.isSame(today, 'year')) continue;
+    months[d.month()].actual += e.amount;
+  }
+  for (const item of items) months[dayjs(item.date).month()].upcoming += item.amount;
+
+  const actualTotal = months.reduce((sum, m) => sum + m.actual, 0);
+  const upcomingTotal = months.reduce((sum, m) => sum + m.upcoming, 0);
+  return {
+    months,
+    currentMonth: today.month() + 1,
+    actualTotal,
+    upcomingTotal,
+    projectedTotal: actualTotal + upcomingTotal,
+  };
+}

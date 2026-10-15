@@ -28,7 +28,11 @@ type Props = {
   upcoming?: MeterUpcoming | null;
   /** 예정 칩 클릭 → 항목 목록 시트 */
   onUpcomingClick?: () => void;
+  /** 예정의 지평. 월간 탭은 월말, 연간 탭은 연말. 머리기사 문구에만 쓴다 */
+  horizon?: 'month' | 'year';
 };
+
+const HORIZON_LABEL: Record<'month' | 'year', string> = { month: '월말', year: '연말' };
 
 /**
  * 전체 탭: 수입 대비 지출.
@@ -36,7 +40,13 @@ type Props = {
  * - 이번 달(예정 있음): 달 중간의 비율은 월급 전이면 의미가 없으므로, 예정을 더한 월말 예상
  *   남은 금액 하나만 크게 두고 수입·지출 막대(실제 단색 + 예정 빗금)로 모양을 보여준다.
  */
-export function IncomeExpenseMeter({ income, expense, upcoming, onUpcomingClick }: Props) {
+export function IncomeExpenseMeter({
+  income,
+  expense,
+  upcoming,
+  onUpcomingClick,
+  horizon = 'month',
+}: Props) {
   const upIncome = upcoming?.income ?? 0;
   const upExpense = upcoming?.expense ?? 0;
   const hasUpcoming = upIncome > 0 || upExpense > 0;
@@ -48,6 +58,7 @@ export function IncomeExpenseMeter({ income, expense, upcoming, onUpcomingClick 
         expense={expense}
         upcoming={upcoming}
         onUpcomingClick={onUpcomingClick}
+        horizon={horizon}
       />
     );
   }
@@ -59,11 +70,13 @@ function ProjectedMeter({
   expense,
   upcoming,
   onUpcomingClick,
+  horizon,
 }: {
   income: number;
   expense: number;
   upcoming: MeterUpcoming;
   onUpcomingClick?: () => void;
+  horizon: 'month' | 'year';
 }) {
   const projectedIncome = income + upcoming.income;
   const projectedExpense = expense + upcoming.expense;
@@ -75,7 +88,7 @@ function ProjectedMeter({
     <div data-testid="income-expense-meter" data-mode="projected" className="space-y-3">
       <div>
         <div className="text-xs text-muted-foreground">
-          {remaining >= 0 ? '월말 예상 남은 금액' : '월말 예상 부족 금액'}
+          {HORIZON_LABEL[horizon]} 예상 {remaining >= 0 ? '남은' : '부족'} 금액
         </div>
         <div
           data-testid="meter-projected-remaining"

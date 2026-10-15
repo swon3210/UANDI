@@ -248,7 +248,7 @@ query(
 아직 결제일이 오지 않은 월세·보험·구독료와 25일에 들어올 월급을 숫자에 반영하되, **실제 기록과 예정을 한 숫자로 합치지 않는다**.
 합계 KPI·도넛·기간 비교는 실제 기록만 보고, 예정은 **빗금 구간과 점선**이라는 시각 요소로만 얹는다. 단색/실선 = 실제, 빗금/점선 = 예정.
 
-- **표시 조건**: 월간 탭 + 이번 달일 때만. 지난달·연간 탭·로딩 중에는 아예 그리지 않는다 (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞인다). 연간 탭 반영은 후속.
+- **표시 조건**: 현재 기간일 때만 — 월간 탭은 이번 달, 연간 탭은 올해. 지난달·지난해·로딩 중에는 아예 그리지 않는다 (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞인다).
 - **데이터 출처**: 카테고리 `recurrence`(단일 출처, `cashflow-recurrence-integration.md` D1). `buildRecurrenceOccurrences`로 이달 발생일을 구하므로 현금흐름 캘린더·내역 프롬프트와 같은 날짜·금액이 나온다.
   - 포함 조건도 같다: `recurrence.enabled` + `expectedAmount > 0`. 금액이 없는 정기 항목은 알림만 받고 예정 금액엔 들어가지 않는다.
   - 발생일 계산은 `occurrenceDateInMonth` (31일 → 짧은 달은 말일, 격월/분기 위상, 몇째 주 요일 모두 처리됨)
@@ -276,7 +276,13 @@ query(
 - **목록 시트 (`upcoming-fixed-sheet`)**: 예정 칩 클릭 → 바텀시트. 미기록(`upcoming-fixed-overdue`)을 위에, 남은 예정(`upcoming-fixed-list`)을 발생일 순으로. 행 `upcoming-fixed-item-{이름}`: 아이콘·이름·`M월 D일 · 오늘/내일/N일 후/N일 지남 · 발생 주기`·금액
   - 보기 전용. 행마다 기록 버튼을 두지 않는다 (기록은 내역 페이지·정기 알림 푸시의 quickAdd 동선이 맡고, 기록하면 예정에서 자동으로 빠진다)
   - 이번 달 건너뛰기(발생분 무시)는 저장 스키마가 필요해 v1 범위 밖
-- 순수 계산은 `utils/upcoming-fixed.ts`(`buildUpcomingFixed`, `pickUpcomingFixed`, `buildMonthProjection`)에 두고 `useDashboardData`가 `upcoming`(전체)·`projection`(현재 탭 필터)으로 노출한다.
+- **연간 탭 (올해)**: 같은 규칙을 지평만 연말로 바꿔 적용한다 (`buildUpcomingFixedYear`, `buildYearProjection`).
+  - 예정 = 오늘부터 12월까지의 발생분. 이번 달은 월간과 같은 규칙(오늘 이후, G1), 다음 달부터는 달마다 발생분 전체. G1은 올해 내역 전체로 판정한다. 미기록(overdue)은 연간에선 세지 않는다 (지난 달들의 미기록까지 세면 안내가 아니라 잔소리가 된다)
+  - 합계 KPI 카드: `연말 예상 N원 · 예정 N원 포함` 한 줄 (같은 `dashboard-total-projection`/`dashboard-total-projected`)
+  - 월별 막대 차트 (`YearProjectionChart`, `year-projection`): 1월~12월 `recharts BarChart` 스택. 실제(단색, `year-bar-actual-{월}`) 위에 남은 예정(빗금 SVG 패턴, `year-bar-upcoming-{월}`). 지난 달은 실제만, 이번 달은 실제+예정, 다음 달부터는 예정만. 이번 달 위치에 세로 점선(라벨 `이번 달`). 툴팁은 달별 실제/예정. 헤더 우측 `예정 N건 ›` 칩(`year-projection-upcoming-button`) → 목록 시트. 변동 탭은 실제만
+  - 전체 탭 게이지: 월간과 같은 `data-mode="projected"` 레이아웃, 머리기사만 `연말 예상 남은/부족 금액`
+  - 목록 시트 제목 `올해 예정 고정 수입·지출`, 발생일 순으로 남은 달의 항목이 모두 들어간다
+- 순수 계산은 `utils/upcoming-fixed.ts`(`buildUpcomingFixed`, `buildUpcomingFixedYear`, `pickUpcomingFixed`, `buildMonthProjection`, `buildYearProjection`)에 두고 `useDashboardData`가 `upcoming`(전체)·`projection`(월간, 현재 탭 필터)·`yearProjection`(연간, 현재 탭 필터)으로 노출한다.
 
 ### 로딩 상태
 

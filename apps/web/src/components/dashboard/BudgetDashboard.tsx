@@ -45,6 +45,7 @@ import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 import { UpcomingFixedSheet } from './UpcomingFixedSheet';
 import { MonthProjectionChart } from './MonthProjectionChart';
+import { YearProjectionChart } from './YearProjectionChart';
 
 type Props = {
   coupleId: string;
@@ -126,6 +127,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     comparison,
     upcoming,
     projection,
+    yearProjection,
     isLoading,
     isCompareLoading,
   } = useDashboardData({
@@ -293,6 +295,10 @@ export function BudgetDashboard({ coupleId }: Props) {
   const kpiUpcomingAmount = upcomingView && group !== 'all' ? upcomingView.totals[group].amount : 0;
   // 투영 차트는 탭 필터(그룹·고정/변동) 기준이라 도넛으로 카테고리를 고른 상태에선 숨긴다
   const showProjection = projection !== null && !isDonutFiltered;
+  const showYearProjection = yearProjection !== null && !isDonutFiltered;
+  // 예정의 지평: 월간 탭은 월말/이달, 연간 탭은 연말/올해
+  const horizon = period === 'monthly' ? 'month' : 'year';
+  const HORIZON_END: Record<typeof horizon, string> = { month: '월말', year: '연말' };
 
   const handleOpenUpcomingSheet = () => {
     if (!upcomingView) return;
@@ -303,7 +309,11 @@ export function BudgetDashboard({ coupleId }: Props) {
       };
       return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
-          <UpcomingFixedSheet items={upcomingView.items} overdue={upcomingView.overdue} />
+          <UpcomingFixedSheet
+            items={upcomingView.items}
+            overdue={upcomingView.overdue}
+            horizon={horizon}
+          />
         </Sheet>
       );
     });
@@ -407,7 +417,7 @@ export function BudgetDashboard({ coupleId }: Props) {
               className="mt-1 text-xs text-muted-foreground tabular-nums"
               data-testid="dashboard-total-projection"
             >
-              월말 예상{' '}
+              {HORIZON_END[horizon]} 예상{' '}
               <span
                 className="font-semibold text-foreground"
                 data-testid="dashboard-total-projected"
@@ -418,6 +428,18 @@ export function BudgetDashboard({ coupleId }: Props) {
             </div>
           ) : null}
         </Link>
+      ) : null}
+
+      {/* 올해 지출·수입 탭: 월별 막대 (실제는 단색, 남은 예정은 빗금) */}
+      {showYearProjection && yearProjection && upcomingView && group !== 'all' ? (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <YearProjectionChart
+            projection={yearProjection}
+            group={group}
+            upcomingCount={upcomingView.items.length}
+            onUpcomingClick={handleOpenUpcomingSheet}
+          />
+        </div>
       ) : null}
 
       {/* 이번 달 지출·수입 탭: 누적 흐름 + 예정 투영 차트 (실제는 실선, 예정은 점선 계단) */}
@@ -462,6 +484,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                 : null
             }
             onUpcomingClick={handleOpenUpcomingSheet}
+            horizon={horizon}
           />
         </div>
       ) : (

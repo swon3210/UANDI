@@ -1451,7 +1451,9 @@ test.describe('대시보드', () => {
       await expect(dashboard.meterProjectedRemaining).toHaveText('100,000원');
     });
 
-    test('지난달·연간 탭에서는 예정과 흐름 차트를 보여주지 않는다', async ({ authedContext }) => {
+    test('지난달에서는 예정을 숨기고, 연간 탭에서는 월 흐름 차트 대신 연간 막대를 보여준다', async ({
+      authedContext,
+    }) => {
       const { page, uid, coupleId } = authedContext;
       await seedRecurringCategories(coupleId);
       await seedCashbookEntry(coupleId, uid, {
@@ -1479,8 +1481,9 @@ test.describe('대시보드', () => {
 
       await dashboard.periodTabYearly.click();
       await expect(dashboard.periodNavLabel).toHaveText(`${today.year()}년`);
-      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.totalProjection).toContainText('연말 예상');
       await expect(dashboard.monthProjection).toHaveCount(0);
+      await expect(dashboard.yearProjection).toBeVisible();
     });
 
     test('변동 지출 탭은 실제 누적만, 고정 지출 탭은 고정 기준으로 예정을 보여준다', async ({
@@ -1586,6 +1589,156 @@ test.describe('대시보드', () => {
       await expect(dashboard.upcomingSheetOverdue).toContainText('아직 기록하지 않았어요 1건');
       await expect(dashboard.upcomingItem('월세')).toContainText('지남');
       await expect(dashboard.upcomingSheetList).toHaveCount(0);
+    });
+  });
+  test.describe('올해 예정 고정 지출·수입 (연간 탭)', () => {
+    const today = dayjs();
+    /** 이번 달 포함 올해 남은 달 수. 월세를 "매월 오늘"로 두면 달마다 1건씩 남는다 */
+    const monthsLeft = 12 - today.month();
+    const won = (n: number) => `${n.toLocaleString('ko-KR')}원`;
+
+    async function seedYearlySetup(coupleId: string, options: { salary?: boolean } = {}) {
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'fixed_expense',
+        name: '월세',
+        icon: 'house',
+        recurrence: {
+          enabled: true,
+          kind: 'dayOfMonth',
+          dayOfMonth: today.date(),
+          expectedAmount: 800000,
+        },
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'income',
+        subGroup: 'irregular_income',
+        name: '부업',
+        icon: 'briefcase',
+      });
+      if (options.salary) {
+        await seedCashbookCategory(coupleId, {
+          group: 'income',
+          subGroup: 'regular_income',
+          name: '정기급여',
+          icon: 'wallet',
+          recurrence: {
+            enabled: true,
+            kind: 'dayOfMonth',
+            dayOfMonth: today.date(),
+            expectedAmount: 3000000,
+          },
+        });
+      }
+    }
+
+    test('연간 지출 탭: 연말 예상 한 줄과 월별 막대에 남은 달의 예정이 빗금으로 선다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedYearlySetup(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabYearly.click();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.totalAmount).toContainText('12,000');
+      await expect(dashboard.totalProjection).toContainText('연말 예상');
+      await expect(dashboard.totalProjected).toHaveText(won(12000 + 800000 * monthsLeft));
+      await expect(dashboard.totalProjection).toContainText(
+        `예정 ${won(800000 * monthsLeft)} 포함`
+      );
+
+      await expect(dashboard.yearProjection).toBeVisible();
+      await expect(dashboard.monthProjection).toHaveCount(0);
+      await expect(dashboard.yearProjectionUpcomingButton).toHaveText(
+        new RegExp(`^예정 ${monthsLeft}건`)
+      );
+      // 이번 달은 실제 + 예정, 12월은 예정만
+      await expect(dashboard.yearBarActual(today.month() + 1)).toBeVisible();
+      await expect(dashboard.yearBarUpcoming(today.month() + 1)).toBeVisible();
+      await expect(dashboard.yearBarUpcoming(12)).toBeVisible();
+      await expect(dashboard.yearBarUpcoming(1)).toHaveCount(monthsLeft === 12 ? 1 : 0);
+    });
+
+    test('연간 전체 탭: 연말 예상 남은 금액이 머리기사가 된다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedYearlySetup(coupleId, { salary: true });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 1000000,
+        category: '부업',
+        date: today.toISOString(),
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 300000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabYearly.click();
+
+      const remaining = 1000000 + 3000000 * monthsLeft - (300000 + 800000 * monthsLeft);
+      await expect(dashboard.meter).toHaveAttribute('data-mode', 'projected');
+      await expect(dashboard.meter).toContainText('연말 예상 남은 금액');
+      await expect(dashboard.meterProjectedRemaining).toHaveText(won(remaining));
+      await expect(dashboard.meterUpcomingButton).toHaveText(
+        new RegExp(`^예정 ${2 * monthsLeft}건`)
+      );
+    });
+
+    test('지난해로 이동하면 예정을 보여주지 않는다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedYearlySetup(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabYearly.click();
+      await dashboard.groupTabExpense.click();
+      await expect(dashboard.yearProjection).toBeVisible();
+
+      await dashboard.periodPrevButton.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${today.year() - 1}년`);
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.yearProjection).toHaveCount(0);
+    });
+
+    test('연간 예정 칩을 누르면 올해 남은 예정 목록이 열린다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedYearlySetup(coupleId);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabYearly.click();
+      await dashboard.groupTabExpense.click();
+      await dashboard.yearProjectionUpcomingButton.click();
+
+      await expect(dashboard.upcomingSheet).toBeVisible();
+      await expect(dashboard.upcomingSheet).toContainText('올해 예정 고정 수입·지출');
+      await expect(dashboard.upcomingSheetList).toContainText(`남은 예정 ${monthsLeft}건`);
+      await expect(dashboard.upcomingItem('월세')).toHaveCount(monthsLeft);
     });
   });
 });

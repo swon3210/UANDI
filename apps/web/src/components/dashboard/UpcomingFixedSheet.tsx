@@ -14,7 +14,11 @@ type Props = {
   items: UpcomingFixedItem[];
   /** 발생일이 지났는데 아직 기록하지 않은 항목 */
   overdue: UpcomingFixedItem[];
+  /** 예정의 지평. 월간 탭은 이달, 연간 탭은 올해. 제목·빈 상태 문구에 쓴다 */
+  horizon?: 'month' | 'year';
 };
+
+const HORIZON_LABEL: Record<'month' | 'year', string> = { month: '이달', year: '올해' };
 
 const AMOUNT_COLOR: Record<CategoryGroup, string> = {
   expense: 'text-expense',
@@ -61,7 +65,8 @@ function ItemRow({ item }: { item: UpcomingFixedItem }) {
  * 아직 기록하지 않은 지난 발생분을 위에, 남은 예정을 아래에 발생일 순으로 보여준다.
  * 보기 전용이다. 가계부에 실제로 기록하면 그 달 발생분은 예정에서 빠지므로 별도의 완료 처리는 없다.
  */
-export function UpcomingFixedSheet({ items, overdue }: Props) {
+export function UpcomingFixedSheet({ items, overdue, horizon = 'month' }: Props) {
+  const scope = HORIZON_LABEL[horizon];
   const isEmpty = items.length === 0 && overdue.length === 0;
 
   return (
@@ -71,7 +76,7 @@ export function UpcomingFixedSheet({ items, overdue }: Props) {
       data-testid="upcoming-fixed-sheet"
     >
       <SheetHeader className="text-left">
-        <SheetTitle>이달 예정 고정 수입·지출</SheetTitle>
+        <SheetTitle>{scope} 예정 고정 수입·지출</SheetTitle>
         <SheetDescription>
           카테고리의 정기 발생 설정에서 가져왔어요. 가계부에 기록하면 예정에서 빠져요.
         </SheetDescription>
@@ -81,7 +86,7 @@ export function UpcomingFixedSheet({ items, overdue }: Props) {
         <div className="py-6">
           <EmptyState
             icon={<CalendarClock size={32} />}
-            title="이달 남은 예정이 없어요"
+            title={`${scope} 남은 예정이 없어요`}
             description="고정 지출·수입 카테고리에 정기 발생을 설정하면 여기에 보여요"
           />
         </div>
