@@ -226,20 +226,22 @@ auto 예측 ↔ 선언 합성의 중복을 생성 단계에서 차단. (G2는 �
   doc-기반 프롬프트(`useDayPredictions`)와 같은 날짜에 합쳐 렌더하되 중복은 G2로 방지.
 - **표현**: 기존 `PredictionPromptBox`(점선 ◇)를 재사용. `kind:'recurrence'` 뷰는 배지를 **"정기"** 로,
   보조줄에 `매월 N일`(또는 `둘째 주 수요일`, `formatRecurrence`) 표기.
-- **액션**: **"기록하기"(예상값 그대로 원탭 기록)** + **"수정 후 기록"(prefill된 `EntryForm`을 열어 금액 등 조정 후 저장)**.
-  발생 시점에 금액이 달라질 수 있어 두 경로를 둔다. doc이 없으므로 confirm/reject 머신을 타지 않고 바로 `addEntry`로 기록한다.
+- **액션 없음(보기 전용)**: 처음엔 "기록하기"(원탭) + "수정 후 기록"(prefill 폼) 두 버튼을 뒀으나, 예정 항목은
+  "앞으로 이만큼 나간다"는 안내이지 지금 처리해야 할 할 일이 아니라서 버튼을 걷어냈다. 기록은 평소처럼
+  추가 버튼(또는 정기 알림 푸시의 quickAdd 딥링크)으로 하고, 기록하면 같은 달 발생분이 자동으로 사라진다(G1).
+  대시보드의 이달 예정 목록 시트도 같은 이유로 보기 전용이다.
   - **✗(아니오)·이번 달 건너뛰기 없음**: 읽기 시점 파생이라 "그냥 제거"는 새로고침 시 되살아난다. 제거를
     영속화하려면 별도 skip 저장이 필요한데, 그 비용 대비 가치가 낮다. 대신 **기록하면(G1) 또는 발생일이
     지나면(`date >= 오늘` 필터) 자동 소멸**한다.
 
 ### 구현 위치
 
-| 파일                                                       | 변경                                                                                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `apps/web/src/hooks/useRecurrencePrompts.ts`               | 신규 — recurrence → 날짜별 프롬프트 뷰(Map), G1/G2 게이트                                         |
-| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형(단일 "기록하기", "정기" 배지, ✗/수정 숨김). `onReject`/`onEdit` optional |
-| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합, `kind`로 핸들러 분기(기록=prefill 추가)                    |
-| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출 + 기록 흐름                                     |
+| 파일                                                       | 변경                                                                                            |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `apps/web/src/hooks/useRecurrencePrompts.ts`               | 신규 — recurrence → 날짜별 프롬프트 뷰(Map), G1/G2 게이트                                       |
+| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형("정기" 배지, 액션 버튼 없음 = 보기 전용). `onReject`/`onEdit` optional |
+| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합, `kind`가 recurrence면 핸들러는 no-op                     |
+| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출(버튼 없음) + G1 소멸                          |
 
 ### 알려진 한계
 
@@ -392,20 +394,20 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 ### 구현 위치
 
-| 파일                                                            | 변경                                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `packages/cashbook-core/src/types.ts`                           | `RecurringSchedule.intervalMonths?` / `anchorMonth?` 추가                  |
-| `packages/cashbook-core/src/utils/recurrence.ts`                | `isActiveMonth`·`INTERVAL_LABELS` 추가, `occurrenceDateInMonth`/`formatRecurrence` 확장 |
-| `packages/cashbook-core/src/utils/__tests__/recurrence.test.ts` | **신규** vitest — 위상/연 경계/format 검증(9 케이스)                       |
-| `functions/src/notifications/recurringReminder.ts`              | `isActiveMonth` 미러링(격월은 건너뛰는 달 알림 안 감)                      |
-| `apps/web/src/utils/cashflow.ts`                                | 합성 거래 `description`에 `formatRecurrence`(근거 라벨)                    |
-| `apps/web/src/components/cashbook/RecurringScheduleFields.tsx`  | 발생 빈도 칩 + 시작 월 셀렉트                                              |
-| `apps/web/src/app/inner/cashbook/(standalone)/categories/page.tsx` | `buildRecurrencePayload`에 interval/anchor 반영                        |
-| `apps/web/src/components/cashbook/CategoryForm.tsx`             | 스키마·기본값에 신규 필드                                                  |
-| `apps/web/src/components/cashbook/CashflowTransactionRow.tsx`   | 예측 근거 서브라벨(정기 발생/AI 추론)                                      |
-| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | 예측 방식 상단 안내                                                       |
-| `apps/web/src/app/api/ai/predict-cashflow/route.ts`             | 프롬프트: 주기 리듬 존중                                                   |
-| E2E `cashflow-recurrence.spec.ts`                               | 격월 정기 발생 노출 + "격월" 근거 표기                                     |
+| 파일                                                               | 변경                                                                                    |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `packages/cashbook-core/src/types.ts`                              | `RecurringSchedule.intervalMonths?` / `anchorMonth?` 추가                               |
+| `packages/cashbook-core/src/utils/recurrence.ts`                   | `isActiveMonth`·`INTERVAL_LABELS` 추가, `occurrenceDateInMonth`/`formatRecurrence` 확장 |
+| `packages/cashbook-core/src/utils/__tests__/recurrence.test.ts`    | **신규** vitest — 위상/연 경계/format 검증(9 케이스)                                    |
+| `functions/src/notifications/recurringReminder.ts`                 | `isActiveMonth` 미러링(격월은 건너뛰는 달 알림 안 감)                                   |
+| `apps/web/src/utils/cashflow.ts`                                   | 합성 거래 `description`에 `formatRecurrence`(근거 라벨)                                 |
+| `apps/web/src/components/cashbook/RecurringScheduleFields.tsx`     | 발생 빈도 칩 + 시작 월 셀렉트                                                           |
+| `apps/web/src/app/inner/cashbook/(standalone)/categories/page.tsx` | `buildRecurrencePayload`에 interval/anchor 반영                                         |
+| `apps/web/src/components/cashbook/CategoryForm.tsx`                | 스키마·기본값에 신규 필드                                                               |
+| `apps/web/src/components/cashbook/CashflowTransactionRow.tsx`      | 예측 근거 서브라벨(정기 발생/AI 추론)                                                   |
+| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx`   | 예측 방식 상단 안내                                                                     |
+| `apps/web/src/app/api/ai/predict-cashflow/route.ts`                | 프롬프트: 주기 리듬 존중                                                                |
+| E2E `cashflow-recurrence.spec.ts`                                  | 격월 정기 발생 노출 + "격월" 근거 표기                                                  |
 
 ## 후속 (미포함)
 
@@ -473,13 +475,13 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 ## 구현 위치 요약
 
-| 영역        | 파일                                                            | 변경                                            |
-| ----------- | --------------------------------------------------------------- | ----------------------------------------------- |
-| 타입        | `apps/web/src/types/index.ts`                                   | `CashflowSettings.initialCashByUid`             |
-| 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
-| 저장        | `apps/web/src/services/cashflow-settings.ts`                    | `initialCashByUid` 저장(+`initialCash`=합계)    |
-| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                     | 멤버 로드, `startingBalanceByUid`, 작성자 귀속  |
-| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`  | 사람별 잔액 칩                                  |
-| 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`     | 멤버별 입력 + 합계                              |
-| 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                      |
-| E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장) |
+| 영역        | 파일                                                             | 변경                                                                       |
+| ----------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 타입        | `apps/web/src/types/index.ts`                                    | `CashflowSettings.initialCashByUid`                                        |
+| 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                 | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
+| 저장        | `apps/web/src/services/cashflow-settings.ts`                     | `initialCashByUid` 저장(+`initialCash`=합계)                               |
+| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                      | 멤버 로드, `startingBalanceByUid`, 작성자 귀속                             |
+| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`   | 사람별 잔액 칩                                                             |
+| 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`      | 멤버별 입력 + 합계                                                         |
+| 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                                                 |
+| E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                 | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장)                           |

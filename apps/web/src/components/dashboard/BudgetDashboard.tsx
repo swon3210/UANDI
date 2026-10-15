@@ -303,11 +303,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       };
       return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
-          <UpcomingFixedSheet
-            items={upcomingView.items}
-            overdue={upcomingView.overdue}
-            onClose={closeAndUnmount}
-          />
+          <UpcomingFixedSheet items={upcomingView.items} overdue={upcomingView.overdue} />
         </Sheet>
       );
     });

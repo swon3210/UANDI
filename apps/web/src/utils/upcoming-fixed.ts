@@ -120,19 +120,6 @@ export function isUpcomingFixedEmpty(upcoming: UpcomingFixed | null): boolean {
   return !upcoming || (upcoming.items.length === 0 && upcoming.overdue.length === 0);
 }
 
-/**
- * 예정 항목을 바로 기록할 수 있는 가계부 내역 딥링크(quickAdd).
- * 정기 알림 푸시가 여는 것과 같은 링크라 내역 페이지의 기존 처리기를 그대로 탄다.
- */
-export function buildQuickAddHref(item: UpcomingFixedItem): string {
-  const params = new URLSearchParams();
-  params.set('quickAdd', '1');
-  params.set('qaType', item.type);
-  params.set('qaCategory', item.category);
-  params.set('qaAmount', String(item.amount));
-  return `/inner/cashbook/history?${params.toString()}`;
-}
-
 // ── 이달 누적 흐름 투영 (지출·수입 탭 차트용) ──
 
 export type MonthProjectionPoint = {

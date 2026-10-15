@@ -188,7 +188,7 @@ test.describe('현금흐름 캘린더 — 정기 발생(recurrence) 통합', () 
 
 // Phase 4: 정기 발생을 내역 페이지의 "예상 수입/지출" 프롬프트로도 읽기 시점에 파생.
 test.describe('내역 페이지 정기 발생 프롬프트 (Phase 4)', () => {
-  test('정기 발생 프롬프트는 기록하기·수정 후 기록을 노출하고 ✗(아니오)는 없다', async ({
+  test('정기 발생 프롬프트는 보기 전용이라 기록·수정·아니오 버튼이 없다', async ({
     authedContext,
   }) => {
     const { page, coupleId } = authedContext;
@@ -207,55 +207,12 @@ test.describe('내역 페이지 정기 발생 프롬프트 (Phase 4)', () => {
     await expect(prompt).toBeVisible();
     await expect(prompt).toHaveAttribute('data-source', 'recurrence');
     await expect(prompt).toContainText('정기');
-    // 기록하기(원탭) + 수정 후 기록(폼) — ✗(아니오)는 없음
-    await expect(prompt.getByTestId('prediction-confirm')).toContainText('기록하기');
-    await expect(prompt.getByTestId('prediction-edit')).toContainText('수정 후 기록');
+    await expect(prompt).toContainText('+3,000,000원');
+    // 보기 전용: 기록하기·수정 후 기록·아니오 모두 없음 (기록은 평소처럼 추가 버튼으로, 기록하면 자동 소멸)
+    await expect(prompt.getByTestId('prediction-confirm')).toHaveCount(0);
+    await expect(prompt.getByTestId('prediction-edit')).toHaveCount(0);
     await expect(prompt.getByTestId('prediction-reject')).toHaveCount(0);
-  });
-
-  test('"기록하기"를 누르면 예상값 그대로 내역이 기록되고 프롬프트가 사라진다', async ({
-    authedContext,
-  }) => {
-    const { page, coupleId } = authedContext;
-    await seedCashbookCategory(coupleId, {
-      group: 'income',
-      subGroup: 'regular_income',
-      name: '정기급여',
-      icon: 'wallet',
-      recurrence: { enabled: true, kind: 'dayOfMonth', dayOfMonth: TODAY, expectedAmount: 3000000 },
-    });
-
-    await page.goto('/inner/cashbook/history');
-
-    const prompt = page.getByTestId('prediction-prompt-box').filter({ hasText: '정기급여' });
-    await expect(prompt).toBeVisible();
-    await prompt.getByTestId('prediction-confirm').click();
-
-    // 실거래로 기록 → 같은 달 G1로 프롬프트 사라지고, 내역에 +3,000,000원이 보인다.
-    await expect(page.getByTestId('prediction-prompt-box')).toHaveCount(0);
-    await expect(page.getByText('+3,000,000원').first()).toBeVisible();
-  });
-
-  test('"수정 후 기록"을 누르면 prefill된 입력 폼이 열린다', async ({ authedContext }) => {
-    const { page, coupleId } = authedContext;
-    await seedCashbookCategory(coupleId, {
-      group: 'income',
-      subGroup: 'regular_income',
-      name: '정기급여',
-      icon: 'wallet',
-      recurrence: { enabled: true, kind: 'dayOfMonth', dayOfMonth: TODAY, expectedAmount: 3000000 },
-    });
-
-    await page.goto('/inner/cashbook/history');
-
-    const prompt = page.getByTestId('prediction-prompt-box').filter({ hasText: '정기급여' });
-    await expect(prompt).toBeVisible();
-    await prompt.getByTestId('prediction-edit').click();
-
-    // prefill된 내역 추가 시트가 열리고 예상 금액이 채워져 있다.
-    const sheet = page.getByTestId('entry-form-sheet');
-    await expect(sheet).toBeVisible();
-    await expect(sheet.getByLabel('금액')).toHaveValue('3000000');
+    await expect(prompt.getByRole('button')).toHaveCount(0);
   });
 
   test('이번 달에 이미 기록한 정기 발생은 내역 페이지 프롬프트에서 빠진다(G1)', async ({

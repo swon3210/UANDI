@@ -273,8 +273,8 @@ query(
   - 아래 회색 한 줄: `지금까지 수입 N만 · 지출 N만`(`meter-income`, `meter-expense`) + `예정 N건 ›` 칩(`meter-upcoming-button`, 미기록 있으면 `· 미기록 N건`) → 목록 시트
   - 예정이 없는 기간(지난달·정기 발생 미설정)은 기존 `data-mode="actual"` 게이지(비율·막대·수입/지출 박스·상태 줄) 그대로
   - 내역이 없어도 예정이 있으면 EmptyState 대신 게이지를 보여준다
-- **목록 시트 (`upcoming-fixed-sheet`)**: 예정 칩 클릭 → 바텀시트. 미기록(`upcoming-fixed-overdue`)을 위에, 남은 예정(`upcoming-fixed-list`)을 발생일 순으로. 행 `upcoming-fixed-item-{이름}`: 아이콘·이름·`M월 D일 · 오늘/내일/N일 후/N일 지남 · 발생 주기`·금액·`기록` 버튼
-  - `기록`은 정기 알림 푸시와 같은 quickAdd 딥링크(`/inner/cashbook/history?quickAdd=1&qaType&qaCategory&qaAmount`)로 내역 추가 시트를 prefill 상태로 연다
+- **목록 시트 (`upcoming-fixed-sheet`)**: 예정 칩 클릭 → 바텀시트. 미기록(`upcoming-fixed-overdue`)을 위에, 남은 예정(`upcoming-fixed-list`)을 발생일 순으로. 행 `upcoming-fixed-item-{이름}`: 아이콘·이름·`M월 D일 · 오늘/내일/N일 후/N일 지남 · 발생 주기`·금액
+  - 보기 전용. 행마다 기록 버튼을 두지 않는다 (기록은 내역 페이지·정기 알림 푸시의 quickAdd 동선이 맡고, 기록하면 예정에서 자동으로 빠진다)
   - 이번 달 건너뛰기(발생분 무시)는 저장 스키마가 필요해 v1 범위 밖
 - 순수 계산은 `utils/upcoming-fixed.ts`(`buildUpcomingFixed`, `pickUpcomingFixed`, `buildMonthProjection`)에 두고 `useDashboardData`가 `upcoming`(전체)·`projection`(현재 탭 필터)으로 노출한다.
 

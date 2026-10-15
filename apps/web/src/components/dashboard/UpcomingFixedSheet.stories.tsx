@@ -15,9 +15,6 @@ const meta: Meta<typeof UpcomingFixedSheet> = {
       </Sheet>
     ),
   ],
-  args: {
-    onClose: () => {},
-  },
 };
 export default meta;
 

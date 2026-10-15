@@ -71,6 +71,7 @@ export const AutoDetected: Story = {
   },
 };
 
+/** 정기 발생 파생: 보기 전용이라 버튼이 없다 */
 export const RecurrenceIncome: Story = {
   args: {
     prompt: {

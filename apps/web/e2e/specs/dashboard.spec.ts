@@ -1512,9 +1512,7 @@ test.describe('대시보드', () => {
       await expect(dashboard.projectionEndLabel).toHaveText('월말 80만');
     });
 
-    test('예정 칩을 누르면 항목 목록이 열리고 기록 버튼이 내역 추가 시트로 이어진다', async ({
-      authedContext,
-    }) => {
+    test('예정 칩을 누르면 항목 목록 시트가 열린다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       await seedRecurringCategories(coupleId);
 
@@ -1529,12 +1527,9 @@ test.describe('대시보드', () => {
       await expect(row).toContainText('800,000');
       await expect(row).toContainText('오늘');
       await expect(row).toContainText(`매월 ${today.date()}일`);
-
-      await row.getByRole('link', { name: '기록' }).click();
-      await expect(page).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
-      await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
-      await expect(page.getByLabel('금액')).toHaveValue('800000');
-      await expect(page.getByTestId('category-breadcrumb')).toContainText('월세');
+      // 보기 전용: 기록 버튼은 없다
+      await expect(row.getByRole('link')).toHaveCount(0);
+      await expect(row.getByRole('button')).toHaveCount(0);
     });
 
     test('전체 탭의 예정 칩에서도 항목 목록이 열린다', async ({ authedContext }) => {

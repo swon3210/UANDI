@@ -1,29 +1,19 @@
 'use client';
 
-import Link from 'next/link';
 import dayjs from 'dayjs';
 import { CalendarClock } from 'lucide-react';
-import {
-  Button,
-  cn,
-  EmptyState,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@uandi/ui';
+import { cn, EmptyState, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@uandi/ui';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 import { formatDay } from '@/utils/date';
-import { buildQuickAddHref, type UpcomingFixedItem } from '@/utils/upcoming-fixed';
+import type { UpcomingFixedItem } from '@/utils/upcoming-fixed';
 
 type Props = {
   /** 오늘 포함 이달 남은 예정 (발생일 오름차순) */
   items: UpcomingFixedItem[];
   /** 발생일이 지났는데 아직 기록하지 않은 항목 */
   overdue: UpcomingFixedItem[];
-  onClose: () => void;
 };
 
 const AMOUNT_COLOR: Record<CategoryGroup, string> = {
@@ -40,7 +30,7 @@ function relativeLabel(date: Date, today = dayjs()): string {
   return `${-diff}일 지남`;
 }
 
-function ItemRow({ item, onClose }: { item: UpcomingFixedItem; onClose: () => void }) {
+function ItemRow({ item }: { item: UpcomingFixedItem }) {
   return (
     <li
       className="flex items-center gap-3 py-2.5"
@@ -62,22 +52,16 @@ function ItemRow({ item, onClose }: { item: UpcomingFixedItem; onClose: () => vo
       <div className={cn('shrink-0 text-sm font-semibold tabular-nums', AMOUNT_COLOR[item.type])}>
         {formatCurrency(item.amount)}
       </div>
-      <Button asChild variant="secondary" size="sm" className="h-8 shrink-0 px-2.5 text-xs">
-        <Link href={buildQuickAddHref(item)} onClick={onClose}>
-          기록
-        </Link>
-      </Button>
     </li>
   );
 }
 
 /**
  * 이달 예정 고정 지출·수입 목록 바텀시트.
- * 아직 기록하지 않은 지난 발생분을 위에, 남은 예정을 아래에 발생일 순으로 보여주고,
- * 각 항목의 '기록'은 정기 알림 푸시와 같은 quickAdd 딥링크로 내역 추가 시트를 연다.
- * 실제로 기록하면 그 달 발생분은 예정에서 빠지므로 별도의 '완료' 처리는 없다.
+ * 아직 기록하지 않은 지난 발생분을 위에, 남은 예정을 아래에 발생일 순으로 보여준다.
+ * 보기 전용이다. 가계부에 실제로 기록하면 그 달 발생분은 예정에서 빠지므로 별도의 완료 처리는 없다.
  */
-export function UpcomingFixedSheet({ items, overdue, onClose }: Props) {
+export function UpcomingFixedSheet({ items, overdue }: Props) {
   const isEmpty = items.length === 0 && overdue.length === 0;
 
   return (
@@ -110,11 +94,7 @@ export function UpcomingFixedSheet({ items, overdue, onClose }: Props) {
               </h3>
               <ul className="divide-y divide-border">
                 {overdue.map((item) => (
-                  <ItemRow
-                    key={`${item.categoryId}-${item.date.getTime()}`}
-                    item={item}
-                    onClose={onClose}
-                  />
+                  <ItemRow key={`${item.categoryId}-${item.date.getTime()}`} item={item} />
                 ))}
               </ul>
             </section>
@@ -127,11 +107,7 @@ export function UpcomingFixedSheet({ items, overdue, onClose }: Props) {
               </h3>
               <ul className="divide-y divide-border">
                 {items.map((item) => (
-                  <ItemRow
-                    key={`${item.categoryId}-${item.date.getTime()}`}
-                    item={item}
-                    onClose={onClose}
-                  />
+                  <ItemRow key={`${item.categoryId}-${item.date.getTime()}`} item={item} />
                 ))}
               </ul>
             </section>

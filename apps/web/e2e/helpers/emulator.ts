@@ -256,6 +256,8 @@ export async function seedCashbookCategory(
     if (r.weekday != null) rf.weekday = { integerValue: String(r.weekday) };
     if (r.leadDays != null) rf.leadDays = { integerValue: String(r.leadDays) };
     if (r.expectedAmount != null) rf.expectedAmount = { integerValue: String(r.expectedAmount) };
+    if (r.intervalMonths != null) rf.intervalMonths = { integerValue: String(r.intervalMonths) };
+    if (r.anchorMonth != null) rf.anchorMonth = { stringValue: r.anchorMonth };
     fields.recurrence = { mapValue: { fields: rf } };
   }
 

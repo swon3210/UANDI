@@ -5,7 +5,6 @@ import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
-import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import { BookOpen, FileBarChart, ChevronRight } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
@@ -355,31 +354,10 @@ export default function CashbookPage() {
     ));
   };
 
-  // ✓ 추가: doc 예측은 정식 거래로 확정(SYNC-03). 정기 발생 파생은 "기록하기"=예상값 그대로 원탭 기록.
+  // ✓ 추가: doc 예측은 정식 거래로 확정(SYNC-03).
+  // 정기 발생 파생 프롬프트는 보기 전용(버튼 없음)이라 호출되지 않는다.
   const handlePromptConfirm = (view: PredictionPromptView) => {
-    if (view.kind === 'recurrence') {
-      const date = Timestamp.fromDate(view.date);
-      addMutation.mutate(
-        {
-          createdBy: uid,
-          type: view.type,
-          amount: view.amount,
-          category: view.category,
-          description: '',
-          date,
-        },
-        {
-          onSuccess: () =>
-            notifyTransition({
-              type: view.type,
-              amount: view.amount,
-              category: view.category,
-              date,
-            }),
-        }
-      );
-      return;
-    }
+    if (view.kind === 'recurrence') return;
     const p = predictionById.get(view.id);
     if (p) confirmPredictionMutation.mutate({ prediction: p });
   };
@@ -394,18 +372,10 @@ export default function CashbookPage() {
     else rejectPredictionMutation.mutate(p.id);
   };
 
-  // ✎ 수정 후 추가/기록: EntryForm을 prefill로 열어 수정값으로 저장.
-  // - doc 예측: 수정값으로 확정(시나리오 E). - 정기 발생 파생: prefill 추가 시트로 금액 등 조정 후 기록.
+  // ✎ 수정 후 추가: EntryForm을 prefill로 열어 수정값으로 확정(시나리오 E).
+  // 정기 발생 파생 프롬프트는 보기 전용이라 호출되지 않는다.
   const handlePromptEdit = (view: PredictionPromptView) => {
-    if (view.kind === 'recurrence') {
-      handleAdd({
-        type: view.type,
-        amount: view.amount,
-        category: view.category,
-        date: dayjs(view.date).format('YYYY-MM-DD'),
-      });
-      return;
-    }
+    if (view.kind === 'recurrence') return;
     const p = predictionById.get(view.id);
     if (!p) return;
     overlay.open(({ isOpen, close, unmount }) => (
