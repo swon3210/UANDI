@@ -4,7 +4,13 @@ import { buildCategoryColorMap, distinctColors, getCategoryColor } from '@uandi/
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, isCurrentPeriod, type PeriodKind } from '@/utils/date';
-import { buildUpcomingFixed, type UpcomingFixed } from '@/utils/upcoming-fixed';
+import {
+  buildMonthProjection,
+  buildUpcomingFixed,
+  pickUpcomingFixed,
+  type MonthProjection,
+  type UpcomingFixed,
+} from '@/utils/upcoming-fixed';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
 /** 'all'(전체)은 지출·수입 총량 비교 전용 탭이다. */
@@ -62,6 +68,11 @@ export type DashboardData = {
    * 다른 달·연간 탭·로딩 중에는 null (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞이므로).
    */
   upcoming: UpcomingFixed | null;
+  /**
+   * 지출·수입 탭 + 이번 달일 때만: 현재 필터(그룹·고정/변동)의 이달 누적 흐름과 예정 투영.
+   * 변동 탭은 예정이 없어도 실제 누적만 담긴다. 전체 탭·다른 달·연간은 null.
+   */
+  projection: MonthProjection | null;
   isLoading: boolean;
   /** 비교 기간 데이터 로딩 중 (현재 기간과 별도로 비교 기간만 바꿀 수 있어 분리) */
   isCompareLoading: boolean;
@@ -267,6 +278,15 @@ export function useDashboardData(args: {
       !isLoading && period === 'monthly' && isCurrentPeriod(period, cursor)
         ? buildUpcomingFixed(categoriesQuery.data ?? [], entriesQuery.data ?? [], dayjs())
         : null;
+    // 투영은 합계 KPI와 같은 필터 기준. 변동 탭엔 예정 개념이 없으니 예정 없이 실제 누적만.
+    const projection =
+      upcoming && supportsSubGroup(group)
+        ? buildMonthProjection(
+            filtered,
+            pickUpcomingFixed(upcoming, subGroup === 'variable' ? [] : [group], null).items,
+            dayjs()
+          )
+        : null;
 
     return {
       byCategory: buildByCategory(filtered, colorMap),
@@ -279,6 +299,7 @@ export function useDashboardData(args: {
         rows: buildComparisonRows(filtered, compareFiltered),
       },
       upcoming,
+      projection,
       isLoading,
       isCompareLoading: compareQuery.isLoading,
     };

@@ -43,8 +43,9 @@ import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
-import { UpcomingFixedSummary } from './UpcomingFixedSummary';
 import { UpcomingFixedSheet } from './UpcomingFixedSheet';
+import { ActualProjectedBar } from './ActualProjectedBar';
+import { MonthProjectionChart } from './MonthProjectionChart';
 
 type Props = {
   coupleId: string;
@@ -125,6 +126,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     hasEntries,
     comparison,
     upcoming,
+    projection,
     isLoading,
     isCompareLoading,
   } = useDashboardData({
@@ -288,6 +290,10 @@ export function BudgetDashboard({ coupleId }: Props) {
     ? pickUpcomingFixed(upcoming, upcomingTypes, isDonutFiltered ? donutSelection : null)
     : null;
   const showUpcoming = upcomingView !== null && !isUpcomingFixedEmpty(upcomingView);
+  // 합계 카드의 예정 구간·월말 예상: 도넛 선택이 있으면 그 카테고리 기준(upcomingView), 없으면 투영과 같다
+  const kpiUpcomingAmount = upcomingView && group !== 'all' ? upcomingView.totals[group].amount : 0;
+  // 투영 차트는 탭 필터(그룹·고정/변동) 기준이라 도넛으로 카테고리를 고른 상태에선 숨긴다
+  const showProjection = projection !== null && !isDonutFiltered;
 
   const handleOpenUpcomingSheet = () => {
     if (!upcomingView) return;
@@ -400,19 +406,44 @@ export function BudgetDashboard({ coupleId }: Props) {
           <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
             {formatCurrency(displayTotal)}
           </div>
+          {/* 이번 달에만: 실제(단색) 뒤에 예정 고정 항목(빗금)을 이어 월말 예상까지 한 줄로 */}
+          {kpiUpcomingAmount > 0 ? (
+            <div className="mt-2" data-testid="dashboard-total-projection">
+              <ActualProjectedBar
+                actual={displayTotal}
+                upcoming={kpiUpcomingAmount}
+                max={displayTotal + kpiUpcomingAmount}
+                tone={group}
+                testId="dashboard-total-bar"
+              />
+              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>예정 {formatCurrency(kpiUpcomingAmount)} 포함</span>
+                <span>
+                  월말 예상{' '}
+                  <span
+                    className="font-semibold tabular-nums text-foreground"
+                    data-testid="dashboard-total-projected"
+                  >
+                    {formatCurrency(displayTotal + kpiUpcomingAmount)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          ) : null}
         </Link>
       ) : null}
 
-      {/* 이번 달에만: 아직 기록되지 않은 고정 지출·수입 예정 (실제 합계와 섞지 않고 보조 카드로) */}
-      {showUpcoming && upcomingView ? (
-        <UpcomingFixedSummary
-          group={group}
-          expense={upcomingView.totals.expense}
-          income={upcomingView.totals.income}
-          overdueCount={upcomingView.overdue.length}
-          actualTotal={group === 'all' ? undefined : displayTotal}
-          onClick={handleOpenUpcomingSheet}
-        />
+      {/* 이번 달 지출·수입 탭: 누적 흐름 + 예정 투영 차트 (실제는 실선, 예정은 점선 계단) */}
+      {showProjection && projection && upcomingView && group !== 'all' ? (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <MonthProjectionChart
+            projection={projection}
+            group={group}
+            upcomingCount={upcomingView.items.length}
+            overdueCount={upcomingView.overdue.length}
+            onUpcomingClick={handleOpenUpcomingSheet}
+          />
+        </div>
       ) : null}
 
       {isLoading ? (
@@ -420,7 +451,7 @@ export function BudgetDashboard({ coupleId }: Props) {
           <Skeleton className="h-[260px] w-full rounded-xl" />
           <Skeleton className="h-[260px] w-full rounded-xl" />
         </>
-      ) : !hasEntries ? (
+      ) : !hasEntries && !(group === 'all' && showUpcoming) ? (
         <div data-testid="dashboard-empty" className="rounded-xl border border-border bg-card p-6">
           <EmptyState
             icon={<BookOpen size={32} />}
@@ -438,9 +469,11 @@ export function BudgetDashboard({ coupleId }: Props) {
                 ? {
                     income: upcomingView.totals.income.amount,
                     expense: upcomingView.totals.expense.amount,
+                    count: upcomingView.items.length,
                   }
                 : null
             }
+            onUpcomingClick={handleOpenUpcomingSheet}
           />
         </div>
       ) : (

@@ -46,7 +46,8 @@ export const WithUpcoming: Story = {
   args: {
     income: 1_000_000,
     expense: 300_000,
-    upcoming: { income: 3_000_000, expense: 1_300_000 },
+    upcoming: { income: 3_000_000, expense: 1_300_000, count: 3 },
+    onUpcomingClick: () => {},
   },
 };
 
@@ -55,7 +56,8 @@ export const UpcomingExpenseOnly: Story = {
   args: {
     income: 3_200_000,
     expense: 1_200_000,
-    upcoming: { income: 0, expense: 1_300_000 },
+    upcoming: { income: 0, expense: 1_300_000, count: 2 },
+    onUpcomingClick: () => {},
   },
 };
 
@@ -64,7 +66,8 @@ export const UpcomingOverIncome: Story = {
   args: {
     income: 2_000_000,
     expense: 1_500_000,
-    upcoming: { income: 0, expense: 900_000 },
+    upcoming: { income: 0, expense: 900_000, count: 1 },
+    onUpcomingClick: () => {},
   },
 };
 
@@ -73,6 +76,7 @@ export const UpcomingNoIncomeYet: Story = {
   args: {
     income: 0,
     expense: 120_000,
-    upcoming: { income: 3_000_000, expense: 800_000 },
+    upcoming: { income: 3_000_000, expense: 800_000, count: 2 },
+    onUpcomingClick: () => {},
   },
 };

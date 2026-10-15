@@ -1321,7 +1321,7 @@ test.describe('대시보드', () => {
       }
     }
 
-    test('지출 탭: 남은 고정 지출 예정 건수·금액과 월말 예상 합계를 보여준다', async ({
+    test('지출 탭: 합계 카드 막대와 누적 흐름 차트에 예정 고정 지출이 이어진다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
@@ -1337,13 +1337,20 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      // 실제 합계는 그대로, 예정은 보조 카드로
+      // 큰 숫자(실제 합계)는 그대로, 그 아래 막대에 예정 구간이 붙고 월말 예상이 보인다
       await expect(dashboard.totalAmount).toContainText('12,000');
-      await expect(dashboard.upcomingSummary).toBeVisible();
-      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
-      await expect(dashboard.upcomingAmount('expense')).toContainText('800,000');
-      await expect(dashboard.upcomingProjectedTotal).toContainText('812,000');
-      await expect(dashboard.upcomingOverdueHint).toHaveCount(0);
+      await expect(dashboard.totalProjection).toBeVisible();
+      await expect(dashboard.totalBarUpcoming).toBeVisible();
+      await expect(dashboard.totalProjected).toHaveText('812,000원');
+
+      // 누적 흐름 차트: 오늘 발생 예정인 월세가 점으로 찍히고 월말 예상이 같다
+      await expect(dashboard.monthProjection).toBeVisible();
+      await expect(dashboard.projectionUpcomingButton).toContainText('예정 1건');
+      await expect(dashboard.projectionUpcomingButton).toContainText('800,000');
+      await expect(dashboard.projectionDot(today.date())).toBeVisible();
+      await expect(dashboard.projectionActualTotal).toHaveText('12,000원');
+      await expect(dashboard.projectionProjectedTotal).toHaveText('812,000원');
+      await expect(dashboard.projectionOverdueHint).toHaveCount(0);
     });
 
     test('이달에 이미 기록한 고정 항목은 예정에서 빠진다', async ({ authedContext }) => {
@@ -1361,23 +1368,29 @@ test.describe('대시보드', () => {
       await dashboard.groupTabExpense.click();
 
       await expect(dashboard.totalAmount).toContainText('800,000');
-      await expect(dashboard.upcomingSummary).toHaveCount(0);
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      // 차트는 실제 누적만 남고 예정 칩·점은 없다
+      await expect(dashboard.monthProjection).toBeVisible();
+      await expect(dashboard.projectionUpcomingButton).toHaveCount(0);
+      await expect(dashboard.projectionDot(today.date())).toHaveCount(0);
+      await expect(dashboard.projectionProjectedTotal).toHaveText('800,000원');
     });
 
-    test('내역이 없어도 예정은 보여준다', async ({ authedContext }) => {
+    test('내역이 없어도 전체 탭 게이지에 예정이 보인다', async ({ authedContext }) => {
       const { page, coupleId } = authedContext;
       await seedRecurringCategories(coupleId);
 
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
 
-      await expect(dashboard.emptyState).toBeVisible();
-      await expect(dashboard.upcomingSummary).toBeVisible();
-      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
-      await expect(dashboard.upcomingCount('income')).toHaveCount(0);
+      await expect(dashboard.emptyState).toHaveCount(0);
+      await expect(dashboard.meterStatus).toContainText('내역이 없어요');
+      await expect(dashboard.meterExpenseUpcoming).toContainText('800,000');
+      await expect(dashboard.meterExpenseBarUpcoming).toBeVisible();
+      await expect(dashboard.meterIncomeUpcoming).toHaveCount(0);
     });
 
-    test('전체 탭: 게이지 비율은 실제 금액 그대로 두고 예정 반영 잔액을 따로 보여준다', async ({
+    test('전체 탭: 게이지 비율은 실제 그대로, 수입·지출 막대에 예정이 빗금으로 이어진다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
@@ -1400,15 +1413,15 @@ test.describe('대시보드', () => {
 
       await expect(dashboard.meterPercent).toHaveText('30%');
       await expect(dashboard.meterStatus).toContainText('700,000');
-      // 예정 지출은 빗금 구간으로 이어 그린다
-      await expect(dashboard.meterUpcomingFill).toBeVisible();
+      await expect(dashboard.meterIncome).toHaveText('1,000,000원');
+      await expect(dashboard.meterExpense).toHaveText('300,000원');
+      await expect(dashboard.meterIncomeUpcoming).toContainText('3,000,000');
+      await expect(dashboard.meterExpenseUpcoming).toContainText('800,000');
+      await expect(dashboard.meterIncomeBarUpcoming).toBeVisible();
+      await expect(dashboard.meterExpenseBarUpcoming).toBeVisible();
+      await expect(dashboard.meterUpcomingButton).toContainText('예정 2건');
       // (1,000,000 + 3,000,000) - (300,000 + 800,000)
-      await expect(dashboard.meterProjected).toContainText('수입 +3,000,000');
-      await expect(dashboard.meterProjected).toContainText('지출 +800,000');
       await expect(dashboard.meterProjectedRemaining).toContainText('2,900,000');
-
-      await expect(dashboard.upcomingCount('income')).toHaveText('예정 고정 수입 1건');
-      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
     });
 
     test('예정을 반영하면 수입을 넘기는 경우 더 쓰게 된다고 알린다', async ({ authedContext }) => {
@@ -1435,7 +1448,7 @@ test.describe('대시보드', () => {
       await expect(dashboard.meterProjectedRemaining).toContainText('더 쓰게 돼요');
     });
 
-    test('지난달·연간 탭에서는 예정을 보여주지 않는다', async ({ authedContext }) => {
+    test('지난달·연간 탭에서는 예정과 흐름 차트를 보여주지 않는다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedRecurringCategories(coupleId);
       await seedCashbookEntry(coupleId, uid, {
@@ -1448,23 +1461,26 @@ test.describe('대시보드', () => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
-      await expect(dashboard.upcomingSummary).toBeVisible();
+      await expect(dashboard.totalProjection).toBeVisible();
+      await expect(dashboard.monthProjection).toBeVisible();
 
       await dashboard.periodPrevButton.click();
       await expect(dashboard.periodNavLabel).toHaveText(
         today.subtract(1, 'month').format('YYYY년 M월')
       );
-      await expect(dashboard.upcomingSummary).toHaveCount(0);
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.monthProjection).toHaveCount(0);
 
       await dashboard.periodNextButton.click();
-      await expect(dashboard.upcomingSummary).toBeVisible();
+      await expect(dashboard.monthProjection).toBeVisible();
 
       await dashboard.periodTabYearly.click();
       await expect(dashboard.periodNavLabel).toHaveText(`${today.year()}년`);
-      await expect(dashboard.upcomingSummary).toHaveCount(0);
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.monthProjection).toHaveCount(0);
     });
 
-    test('변동 지출 탭에서는 숨기고 고정 지출 탭에서는 고정 합계 기준으로 보여준다', async ({
+    test('변동 지출 탭은 실제 누적만, 고정 지출 탭은 고정 기준으로 예정을 보여준다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
@@ -1482,15 +1498,19 @@ test.describe('대시보드', () => {
 
       await dashboard.subGroupTab('변동 지출').click();
       await expect(dashboard.totalAmount).toContainText('12,000');
-      await expect(dashboard.upcomingSummary).toHaveCount(0);
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.monthProjection).toBeVisible();
+      await expect(dashboard.projectionUpcomingButton).toHaveCount(0);
+      await expect(dashboard.projectionProjectedTotal).toHaveText('12,000원');
 
       await dashboard.subGroupTab('고정 지출').click();
-      await expect(dashboard.upcomingSummary).toBeVisible();
       // 고정 지출 실제 0 + 예정 800,000
-      await expect(dashboard.upcomingProjectedTotal).toContainText('800,000');
+      await expect(dashboard.totalProjected).toHaveText('800,000원');
+      await expect(dashboard.projectionActualTotal).toHaveText('0원');
+      await expect(dashboard.projectionProjectedTotal).toHaveText('800,000원');
     });
 
-    test('예정 카드를 누르면 항목 목록이 열리고 기록 버튼이 내역 추가 시트로 이어진다', async ({
+    test('예정 칩을 누르면 항목 목록이 열리고 기록 버튼이 내역 추가 시트로 이어진다', async ({
       authedContext,
     }) => {
       const { page, coupleId } = authedContext;
@@ -1499,7 +1519,7 @@ test.describe('대시보드', () => {
       const dashboard = new DashboardPage(page);
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
-      await dashboard.upcomingSummary.click();
+      await dashboard.projectionUpcomingButton.click();
 
       await expect(dashboard.upcomingSheet).toBeVisible();
       await expect(dashboard.upcomingSheetList).toContainText('남은 예정 1건');
@@ -1513,6 +1533,20 @@ test.describe('대시보드', () => {
       await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
       await expect(page.getByLabel('금액')).toHaveValue('800000');
       await expect(page.getByTestId('category-breadcrumb')).toContainText('월세');
+    });
+
+    test('전체 탭의 예정 칩에서도 항목 목록이 열린다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId, { salary: true });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.meterUpcomingButton.click();
+
+      await expect(dashboard.upcomingSheet).toBeVisible();
+      await expect(dashboard.upcomingSheetList).toContainText('남은 예정 2건');
+      await expect(dashboard.upcomingItem('정기급여')).toContainText('3,000,000');
+      await expect(dashboard.upcomingItem('월세')).toContainText('800,000');
     });
 
     test('발생일이 지났는데 기록하지 않은 항목은 합계에 넣지 않고 따로 알려준다', async ({
@@ -1546,13 +1580,13 @@ test.describe('대시보드', () => {
       await dashboard.goto();
       await dashboard.groupTabExpense.click();
 
-      await expect(dashboard.upcomingSummary).toBeVisible();
-      await expect(dashboard.upcomingSummary).toContainText('남은 예정은 없어요');
-      await expect(dashboard.upcomingOverdueHint).toContainText('1건');
-      // 지난 발생분은 월말 예상에 넣지 않는다
-      await expect(dashboard.upcomingProjectedTotal).toHaveCount(0);
+      // 지난 발생분은 막대·월말 예상에 넣지 않는다
+      await expect(dashboard.totalProjection).toHaveCount(0);
+      await expect(dashboard.projectionProjectedTotal).toHaveText('12,000원');
+      await expect(dashboard.projectionOverdueHint).toContainText('1건');
+      await expect(dashboard.projectionUpcomingButton).toContainText('미기록 1건');
 
-      await dashboard.upcomingSummary.click();
+      await dashboard.projectionUpcomingButton.click();
       await expect(dashboard.upcomingSheetOverdue).toContainText('아직 기록하지 않았어요 1건');
       await expect(dashboard.upcomingItem('월세')).toContainText('지남');
       await expect(dashboard.upcomingSheetList).toHaveCount(0);

@@ -132,3 +132,83 @@ export function buildQuickAddHref(item: UpcomingFixedItem): string {
   params.set('qaAmount', String(item.amount));
   return `/inner/cashbook/history?${params.toString()}`;
 }
+
+// ── 이달 누적 흐름 투영 (지출·수입 탭 차트용) ──
+
+export type MonthProjectionPoint = {
+  /** 1 ~ 말일 */
+  day: number;
+  /** 오늘까지의 실제 누적. 오늘 이후는 null (실선이 오늘에서 멈춘다) */
+  actual: number | null;
+  /** 오늘부터의 예상 누적 = 실제 합계 + 그날까지의 예정 합계. 오늘 이전은 null */
+  projected: number | null;
+  /** 이날 발생 예정인 고정 항목 이름 (점선 위 점·툴팁용) */
+  items: string[];
+};
+
+export type MonthProjection = {
+  points: MonthProjectionPoint[];
+  today: number;
+  daysInMonth: number;
+  actualTotal: number;
+  upcomingTotal: number;
+  /** 월말 예상 합계 = 실제 + 예정 */
+  projectedTotal: number;
+};
+
+/**
+ * 이달 1일부터 말일까지 하루 단위로 실제 누적(오늘까지)과 예상 누적(오늘부터)을 만든다.
+ * 오늘 자리에는 둘 다 값이 있어 실선과 점선이 이어지고, 예정 발생일에 점선이 계단처럼 올라간다.
+ * entries는 이미 탭 필터(그룹·고정/변동)가 적용된 이달 내역, items는 같은 기준으로 추린 남은 예정이다.
+ */
+export function buildMonthProjection(
+  entries: CashbookEntry[],
+  items: UpcomingFixedItem[],
+  today: Dayjs
+): MonthProjection {
+  const daysInMonth = today.daysInMonth();
+  const todayDay = today.date();
+
+  const actualByDay = new Array<number>(daysInMonth + 1).fill(0);
+  for (const e of entries) {
+    const d = dayjs(e.date.toDate());
+    if (!d.isSame(today, 'month')) continue;
+    actualByDay[d.date()] += e.amount;
+  }
+  const upcomingByDay = new Array<number>(daysInMonth + 1).fill(0);
+  const itemsByDay = new Map<number, string[]>();
+  for (const item of items) {
+    const day = dayjs(item.date).date();
+    upcomingByDay[day] += item.amount;
+    itemsByDay.set(day, [...(itemsByDay.get(day) ?? []), item.category]);
+  }
+
+  const points: MonthProjectionPoint[] = [];
+  let actual = 0;
+  for (let day = 1; day <= todayDay; day++) {
+    actual += actualByDay[day];
+    points.push({ day, actual, projected: null, items: [] });
+  }
+  const actualTotal = actual;
+  let projected = actualTotal;
+  for (let day = todayDay; day <= daysInMonth; day++) {
+    projected += upcomingByDay[day];
+    const point = { day, actual: null, projected, items: itemsByDay.get(day) ?? [] };
+    if (day === todayDay) {
+      // 오늘: 실선 끝점과 점선 시작점을 한 점에 둔다
+      points[points.length - 1] = { ...point, actual: actualTotal };
+    } else {
+      points.push(point);
+    }
+  }
+
+  const upcomingTotal = items.reduce((sum, i) => sum + i.amount, 0);
+  return {
+    points,
+    today: todayDay,
+    daysInMonth,
+    actualTotal,
+    upcomingTotal,
+    projectedTotal: actualTotal + upcomingTotal,
+  };
+}

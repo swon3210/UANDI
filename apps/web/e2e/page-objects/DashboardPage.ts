@@ -67,24 +67,29 @@ export class DashboardPage {
   readonly meterIncome: Locator;
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
-  readonly meterUpcomingFill: Locator;
-  readonly meterProjected: Locator;
+  readonly meterIncomeUpcoming: Locator;
+  readonly meterExpenseUpcoming: Locator;
+  readonly meterIncomeBarUpcoming: Locator;
+  readonly meterExpenseBarUpcoming: Locator;
+  readonly meterUpcomingButton: Locator;
   readonly meterProjectedRemaining: Locator;
 
-  // 이달 예정 고정 지출·수입
-  readonly upcomingSummary: Locator;
-  readonly upcomingProjectedTotal: Locator;
-  readonly upcomingOverdueHint: Locator;
+  // 이달 예정 고정 지출·수입 (합계 카드 막대 · 누적 흐름 차트 · 목록 시트)
+  readonly totalProjection: Locator;
+  readonly totalBarUpcoming: Locator;
+  readonly totalProjected: Locator;
+  readonly monthProjection: Locator;
+  readonly projectionUpcomingButton: Locator;
+  readonly projectionActualTotal: Locator;
+  readonly projectionProjectedTotal: Locator;
+  readonly projectionOverdueHint: Locator;
   readonly upcomingSheet: Locator;
   readonly upcomingSheetList: Locator;
   readonly upcomingSheetOverdue: Locator;
 
-  upcomingCount(group: 'expense' | 'income'): Locator {
-    return this.page.getByTestId(`upcoming-${group}-count`);
-  }
-
-  upcomingAmount(group: 'expense' | 'income'): Locator {
-    return this.page.getByTestId(`upcoming-${group}-amount`);
+  /** 누적 흐름 차트의 예정 발생일 점 */
+  projectionDot(day: number): Locator {
+    return this.page.getByTestId(`projection-dot-${day}`);
   }
 
   upcomingItem(name: string): Locator {
@@ -159,13 +164,21 @@ export class DashboardPage {
     this.meterIncome = page.getByTestId('meter-income');
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
-    this.meterUpcomingFill = page.getByTestId('meter-upcoming-fill');
-    this.meterProjected = page.getByTestId('meter-projected');
+    this.meterIncomeUpcoming = page.getByTestId('meter-income-upcoming');
+    this.meterExpenseUpcoming = page.getByTestId('meter-expense-upcoming');
+    this.meterIncomeBarUpcoming = page.getByTestId('meter-income-bar-upcoming');
+    this.meterExpenseBarUpcoming = page.getByTestId('meter-expense-bar-upcoming');
+    this.meterUpcomingButton = page.getByTestId('meter-upcoming-button');
     this.meterProjectedRemaining = page.getByTestId('meter-projected-remaining');
 
-    this.upcomingSummary = page.getByTestId('upcoming-fixed-summary');
-    this.upcomingProjectedTotal = page.getByTestId('upcoming-projected-total');
-    this.upcomingOverdueHint = page.getByTestId('upcoming-overdue-hint');
+    this.totalProjection = page.getByTestId('dashboard-total-projection');
+    this.totalBarUpcoming = page.getByTestId('dashboard-total-bar-upcoming');
+    this.totalProjected = page.getByTestId('dashboard-total-projected');
+    this.monthProjection = page.getByTestId('month-projection');
+    this.projectionUpcomingButton = page.getByTestId('projection-upcoming-button');
+    this.projectionActualTotal = page.getByTestId('projection-actual-total');
+    this.projectionProjectedTotal = page.getByTestId('projection-projected-total');
+    this.projectionOverdueHint = page.getByTestId('projection-overdue-hint');
     this.upcomingSheet = page.getByTestId('upcoming-fixed-sheet');
     this.upcomingSheetList = page.getByTestId('upcoming-fixed-list');
     this.upcomingSheetOverdue = page.getByTestId('upcoming-fixed-overdue');
