@@ -32,6 +32,7 @@ import {
   shiftPeriod,
   type PeriodKind,
 } from '@/utils/date';
+import { isUpcomingFixedEmpty, pickUpcomingFixed } from '@/utils/upcoming-fixed';
 import { PeriodSelector } from './PeriodSelector';
 import { PeriodNavigator } from './PeriodNavigator';
 import { PeriodPicker } from './PeriodPicker';
@@ -42,6 +43,8 @@ import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
+import { UpcomingFixedSummary } from './UpcomingFixedSummary';
+import { UpcomingFixedSheet } from './UpcomingFixedSheet';
 
 type Props = {
   coupleId: string;
@@ -121,6 +124,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     total,
     hasEntries,
     comparison,
+    upcoming,
     isLoading,
     isCompareLoading,
   } = useDashboardData({
@@ -276,6 +280,34 @@ export function BudgetDashboard({ coupleId }: Props) {
     toOption(c.category, c.color)
   );
 
+  // 이달 예정 고정 지출·수입(이번 달 월간 탭에서만 값이 있다).
+  // 변동 탭엔 예정 개념이 없고, 도넛에서 카테고리를 골랐으면 합계와 같은 기준으로 그 카테고리만 센다.
+  const upcomingTypes: CategoryGroup[] =
+    group === 'all' ? ['expense', 'income'] : subGroup === 'variable' ? [] : [group];
+  const upcomingView = upcoming
+    ? pickUpcomingFixed(upcoming, upcomingTypes, isDonutFiltered ? donutSelection : null)
+    : null;
+  const showUpcoming = upcomingView !== null && !isUpcomingFixedEmpty(upcomingView);
+
+  const handleOpenUpcomingSheet = () => {
+    if (!upcomingView) return;
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <UpcomingFixedSheet
+            items={upcomingView.items}
+            overdue={upcomingView.overdue}
+            onClose={closeAndUnmount}
+          />
+        </Sheet>
+      );
+    });
+  };
+
   const handleOpenDonutCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
       const closeAndUnmount = () => {
@@ -371,6 +403,18 @@ export function BudgetDashboard({ coupleId }: Props) {
         </Link>
       ) : null}
 
+      {/* 이번 달에만: 아직 기록되지 않은 고정 지출·수입 예정 (실제 합계와 섞지 않고 보조 카드로) */}
+      {showUpcoming && upcomingView ? (
+        <UpcomingFixedSummary
+          group={group}
+          expense={upcomingView.totals.expense}
+          income={upcomingView.totals.income}
+          overdueCount={upcomingView.overdue.length}
+          actualTotal={group === 'all' ? undefined : displayTotal}
+          onClick={handleOpenUpcomingSheet}
+        />
+      ) : null}
+
       {isLoading ? (
         <>
           <Skeleton className="h-[260px] w-full rounded-xl" />
@@ -386,7 +430,18 @@ export function BudgetDashboard({ coupleId }: Props) {
         </div>
       ) : group === 'all' ? (
         <div className="rounded-xl border border-border bg-card p-4">
-          <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
+          <IncomeExpenseMeter
+            income={typeTotals.income}
+            expense={typeTotals.expense}
+            upcoming={
+              upcomingView
+                ? {
+                    income: upcomingView.totals.income.amount,
+                    expense: upcomingView.totals.expense.amount,
+                  }
+                : null
+            }
+          />
         </div>
       ) : (
         <>

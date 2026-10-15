@@ -1273,4 +1273,289 @@ test.describe('대시보드', () => {
       await expect(dashboard.categoryDonutItem('교통').getByRole('button')).toHaveCount(0);
     });
   });
+  test.describe('이달 예정 고정 지출·수입 (월간 탭)', () => {
+    const today = dayjs();
+
+    /**
+     * 월세(고정 지출)·정기급여(고정 수입)에 "매월 오늘" 정기 발생을 설정한다.
+     * 오늘 발생분은 아직 기록 전이면 '남은 예정'에 들어가므로 달의 어느 날에 돌려도 결과가 같다.
+     */
+    async function seedRecurringCategories(coupleId: string, options: { salary?: boolean } = {}) {
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'fixed_expense',
+        name: '월세',
+        icon: 'house',
+        recurrence: {
+          enabled: true,
+          kind: 'dayOfMonth',
+          dayOfMonth: today.date(),
+          expectedAmount: 800000,
+        },
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'income',
+        subGroup: 'irregular_income',
+        name: '부업',
+        icon: 'briefcase',
+      });
+      if (options.salary) {
+        await seedCashbookCategory(coupleId, {
+          group: 'income',
+          subGroup: 'regular_income',
+          name: '정기급여',
+          icon: 'wallet',
+          recurrence: {
+            enabled: true,
+            kind: 'dayOfMonth',
+            dayOfMonth: today.date(),
+            expectedAmount: 3000000,
+          },
+        });
+      }
+    }
+
+    test('지출 탭: 남은 고정 지출 예정 건수·금액과 월말 예상 합계를 보여준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      // 실제 합계는 그대로, 예정은 보조 카드로
+      await expect(dashboard.totalAmount).toContainText('12,000');
+      await expect(dashboard.upcomingSummary).toBeVisible();
+      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
+      await expect(dashboard.upcomingAmount('expense')).toContainText('800,000');
+      await expect(dashboard.upcomingProjectedTotal).toContainText('812,000');
+      await expect(dashboard.upcomingOverdueHint).toHaveCount(0);
+    });
+
+    test('이달에 이미 기록한 고정 항목은 예정에서 빠진다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 800000,
+        category: '월세',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.totalAmount).toContainText('800,000');
+      await expect(dashboard.upcomingSummary).toHaveCount(0);
+    });
+
+    test('내역이 없어도 예정은 보여준다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.emptyState).toBeVisible();
+      await expect(dashboard.upcomingSummary).toBeVisible();
+      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
+      await expect(dashboard.upcomingCount('income')).toHaveCount(0);
+    });
+
+    test('전체 탭: 게이지 비율은 실제 금액 그대로 두고 예정 반영 잔액을 따로 보여준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId, { salary: true });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 1000000,
+        category: '부업',
+        date: today.toISOString(),
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 300000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.meterPercent).toHaveText('30%');
+      await expect(dashboard.meterStatus).toContainText('700,000');
+      // 예정 지출은 빗금 구간으로 이어 그린다
+      await expect(dashboard.meterUpcomingFill).toBeVisible();
+      // (1,000,000 + 3,000,000) - (300,000 + 800,000)
+      await expect(dashboard.meterProjected).toContainText('수입 +3,000,000');
+      await expect(dashboard.meterProjected).toContainText('지출 +800,000');
+      await expect(dashboard.meterProjectedRemaining).toContainText('2,900,000');
+
+      await expect(dashboard.upcomingCount('income')).toHaveText('예정 고정 수입 1건');
+      await expect(dashboard.upcomingCount('expense')).toHaveText('예정 고정 지출 1건');
+    });
+
+    test('예정을 반영하면 수입을 넘기는 경우 더 쓰게 된다고 알린다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'income',
+        amount: 1000000,
+        category: '부업',
+        date: today.toISOString(),
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 300000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.meterStatus).toContainText('남은 금액');
+      await expect(dashboard.meterProjectedRemaining).toContainText('100,000');
+      await expect(dashboard.meterProjectedRemaining).toContainText('더 쓰게 돼요');
+    });
+
+    test('지난달·연간 탭에서는 예정을 보여주지 않는다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await expect(dashboard.upcomingSummary).toBeVisible();
+
+      await dashboard.periodPrevButton.click();
+      await expect(dashboard.periodNavLabel).toHaveText(
+        today.subtract(1, 'month').format('YYYY년 M월')
+      );
+      await expect(dashboard.upcomingSummary).toHaveCount(0);
+
+      await dashboard.periodNextButton.click();
+      await expect(dashboard.upcomingSummary).toBeVisible();
+
+      await dashboard.periodTabYearly.click();
+      await expect(dashboard.periodNavLabel).toHaveText(`${today.year()}년`);
+      await expect(dashboard.upcomingSummary).toHaveCount(0);
+    });
+
+    test('변동 지출 탭에서는 숨기고 고정 지출 탭에서는 고정 합계 기준으로 보여준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await dashboard.subGroupTab('변동 지출').click();
+      await expect(dashboard.totalAmount).toContainText('12,000');
+      await expect(dashboard.upcomingSummary).toHaveCount(0);
+
+      await dashboard.subGroupTab('고정 지출').click();
+      await expect(dashboard.upcomingSummary).toBeVisible();
+      // 고정 지출 실제 0 + 예정 800,000
+      await expect(dashboard.upcomingProjectedTotal).toContainText('800,000');
+    });
+
+    test('예정 카드를 누르면 항목 목록이 열리고 기록 버튼이 내역 추가 시트로 이어진다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedRecurringCategories(coupleId);
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+      await dashboard.upcomingSummary.click();
+
+      await expect(dashboard.upcomingSheet).toBeVisible();
+      await expect(dashboard.upcomingSheetList).toContainText('남은 예정 1건');
+      const row = dashboard.upcomingItem('월세');
+      await expect(row).toContainText('800,000');
+      await expect(row).toContainText('오늘');
+      await expect(row).toContainText(`매월 ${today.date()}일`);
+
+      await row.getByRole('link', { name: '기록' }).click();
+      await expect(page).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+      await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
+      await expect(page.getByLabel('금액')).toHaveValue('800000');
+      await expect(page.getByTestId('category-breadcrumb')).toContainText('월세');
+    });
+
+    test('발생일이 지났는데 기록하지 않은 항목은 합계에 넣지 않고 따로 알려준다', async ({
+      authedContext,
+    }) => {
+      // 1일에는 "지난 발생일"이 있을 수 없다
+      test.skip(today.date() === 1, '매월 1일에는 지난 발생분을 만들 수 없다');
+
+      const { page, uid, coupleId } = authedContext;
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'fixed_expense',
+        name: '월세',
+        icon: 'house',
+        recurrence: { enabled: true, kind: 'dayOfMonth', dayOfMonth: 1, expectedAmount: 800000 },
+      });
+      await seedCashbookCategory(coupleId, {
+        group: 'expense',
+        subGroup: 'variable_common',
+        name: '식비',
+        icon: 'bowl_food',
+      });
+      await seedCashbookEntry(coupleId, uid, {
+        type: 'expense',
+        amount: 12000,
+        category: '식비',
+        date: today.toISOString(),
+      });
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.groupTabExpense.click();
+
+      await expect(dashboard.upcomingSummary).toBeVisible();
+      await expect(dashboard.upcomingSummary).toContainText('남은 예정은 없어요');
+      await expect(dashboard.upcomingOverdueHint).toContainText('1건');
+      // 지난 발생분은 월말 예상에 넣지 않는다
+      await expect(dashboard.upcomingProjectedTotal).toHaveCount(0);
+
+      await dashboard.upcomingSummary.click();
+      await expect(dashboard.upcomingSheetOverdue).toContainText('아직 기록하지 않았어요 1건');
+      await expect(dashboard.upcomingItem('월세')).toContainText('지남');
+      await expect(dashboard.upcomingSheetList).toHaveCount(0);
+    });
+  });
 });

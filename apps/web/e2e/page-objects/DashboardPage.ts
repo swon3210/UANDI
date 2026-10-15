@@ -67,6 +67,29 @@ export class DashboardPage {
   readonly meterIncome: Locator;
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
+  readonly meterUpcomingFill: Locator;
+  readonly meterProjected: Locator;
+  readonly meterProjectedRemaining: Locator;
+
+  // 이달 예정 고정 지출·수입
+  readonly upcomingSummary: Locator;
+  readonly upcomingProjectedTotal: Locator;
+  readonly upcomingOverdueHint: Locator;
+  readonly upcomingSheet: Locator;
+  readonly upcomingSheetList: Locator;
+  readonly upcomingSheetOverdue: Locator;
+
+  upcomingCount(group: 'expense' | 'income'): Locator {
+    return this.page.getByTestId(`upcoming-${group}-count`);
+  }
+
+  upcomingAmount(group: 'expense' | 'income'): Locator {
+    return this.page.getByTestId(`upcoming-${group}-amount`);
+  }
+
+  upcomingItem(name: string): Locator {
+    return this.page.getByTestId(`upcoming-fixed-item-${name}`);
+  }
 
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
@@ -136,6 +159,16 @@ export class DashboardPage {
     this.meterIncome = page.getByTestId('meter-income');
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
+    this.meterUpcomingFill = page.getByTestId('meter-upcoming-fill');
+    this.meterProjected = page.getByTestId('meter-projected');
+    this.meterProjectedRemaining = page.getByTestId('meter-projected-remaining');
+
+    this.upcomingSummary = page.getByTestId('upcoming-fixed-summary');
+    this.upcomingProjectedTotal = page.getByTestId('upcoming-projected-total');
+    this.upcomingOverdueHint = page.getByTestId('upcoming-overdue-hint');
+    this.upcomingSheet = page.getByTestId('upcoming-fixed-sheet');
+    this.upcomingSheetList = page.getByTestId('upcoming-fixed-list');
+    this.upcomingSheetOverdue = page.getByTestId('upcoming-fixed-overdue');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

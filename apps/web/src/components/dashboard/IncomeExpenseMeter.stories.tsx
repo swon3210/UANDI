@@ -40,3 +40,39 @@ export const NoExpense: Story = {
 export const Empty: Story = {
   args: { income: 0, expense: 0 },
 };
+
+/** 이번 달: 월급은 아직 안 들어왔고, 월세·보험이 빠져나갈 예정 */
+export const WithUpcoming: Story = {
+  args: {
+    income: 1_000_000,
+    expense: 300_000,
+    upcoming: { income: 3_000_000, expense: 1_300_000 },
+  },
+};
+
+/** 예정 지출만 있을 때: 빗금 구간이 실제 지출 뒤에 이어진다 */
+export const UpcomingExpenseOnly: Story = {
+  args: {
+    income: 3_200_000,
+    expense: 1_200_000,
+    upcoming: { income: 0, expense: 1_300_000 },
+  },
+};
+
+/** 예정을 반영하면 수입을 넘기는 경우 */
+export const UpcomingOverIncome: Story = {
+  args: {
+    income: 2_000_000,
+    expense: 1_500_000,
+    upcoming: { income: 0, expense: 900_000 },
+  },
+};
+
+/** 월초: 실제 수입이 아직 없어 트랙은 없지만 예정 반영 잔액은 보여준다 */
+export const UpcomingNoIncomeYet: Story = {
+  args: {
+    income: 0,
+    expense: 120_000,
+    upcoming: { income: 3_000_000, expense: 800_000 },
+  },
+};

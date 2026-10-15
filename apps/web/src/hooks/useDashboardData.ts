@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { type Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { buildCategoryColorMap, distinctColors, getCategoryColor } from '@uandi/cashbook-core';
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { getPeriodRange, type PeriodKind } from '@/utils/date';
+import { getPeriodRange, isCurrentPeriod, type PeriodKind } from '@/utils/date';
+import { buildUpcomingFixed, type UpcomingFixed } from '@/utils/upcoming-fixed';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
 /** 'all'(전체)은 지출·수입 총량 비교 전용 탭이다. */
@@ -56,6 +57,11 @@ export type DashboardData = {
   total: number;
   hasEntries: boolean;
   comparison: PeriodComparison;
+  /**
+   * 월간 탭 + 이번 달일 때만: 아직 기록되지 않은 이달 고정 지출·수입 발생분(그룹 필터와 무관, 전체).
+   * 다른 달·연간 탭·로딩 중에는 null (과거 기간에 예정을 얹으면 기록이 아닌 숫자가 섞이므로).
+   */
+  upcoming: UpcomingFixed | null;
   isLoading: boolean;
   /** 비교 기간 데이터 로딩 중 (현재 기간과 별도로 비교 기간만 바꿀 수 있어 분리) */
   isCompareLoading: boolean;
@@ -255,6 +261,12 @@ export function useDashboardData(args: {
     const filtered = filterEntries(entriesQuery.data ?? [], group, subGroup, fixedLookup);
     const compareFiltered = filterEntries(compareQuery.data ?? [], group, subGroup, fixedLookup);
     const total = computeTotal(filtered);
+    const isLoading = entriesQuery.isLoading || categoriesQuery.isLoading;
+    // 로딩 중엔 실거래(G1)가 아직 없어 예정 건수가 잠깐 부풀어 보이므로 숨긴다.
+    const upcoming =
+      !isLoading && period === 'monthly' && isCurrentPeriod(period, cursor)
+        ? buildUpcomingFixed(categoriesQuery.data ?? [], entriesQuery.data ?? [], dayjs())
+        : null;
 
     return {
       byCategory: buildByCategory(filtered, colorMap),
@@ -266,7 +278,8 @@ export function useDashboardData(args: {
       comparison: {
         rows: buildComparisonRows(filtered, compareFiltered),
       },
-      isLoading: entriesQuery.isLoading || categoriesQuery.isLoading,
+      upcoming,
+      isLoading,
       isCompareLoading: compareQuery.isLoading,
     };
   }, [
@@ -278,5 +291,7 @@ export function useDashboardData(args: {
     categoriesQuery.isLoading,
     group,
     subGroup,
+    period,
+    cursor,
   ]);
 }
