@@ -41,7 +41,7 @@ export const Empty: Story = {
   args: { income: 0, expense: 0 },
 };
 
-/** 이번 달: 월급은 아직 안 들어왔고, 월세·보험이 빠져나갈 예정 */
+/** 이번 달: 월급은 아직 안 들어왔고, 월세·보험이 빠져나갈 예정 → 월말 예상 남은 금액이 머리기사 */
 export const WithUpcoming: Story = {
   args: {
     income: 1_000_000,
@@ -61,12 +61,12 @@ export const UpcomingExpenseOnly: Story = {
   },
 };
 
-/** 예정을 반영하면 수입을 넘기는 경우 */
+/** 예정을 반영하면 수입을 넘기는 경우: 부족 금액이 빨간 머리기사 */
 export const UpcomingOverIncome: Story = {
   args: {
     income: 2_000_000,
     expense: 1_500_000,
-    upcoming: { income: 0, expense: 900_000, count: 1 },
+    upcoming: { income: 0, expense: 900_000, count: 1, overdueCount: 2 },
     onUpcomingClick: () => {},
   },
 };

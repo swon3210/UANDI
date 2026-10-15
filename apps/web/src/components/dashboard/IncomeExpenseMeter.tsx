@@ -2,8 +2,8 @@
 
 import { ChevronRight } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
-import { formatCurrency } from '@/utils/currency';
-import { ActualProjectedBar, HATCH_STYLE } from './ActualProjectedBar';
+import { formatCurrency, formatCurrencyMan } from '@/utils/currency';
+import { ActualProjectedBar } from './ActualProjectedBar';
 
 export type MeterUpcoming = {
   /** 이달 남은 예정 고정 수입 합계 */
@@ -12,6 +12,8 @@ export type MeterUpcoming = {
   expense: number;
   /** 남은 예정 건수 (수입+지출) */
   count: number;
+  /** 발생일이 지났는데 아직 기록하지 않은 건수 */
+  overdueCount?: number;
 };
 
 type Props = {
@@ -21,7 +23,7 @@ type Props = {
   expense: number;
   /**
    * 이번 달일 때만: 아직 기록되지 않은 이달 예정 고정 수입·지출.
-   * 게이지의 비율은 실제 금액 그대로 두고, 수입·지출 막대에 예정 구간을 빗금으로 이어 그린다.
+   * 예정이 있으면 "월말 예상 남은 금액"을 머리기사로 두는 투영 레이아웃으로 바뀐다.
    */
   upcoming?: MeterUpcoming | null;
   /** 예정 칩 클릭 → 항목 목록 시트 */
@@ -29,27 +31,138 @@ type Props = {
 };
 
 /**
- * 전체 탭: 수입(트랙 = 100%) 중 얼마를 지출로 채웠는지, 넘기지는 않았는지 보여주는 게이지.
- * 수입을 넘기면 막대를 가득 채우고 초과 금액을 알린다.
- * 아래 수입·지출 막대는 같은 축에 두어 길이로 바로 비교되고, 예정 고정 항목은 빗금으로 이어진다.
+ * 전체 탭: 수입 대비 지출.
+ * - 기록이 끝난 기간(예정 없음): 수입(트랙 = 100%) 중 얼마를 지출로 채웠는지 게이지 + 남은 금액.
+ * - 이번 달(예정 있음): 달 중간의 비율은 월급 전이면 의미가 없으므로, 예정을 더한 월말 예상
+ *   남은 금액 하나만 크게 두고 수입·지출 막대(실제 단색 + 예정 빗금)로 모양을 보여준다.
  */
 export function IncomeExpenseMeter({ income, expense, upcoming, onUpcomingClick }: Props) {
+  const upIncome = upcoming?.income ?? 0;
+  const upExpense = upcoming?.expense ?? 0;
+  const hasUpcoming = upIncome > 0 || upExpense > 0;
+
+  if (hasUpcoming && upcoming) {
+    return (
+      <ProjectedMeter
+        income={income}
+        expense={expense}
+        upcoming={upcoming}
+        onUpcomingClick={onUpcomingClick}
+      />
+    );
+  }
+  return <ActualMeter income={income} expense={expense} />;
+}
+
+function ProjectedMeter({
+  income,
+  expense,
+  upcoming,
+  onUpcomingClick,
+}: {
+  income: number;
+  expense: number;
+  upcoming: MeterUpcoming;
+  onUpcomingClick?: () => void;
+}) {
+  const projectedIncome = income + upcoming.income;
+  const projectedExpense = expense + upcoming.expense;
+  const remaining = projectedIncome - projectedExpense;
+  const barMax = Math.max(projectedIncome, projectedExpense);
+  const overdueCount = upcoming.overdueCount ?? 0;
+
+  return (
+    <div data-testid="income-expense-meter" data-mode="projected" className="space-y-3">
+      <div>
+        <div className="text-xs text-muted-foreground">
+          {remaining >= 0 ? '월말 예상 남은 금액' : '월말 예상 부족 금액'}
+        </div>
+        <div
+          data-testid="meter-projected-remaining"
+          className={cn(
+            'mt-1 text-2xl font-semibold tabular-nums',
+            remaining >= 0 ? 'text-income' : 'text-expense'
+          )}
+        >
+          {formatCurrency(Math.abs(remaining))}
+        </div>
+      </div>
+
+      {/* 수입·지출을 같은 축에 둔 막대. 단색 = 실제, 빗금 = 예정. 숫자는 줄 끝에 월말 예상 하나 */}
+      <dl className="space-y-2.5">
+        <div className="flex items-center gap-3">
+          <dt className="w-7 shrink-0 text-xs text-muted-foreground">수입</dt>
+          <ActualProjectedBar
+            actual={income}
+            upcoming={upcoming.income}
+            max={barMax}
+            tone="income"
+            testId="meter-income-bar"
+            className="flex-1"
+          />
+          <dd
+            data-testid="meter-income-projected"
+            className="w-14 shrink-0 text-right text-xs font-semibold tabular-nums"
+          >
+            {formatCurrencyMan(projectedIncome)}
+          </dd>
+        </div>
+        <div className="flex items-center gap-3">
+          <dt className="w-7 shrink-0 text-xs text-muted-foreground">지출</dt>
+          <ActualProjectedBar
+            actual={expense}
+            upcoming={upcoming.expense}
+            max={barMax}
+            tone="expense"
+            testId="meter-expense-bar"
+            className="flex-1"
+          />
+          <dd
+            data-testid="meter-expense-projected"
+            className="w-14 shrink-0 text-right text-xs font-semibold tabular-nums"
+          >
+            {formatCurrencyMan(projectedExpense)}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span data-testid="meter-actual-line" className="tabular-nums">
+          지금까지 수입{' '}
+          <span data-testid="meter-income" className="font-medium text-foreground">
+            {formatCurrencyMan(income)}
+          </span>
+          {' · '}지출{' '}
+          <span data-testid="meter-expense" className="font-medium text-foreground">
+            {formatCurrencyMan(expense)}
+          </span>
+        </span>
+        {onUpcomingClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onUpcomingClick}
+            data-testid="meter-upcoming-button"
+            className="h-6 shrink-0 gap-0.5 px-1.5 text-xs"
+          >
+            예정 {upcoming.count}건{overdueCount > 0 ? ` · 미기록 ${overdueCount}건` : ''}
+            <ChevronRight size={14} />
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ActualMeter({ income, expense }: { income: number; expense: number }) {
   const hasIncome = income > 0;
   const ratio = hasIncome ? expense / income : expense > 0 ? Infinity : 0;
   const isOver = ratio > 1;
   const percent = hasIncome ? Math.round(ratio * 100) : null;
   const fillWidth = `${Math.min(ratio, 1) * 100}%`;
 
-  const upIncome = upcoming?.income ?? 0;
-  const upExpense = upcoming?.expense ?? 0;
-  const hasUpcoming = upIncome > 0 || upExpense > 0;
-  const projectedIncome = income + upIncome;
-  const projectedExpense = expense + upExpense;
-  const projectedRemaining = projectedIncome - projectedExpense;
-  const barMax = Math.max(projectedIncome, projectedExpense);
-
   return (
-    <div data-testid="income-expense-meter" className="space-y-3">
+    <div data-testid="income-expense-meter" data-mode="actual" className="space-y-3">
       <div className="flex items-end justify-between gap-2">
         <span className="text-xs text-muted-foreground">수입 대비 지출</span>
         <span
@@ -76,76 +189,25 @@ export function IncomeExpenseMeter({ income, expense, upcoming, onUpcomingClick 
         />
       </div>
 
-      {/* 수입·지출을 같은 축에 둔 막대. 예정이 있으면 빗금으로 이어져 월말 모양이 보인다 */}
-      <dl className="space-y-2 rounded-lg bg-muted/50 px-3 py-2 text-xs">
-        <div>
-          <div className="flex items-baseline justify-between">
-            <dt className="text-muted-foreground">수입</dt>
-            <dd className="tabular-nums">
-              <span data-testid="meter-income" className="text-sm font-semibold">
-                {formatCurrency(income)}
-              </span>
-              {upIncome > 0 ? (
-                <span data-testid="meter-income-upcoming" className="ml-1 text-income">
-                  +{formatCurrency(upIncome)} 예정
-                </span>
-              ) : null}
-            </dd>
-          </div>
-          <ActualProjectedBar
-            actual={income}
-            upcoming={upIncome}
-            max={barMax}
-            tone="income"
-            testId="meter-income-bar"
-            className="mt-1"
-          />
+      <dl className="grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-lg bg-muted/50 px-3 py-2">
+          <dt className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-expense/25" />
+            수입
+          </dt>
+          <dd data-testid="meter-income" className="mt-0.5 text-sm font-semibold tabular-nums">
+            {formatCurrency(income)}
+          </dd>
         </div>
-        <div>
-          <div className="flex items-baseline justify-between">
-            <dt className="text-muted-foreground">지출</dt>
-            <dd className="tabular-nums">
-              <span data-testid="meter-expense" className="text-sm font-semibold">
-                {formatCurrency(expense)}
-              </span>
-              {upExpense > 0 ? (
-                <span data-testid="meter-expense-upcoming" className="ml-1 text-expense">
-                  +{formatCurrency(upExpense)} 예정
-                </span>
-              ) : null}
-            </dd>
-          </div>
-          <ActualProjectedBar
-            actual={expense}
-            upcoming={upExpense}
-            max={barMax}
-            tone="expense"
-            testId="meter-expense-bar"
-            className="mt-1"
-          />
+        <div className="rounded-lg bg-muted/50 px-3 py-2">
+          <dt className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-expense" />
+            지출
+          </dt>
+          <dd data-testid="meter-expense" className="mt-0.5 text-sm font-semibold tabular-nums">
+            {formatCurrency(expense)}
+          </dd>
         </div>
-        {hasUpcoming ? (
-          <div className="flex items-center justify-between gap-2 text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-3 rounded-sm bg-foreground/60" />
-              실제
-              <span className="ml-1 h-2 w-3 rounded-sm" style={HATCH_STYLE.expense} />
-              예정
-            </span>
-            {onUpcomingClick ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onUpcomingClick}
-                data-testid="meter-upcoming-button"
-                className="h-6 gap-0.5 px-1.5 text-xs"
-              >
-                예정 {upcoming?.count ?? 0}건
-                <ChevronRight size={14} />
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
       </dl>
 
       <div
@@ -174,26 +236,6 @@ export function IncomeExpenseMeter({ income, expense, upcoming, onUpcomingClick 
             </span>
           </span>
         )}
-        {hasUpcoming ? (
-          <div className="mt-1 text-xs font-normal" data-testid="meter-projected-remaining">
-            {projectedRemaining >= 0 ? (
-              <span>
-                <span className="text-muted-foreground">예정 반영 시 월말 남은 금액 </span>
-                <span className="font-bold tabular-nums text-income">
-                  {formatCurrency(projectedRemaining)}
-                </span>
-              </span>
-            ) : (
-              <span>
-                <span className="text-muted-foreground">예정 반영 시 월말엔 수입보다 </span>
-                <span className="font-bold tabular-nums text-expense">
-                  {formatCurrency(-projectedRemaining)}
-                </span>
-                <span className="text-muted-foreground"> 더 쓰게 돼요</span>
-              </span>
-            )}
-          </div>
-        ) : null}
       </div>
     </div>
   );

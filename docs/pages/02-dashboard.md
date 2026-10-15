@@ -62,15 +62,13 @@
 │  ┌───────────────────┐  │
 │  │ 지출 합계 내역 보기 ›│ │  ← KPI 카드(클릭 시 내역 페이지로 이동)
 │  │ 1,370,000원        │  │
-│  │ ████████▒▒▒▒▒▒▒    │  │  ← 이번 달만: 실제(단색)+예정(빗금) 막대
-│  │ 예정 1,300,000 포함  월말 예상 2,670,000│
+│  │ 월말 예상 2,670,000원 · 예정 1,300,000원 포함│ ← 이번 달만: 한 줄
 │  └───────────────────┘  │
 │  ┌───────────────────┐  │
-│  │ 이달 지출 흐름  [▒ 예정 2건 1,300,000 ›]│ ← 이번 달만: 누적 흐름 차트
-│  │        ╭─ ─ ─┐     │  │     실선 = 오늘까지 실제 누적
+│  │ 이달 지출 흐름      [▒ 예정 2건 ›]│ ← 이번 달만: 누적 흐름 차트
+│  │        ╭─ ─ ─┐ 월말 267만│     실선 = 오늘까지 실제 누적
 │  │   ╭────╯ 오늘 ╰─ ─╯│  │     점선 = 예정 고정 항목을 더한 예상, 결제일마다 계단
 │  │ 1일   10일   20일  31일│
-│  │ 지금까지 1,370,000   월말 예상 2,670,000│
 │  └───────────────────┘  │
 │                         │
 │  ┌───────────────────┐  │
@@ -259,18 +257,21 @@ query(
 - **탭별 적용**
   - 지출·수입 탭: 그 그룹의 예정만. `변동` 세부 탭에는 예정 개념이 없어 막대·칩을 숨기고 차트는 실제 누적만 그린다. 도넛에서 카테고리를 골랐으면 합계 카드 막대는 그 카테고리 기준으로 세고, 누적 흐름 차트(탭 필터 기준)는 숨긴다.
   - 전체 탭: 게이지의 수입·지출 막대에 각각 적용.
-- **합계 KPI 카드 막대 (`dashboard-total-projection`)**: 큰 숫자(실제 합계) 아래 `ActualProjectedBar`(`dashboard-total-bar`, 구간 `-actual`/`-upcoming`). 실제(단색) 뒤에 예정(빗금)을 2px 틈을 두고 이어 붙이고, 막대 길이 100% = 실제 + 예정. 아래 줄에 `예정 N원 포함` / `월말 예상 N원`(`dashboard-total-projected`). 예정이 0이면 그리지 않는다.
+- **정보량 원칙**: 카드마다 머리기사 숫자 하나, 그림 하나, 보조 문장 한 줄. 같은 숫자를 두 카드에 반복하지 않는다 (합계 카드가 정확한 숫자를, 차트가 모양을 맡는다).
+- **합계 KPI 카드 (`dashboard-total-projection`)**: 큰 숫자(실제 합계) 아래 회색 한 줄 `월말 예상 N원(dashboard-total-projected) · 예정 N원 포함`. 막대는 그리지 않는다(모양은 흐름 차트가 맡는다). 예정이 0이면 줄 자체를 생략.
 - **누적 흐름 차트 (`MonthProjectionChart`, `month-projection`)**: KPI 카드 아래 카드. 이달 1일부터 말일까지 하루 단위 누적을 `recharts LineChart`로 그린다 (`buildMonthProjection`).
   - 실선(`actual`, monotone, 2.5px): 오늘까지의 실제 누적. 오늘 이후는 null이라 오늘에서 멈춘다
   - 점선(`projected`, stepAfter, `5 4`): 오늘부터 예정 고정 항목을 더한 예상 누적. 오늘 자리에는 두 값이 같이 있어 선이 이어지고, 발생일마다 계단처럼 올라간다
   - 발생일에만 점(`projection-dot-{day}`, 흰 속 + 계열 색 테두리)을 찍고, 툴팁에 `N일 · 실제/예상 누적 금액`과 그날 예정 항목 이름을 보여준다
   - 오늘 위치에 세로 점선 `ReferenceLine`(라벨 `오늘`). X축 눈금은 1·10·20·말일·오늘, Y축은 만원 단위 3눈금
-  - 헤더 우측 예정 칩(`projection-upcoming-button`): `[빗금] 예정 N건 금액 ›` → 목록 시트. 남은 예정은 없고 미기록만 있으면 `⏰ 미기록 N건 ›`
-  - 하단 요약 띠: `지금까지 N원`(`projection-actual-total`), `월말 예상 N원`(`projection-projected-total`, 그룹 색 extrabold), 미기록 있으면 `projection-overdue-hint`
+  - 점선 끝(말일)에 `월말 N만` 직접 라벨(`projection-end-label`, 예정이 있을 때만). 하단 요약 띠는 두지 않는다
+  - 헤더 우측 예정 칩(`projection-upcoming-button`): `[빗금] 예정 N건 ›` → 목록 시트. 미기록이 있으면 같은 칩에 `· 미기록 N건`(`projection-overdue-hint`), 남은 예정 없이 미기록만 있으면 `⏰ 미기록 N건 ›`
   - 내역이 없는 월초에도 그린다 (실선은 0에 붙고 점선만 올라간다)
-- **게이지 (`IncomeExpenseMeter`, 전체 탭)**: 상단 비율·막대·상태 줄은 실제 금액 그대로. 아래 수입·지출 행을 같은 축(최대값 = max(수입+예정, 지출+예정))의 `ActualProjectedBar` 두 개로 바꿔 길이로 바로 비교되게 한다 (`meter-income-bar`, `meter-expense-bar`, 예정 구간 `-upcoming`)
-  - 금액 옆에 `+N원 예정`(`meter-income-upcoming`, `meter-expense-upcoming`), 범례 `실제 / 예정`과 `예정 N건 ›` 칩(`meter-upcoming-button`) → 목록 시트
-  - 상태 줄 아래 `예정 반영 시 월말 남은 금액 N원`(`meter-projected-remaining`). 음수면 `예정 반영 시 월말엔 수입보다 N원 더 쓰게 돼요`
+- **게이지 (`IncomeExpenseMeter`, 전체 탭)**: 예정이 있는 이번 달은 `data-mode="projected"` 레이아웃으로 바뀐다. 월급 전의 `수입 대비 지출 112%` 같은 비율은 달 중간엔 의미가 없고 예상 잔액과 반대 신호를 내므로 숨기고, 머리기사를 하나로 둔다.
+  - 머리기사: `월말 예상 남은 금액`(음수면 `월말 예상 부족 금액`, expense 색) + 금액(`meter-projected-remaining`)
+  - 수입·지출 행: 같은 축(최대값 = max(수입+예정, 지출+예정))의 `ActualProjectedBar` 두 개(`meter-income-bar`, `meter-expense-bar`, 예정 구간 `-upcoming`). 줄 끝 숫자는 월말 예상 하나(`meter-income-projected`, `meter-expense-projected`, 만원 단위). 범례는 두지 않는다
+  - 아래 회색 한 줄: `지금까지 수입 N만 · 지출 N만`(`meter-income`, `meter-expense`) + `예정 N건 ›` 칩(`meter-upcoming-button`, 미기록 있으면 `· 미기록 N건`) → 목록 시트
+  - 예정이 없는 기간(지난달·정기 발생 미설정)은 기존 `data-mode="actual"` 게이지(비율·막대·수입/지출 박스·상태 줄) 그대로
   - 내역이 없어도 예정이 있으면 EmptyState 대신 게이지를 보여준다
 - **목록 시트 (`upcoming-fixed-sheet`)**: 예정 칩 클릭 → 바텀시트. 미기록(`upcoming-fixed-overdue`)을 위에, 남은 예정(`upcoming-fixed-list`)을 발생일 순으로. 행 `upcoming-fixed-item-{이름}`: 아이콘·이름·`M월 D일 · 오늘/내일/N일 후/N일 지남 · 발생 주기`·금액·`기록` 버튼
   - `기록`은 정기 알림 푸시와 같은 quickAdd 딥링크(`/inner/cashbook/history?quickAdd=1&qaType&qaCategory&qaAmount`)로 내역 추가 시트를 prefill 상태로 연다

@@ -44,7 +44,6 @@ import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 import { UpcomingFixedSheet } from './UpcomingFixedSheet';
-import { ActualProjectedBar } from './ActualProjectedBar';
 import { MonthProjectionChart } from './MonthProjectionChart';
 
 type Props = {
@@ -406,28 +405,20 @@ export function BudgetDashboard({ coupleId }: Props) {
           <div className={`mt-1 text-2xl font-semibold tabular-nums ${TOTAL_COLOR[group]}`}>
             {formatCurrency(displayTotal)}
           </div>
-          {/* 이번 달에만: 실제(단색) 뒤에 예정 고정 항목(빗금)을 이어 월말 예상까지 한 줄로 */}
+          {/* 이번 달에만: 예정 고정 항목을 더한 월말 예상 한 줄. 모양은 아래 흐름 차트가 맡는다 */}
           {kpiUpcomingAmount > 0 ? (
-            <div className="mt-2" data-testid="dashboard-total-projection">
-              <ActualProjectedBar
-                actual={displayTotal}
-                upcoming={kpiUpcomingAmount}
-                max={displayTotal + kpiUpcomingAmount}
-                tone={group}
-                testId="dashboard-total-bar"
-              />
-              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>예정 {formatCurrency(kpiUpcomingAmount)} 포함</span>
-                <span>
-                  월말 예상{' '}
-                  <span
-                    className="font-semibold tabular-nums text-foreground"
-                    data-testid="dashboard-total-projected"
-                  >
-                    {formatCurrency(displayTotal + kpiUpcomingAmount)}
-                  </span>
-                </span>
-              </div>
+            <div
+              className="mt-1 text-xs text-muted-foreground tabular-nums"
+              data-testid="dashboard-total-projection"
+            >
+              월말 예상{' '}
+              <span
+                className="font-semibold text-foreground"
+                data-testid="dashboard-total-projected"
+              >
+                {formatCurrency(displayTotal + kpiUpcomingAmount)}
+              </span>
+              {' · '}예정 {formatCurrency(kpiUpcomingAmount)} 포함
             </div>
           ) : null}
         </Link>
@@ -470,6 +461,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                     income: upcomingView.totals.income.amount,
                     expense: upcomingView.totals.expense.amount,
                     count: upcomingView.items.length,
+                    overdueCount: upcomingView.overdue.length,
                   }
                 : null
             }
