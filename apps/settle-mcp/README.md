@@ -16,20 +16,22 @@ uandi-settle-mcp connect ABCD-2345
 uandi-settle-mcp status
 ```
 
-Claude Desktop 설정(`claude_desktop_config.json`)에 등록:
+Claude Desktop 설정(`~/Library/Application Support/Claude/claude_desktop_config.json`)에 등록한다.
+아직 npm에 배포하지 않았으므로 `npx @uandi/settle-mcp`는 동작하지 않는다 — 모노레포에서 빌드한 `dist/cli.js`를 직접 가리킨다.
 
 ```json
 {
   "mcpServers": {
     "uandi-settle": {
-      "command": "npx",
-      "args": ["-y", "@uandi/settle-mcp"]
+      "command": "/opt/homebrew/bin/node",
+      "args": ["<repo>/apps/settle-mcp/dist/cli.js"]
     }
   }
 }
 ```
 
-모노레포 안에서 개발 중이면 `command: "node"`, `args: ["<repo>/apps/settle-mcp/dist/cli.js"]`로 빌드 산출물을 직접 가리킨다.
+`command`는 `which node`의 절대 경로를 쓴다(Claude Desktop은 셸 PATH를 물려받지 않는다). 설정 후 Claude Desktop을 완전히 종료(⌘Q)하고 다시 연다.
+터미널에서 `connect`/`status`를 실행할 때도 `node dist/cli.js connect …`처럼 직접 호출한다.
 
 ## 사용
 
