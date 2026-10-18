@@ -17,7 +17,7 @@ const log = (msg: string) => process.stderr.write(`${msg}\n`);
 
 function bootstrap() {
   const config = loadConfig();
-  const storage = createKeyringStorage();
+  const storage = createKeyringStorage(config.keyringService);
   const firebase = createFirebaseClient(config, createKeyValuePersistence(storage));
   const session = new SessionManager(firebase.auth, firebase.db, config);
   const deps: ToolDeps = {

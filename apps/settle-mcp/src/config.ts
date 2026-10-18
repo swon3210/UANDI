@@ -21,6 +21,8 @@ export type SettleConfig = {
   emulator: { authHost: string; firestoreHost: string } | null;
   /** uandi://rules 리소스에 실명(aliases 키)을 그대로 노출할지. false면 키를 가린다 (§6.1) */
   exposeAliasesInResource: boolean;
+  /** OS 키체인 서비스 이름. 테스트가 실제 로그인 항목과 섞이지 않게 바꿀 수 있다 */
+  keyringService: string;
 };
 
 const PRODUCTION_FIREBASE = {
@@ -51,5 +53,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): SettleConfig {
         }
       : null,
     exposeAliasesInResource: env.UANDI_EXPOSE_ALIASES !== 'false',
+    keyringService: env.UANDI_SETTLE_KEYRING_SERVICE ?? 'uandi-settle',
   };
 }

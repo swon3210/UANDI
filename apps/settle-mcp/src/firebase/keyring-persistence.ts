@@ -41,6 +41,38 @@ export function createKeyringStorage(service: string = SERVICE): KeyValueStorage
 
 const AVAILABILITY_PROBE_KEY = '__sak';
 
+const log = (msg: string) => process.stderr.write(`[uandi-settle] ${msg}\n`);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * 같은 값이면 쓰지 않고, 실패하면 잠깐 뒤 한 번 더 시도한다.
+ * 호스트가 서버를 둘 띄우면(채팅용 + 다른 클라이언트) 둘이 동시에 같은 키체인 항목을 갱신하다
+ * macOS가 "이미 존재하는 항목"으로 거절하는 경쟁이 생긴다. 실제 사고: Claude Desktop에서 Server disconnected.
+ */
+export async function writeIfChanged(
+  storage: KeyValueStorage,
+  key: string,
+  value: string
+): Promise<void> {
+  if (storage.getItem(key) === value) return;
+  try {
+    storage.setItem(key, value);
+  } catch (first) {
+    await sleep(150 + Math.random() * 200);
+    if (storage.getItem(key) === value) return;
+    try {
+      storage.setItem(key, value);
+    } catch {
+      try {
+        await storage.removeItem(key);
+        storage.setItem(key, value);
+      } catch (last) {
+        throw last instanceof Error ? last : (first as Error);
+      }
+    }
+  }
+}
+
 export function createKeyValuePersistence(storage: KeyValueStorage): Persistence {
   return class {
     static type = 'LOCAL' as const;
@@ -55,15 +87,24 @@ export function createKeyValuePersistence(storage: KeyValueStorage): Persistence
         return false;
       }
     }
+    /** 퍼시스턴스 쓰기 실패는 로그만 남긴다 — 메모리의 로그인 상태로 서버는 계속 동작해야 한다 */
     async _set(key: string, value: unknown): Promise<void> {
-      storage.setItem(key, JSON.stringify(value));
+      try {
+        await writeIfChanged(storage, key, JSON.stringify(value));
+      } catch (e) {
+        log(`키체인 저장 실패(무시하고 계속): ${(e as Error).message}`);
+      }
     }
     async _get<T>(key: string): Promise<T | null> {
       const json = storage.getItem(key);
       return json ? (JSON.parse(json) as T) : null;
     }
     async _remove(key: string): Promise<void> {
-      await storage.removeItem(key);
+      try {
+        await storage.removeItem(key);
+      } catch (e) {
+        log(`키체인 삭제 실패(무시하고 계속): ${(e as Error).message}`);
+      }
     }
     _addListener(): void {}
     _removeListener(): void {}

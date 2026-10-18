@@ -19,7 +19,12 @@ describe('stdio 서버', () => {
       command: join(process.cwd(), 'node_modules/.bin/tsx'),
       args: ['src/cli.ts', 'serve'],
       cwd: process.cwd(),
-      env: { ...process.env, UANDI_SETTLE_DIR: dir } as Record<string, string>,
+      // 이 PC의 실제 로그인(키체인 'uandi-settle')과 섞이지 않게 서비스 이름을 분리한다
+      env: {
+        ...process.env,
+        UANDI_SETTLE_DIR: dir,
+        UANDI_SETTLE_KEYRING_SERVICE: `uandi-settle-test-${process.pid}`,
+      } as Record<string, string>,
       stderr: 'pipe',
     });
     client = new Client({ name: 'stdio-test', version: '0' });
