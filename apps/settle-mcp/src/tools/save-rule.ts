@@ -6,6 +6,8 @@ import {
   applyRules,
   compilePattern,
   compileRules,
+  newRuleMeta,
+  normalizedKeyOf,
   writeRules,
   type CompiledRules,
   type RulesFile,
@@ -19,6 +21,7 @@ export const saveRuleInputShape = {
       kind: z.literal('exactCategory'),
       description: z.string().min(1).max(200).describe('적요. normalize되어 저장된다'),
       category: z.string().min(1).max(50),
+      rationale: z.string().min(1).max(200).optional().describe('왜 이렇게 정했는지 한 줄'),
     }),
     z.object({
       kind: z.literal('alias'),
@@ -35,11 +38,13 @@ export const saveRuleInputShape = {
           type: z.enum(['income', 'expense']).optional(),
         })
         .optional(),
+      rationale: z.string().min(1).max(200).optional(),
     }),
     z.object({
       kind: z.literal('transfer'),
       pattern: z.string().min(1).max(200),
       requireKnownName: z.boolean().optional(),
+      rationale: z.string().min(1).max(200).optional(),
     }),
     z.object({
       kind: z.literal('remove'),
@@ -56,6 +61,10 @@ export type SaveRuleOutput = {
   appliedToBatch?: { batchId: string; changed: number };
 };
 
+/**
+ * 규칙 파일 v2에 한 항목을 넣거나 뺀다. 같은 키(적요·패턴)의 규칙이 있으면 메타(id·hits·createdAt)를 보존하며 덮어쓴다.
+ * 입력 kind는 v1과 같다 — categoryRule(contains/regex)·promote·principle·interview는 1b단계 3번째 작업에서 추가한다.
+ */
 function nextRules(
   current: RulesFile,
   rule: SaveRuleInput['rule'],
@@ -67,36 +76,61 @@ function nextRules(
       if (!categoryNames.has(rule.category)) {
         throw new SettleError('UNKNOWN_CATEGORY', `카테고리 "${rule.category}"는 목록에 없습니다`);
       }
-      const key = normalize(rule.description);
-      if (!key) throw new SettleError('INVALID_INPUT', '적요가 비어 있습니다');
-      next.exactCategory[key] = rule.category;
+      const key = normalizedKeyOf(rule.description);
+      const existing = next.categoryRules.find(
+        (r) => r.match.kind === 'exact' && normalize(r.match.key) === key
+      );
+      if (existing) {
+        existing.category = rule.category;
+        if (rule.rationale) existing.rationale = rule.rationale;
+      } else {
+        next.categoryRules.push({
+          ...newRuleMeta({ source: 'user', rationale: rule.rationale ?? null }),
+          match: { kind: 'exact', key },
+          category: rule.category,
+        });
+      }
       return next;
     }
     case 'alias':
       next.aliases[rule.realName] = rule.alias;
       return next;
-    case 'ignore':
+    case 'ignore': {
       compilePattern(rule.pattern);
+      const existing = next.ignore.find((r) => r.pattern === rule.pattern);
+      const meta = existing ?? newRuleMeta({ source: 'user' });
       next.ignore = next.ignore.filter((r) => r.pattern !== rule.pattern);
       next.ignore.push({
+        ...meta,
+        rationale: rule.rationale ?? meta.rationale,
         pattern: rule.pattern,
         reason: rule.reason,
         ...(rule.onlyFor ? { onlyFor: rule.onlyFor } : {}),
       });
       return next;
-    case 'transfer':
+    }
+    case 'transfer': {
       compilePattern(rule.pattern);
+      const existing = next.transfer.find((r) => r.pattern === rule.pattern);
+      const meta = existing ?? newRuleMeta({ source: 'user' });
       next.transfer = next.transfer.filter((r) => r.pattern !== rule.pattern);
       next.transfer.push({
+        ...meta,
+        rationale: rule.rationale ?? meta.rationale,
         pattern: rule.pattern,
         ...(rule.requireKnownName !== undefined ? { requireKnownName: rule.requireKnownName } : {}),
       });
       return next;
+    }
     case 'remove': {
       switch (rule.target) {
-        case 'exactCategory':
-          delete next.exactCategory[normalize(rule.key)];
+        case 'exactCategory': {
+          const key = normalize(rule.key);
+          next.categoryRules = next.categoryRules.filter(
+            (r) => !(r.match.kind === 'exact' && normalize(r.match.key) === key)
+          );
           break;
+        }
         case 'alias':
           delete next.aliases[rule.key];
           break;
@@ -141,6 +175,9 @@ async function reapplyToBatch(
     if (row.categorySource !== 'user' && applied.category !== row.category) {
       patch.category = applied.category;
       patch.categorySource = applied.categorySource;
+    }
+    if (row.categorySource !== 'user' && applied.appliedRuleId !== row.appliedRuleId) {
+      patch.appliedRuleId = applied.appliedRuleId;
     }
     const userSetStatus = row.statusReason?.startsWith('user:') ?? false;
     const keepDuplicate = row.status === 'duplicate' && applied.status === 'pending';

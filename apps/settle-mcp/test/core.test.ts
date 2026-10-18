@@ -16,6 +16,7 @@ import {
   writeRules,
 } from '../src/core/rules';
 import type { StagedTransaction } from '../src/core/types';
+import { exactRule, ignoreRule, rulesWith, transferRule } from './rule-factories';
 
 describe('normalize / fingerprint', () => {
   it('NFC·공백·구두점·대소문자를 무시해 같은 키를 만든다', () => {
@@ -78,7 +79,7 @@ describe('rules', () => {
     const rules = await loadRules(path, 'c1');
     expect(rules.file.coupleId).toBe('c1');
     expect(rules.ignore).toHaveLength(1);
-    expect(JSON.parse(await readFile(path, 'utf8')).version).toBe(1);
+    expect(JSON.parse(await readFile(path, 'utf8')).version).toBe(2);
   });
 
   it('깨진 JSON·형식 오류·다른 커플 파일은 RULES_INVALID', async () => {
@@ -128,10 +129,9 @@ describe('rules', () => {
   });
 
   it('정확일치 규칙이 LLM 후보를 덮어쓰고, 목록에 없는 LLM 카테고리는 null', () => {
-    const rules = compileRules({
-      ...defaultRules('c1'),
-      exactCategory: { [normalize('스타벅스 코리아')]: '구독' },
-    });
+    const rules = compileRules(
+      rulesWith({ categoryRules: [exactRule('스타벅스 코리아', '구독')] })
+    );
     const names = new Set(['식비', '구독']);
     const hit = applyRules(
       { rawDescription: '스타벅스코리아', type: 'expense', llmCategory: '식비' },
@@ -167,7 +167,7 @@ describe('rules', () => {
 
     const strict = compileRules({
       ...base,
-      transfer: [{ pattern: '이체', requireKnownName: true }],
+      transfer: [transferRule('이체', { requireKnownName: true })],
       aliases: { 홍길동: '처형' },
     });
     expect(
@@ -201,6 +201,7 @@ describe('enforceBeforeCommit', () => {
     description: '스타벅스',
     category: '식비',
     categorySource: 'llm',
+    appliedRuleId: null,
     status: 'pending',
     statusReason: null,
     duplicateOf: null,
@@ -215,7 +216,7 @@ describe('enforceBeforeCommit', () => {
     const rules = compileRules({
       ...defaultRules('c1'),
       aliases: { 홍길동: '처형' },
-      ignore: [{ pattern: '넷플릭스', reason: '구독은 따로' }],
+      ignore: [ignoreRule('넷플릭스', '구독은 따로')],
     });
     // description은 별칭 규칙이 없던 시점에 만들어졌다고 가정 — 재치환으로 잡혀야 한다
     const leakFree = enforceBeforeCommit(

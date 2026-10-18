@@ -239,7 +239,11 @@ describe('save_rule', () => {
     const out = await h.call<SaveRuleOutput>('save_rule', {
       rule: { kind: 'remove', target: 'exactCategory', key: '넷플릭스' },
     });
-    expect(out.rules.exactCategory[normalize('넷플릭스')]).toBeUndefined();
+    expect(
+      out.rules.categoryRules.find(
+        (r) => r.match.kind === 'exact' && r.match.key === normalize('넷플릭스')
+      )
+    ).toBeUndefined();
   });
 });
 

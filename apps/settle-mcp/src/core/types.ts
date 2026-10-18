@@ -31,6 +31,8 @@ export type StagedTransaction = {
   /** null이면 커밋 불가 */
   category: string | null;
   categorySource: CategorySource | null;
+  /** 카테고리를 정한 규칙 id (categorySource==='rule'일 때). "왜 이 카테고리인가"를 설명할 수 있어야 한다 */
+  appliedRuleId: string | null;
   status: StagedStatus;
   /** 예: 'ignore:카드대금', 'dup:existing#abc123', 'transfer:pattern' */
   statusReason: string | null;

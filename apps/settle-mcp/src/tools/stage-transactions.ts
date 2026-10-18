@@ -4,7 +4,7 @@ import { createExistingMatcher, dedupeWithinBatch, duplicateScope } from '../cor
 import { SettleError } from '../core/errors';
 import { fingerprint } from '../core/fingerprint';
 import { newId } from '../core/id';
-import { applyRules } from '../core/rules';
+import { applyRules, recordHits, writeRules } from '../core/rules';
 import type { Batch, StagedTransaction } from '../core/types';
 import { guarded, loadSessionRules, toolResult, type ToolDeps } from './shared';
 
@@ -74,7 +74,8 @@ export async function stageTransactions(deps: ToolDeps, input: StageInput): Prom
   const batchId = newId();
   const now = new Date().toISOString();
 
-  // 2) 규칙 적용 + 지문
+  // 2) 규칙 적용 + 지문. 적용된 규칙은 hits로 모아 뒤에서 한 번에 기록한다
+  const hits: { ruleId: string; rawDescription: string }[] = [];
   const rows: StagedTransaction[] = input.transactions.map((tx) => {
     const applied = applyRules(
       { rawDescription: tx.description, type: tx.type, llmCategory: tx.category ?? null },
@@ -82,6 +83,7 @@ export async function stageTransactions(deps: ToolDeps, input: StageInput): Prom
       rules,
       categoryNames
     );
+    for (const ruleId of applied.hitRuleIds) hits.push({ ruleId, rawDescription: tx.description });
     return {
       id: newId(),
       batchId,
@@ -93,6 +95,7 @@ export async function stageTransactions(deps: ToolDeps, input: StageInput): Prom
       description: applied.description,
       category: applied.category,
       categorySource: applied.categorySource,
+      appliedRuleId: applied.appliedRuleId,
       status: applied.status,
       statusReason: applied.statusReason,
       duplicateOf: null,
@@ -144,6 +147,9 @@ export async function stageTransactions(deps: ToolDeps, input: StageInput): Prom
   };
   await deps.store.createBatch(batch);
   await deps.store.insertStaged(kept);
+
+  // 6) 규칙 적용 횟수·예시 기록 (근거 E-3). 배치 저장 뒤에 하므로 실패해도 스테이징은 남는다
+  if (hits.length > 0) await writeRules(deps.rulesPath, recordHits(rules.file, hits, now));
 
   const count = (s: StagedTransaction['status']) => kept.filter((r) => r.status === s).length;
   const needsAttention = kept.filter(
