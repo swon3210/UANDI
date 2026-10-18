@@ -213,6 +213,25 @@ describe('save_rule', () => {
     expect(byAmount[10]!.rawDescription).toBe('홍길동');
   });
 
+  it('사용자가 pending으로 바꾼 송금 행은 규칙 재적용 후에도 pending이다', async () => {
+    const out = await stage([tx({ description: '홍길동 이체', amount: 50000, category: '기타' })]);
+    const list = await h.call<ListStagedOutput>('list_staged', { batchId: out.batchId });
+    const row = list.items[0]!;
+    expect(row.status).toBe('transfer');
+    await h.call('set_category', {
+      batchId: out.batchId,
+      changes: [{ id: row.id, status: 'pending' }],
+    });
+
+    await h.call('save_rule', { rule: { kind: 'alias', realName: '홍길동', alias: '처형' } });
+    const after = await h.call<ListStagedOutput>('list_staged', { batchId: out.batchId });
+    expect(after.items[0]).toMatchObject({ status: 'pending', description: '처형 이체' });
+
+    const commit = await h.call<CommitBatchOutput>('commit_batch', { batchId: out.batchId });
+    expect(commit.committed).toBe(1);
+    expect([...h.gateway.entries.values()][0]!.description).toBe('처형 이체');
+  });
+
   it('remove로 규칙을 지울 수 있다', async () => {
     await h.call('save_rule', {
       rule: { kind: 'exactCategory', description: '넷플릭스', category: '구독' },

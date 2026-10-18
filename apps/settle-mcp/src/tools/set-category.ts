@@ -105,7 +105,8 @@ export async function setCategory(
         );
       }
       patch.status = change.status;
-      patch.statusReason = change.status === 'pending' ? null : `user:${change.status}`;
+      // 'user:' 접두사 — save_rule 재적용이 사용자가 정한 상태를 덮어쓰지 않게 하는 표식
+      patch.statusReason = `user:${change.status}`;
       if (change.status !== 'duplicate') patch.duplicateOf = row.duplicateOf;
     }
     await deps.store.updateStaged(row.id, patch);
