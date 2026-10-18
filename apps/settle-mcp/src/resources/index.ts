@@ -1,10 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { normalize } from '../core/fingerprint';
+import { INTERVIEW_QUESTIONS } from '../core/interview';
 import type { CategoryRule, RulesFile } from '../core/rules';
+import { readPrinciplesMarkdown } from './principles';
 import { loadSessionRules, type ToolDeps } from '../tools/shared';
 
 export const CATEGORIES_URI = 'uandi://categories';
 export const RULES_URI = 'uandi://rules';
+export const PRINCIPLES_URI = 'uandi://principles';
+export const INTERVIEW_URI = 'uandi://interview';
 
 /**
  * 실명을 가린 규칙 — LLM 제공자에게 실명을 보내고 싶지 않은 사용자용 (§6.1).
@@ -104,5 +108,41 @@ export function registerResources(server: McpServer, deps: ToolDeps) {
         ],
       };
     }
+  );
+
+  server.registerResource(
+    'principles',
+    PRINCIPLES_URI,
+    {
+      title: '결산할 때 지키는 여섯 가지',
+      description:
+        '서버가 지키는 결산 원칙. 사용자와 LLM이 같은 글을 읽는다. 결산 시작 때 굵은 제목 여섯 줄만 보여 주고, 판단을 설명할 때 "원칙 N(제목)"으로 인용한다. 사용자가 바꿀 수 없다.',
+      mimeType: 'text/markdown',
+    },
+    async (uri) => ({
+      contents: [
+        { uri: uri.href, mimeType: 'text/markdown', text: await readPrinciplesMarkdown() },
+      ],
+    })
+  );
+
+  server.registerResource(
+    'interview',
+    INTERVIEW_URI,
+    {
+      title: '첫 결산 인터뷰',
+      description:
+        '규칙 파일의 interview.completedAt이 null일 때, 내역서를 읽기 전에 묻는 네 질문. 질문과 선택지를 그대로 보여 주고(말을 바꾸지 않는다) 답은 save_rule { kind:"interview" }로 저장한다.',
+      mimeType: 'application/json',
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'application/json',
+          text: JSON.stringify({ questions: INTERVIEW_QUESTIONS }, null, 2),
+        },
+      ],
+    })
   );
 }

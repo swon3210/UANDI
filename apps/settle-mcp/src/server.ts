@@ -12,7 +12,7 @@ import type { ToolDeps } from './tools/shared';
 export const SERVER_NAME = 'uandi-settle';
 export const SERVER_VERSION = '0.0.1';
 
-/** 도구 6개 + 리소스 2개 + 프롬프트 1개를 등록한 MCP 서버. 트랜스포트는 호출자가 붙인다 */
+/** 도구 6개 + 리소스 4개(categories·rules·principles·interview) + 프롬프트 1개를 등록한 MCP 서버. 트랜스포트는 호출자가 붙인다 */
 export function createServer(deps: ToolDeps): McpServer {
   const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });
   registerStageTransactions(server, deps);

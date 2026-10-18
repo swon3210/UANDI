@@ -36,7 +36,7 @@ describe('stdio 서버', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('도구 6개·리소스 2개·프롬프트 1개가 등록된다', async () => {
+  it('도구 6개·리소스 4개·프롬프트 1개가 등록된다', async () => {
     const tools = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(tools).toEqual(
       [
@@ -49,7 +49,12 @@ describe('stdio 서버', () => {
       ].sort()
     );
     const resources = (await client.listResources()).resources.map((r) => r.uri).sort();
-    expect(resources).toEqual(['uandi://categories', 'uandi://rules']);
+    expect(resources).toEqual([
+      'uandi://categories',
+      'uandi://interview',
+      'uandi://principles',
+      'uandi://rules',
+    ]);
     const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
     expect(prompts).toEqual(['settle-statement']);
   });
