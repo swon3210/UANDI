@@ -33,6 +33,8 @@ export type StagedTransaction = {
   categorySource: CategorySource | null;
   /** 카테고리를 정한 규칙 id (categorySource==='rule'일 때). "왜 이 카테고리인가"를 설명할 수 있어야 한다 */
   appliedRuleId: string | null;
+  /** 스테이징 때 이 행에 붙은 제안(Suggestion) id들. 제안은 StageOutput.suggestions에 있다 */
+  suggestionIds: string[];
   status: StagedStatus;
   /** 예: 'ignore:카드대금', 'dup:existing#abc123', 'transfer:pattern' */
   statusReason: string | null;

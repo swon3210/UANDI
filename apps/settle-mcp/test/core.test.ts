@@ -202,6 +202,7 @@ describe('enforceBeforeCommit', () => {
     category: '식비',
     categorySource: 'llm',
     appliedRuleId: null,
+    suggestionIds: [],
     status: 'pending',
     statusReason: null,
     duplicateOf: null,

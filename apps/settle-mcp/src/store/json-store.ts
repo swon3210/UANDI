@@ -15,6 +15,8 @@ export interface Store {
   updateBatch(id: string, patch: Partial<Batch>): Promise<Batch>;
   /** 아직 커밋되지 않은 가장 최근 배치 (save_rule 재적용 대상) */
   latestStagingBatch(coupleId: string): Promise<Batch | null>;
+  /** 커플의 배치 전부, 최근 생성 순 */
+  listBatches(coupleId: string): Promise<Batch[]>;
   insertStaged(rows: StagedTransaction[]): Promise<void>;
   listStaged(batchId: string, filter?: StagedFilter): Promise<StagedTransaction[]>;
   countStaged(batchId: string, status?: StagedStatus[]): Promise<number>;
@@ -91,6 +93,13 @@ export class JsonFileStore implements Store {
       d.batches[id] = next;
       return next;
     });
+  }
+
+  async listBatches(coupleId: string): Promise<Batch[]> {
+    const d = await this.load();
+    return Object.values(d.batches)
+      .filter((b) => b.coupleId === coupleId)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }
 
   async latestStagingBatch(coupleId: string): Promise<Batch | null> {
