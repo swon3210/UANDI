@@ -937,7 +937,7 @@ type Decision = {
 
 ### 11.4 첫 결산 인터뷰
 
-`interview.completedAt === null`이면 `settle-statement` 프롬프트가 내역서를 읽기 **전에** 네 가지를 묻는다. 질문·선택지는 서버가 `uandi://interview` 리소스로 제공해 LLM이 말을 바꾸지 않게 한다. 답은 `save_rule { kind:'interview', answers }` 한 번으로 저장되고, 서버가 답을 **기준(문장) + 기계 규칙**으로 풀어 쓴다.
+`interview.completedAt === null`이면 `settle-statement` 프롬프트가 내역서를 읽기 **전에** 네 가지를 묻는다. 질문·선택지는 서버가 `uandi://interview` 리소스로 제공해 LLM이 말을 바꾸지 않게 한다. 답은 `save_rule { kind:'interview', answers }` 한 번으로 저장되고(각 질문의 답 형식은 리소스의 `answerShape`), 서버가 답을 **기준(문장) + 기계 규칙**으로 풀어 쓴다(`core/interview.ts`의 `applyInterviewAnswers`). 답하지 않은 질문은 건너뛴다 — 기본값은 이미 기본 규칙이 하고 있다.
 
 | id            | 질문                                                                                                   | 선택지 → 저장되는 것                                                                                                                                                                                                                                                                                                                                |
 | ------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -999,17 +999,18 @@ type Suggestion =
 | { kind: 'categoryRule'; match: CategoryRule['match']; category; rationale?; onlyFor?; evenIfTransfer? }
 | { kind: 'promote'; key: string; category: string; rationale?: string } // decisions의 key → categoryRule exact, source:'promoted'. 해당 decision 삭제
 | { kind: 'principle'; text: string; topic: UserPrinciple['topic'] }     // 사람 말 기준 추가
-| { kind: 'interview'; answers?: Partial<Record<InterviewQuestionId, string>>; extra?: Record<string, unknown>; reset?: boolean }
+| { kind: 'interview'; answers?: InterviewAnswers; reset?: boolean }  // answers는 uandi://interview 각 질문의 answerShape(구조화 객체). reset과 함께 줄 수 없다
 | { kind: 'alias'; realName; alias }                                      // v1과 동일
 | { kind: 'ignore'; pattern; reason; onlyFor?; rationale? }
 | { kind: 'transfer'; pattern; requireKnownName?; rationale? }
-| { kind: 'remove'; id: string }                                          // v2: 규칙·기준은 id로 지운다
-| { kind: 'remove'; target: 'exactCategory'|'alias'|'ignore'|'transfer'; key: string }  // v1 호환
+| { kind: 'remove'; id?: string; target?: 'exactCategory'|'alias'|'ignore'|'transfer'; key?: string }  // id(v2: 규칙·기준) 또는 target+key(v1 호환). 지운 규칙을 가리키던 기준의 ruleIds에서 빠진다
 ```
 
-- 모든 규칙 kind는 `rationale`을 받는다. 비어 있으면 저장은 되고 `review_playbook`이 "이유 없는 규칙"으로 보여 준다(근거 E-2).
-- 저장 시 서버가 **원칙 충돌 검사**를 한다(원칙 6, 근거 E-4): 기본 카드대금 ignore를 지우거나 카드대금 패턴에 카테고리를 주면 `conflictsWith:[2]`, 기본 transfer를 지우거나 `insiders`의 이름에 `evenIfTransfer` 카테고리를 주면 `[3]`. 응답 `warnings`에 "원칙 2(같은 돈은 한 번만 적는다)와 어긋나지만 저장했다"처럼 번호와 제목을 함께 넣는다. **막지 않는다.**
-- `principle`은 `ruleIds:[]`로 저장된다. 같은 호출 흐름에서 LLM이 이어 기계 규칙을 저장하면 그 규칙 id를 `principle.ruleIds`에 연결하도록 `save_rule`이 `linkToPrincipleId?: string`을 받는다.
+- 모든 규칙 kind는 `rationale`을 받는다. 비어 있으면 저장은 되고 `review_playbook`이 "이유 없는 규칙"으로 보여 준다(근거 E-2). `promote`는 rationale이 없으면 "손으로 N번 같은 카테고리로 고름"을 자동으로 적는다.
+- 응답은 `{ rules, appliedToBatch?, savedId?, warnings }`. `savedId`는 새로 만든(또는 덮어쓴) 규칙·기준의 id — 이어지는 `linkToPrincipleId`·`remove`에 쓴다. `warnings`는 원칙 충돌·인터뷰 건너뜀 등 막지 않은 알림이다.
+- 저장 시 서버가 **원칙 충돌 검사**를 한다(원칙 6, 근거 E-4, `core/conflicts.ts`): 카드대금 패턴(기본 regex 또는 "카드대금·카드결제·카드값"이 들어간 키)에 카테고리를 주면 `conflictsWith:[2]`, `insiders`의 이름에 `evenIfTransfer` 카테고리를 주면 `[3]`. 기본 카드대금 ignore·기본 transfer를 지우면 각각 원칙 2·3 경고. 응답 `warnings`에 "원칙 2(같은 돈은 한 번만 적는다)와 어긋나지만 저장했다"처럼 번호와 제목을 함께 넣는다. **막지 않는다.**
+- `principle`은 `ruleIds:[]`로 저장되고 응답 `savedId`로 id를 돌려준다. 이어서 기계 규칙을 저장할 때 `linkToPrincipleId`에 그 id를 주면 `principle.ruleIds`에 연결된다.
+- `promote`는 결정 로그에 그 key·category가 있어야 한다(없으면 `INVALID_INPUT`). 승격 뒤에는 그 key의 결정을 **전부**(다른 카테고리로 고른 이력 포함) 지운다 — 규칙이 그 적요의 답이 됐기 때문이다.
 - 커밋 전 배치 재적용(v1 §5.4)은 그대로다. `appliedRuleId`도 함께 갱신된다.
 
 #### `commit_batch` (변경)

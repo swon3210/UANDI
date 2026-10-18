@@ -1,8 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { PROMOTE_THRESHOLD, recordDecision, type PromotableDecision } from '../core/decisions';
 import { SettleError } from '../core/errors';
+import { writeRules, type RulesFile } from '../core/rules';
 import type { StagedTransaction } from '../core/types';
-import { guarded, toolResult, type ToolDeps } from './shared';
+import { guarded, loadSessionRules, toolResult, type ToolDeps } from './shared';
 
 export const setCategoryInputShape = {
   batchId: z.string().min(1),
@@ -30,6 +32,8 @@ export type SetCategoryOutput = {
   updated: number;
   rejected: { id: string; code: string; message: string }[];
   warnings: string[];
+  /** 이번 호출로 같은 결정이 PROMOTE_THRESHOLD회 이상 쌓인 적요 — "앞으로도 이렇게 할까요?" (원칙 5) */
+  promotable: PromotableDecision[];
 };
 
 export async function setCategory(
@@ -52,6 +56,8 @@ export async function setCategory(
   let updated = 0;
   const rejected: SetCategoryOutput['rejected'] = [];
   const warnings: string[] = [];
+  /** 카테고리를 바꾼 결정만 로그에 남긴다 — 상태 전환은 그 배치의 사정이다 */
+  const decided: { rawDescription: string; category: string }[] = [];
 
   for (const change of input.changes) {
     const row = await deps.store.getStaged(change.id);
@@ -97,6 +103,8 @@ export async function setCategory(
     if (change.category !== undefined) {
       patch.category = change.category;
       patch.categorySource = 'user';
+      patch.appliedRuleId = null;
+      decided.push({ rawDescription: row.rawDescription, category: change.category });
     }
     if (change.status !== undefined && change.status !== row.status) {
       if (row.status === 'duplicate' && change.status === 'pending') {
@@ -113,7 +121,33 @@ export async function setCategory(
     updated += 1;
   }
 
-  return { updated, rejected, warnings };
+  const promotable = await recordDecisions(deps, session, batch.id, decided);
+  return { updated, rejected, warnings, promotable };
+}
+
+async function recordDecisions(
+  deps: ToolDeps,
+  session: Awaited<ReturnType<ToolDeps['session']['require']>>,
+  batchId: string,
+  decided: { rawDescription: string; category: string }[]
+): Promise<PromotableDecision[]> {
+  if (decided.length === 0) return [];
+  let file: RulesFile = (await loadSessionRules(deps, session)).file;
+  const now = new Date().toISOString();
+  const reached = new Map<string, PromotableDecision>();
+  for (const d of decided) {
+    const res = recordDecision(file, { ...d, batchId }, now);
+    file = res.file;
+    const { key, sample, category, count } = res.decision;
+    const hasExactRule = file.categoryRules.some(
+      (r) => r.match.kind === 'exact' && r.match.key === key
+    );
+    if (count >= PROMOTE_THRESHOLD && !hasExactRule) {
+      reached.set(`${key}|${category}`, { key, sample, category, count });
+    }
+  }
+  await writeRules(deps.rulesPath, file);
+  return [...reached.values()];
 }
 
 export function registerSetCategory(server: McpServer, deps: ToolDeps) {
@@ -128,7 +162,11 @@ export function registerSetCategory(server: McpServer, deps: ToolDeps) {
     guarded(async (args) => {
       const out = await setCategory(deps, args as SetCategoryInput);
       return toolResult(
-        `${out.updated}건 변경, ${out.rejected.length}건 거절${out.warnings.length ? `, 경고 ${out.warnings.length}건` : ''}`,
+        `${out.updated}건 변경, ${out.rejected.length}건 거절${out.warnings.length ? `, 경고 ${out.warnings.length}건` : ''}${
+          out.promotable.length
+            ? `. 같은 결정이 ${PROMOTE_THRESHOLD}번 이상 쌓인 적요 ${out.promotable.length}건 — "앞으로도 이렇게 할까요?"라고 묻고, 그래라고 하면 save_rule {kind:"promote"}`
+            : ''
+        }`,
         out
       );
     })
