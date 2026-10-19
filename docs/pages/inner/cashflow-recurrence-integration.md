@@ -234,12 +234,12 @@ auto 예측 ↔ 선언 합성의 중복을 생성 단계에서 차단. (G2는 �
 
 ### 구현 위치
 
-| 파일                                                       | 변경                                                                                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `apps/web/src/hooks/useRecurrencePrompts.ts`               | 신규 — recurrence → 날짜별 프롬프트 뷰(Map), G1/G2 게이트                                         |
-| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형("정기" 배지, 액션 버튼 없음). 핸들러 props는 모두 optional                 |
-| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합(표시 전용)                                                   |
-| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출(액션 버튼 없음)                                 |
+| 파일                                                       | 변경                                                                                |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `apps/web/src/hooks/useRecurrencePrompts.ts`               | 신규 — recurrence → 날짜별 프롬프트 뷰(Map), G1/G2 게이트                           |
+| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형("정기" 배지, 액션 버튼 없음). 핸들러 props는 모두 optional |
+| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합(표시 전용)                                    |
+| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출(액션 버튼 없음)                   |
 
 ### 알려진 한계
 
@@ -484,7 +484,8 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 - `CashflowMemberBalances` — 아바타(`AuthorAvatar`)+이름+금액 칩. 멤버 2명 미만이면 렌더 안 함.
 - **히어로**(`CashflowBaselineCard`): 오늘 예상 현금(합계) 아래 사람별 오늘 잔액.
-- **카드**(`CashflowCard`): "남는 돈"(합계) 아래 "각자 남는 돈" 칩. 음수는 빨강.
+- **카드**(`CashflowCard`): 합계 "남는 돈"만 표시. (사람별 "각자 남는 돈" 칩은 카드마다 반복돼 UI가
+  복잡해져 제거했다 — 사람별 잔액은 히어로에서만 본다. `balanceByUid` 계산 자체는 유지.)
 - **설정 시트**(`CashflowSettingsForm`): 멤버별 최초 현금 입력 + 합계 표시(2명 이상).
 
 ## Gotcha
@@ -503,7 +504,7 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 | 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                 | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
 | 저장        | `apps/web/src/services/cashflow-settings.ts`                     | `initialCashByUid` 저장(+`initialCash`=합계)                               |
 | 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                      | 멤버 로드, `startingBalanceByUid`, 작성자 귀속                             |
-| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`   | 사람별 잔액 칩                                                             |
+| 표시        | `CashflowMemberBalances`/`CashflowBaselineCard`                  | 사람별 잔액 칩(히어로만)                                                   |
 | 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`      | 멤버별 입력 + 합계                                                         |
 | 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                                                 |
 | E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                 | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장)                           |

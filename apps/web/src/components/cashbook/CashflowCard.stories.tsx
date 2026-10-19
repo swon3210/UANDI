@@ -1,11 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CashflowCard } from './CashflowCard';
-import type { CashflowCardData, CashflowMember, CashflowTransaction } from '@/utils/cashflow';
-
-const members: CashflowMember[] = [
-  { uid: 'u1', displayName: '지훈', photoURL: null },
-  { uid: 'u2', displayName: '서연', photoURL: null },
-];
+import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
 
 const sampleTxns: CashflowTransaction[] = [
   {
@@ -80,7 +75,7 @@ export const Positive: Story = {
 
 /** 각자 예상 잔액 칩이 카드에 함께 표시된다(합계 = 각자 합). */
 export const WithMemberBalances: Story = {
-  args: { card: card(), members, defaultOpen: true },
+  args: { card: card(), defaultOpen: true },
 };
 
 export const Expanded: Story = {
@@ -96,7 +91,6 @@ export const Negative: Story = {
       inflow: 0,
       outflow: 700000,
     }),
-    members,
     defaultOpen: true,
   },
 };
@@ -110,7 +104,6 @@ export const Empty: Story = {
       balanceByUid: { u1: 800000, u2: 700000 },
       transactions: [],
     }),
-    members,
     defaultOpen: true,
   },
 };
@@ -147,7 +140,6 @@ export const WithLlmPredictions: Story = {
         },
       ],
     }),
-    members,
     defaultOpen: true,
   },
 };

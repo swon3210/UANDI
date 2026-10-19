@@ -76,7 +76,8 @@ test.describe('현금흐름 사람별 잔액', () => {
     ).toContainText('1,300,000원');
   });
 
-  test('카드에 각자 남는 돈이 표시되고, 합이 합계 잔액과 같다(공동 예측은 균등 분배)', async ({
+  // 카드의 "각자 남는 돈" 섹션은 UI 단순화를 위해 제거됐다(사람별 잔액은 상단 히어로에만).
+  test('카드에는 합계 남는 돈만 표시되고 각자 남는 돈 칩은 없다', async ({
     twoUserAuthedContext,
   }) => {
     const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
@@ -108,16 +109,10 @@ test.describe('현금흐름 사람별 잔액', () => {
     const first = cashflow.cards.first();
     // 합계 = 200만 + 50만 - 70만 = 180만.
     await expect(first.getByTestId('cashflow-card-balance')).toHaveText('1,800,000원');
-    // uid1 = 100만 + 50만(본인 수입) - 35만(공동 절반) = 115만.
-    // uid2 = 100만 - 35만(공동 절반) = 65만. 합 = 180만.
-    const cardMembers = first.getByTestId('cashflow-member-balance');
-    await expect(cardMembers).toHaveCount(2);
-    await expect(
-      first.locator(`[data-testid="cashflow-member-balance"][data-uid="${uid1}"]`)
-    ).toContainText('1,150,000원');
-    await expect(
-      first.locator(`[data-testid="cashflow-member-balance"][data-uid="${uid2}"]`)
-    ).toContainText('650,000원');
+    await expect(first).not.toContainText('각자 남는 돈');
+    await expect(first.getByTestId('cashflow-member-balance')).toHaveCount(0);
+    // 사람별 잔액은 히어로에만 남는다.
+    await expect(cashflow.baselineCard.getByTestId('cashflow-member-balance')).toHaveCount(2);
   });
 
   test('레거시(단일 최초 현금) 문서는 사람별로 균등 분배해 표시한다', async ({

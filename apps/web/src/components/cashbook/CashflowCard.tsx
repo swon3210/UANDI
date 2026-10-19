@@ -6,13 +6,10 @@ import { ChevronDown, CalendarRange } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 import { CashflowTransactionRow } from './CashflowTransactionRow';
-import { CashflowMemberBalances } from './CashflowMemberBalances';
-import type { CashflowCardData, CashflowMember, CashflowTransaction } from '@/utils/cashflow';
+import type { CashflowCardData, CashflowTransaction } from '@/utils/cashflow';
 
 type CashflowCardProps = {
   card: CashflowCardData;
-  /** 커플 멤버(각자 예상 잔액 표기용). 2명 미만이면 사람별 표기는 생략된다. */
-  members?: CashflowMember[];
   defaultOpen?: boolean;
   /**
    * 있으면 예측 거래 행에 삭제 버튼을 노출(레거시 calendar 예측 doc 정리용).
@@ -44,12 +41,7 @@ function groupByDate(
  * 지출 예정일 카드(§4-3): 그 '날짜까지'의 남는 돈을 강조하는 현금 체크포인트.
  * 날짜를 큰 블록으로 끌어올려 어느 날 기준인지 한눈에 보이게 한다.
  */
-export function CashflowCard({
-  card,
-  members,
-  defaultOpen = false,
-  onDeletePrediction,
-}: CashflowCardProps) {
+export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: CashflowCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   // 결제일 카드는 subLabel(단일 날짜)을 갖고, 주 단위 폴백은 갖지 않는다.
   // (paydayType은 리프레이밍으로 UI에서 제거돼 비어 있을 수 있으므로 기준으로 쓰지 않는다.)
@@ -145,14 +137,6 @@ export function CashflowCard({
             </span>
           </div>
         </div>
-
-        {/* 각자 예상 잔액 — 합계(위 "남는 돈")를 사람별로 나눠 보여준다. */}
-        {members && members.length >= 2 && (
-          <div className="border-t border-border/60 px-4 py-2.5">
-            <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">각자 남는 돈</p>
-            <CashflowMemberBalances members={members} balanceByUid={card.balanceByUid} dense />
-          </div>
-        )}
 
         <CollapsibleContent>
           <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">

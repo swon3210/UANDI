@@ -326,11 +326,7 @@ export default function CashflowCalendarPage() {
               </p>
             </div>
 
-            <CashflowCardList
-              cards={cards}
-              members={members}
-              onDeletePrediction={handleDeletePrediction}
-            />
+            <CashflowCardList cards={cards} onDeletePrediction={handleDeletePrediction} />
           </div>
         )}
       </main>
