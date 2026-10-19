@@ -17,12 +17,12 @@ type BudgetAlertBannerProps = {
   alerts: BudgetAlert[];
   /** 배너가 대표하는 초과 알림을 한 번에 닫는다. */
   onDismissAll: () => void;
-  /** "자세히 보기" 링크 대상. 생략 시 월간 페이지. */
+  /** "자세히 보기" 링크 대상. 생략 시 가계부 대시보드. */
   detailHref?: string;
 };
 
 // 상시 배너는 실제 초과(over100/over120)만 다룬다.
-// 80% 임박(warn80)은 월간 노란 게이지 + 실시간 토스트가 담당한다.
+// 80% 임박(warn80)은 실시간 토스트가 담당한다.
 type OverThreshold = 'over100' | 'over120';
 
 const EMOJI: Record<OverThreshold, string> = {
@@ -44,7 +44,7 @@ function totalMessage(threshold: OverThreshold): string {
 export function BudgetAlertBanner({
   alerts,
   onDismissAll,
-  detailHref = '/inner/cashbook/history/monthly?sort=over',
+  detailHref = '/inner/cashbook',
 }: BudgetAlertBannerProps) {
   const over = alerts.filter(
     (a): a is BudgetAlert & { threshold: OverThreshold } => isOver(a.threshold)

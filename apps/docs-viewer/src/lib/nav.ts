@@ -56,8 +56,6 @@ export const NAV_ITEMS: NavGroup[] = [
         children: [
           { title: '카테고리', slug: 'pages/inner/cashbook-categories' },
           { title: '연간 계획', slug: 'pages/inner/cashbook-annual-plan' },
-          { title: '월간', slug: 'pages/inner/cashbook-monthly' },
-          { title: '주간', slug: 'pages/inner/cashbook-weekly' },
           { title: '알림', slug: 'pages/inner/cashbook-notifications' },
         ],
       },

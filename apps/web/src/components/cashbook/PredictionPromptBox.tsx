@@ -19,7 +19,7 @@ export type PredictionPromptView = {
   recurrenceLabel?: string | null;
   /**
    * 'recurrence'이면 카테고리 정기 발생에서 읽기 시점 파생된 프롬프트(doc 없음).
-   * "기록하기"(예상값 원탭) + "수정 후 기록"(폼)만 노출하고 ✗(아니오)는 숨긴다.
+   * 예상 항목으로만 보여주고 액션 버튼(✓/✎/✗)은 노출하지 않는다.
    * 미지정(doc 기반)은 ✓/✎/✗ 모두 노출.
    */
   kind?: 'recurrence';
@@ -33,12 +33,12 @@ const SOURCE_LABEL: Record<PredictionSource, string> = {
 
 type PredictionPromptBoxProps = {
   prompt: PredictionPromptView;
-  onConfirm: () => void; // ✓ 추가 / 기록하기
+  onConfirm?: () => void; // ✓ 추가 (doc 기반만)
   onReject?: () => void; // ✗ 아니오 (doc 기반만)
   onEdit?: () => void; // ✎ 수정 후 추가 (doc 기반만)
 };
 
-/** 오늘 이후 날짜에 뜨는 예측 프롬프트(점선 박스). doc 기반은 추가/수정/아니오, recurrence는 기록하기/수정 후 기록. */
+/** 오늘 이후 날짜에 뜨는 예측 프롬프트(점선 박스). doc 기반은 추가/수정/아니오, recurrence는 표시만. */
 export function PredictionPromptBox({
   prompt,
   onConfirm,
@@ -85,24 +85,7 @@ export function PredictionPromptBox({
         </div>
       </div>
 
-      {isRecurrence ? (
-        <div className="flex gap-2">
-          <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
-            <Check size={14} className="mr-1" />
-            기록하기
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1"
-            onClick={onEdit}
-            data-testid="prediction-edit"
-          >
-            <Pencil size={14} className="mr-1" />
-            수정 후 기록
-          </Button>
-        </div>
-      ) : (
+      {!isRecurrence && (
         <div className="flex gap-2">
           <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
             <Check size={14} className="mr-1" />

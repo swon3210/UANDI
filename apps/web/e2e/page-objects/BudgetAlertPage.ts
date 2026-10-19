@@ -16,21 +16,12 @@ export class BudgetAlertPage {
     return this.page.getByTestId('budget-alert-dismiss-all');
   }
 
-  /** 월간 페이지로 가는 "자세히 보기" 링크 */
+  /** 가계부 대시보드로 가는 "자세히 보기" 링크 */
   detailLink(): Locator {
     return this.page.getByTestId('budget-alert-detail-link');
   }
 
   async gotoMain() {
     await this.page.goto('/inner/cashbook/history');
-  }
-
-  async gotoWeekly() {
-    await this.page.goto('/inner/cashbook/history/weekly');
-  }
-
-  async gotoMonthly() {
-    await this.page.goto('/inner/cashbook/history/monthly');
-    await this.page.waitForSelector('[data-testid="monthly-overview"]', { timeout: 15000 });
   }
 }

@@ -27,7 +27,7 @@
 | `≥ 100% & < 120%` | over100 | `--expense` | 🔴 | 초과 — 예산을 넘음 |
 | `≥ 120%` | over120 | `--expense` (강조) | 🚨 | 위험 — 예산을 크게 초과 |
 
-> 기존 월간 대시보드(`04c-cashbook-monthly.md`)의 안정/경고/긴급 색상 체계와 일치시키되, 알림용으로 120% 단계를 추가한다.
+> 예산 안정/경고/긴급 색상 체계(`useMonthlyBudget.getBudgetStatus`)와 일치시키되, 알림용으로 120% 단계를 추가한다.
 
 ### 체크 대상
 
@@ -67,9 +67,9 @@
 
 ### 2. 가계부 페이지 상단 배너 (지속 노출, 양쪽 모두 표시)
 
-가계부 메인 / 월간 / 주간 페이지 모두 상단에 활성 경고 배너를 마운트한다.
+가계부 내역 페이지 상단에 활성 경고 배너를 마운트한다.
 
-마운트 위치: `apps/web/src/app/inner/cashbook/(main)/history/layout.tsx` — 3개 페이지(`/inner/cashbook/history`, `/inner/cashbook/history/monthly`, `/inner/cashbook/history/weekly`) 공통 레이아웃이므로 한 곳에서 처리.
+마운트 위치: `apps/web/src/app/inner/cashbook/(main)/history/layout.tsx` — 내역 페이지(`/inner/cashbook/history`) 레이아웃. (주간/월간 탭 페이지는 제거됨)
 
 ```
 ┌──────────────────────────────┐
@@ -155,7 +155,7 @@ value: boolean
 
 ### 푸시 클릭 시 동작
 
-- 월간 가계부 페이지(`/inner/cashbook/history/monthly`)로 이동
+- 가계부 대시보드(`/inner/cashbook`)로 이동
 
 ---
 
@@ -218,8 +218,7 @@ type FcmToken = {
 
 ## 관련 문서
 
-- 월간 대시보드: `04c-cashbook-monthly.md` (예산 색상 체계의 원본)
-- 주간 대시보드: `04d-cashbook-weekly.md` (기록 알림 — 별도 사이클)
+- 가계부 대시보드: `02-dashboard.md`
 - 카테고리 체계: `04a-cashbook-categories.md`
 - 연간 예산 계획: `04b-cashbook-annual-plan.md`
 

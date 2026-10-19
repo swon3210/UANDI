@@ -331,5 +331,3 @@
 - 기본 가계부 CRUD: `04-cashbook.md`
 - 도메인 모델: `03-domain-models.md`
 - 연간 예산 계획: `04b-cashbook-annual-plan.md`
-- 월간 대시보드: `04c-cashbook-monthly.md`
-- 주간 대시보드: `04d-cashbook-weekly.md`

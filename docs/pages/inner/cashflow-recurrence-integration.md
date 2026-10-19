@@ -226,20 +226,20 @@ auto 예측 ↔ 선언 합성의 중복을 생성 단계에서 차단. (G2는 �
   doc-기반 프롬프트(`useDayPredictions`)와 같은 날짜에 합쳐 렌더하되 중복은 G2로 방지.
 - **표현**: 기존 `PredictionPromptBox`(점선 ◇)를 재사용. `kind:'recurrence'` 뷰는 배지를 **"정기"** 로,
   보조줄에 `매월 N일`(또는 `둘째 주 수요일`, `formatRecurrence`) 표기.
-- **액션**: **"기록하기"(예상값 그대로 원탭 기록)** + **"수정 후 기록"(prefill된 `EntryForm`을 열어 금액 등 조정 후 저장)**.
-  발생 시점에 금액이 달라질 수 있어 두 경로를 둔다. doc이 없으므로 confirm/reject 머신을 타지 않고 바로 `addEntry`로 기록한다.
+- **액션**: **없음(표시 전용)**. 초기 구현은 "기록하기"(예상값 원탭 기록) + "수정 후 기록"(prefill `EntryForm`)
+  두 버튼을 뒀으나 실제 사용이 거의 없어 제거했다. 사용자는 기존 "추가" 흐름으로 직접 기록하며, 기록하면(G1)
+  또는 발생일이 지나면(`date >= 오늘` 필터) 프롬프트가 자동 소멸한다. doc이 없으므로 confirm/reject 머신도 타지 않는다.
   - **✗(아니오)·이번 달 건너뛰기 없음**: 읽기 시점 파생이라 "그냥 제거"는 새로고침 시 되살아난다. 제거를
-    영속화하려면 별도 skip 저장이 필요한데, 그 비용 대비 가치가 낮다. 대신 **기록하면(G1) 또는 발생일이
-    지나면(`date >= 오늘` 필터) 자동 소멸**한다.
+    영속화하려면 별도 skip 저장이 필요한데, 그 비용 대비 가치가 낮다.
 
 ### 구현 위치
 
 | 파일                                                       | 변경                                                                                              |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `apps/web/src/hooks/useRecurrencePrompts.ts`               | 신규 — recurrence → 날짜별 프롬프트 뷰(Map), G1/G2 게이트                                         |
-| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형(단일 "기록하기", "정기" 배지, ✗/수정 숨김). `onReject`/`onEdit` optional |
-| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합, `kind`로 핸들러 분기(기록=prefill 추가)                    |
-| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출 + 기록 흐름                                     |
+| `apps/web/src/components/cashbook/PredictionPromptBox.tsx` | `kind:'recurrence'` 변형("정기" 배지, 액션 버튼 없음). 핸들러 props는 모두 optional                 |
+| `apps/web/src/app/inner/cashbook/(main)/history/page.tsx`  | recurrence 프롬프트를 day 섹션에 병합(표시 전용)                                                   |
+| E2E                                                        | 내역 페이지에 정기 발생 "예상 수입" 프롬프트 노출(액션 버튼 없음)                                 |
 
 ### 알려진 한계
 
@@ -255,7 +255,7 @@ auto 예측 ↔ 선언 합성의 중복을 생성 단계에서 차단. (G2는 �
 
 - 자동감지로 이미 만들어진 `source:'auto'` 예측 doc은 Phase 3(신규 생성 차단) 이후에도 **삭제되지 않고 잔존**한다.
 - 그 잔존 doc이 같은 달에 있으면 `useRecurrencePrompts`의 **G2가 정기 발생 프롬프트를 억제**해, 사용자가
-  발생일을 새로 지정해도 내역 페이지 "기록하기"가 안 뜬다(E2E로 재현: count 0 → 수정 후 1).
+  발생일을 새로 지정해도 내역 페이지 정기 프롬프트가 안 뜬다(E2E로 재현: count 0 → 수정 후 1).
 
 ### 변경
 
