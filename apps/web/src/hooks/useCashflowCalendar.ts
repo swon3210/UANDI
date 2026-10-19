@@ -19,7 +19,6 @@ import {
   mergeBoundariesByDate,
   recurrenceMonthKey,
   llmTransactions,
-  resolveInitialCashByUid,
   type CashflowCardData,
   type CashflowTransaction,
   type CashflowMember,
@@ -47,9 +46,7 @@ export type CashflowCalendarResult = {
   initialDate: Date | null;
   /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액(예측 출발점, 합계). */
   startingBalance: number;
-  /** 사람별 오늘 예상 잔액(uid→금액). 멤버 정보가 없으면 빈 객체. */
-  startingBalanceByUid: Record<string, number>;
-  /** 커플 멤버(사람별 잔액 표시용). uid→이름/사진. */
+  /** 커플 멤버(설정 시트의 멤버별 최초 현금 입력용). uid→이름/사진. */
   members: CashflowMember[];
 };
 
@@ -107,7 +104,6 @@ export function useCashflowCalendar(
       })),
     [memberDocs]
   );
-  const memberUids = useMemo(() => members.map((m) => m.uid), [members]);
 
   const startingBalance = useMemo(() => {
     let balance = settings?.initialCash ?? 0;
@@ -117,18 +113,6 @@ export function useCashflowCalendar(
     }
     return balance;
   }, [settings, accumEntries]);
-
-  // 사람별 오늘 예상 잔액 = 사람별 최초 현금 + (기준일~오늘 직전 실거래 중 작성자 본인 것).
-  const startingBalanceByUid = useMemo(() => {
-    const byUid = resolveInitialCashByUid(memberUids, settings);
-    const memberSet = new Set(memberUids);
-    for (const e of accumEntries ?? []) {
-      if (!memberSet.has(e.createdBy)) continue; // 이탈 멤버 기록은 합계에만 반영(사람별 제외)
-      const signed = e.type === 'income' ? e.amount : -e.amount;
-      byUid[e.createdBy] = (byUid[e.createdBy] ?? 0) + signed;
-    }
-    return byUid;
-  }, [memberUids, settings, accumEntries]);
 
   const cards = useMemo<CashflowCardData[]>(() => {
     const paydays = settings?.paydays ?? [];
@@ -206,10 +190,7 @@ export function useCashflowCalendar(
       txns.push(t);
     }
 
-    return buildCashflowCards(boundaries, txns, startingBalance, {
-      memberUids,
-      startingBalanceByUid,
-    });
+    return buildCashflowCards(boundaries, txns, startingBalance);
   }, [
     settings,
     entries,
@@ -219,8 +200,6 @@ export function useCashflowCalendar(
     from,
     llmPredictions,
     startingBalance,
-    memberUids,
-    startingBalanceByUid,
   ]);
 
   return {
@@ -233,7 +212,6 @@ export function useCashflowCalendar(
     initialCash: settings?.initialCash ?? 0,
     initialDate: settings?.initialDate ? settings.initialDate.toDate() : null,
     startingBalance,
-    startingBalanceByUid,
     members,
   };
 }

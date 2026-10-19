@@ -482,10 +482,10 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 ## 표시
 
-- `CashflowMemberBalances` — 아바타(`AuthorAvatar`)+이름+금액 칩. 멤버 2명 미만이면 렌더 안 함.
-- **히어로**(`CashflowBaselineCard`): 오늘 예상 현금(합계) 아래 사람별 오늘 잔액.
-- **카드**(`CashflowCard`): 합계 "남는 돈"만 표시. (사람별 "각자 남는 돈" 칩은 카드마다 반복돼 UI가
-  복잡해져 제거했다 — 사람별 잔액은 히어로에서만 본다. `balanceByUid` 계산 자체는 유지.)
+- **히어로**(`CashflowBaselineCard`)·**카드**(`CashflowCard`): **합계만** 표시한다. 사람별 잔액 칩
+  (`CashflowMemberBalances`)은 UI를 복잡하게 만들어 히어로·카드 모두에서 제거했고 컴포넌트도 삭제했다.
+  사람별 입력(설정 시트)과 `initialCashByUid` 저장은 유지하며, 화면에서는 합계로만 보여준다.
+  (`utils/cashflow.ts`의 사람별 누적·균등 분배 유틸은 호출부 없이 남아 있다 — 재도입 시 사용.)
 - **설정 시트**(`CashflowSettingsForm`): 멤버별 최초 현금 입력 + 합계 표시(2명 이상).
 
 ## Gotcha
@@ -503,8 +503,8 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 | 타입        | `apps/web/src/types/index.ts`                                    | `CashflowSettings.initialCashByUid`                                        |
 | 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                 | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
 | 저장        | `apps/web/src/services/cashflow-settings.ts`                     | `initialCashByUid` 저장(+`initialCash`=합계)                               |
-| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                      | 멤버 로드, `startingBalanceByUid`, 작성자 귀속                             |
-| 표시        | `CashflowMemberBalances`/`CashflowBaselineCard`                  | 사람별 잔액 칩(히어로만)                                                   |
+| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                      | 멤버 로드(설정 시트용), 합계 `startingBalance`                             |
+| 표시        | `CashflowBaselineCard` / `CashflowCard`                          | 합계만 표시(사람별 칩 제거)                                                |
 | 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`      | 멤버별 입력 + 합계                                                         |
 | 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                                                 |
 | E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                 | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장)                           |

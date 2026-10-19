@@ -3,8 +3,6 @@
 import dayjs from 'dayjs';
 import { Wallet, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
-import { CashflowMemberBalances } from './CashflowMemberBalances';
-import type { CashflowMember } from '@/utils/cashflow';
 
 type CashflowBaselineCardProps = {
   /** 최초 현금 + (기준일~오늘 실거래 누적) = 오늘 기준 예상 잔액. 카드의 큰 숫자. */
@@ -13,10 +11,6 @@ type CashflowBaselineCardProps = {
   initialCash: number;
   /** 최초 현금 기준일. */
   initialDate: Date | null;
-  /** 커플 멤버(사람별 오늘 잔액 표기용). 2명 미만이면 생략. */
-  members?: CashflowMember[];
-  /** 사람별 오늘 예상 잔액(uid→금액). */
-  balanceByUid?: Record<string, number>;
   /** 탭하면 최초 현금 설정 시트를 연다. */
   onEdit: () => void;
 };
@@ -31,12 +25,8 @@ export function CashflowBaselineCard({
   todayBalance,
   initialCash,
   initialDate,
-  members,
-  balanceByUid,
   onEdit,
 }: CashflowBaselineCardProps) {
-  const showPerPerson = !!members && members.length >= 2 && !!balanceByUid;
-
   return (
     <button
       type="button"
@@ -77,8 +67,6 @@ export function CashflowBaselineCard({
           수정
         </span>
       </div>
-
-      {showPerPerson && <CashflowMemberBalances members={members} balanceByUid={balanceByUid} />}
     </button>
   );
 }
