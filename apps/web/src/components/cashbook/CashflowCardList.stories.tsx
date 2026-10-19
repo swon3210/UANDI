@@ -1,11 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CashflowCardList } from './CashflowCardList';
-import type { CashflowCardData, CashflowMember } from '@/utils/cashflow';
-
-const members: CashflowMember[] = [
-  { uid: 'u1', displayName: '지훈', photoURL: null },
-  { uid: 'u2', displayName: '서연', photoURL: null },
-];
+import type { CashflowCardData } from '@/utils/cashflow';
 
 const cards: CashflowCardData[] = [
   {
@@ -109,12 +104,11 @@ export default meta;
 type Story = StoryObj<typeof CashflowCardList>;
 
 export const Default: Story = {
-  args: { cards, members },
+  args: { cards },
 };
 
 export const WeeklyFallback: Story = {
   args: {
-    members,
     cards: [
       {
         key: 'w0',
