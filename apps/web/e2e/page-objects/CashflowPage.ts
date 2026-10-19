@@ -55,11 +55,6 @@ export class CashflowPage {
     return this.page.getByTestId('cashflow-initial-date');
   }
 
-  /** 상단 히어로/카드의 사람별 잔액 칩. */
-  get memberBalances(): Locator {
-    return this.page.getByTestId('cashflow-member-balance');
-  }
-
   get saveButton(): Locator {
     return this.page.getByTestId('cashflow-settings-save');
   }

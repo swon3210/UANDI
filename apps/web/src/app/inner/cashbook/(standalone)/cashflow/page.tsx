@@ -140,7 +140,6 @@ export default function CashflowCalendarPage() {
     initialCash,
     initialDate,
     startingBalance,
-    startingBalanceByUid,
     members,
   } = useCashflowCalendar(coupleId, predictions);
   const { negativeCard, dismiss } = useCashflowNegativeAlert(coupleId, cards);
@@ -251,8 +250,6 @@ export default function CashflowCalendarPage() {
               todayBalance={startingBalance}
               initialCash={initialCash}
               initialDate={initialDate}
-              members={members}
-              balanceByUid={startingBalanceByUid}
               onEdit={openSettings}
             />
 
