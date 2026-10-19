@@ -288,13 +288,11 @@ type InvestmentPlan = {
 - **지출 시기가 지정된 항목**: 해당 월에만 배정 (균등 분배)
 - **연간 총액만 있는 항목**: 12로 나눠 균등 배정
 
-이 데이터는 월간 대시보드(`04c-cashbook-monthly.md`)에서 "목표 vs 실제" 비교에 사용된다.
+이 데이터는 가계부 대시보드(`02-dashboard.md`)와 내역 점검(`/inner/cashbook/review`)에서 "목표 vs 실제" 비교에 사용된다.
 
 ---
 
 ## 관련 문서
 
 - 카테고리 체계: `04a-cashbook-categories.md`
-- 월간 대시보드: `04c-cashbook-monthly.md`
-- 주간 대시보드: `04d-cashbook-weekly.md`
 - 도메인 모델: `03-domain-models.md`

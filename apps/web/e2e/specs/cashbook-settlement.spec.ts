@@ -45,17 +45,11 @@ async function seedSettlementData(coupleId: string, uid: string) {
 }
 
 test.describe('월 점검 페이지', () => {
-  test('내역 페이지의 점검 진입점으로 들어가면 예산 vs 실적 차트가 표시된다', async ({
-    authedContext,
-  }) => {
+  test('점검 페이지에 들어가면 예산 vs 실적 차트가 표시된다', async ({ authedContext }) => {
     const { page, coupleId, uid } = authedContext;
     await seedSettlementData(coupleId, uid);
 
-    // 내역 페이지의 "내역 점검" 진입점
-    await page.goto('/inner/cashbook/history');
-    await page.getByTestId('history-review-link').click();
-
-    await expect(page).toHaveURL(/\/inner\/cashbook\/review/);
+    await page.goto('/inner/cashbook/review');
 
     // 차트 2종 노출
     await expect(page.getByTestId('budget-vs-actual-chart')).toBeVisible({ timeout: 5000 });

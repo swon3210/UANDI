@@ -17,7 +17,7 @@ const PARTNER_PAYLOAD: MessagePayload = {
     body: '이번 달 식비가 예산의 80%를 넘었어요',
   },
   data: {
-    click_action: '/inner/cashbook/history/monthly',
+    click_action: '/inner/cashbook',
     scopeId: 'category-food',
     threshold: 'warn80',
     recipient: 'partner',
@@ -33,7 +33,7 @@ const SELF_PAYLOAD: MessagePayload = {
     body: '[내 지출] 이번 달 카페가 예산을 넘었어요',
   },
   data: {
-    click_action: '/inner/cashbook/history/monthly',
+    click_action: '/inner/cashbook',
     scopeId: 'category-cafe',
     threshold: 'over100',
     recipient: 'self',

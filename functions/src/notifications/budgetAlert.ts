@@ -275,7 +275,7 @@ export const onCashbookEntryCreated = onDocumentCreated(
               body,
             },
             data: {
-              click_action: '/inner/cashbook/history/monthly',
+              click_action: '/inner/cashbook',
               scopeId: t.scopeId,
               threshold: t.threshold,
               recipient: isSelf ? 'self' : 'partner',

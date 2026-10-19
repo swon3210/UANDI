@@ -2,8 +2,8 @@ import { type Page, type Locator } from '@playwright/test';
 
 /**
  * 가계부 상단 탭 + 설정(⚙) POM. 가계부 루트(`/inner/cashbook`)는 대시보드이고,
- * 상단 탭 4개(대시보드/내역/현금흐름/목표)로 전환한다. 점검은 탭이 아니라
- * 대시보드 헤더·내역 페이지의 진입점으로 들어간다.
+ * 상단 탭 4개(대시보드/내역/현금흐름/목표)로 전환한다. 점검은 탭에 두지 않고
+ * URL(`/inner/cashbook/review`)로 직접 진입한다.
  */
 export class CashbookTabsPage {
   readonly page: Page;

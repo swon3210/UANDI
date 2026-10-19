@@ -84,8 +84,6 @@ export const RecurrenceIncome: Story = {
       date: new Date(2026, 5, 25),
       recurrenceLabel: '매월 25일',
     },
-    onConfirm: noop,
-    onEdit: noop,
   },
 };
 
@@ -102,8 +100,6 @@ export const RecurrenceExpense: Story = {
       date: new Date(2026, 5, 5),
       recurrenceLabel: '매월 5일',
     },
-    onConfirm: noop,
-    onEdit: noop,
   },
 };
 

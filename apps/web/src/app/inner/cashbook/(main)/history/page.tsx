@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
-import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
-import { BookOpen, FileBarChart, ChevronRight } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -355,57 +353,25 @@ export default function CashbookPage() {
     ));
   };
 
-  // ✓ 추가: doc 예측은 정식 거래로 확정(SYNC-03). 정기 발생 파생은 "기록하기"=예상값 그대로 원탭 기록.
+  // 정기 발생 파생(kind === 'recurrence') 프롬프트는 표시만 하고 액션 버튼이 없으므로
+  // 아래 핸들러들은 doc 기반 예측에서만 호출된다.
+
+  // ✓ 추가: doc 예측을 정식 거래로 확정(SYNC-03).
   const handlePromptConfirm = (view: PredictionPromptView) => {
-    if (view.kind === 'recurrence') {
-      const date = Timestamp.fromDate(view.date);
-      addMutation.mutate(
-        {
-          createdBy: uid,
-          type: view.type,
-          amount: view.amount,
-          category: view.category,
-          description: '',
-          date,
-        },
-        {
-          onSuccess: () =>
-            notifyTransition({
-              type: view.type,
-              amount: view.amount,
-              category: view.category,
-              date,
-            }),
-        }
-      );
-      return;
-    }
     const p = predictionById.get(view.id);
     if (p) confirmPredictionMutation.mutate({ prediction: p });
   };
 
   // ✗ 아니오: calendar 출처는 프롬프트만 닫고(캘린더 잔존, SYNC-04), auto 출처는 거절(양쪽 제거).
-  // 정기 발생 파생엔 ✗ 버튼이 없으므로 호출되지 않는다.
   const handlePromptReject = (view: PredictionPromptView) => {
-    if (view.kind === 'recurrence') return;
     const p = predictionById.get(view.id);
     if (!p) return;
     if (p.source === 'calendar') dismissPromptMutation.mutate(p.id);
     else rejectPredictionMutation.mutate(p.id);
   };
 
-  // ✎ 수정 후 추가/기록: EntryForm을 prefill로 열어 수정값으로 저장.
-  // - doc 예측: 수정값으로 확정(시나리오 E). - 정기 발생 파생: prefill 추가 시트로 금액 등 조정 후 기록.
+  // ✎ 수정 후 추가: EntryForm을 prefill로 열어 수정값으로 확정(시나리오 E).
   const handlePromptEdit = (view: PredictionPromptView) => {
-    if (view.kind === 'recurrence') {
-      handleAdd({
-        type: view.type,
-        amount: view.amount,
-        category: view.category,
-        date: dayjs(view.date).format('YYYY-MM-DD'),
-      });
-      return;
-    }
     const p = predictionById.get(view.id);
     if (!p) return;
     overlay.open(({ isOpen, close, unmount }) => (
@@ -469,27 +435,7 @@ export default function CashbookPage() {
 
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
-      <Button
-        asChild
-        variant="outline"
-        className="h-auto w-full justify-start gap-3 py-3"
-        data-testid="history-review-link"
-      >
-        <Link href="/inner/cashbook/review">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <FileBarChart size={18} aria-hidden />
-          </span>
-          <span className="flex min-w-0 flex-col items-start">
-            <span className="text-sm font-medium text-foreground">내역 점검</span>
-            <span className="whitespace-normal text-left text-xs leading-snug text-muted-foreground">
-              누락·중복된 내역이 없는지 확인하고 채우기
-            </span>
-          </span>
-          <ChevronRight size={18} aria-hidden className="ml-auto shrink-0 text-muted-foreground" />
-        </Link>
-      </Button>
-
-      <div className="mt-4">
+      <div>
         <CashbookFilterBar
           period={filter.period}
           periodLabel={range.label}

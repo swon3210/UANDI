@@ -125,8 +125,6 @@
 | `pages/inner/cashbook.md`               | `/inner/cashbook`                              |
 | `pages/inner/cashbook-categories.md`    | `/inner/cashbook/categories`                   |
 | `pages/inner/cashbook-annual-plan.md`   | `/inner/cashbook/plan/annual`                  |
-| `pages/inner/cashbook-monthly.md`       | `/inner/cashbook/monthly`                      |
-| `pages/inner/cashbook-weekly.md`        | `/inner/cashbook/weekly`                       |
 | `pages/inner/cashbook-notifications.md` | 가계부 알림                                    |
 
 **💼 재테크 (`pages/outer/*`)**

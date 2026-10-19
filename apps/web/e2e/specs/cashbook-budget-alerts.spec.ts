@@ -43,7 +43,7 @@ async function seedFoodBudget(
 }
 
 test.describe('가계부 예산 초과 알림', () => {
-  test.describe('메인/주간 배너', () => {
+  test.describe('메인 배너', () => {
     test('카테고리 예산을 100% 초과하면 메인 배너에 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
@@ -77,7 +77,7 @@ test.describe('가계부 예산 초과 알림', () => {
     });
 
     test('예산의 80%만 넘으면(임박) 배너에 표시되지 않는다', async ({ authedContext }) => {
-      // 80% 임박은 상시 배너에서 제외됐다. (월간 노란 게이지 + 실시간 토스트가 담당)
+      // 80% 임박은 상시 배너에서 제외됐다. (실시간 토스트가 담당)
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
       await seedCashbookEntry(coupleId, uid, {
@@ -139,21 +139,6 @@ test.describe('가계부 예산 초과 알림', () => {
       // 전체 지출은 초과가 아니므로 "넘었어요"(전체 라인)는 없어야 한다
       await expect(alert.banner()).not.toContainText('전체 지출');
     });
-
-    test('주간 페이지에도 배너가 노출된다', async ({ authedContext }) => {
-      const { page, uid, coupleId } = authedContext;
-      await seedFoodBudget(coupleId, uid);
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 650_000,
-        category: '식비',
-      });
-
-      const alert = new BudgetAlertPage(page);
-      await alert.gotoWeekly();
-
-      await expect(alert.banner()).toBeVisible();
-    });
   });
 
   test.describe('전체 닫기', () => {
@@ -202,8 +187,8 @@ test.describe('가계부 예산 초과 알림', () => {
     });
   });
 
-  test.describe('월간으로 드릴다운', () => {
-    test('자세히 보기 링크를 누르면 월간 페이지로 이동한다', async ({ authedContext }) => {
+  test.describe('대시보드로 드릴다운', () => {
+    test('자세히 보기 링크를 누르면 가계부 대시보드로 이동한다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedFoodBudget(coupleId, uid);
       await seedCashbookEntry(coupleId, uid, {
@@ -218,26 +203,8 @@ test.describe('가계부 예산 초과 알림', () => {
       await expect(alert.detailLink()).toBeVisible();
       await alert.detailLink().click();
 
-      // 초과 카테고리부터 정렬되도록 ?sort=over로 진입한다.
-      await expect(page).toHaveURL(/\/inner\/cashbook\/history\/monthly\?sort=over/);
-      await expect(page.getByTestId('monthly-overview')).toBeVisible();
-    });
-
-    test('월간 페이지에서는 배너가 표시되지 않는다 (상세가 페이지에 있으므로)', async ({
-      authedContext,
-    }) => {
-      const { page, uid, coupleId } = authedContext;
-      await seedFoodBudget(coupleId, uid);
-      await seedCashbookEntry(coupleId, uid, {
-        type: 'expense',
-        amount: 650_000,
-        category: '식비',
-      });
-
-      const alert = new BudgetAlertPage(page);
-      await alert.gotoMonthly();
-
-      await expect(alert.banner()).not.toBeVisible();
+      await expect(page).toHaveURL(/\/inner\/cashbook$/);
+      await expect(page.getByTestId('dashboard-header')).toBeVisible();
     });
   });
 

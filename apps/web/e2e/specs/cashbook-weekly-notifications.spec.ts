@@ -86,18 +86,4 @@ test.describe('알림 설정', () => {
     await expect(notifPage.dayButton('화')).toHaveAttribute('data-selected', 'false');
     await expect(notifPage.dayButton('목')).toHaveAttribute('data-selected', 'false');
   });
-
-  test('주간 예산 페이지에서 알림 설정으로 이동할 수 있다', async ({ authedContext }) => {
-    const { page } = authedContext;
-
-    // 주간 페이지로 이동 (예산 데이터 없어도 헤더는 표시됨)
-    await page.goto('/inner/cashbook/history/weekly');
-
-    // 알림 설정 버튼 클릭
-    const bellButton = page.getByRole('button', { name: '알림 설정' });
-    await bellButton.click();
-
-    // 알림 설정 페이지로 이동됨
-    await expect(page).toHaveURL(/\/inner\/cashbook\/history\/weekly\/notifications/);
-  });
 });
