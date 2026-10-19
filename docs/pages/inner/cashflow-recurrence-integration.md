@@ -298,6 +298,26 @@ expectedAmount: 감지 평균금액 } })` + **성공 토스트**(`'{name}' 항�
   값이 어긋나면 카테고리 편집에서 조정.
 - **닫기(안 함)**: `updateCategory(categoryId, { recurrenceSuggestionDismissed: true })`. 영속(커플 공유),
   별도 meta doc 불필요. 다시 제안하지 않는다.
+- **변동 카테고리에서 패턴이 잡힌 경우(`kind: 'move'`)**: 패턴의 카테고리가 변동 지출(`variable_*`)·비정기 수입
+  (`irregular_income`)이면 **그 카테고리에 recurrence를 붙이지 않는다**(정기 발생은 고정 지출/정기 수입 전용 —
+  `RECURRENCE_SUBGROUPS`. 붙이면 카테고리 편집 폼에 정기 발생 섹션이 없어 수정·해제가 불가능한 상태가 됐던 버그).
+  대신 카드 문구("변동 지출 카테고리에는 정기 지출을 바로 등록할 수 없어요. 새 고정 지출 카테고리를 만들어 반복된
+  내역 N건을 옮길까요?")와 버튼 **"고정 지출 카테고리 만들기" / "정기 수입 카테고리 만들기"** 로 안내한다.
+  - **수락**: `CategoryForm` 시트를 **구분 잠금**(`lockedSubGroup` = `recurrenceSubGroupFor(group)`) + prefill
+    (원본 카테고리 아이콘·색상, 설명, `recurrence: { enabled, dayOfMonth: 감지일, expectedAmount: 감지 금액 }`)로 연다.
+    저장 시 `useMoveRecurrenceToNewCategory`가 ① 새 카테고리 `addCategory` → ② 패턴 클러스터에 속한 내역
+    (`RecurringPattern.entryIds`, 감지 창 6개월 내 일자 ±2일·금액 ±10% 일치분)만 `bulkUpdateEntriesCategory`로
+    새 이름으로 이동 → 성공 토스트. 원본 변동 카테고리는 건드리지 않는다(패턴 내역이 빠져 제안은 자연 소멸,
+    패턴 밖 내역은 그대로 남음). 새 카테고리는 recurrence가 있어 캘린더 ◇·내역 프롬프트에 바로 반영된다.
+  - **이름 중복 거부**: 내역은 카테고리 **이름**으로 연결되므로 같은 group의 기존 이름(`takenNames`)은 폼 검증에서
+    거부한다("이미 같은 이름의 카테고리가 있어요"). (`addCategory`의 중복 검사는 같은 subGroup 안에서만 보기 때문.)
+  - **취소**: add와 동일하게 원본 카테고리에 `recurrenceSuggestionDismissed: true`.
+  - **기존 잘못된 데이터 정리**: 이 버그로 변동/비정기 카테고리에 이미 붙은 recurrence는
+    `scripts/migrate-remove-variable-recurrence.ts`(`--dry-run` 지원, 멱등)로 `recurrence: null` 처리한다.
+    판정 규칙은 `hasInvalidRecurrence`(cashbook-core, 단위 테스트). 닫음 플래그는 유지하므로 패턴이 계속되는
+    카테고리는 정리 후 올바른 move 제안으로 다시 뜬다.
+  - **편집 경로 보호**: 카테고리 편집에서 구분을 고정 지출/정기 수입 → 변동/비정기로 바꾸면 recurrence를 함께
+    `null`로 저장한다(폼에서 보이지 않는 recurrence가 남아 캘린더·알림에 계속 잡히는 경로 차단).
 
 > **명시성(요청 반영)**: "등록"이 단순 버튼으로 인지되지 않는 문제를 보완해, 카드 문구("이 카테고리를 정기 지출
 > 항목으로 등록하면…")·버튼 라벨("정기 지출/수입 등록")·성공 토스트로 **"정기 지출/수입으로 등록"** 임을 명확히 한다.
@@ -317,15 +337,19 @@ recurrenceSuggestionDismissed?: boolean;
 
 ### 구현 위치
 
-| 파일                                                             | 변경                                                                                                    |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `packages/cashbook-core/src/types.ts`                            | `CashbookCategory.recurrenceSuggestionDismissed?` 추가                                                  |
-| `packages/cashbook-core/src/services/cashbook-categories.ts`     | `updateCategory` Pick에 필드 추가                                                                       |
-| `apps/web/src/hooks/useCashbookCategories.ts`                    | `useUpdateCategory` Pick에 필드 추가                                                                    |
-| `apps/web/src/hooks/useRecurrenceSuggestions.ts`                 | **신규** — 6개월 내역 감지 + 필터 → 제안 목록 + accept/dismiss                                          |
-| `apps/web/src/components/cashbook/RecurrenceSuggestionCard.tsx`  | **신규** 프레젠테이션 + 스토리                                                                          |
-| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | 제안 섹션 렌더                                                                                          |
-| E2E                                                              | 반복 내역(미선언) → 제안 노출 → "등록" → recurrence 설정·캘린더 반영·제안 소멸 / "안 함" → 재노출 안 함 |
+| 파일                                                             | 변경                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/cashbook-core/src/types.ts`                            | `CashbookCategory.recurrenceSuggestionDismissed?` 추가                                                                                                                                                                                |
+| `packages/cashbook-core/src/services/cashbook-categories.ts`     | `updateCategory` Pick에 필드 추가                                                                                                                                                                                                     |
+| `apps/web/src/hooks/useCashbookCategories.ts`                    | `useUpdateCategory` Pick에 필드 추가                                                                                                                                                                                                  |
+| `apps/web/src/hooks/useRecurrenceSuggestions.ts`                 | **신규** — 6개월 내역 감지 + 필터 → 제안 목록(add/move) + accept/dismiss, `useMoveRecurrenceToNewCategory`                                                                                                                            |
+| `apps/web/src/components/cashbook/RecurrenceSuggestionCard.tsx`  | **신규** 프레젠테이션 + 스토리 (`kind: 'add' \| 'move' \| 'remove'`)                                                                                                                                                                  |
+| `apps/web/src/components/cashbook/CategoryForm.tsx`              | `lockedSubGroup` / `initialValues` / `takenNames` / `title` props (move 수락 시트)                                                                                                                                                    |
+| `apps/web/src/utils/auto-detect.ts`                              | `RecurringPattern.entryIds` — 클러스터 내역 id(이동 대상)                                                                                                                                                                             |
+| `apps/web/src/utils/recurrence-form.ts`                          | `buildRecurrencePayload` (카테고리 페이지에서 추출, 현금흐름 페이지와 공유)                                                                                                                                                           |
+| `packages/cashbook-core/src/constants/default-categories.ts`     | `RECURRENCE_SUBGROUPS`, `recurrenceSubGroupFor`                                                                                                                                                                                       |
+| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | 제안 섹션 렌더 + move 수락 시트(`MoveSuggestionSheetContent`)                                                                                                                                                                         |
+| E2E                                                              | 반복 내역(미선언) → 제안 노출 → "등록" → recurrence 설정·캘린더 반영·제안 소멸 / "안 함" → 재노출 안 함 / 변동 카테고리 패턴 → "고정 지출 카테고리 만들기" → 시트(구분 잠금·prefill) → 이름 중복 거부 → 저장 시 내역 이동·캘린더 반영 |
 
 ## Phase 7 구현 (완료) — 정기 발생 해제 제안 (역방향)
 
@@ -392,20 +416,20 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 ### 구현 위치
 
-| 파일                                                            | 변경                                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `packages/cashbook-core/src/types.ts`                           | `RecurringSchedule.intervalMonths?` / `anchorMonth?` 추가                  |
-| `packages/cashbook-core/src/utils/recurrence.ts`                | `isActiveMonth`·`INTERVAL_LABELS` 추가, `occurrenceDateInMonth`/`formatRecurrence` 확장 |
-| `packages/cashbook-core/src/utils/__tests__/recurrence.test.ts` | **신규** vitest — 위상/연 경계/format 검증(9 케이스)                       |
-| `functions/src/notifications/recurringReminder.ts`              | `isActiveMonth` 미러링(격월은 건너뛰는 달 알림 안 감)                      |
-| `apps/web/src/utils/cashflow.ts`                                | 합성 거래 `description`에 `formatRecurrence`(근거 라벨)                    |
-| `apps/web/src/components/cashbook/RecurringScheduleFields.tsx`  | 발생 빈도 칩 + 시작 월 셀렉트                                              |
-| `apps/web/src/app/inner/cashbook/(standalone)/categories/page.tsx` | `buildRecurrencePayload`에 interval/anchor 반영                        |
-| `apps/web/src/components/cashbook/CategoryForm.tsx`             | 스키마·기본값에 신규 필드                                                  |
-| `apps/web/src/components/cashbook/CashflowTransactionRow.tsx`   | 예측 근거 서브라벨(정기 발생/AI 추론)                                      |
-| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | 예측 방식 상단 안내                                                       |
-| `apps/web/src/app/api/ai/predict-cashflow/route.ts`             | 프롬프트: 주기 리듬 존중                                                   |
-| E2E `cashflow-recurrence.spec.ts`                               | 격월 정기 발생 노출 + "격월" 근거 표기                                     |
+| 파일                                                               | 변경                                                                                    |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `packages/cashbook-core/src/types.ts`                              | `RecurringSchedule.intervalMonths?` / `anchorMonth?` 추가                               |
+| `packages/cashbook-core/src/utils/recurrence.ts`                   | `isActiveMonth`·`INTERVAL_LABELS` 추가, `occurrenceDateInMonth`/`formatRecurrence` 확장 |
+| `packages/cashbook-core/src/utils/__tests__/recurrence.test.ts`    | **신규** vitest — 위상/연 경계/format 검증(9 케이스)                                    |
+| `functions/src/notifications/recurringReminder.ts`                 | `isActiveMonth` 미러링(격월은 건너뛰는 달 알림 안 감)                                   |
+| `apps/web/src/utils/cashflow.ts`                                   | 합성 거래 `description`에 `formatRecurrence`(근거 라벨)                                 |
+| `apps/web/src/components/cashbook/RecurringScheduleFields.tsx`     | 발생 빈도 칩 + 시작 월 셀렉트                                                           |
+| `apps/web/src/app/inner/cashbook/(standalone)/categories/page.tsx` | `buildRecurrencePayload`에 interval/anchor 반영                                         |
+| `apps/web/src/components/cashbook/CategoryForm.tsx`                | 스키마·기본값에 신규 필드                                                               |
+| `apps/web/src/components/cashbook/CashflowTransactionRow.tsx`      | 예측 근거 서브라벨(정기 발생/AI 추론)                                                   |
+| `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx`   | 예측 방식 상단 안내                                                                     |
+| `apps/web/src/app/api/ai/predict-cashflow/route.ts`                | 프롬프트: 주기 리듬 존중                                                                |
+| E2E `cashflow-recurrence.spec.ts`                                  | 격월 정기 발생 노출 + "격월" 근거 표기                                                  |
 
 ## 후속 (미포함)
 
@@ -473,13 +497,13 @@ anchorMonth?: string;    // "YYYY-MM" — interval>1일 때 위상 기준 달
 
 ## 구현 위치 요약
 
-| 영역        | 파일                                                            | 변경                                            |
-| ----------- | --------------------------------------------------------------- | ----------------------------------------------- |
-| 타입        | `apps/web/src/types/index.ts`                                   | `CashflowSettings.initialCashByUid`             |
-| 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
-| 저장        | `apps/web/src/services/cashflow-settings.ts`                    | `initialCashByUid` 저장(+`initialCash`=합계)    |
-| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                     | 멤버 로드, `startingBalanceByUid`, 작성자 귀속  |
-| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`  | 사람별 잔액 칩                                  |
-| 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`     | 멤버별 입력 + 합계                              |
-| 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                      |
-| E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장) |
+| 영역        | 파일                                                             | 변경                                                                       |
+| ----------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 타입        | `apps/web/src/types/index.ts`                                    | `CashflowSettings.initialCashByUid`                                        |
+| 순수 유틸   | `apps/web/src/utils/cashflow.ts`                                 | `ownerUid`/`balanceByUid`, 사람별 누적·균등분배, `resolveInitialCashByUid` |
+| 저장        | `apps/web/src/services/cashflow-settings.ts`                     | `initialCashByUid` 저장(+`initialCash`=합계)                               |
+| 계산        | `apps/web/src/hooks/useCashflowCalendar.ts`                      | 멤버 로드, `startingBalanceByUid`, 작성자 귀속                             |
+| 표시        | `CashflowMemberBalances`/`CashflowCard`/`CashflowBaselineCard`   | 사람별 잔액 칩                                                             |
+| 설정 폼     | `apps/web/src/components/cashbook/CashflowSettingsForm.tsx`      | 멤버별 입력 + 합계                                                         |
+| 페이지 배선 | `apps/web/src/app/inner/cashbook/(standalone)/cashflow/page.tsx` | members/initial props 주입                                                 |
+| E2E         | `apps/web/e2e/specs/cashflow-per-person.spec.ts`                 | 5개 시나리오(설정·귀속·불변식·마이그레이션·저장)                           |

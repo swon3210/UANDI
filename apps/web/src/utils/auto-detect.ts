@@ -9,6 +9,7 @@ export type RecurringPattern = {
   dayOfMonth: number; // 대표 발생일 (1~31)
   amount: number; // 대표 금액(평균, 반올림)
   occurrences: number; // 반복된 '서로 다른 달' 수
+  entryIds: string[]; // 패턴 클러스터(일자 ±2일·금액 ±10%)에 속한 내역 id — 카테고리 이동 등에 사용
 };
 
 const MIN_OCCURRENCES = 3; // 3회 이상 반복
@@ -65,6 +66,7 @@ function bestCluster(list: CashbookEntry[]): RecurringPattern | null {
         dayOfMonth: Math.round(within.reduce((s, e) => s + dom(e), 0) / within.length),
         amount: Math.round(within.reduce((s, e) => s + e.amount, 0) / within.length),
         occurrences: months.size,
+        entryIds: within.map((e) => e.id),
       };
     }
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +28,7 @@ import {
   SUB_GROUPS_BY_GROUP,
   SUB_GROUP_LABELS,
   SUB_GROUP_SHORT_LABELS,
+  RECURRENCE_SUBGROUPS,
   COLOR_PRESETS,
 } from '@/constants/default-categories';
 import { IconPicker } from './IconPicker';
@@ -34,9 +36,6 @@ import { ColorPicker } from './ColorPicker';
 import { CategoryIcon } from './CategoryIcon';
 import { ExampleTagInput, ExampleChipList, EXAMPLES_MAX } from './ExampleTagInput';
 import { RecurringScheduleFields } from './RecurringScheduleFields';
-
-// 정기 발생 설정을 노출할 subGroup (고정 지출 / 고정 수입)
-const RECURRENCE_SUBGROUPS: CategorySubGroup[] = ['fixed_expense', 'regular_income'];
 
 const recurrenceSchema = z
   .object({
@@ -97,11 +96,27 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/** 추가 모드에서 폼을 미리 채울 값(정기 발생 제안 → 새 고정 카테고리 만들기 등). */
+export type CategoryFormInitialValues = Partial<
+  Pick<FormValues, 'name' | 'icon' | 'color' | 'description' | 'examples' | 'recurrence'>
+>;
+
 type CategoryFormProps = {
   group: CategoryGroup;
   /** 자식 추가 모드. 값이 있으면 부모가 잠긴 상태로 표시되고 subGroup도 부모 값 고정. */
   parentCategory?: CashbookCategory;
   editingCategory?: CashbookCategory;
+  /**
+   * 부모 없이 구분만 잠그는 추가 모드(예: 정기 발생 제안에서 새 고정 지출 카테고리 만들기).
+   * 구분 라디오 대신 잠긴 배지를 보여주고 subGroup은 이 값으로 고정된다.
+   */
+  lockedSubGroup?: CategorySubGroup;
+  /** 추가 모드 초기값(prefill). editingCategory가 있으면 무시된다. */
+  initialValues?: CategoryFormInitialValues;
+  /** 이 이름들은 저장을 거부한다(내역이 카테고리 이름으로 연결되므로 group 안에서 중복 금지). */
+  takenNames?: string[];
+  /** 시트 제목 override. */
+  title?: string;
   isSubmitting?: boolean;
   onSubmit: (data: FormValues) => Promise<void>;
   onClose: () => void;
@@ -111,24 +126,48 @@ export function CategoryForm({
   group,
   parentCategory,
   editingCategory,
+  lockedSubGroup: lockedSubGroupProp,
+  initialValues,
+  takenNames,
+  title,
   isSubmitting,
   onSubmit,
   onClose,
 }: CategoryFormProps) {
   const subGroups = SUB_GROUPS_BY_GROUP[group];
   const isChildMode = !!parentCategory;
-  const lockedSubGroup = parentCategory?.subGroup;
+  const lockedSubGroup = parentCategory?.subGroup ?? lockedSubGroupProp;
+  const isSubGroupLocked = isChildMode || !!lockedSubGroupProp;
+  const prefill = editingCategory ? undefined : initialValues;
+
+  // 내역은 카테고리 이름으로 연결되므로 takenNames(같은 group의 기존 이름)와 겹치면 저장을 거부한다.
+  // 편집 중인 카테고리 자신의 이름은 허용.
+  const editingName = editingCategory?.name;
+  const resolvedSchema = useMemo(
+    () =>
+      schema.superRefine((val, ctx) => {
+        const name = val.name.trim();
+        if (takenNames?.some((n) => n === name && n !== editingName)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: '이미 같은 이름의 카테고리가 있어요',
+            path: ['name'],
+          });
+        }
+      }),
+    [takenNames, editingName]
+  );
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(resolvedSchema),
     defaultValues: {
-      name: editingCategory?.name ?? '',
-      icon: editingCategory?.icon ?? parentCategory?.icon ?? '',
-      color: editingCategory?.color ?? parentCategory?.color ?? COLOR_PRESETS[0],
+      name: editingCategory?.name ?? prefill?.name ?? '',
+      icon: editingCategory?.icon ?? prefill?.icon ?? parentCategory?.icon ?? '',
+      color: editingCategory?.color ?? prefill?.color ?? parentCategory?.color ?? COLOR_PRESETS[0],
       // 자식 카테고리는 항상 부모의 구분을 따른다(부모가 잠금값으로 우선).
       subGroup: lockedSubGroup ?? editingCategory?.subGroup ?? subGroups[0],
-      description: editingCategory?.description ?? '',
-      examples: editingCategory?.examples ?? [],
+      description: editingCategory?.description ?? prefill?.description ?? '',
+      examples: editingCategory?.examples ?? prefill?.examples ?? [],
       recurrence: editingCategory?.recurrence
         ? {
             enabled: editingCategory.recurrence.enabled,
@@ -141,7 +180,7 @@ export function CategoryForm({
             intervalMonths: editingCategory.recurrence.intervalMonths,
             anchorMonth: editingCategory.recurrence.anchorMonth,
           }
-        : { enabled: false, kind: 'dayOfMonth' },
+        : (prefill?.recurrence ?? { enabled: false, kind: 'dayOfMonth' }),
     },
   });
 
@@ -165,7 +204,12 @@ export function CategoryForm({
     >
       <SheetHeader>
         <SheetTitle>
-          {editingCategory ? '카테고리 편집' : isChildMode ? '하위 카테고리 추가' : '카테고리 추가'}
+          {title ??
+            (editingCategory
+              ? '카테고리 편집'
+              : isChildMode
+                ? '하위 카테고리 추가'
+                : '카테고리 추가')}
         </SheetTitle>
       </SheetHeader>
 
@@ -279,7 +323,20 @@ export function CategoryForm({
             />
           </div>
 
-          {!isChildMode && (
+          {!isChildMode && lockedSubGroupProp && (
+            <div className="flex flex-col gap-1.5">
+              <Label>구분</Label>
+              <div
+                data-testid="locked-subgroup"
+                className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
+              >
+                <span className="text-foreground">{SUB_GROUP_LABELS[lockedSubGroupProp]}</span>
+                <Lock size={12} className="ml-auto" />
+              </div>
+            </div>
+          )}
+
+          {!isSubGroupLocked && (
             <FormField
               control={form.control}
               name="subGroup"
@@ -337,8 +394,12 @@ export function CategoryForm({
             </>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? '저장 중...' : '저장'}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting || form.formState.isSubmitting}
+          >
+            {isSubmitting || form.formState.isSubmitting ? '저장 중...' : '저장'}
           </Button>
         </form>
       </Form>

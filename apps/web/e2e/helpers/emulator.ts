@@ -437,6 +437,33 @@ export async function seedCashbookEntry(
 }
 
 // 현금흐름 캘린더 예측 (couples/{coupleId}/cashbookPredictions/{predictionId})
+type EmulatorCashbookEntry = {
+  id: string;
+  type: string;
+  amount: number;
+  category: string;
+};
+
+/** 커플의 가계부 내역 전체를 읽는다(검증용). 카테고리 이동 등 쓰기 결과를 확인할 때 사용. */
+export async function listCashbookEntries(coupleId: string): Promise<EmulatorCashbookEntry[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries?pageSize=300`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const json = (await res.json()) as {
+    documents?: {
+      name: string;
+      fields: Record<string, { stringValue?: string; integerValue?: string; doubleValue?: number }>;
+    }[];
+  };
+  return (json.documents ?? []).map((d) => ({
+    id: d.name.split('/').pop() ?? '',
+    type: d.fields.type?.stringValue ?? '',
+    amount: Number(d.fields.amount?.integerValue ?? d.fields.amount?.doubleValue ?? 0),
+    category: d.fields.category?.stringValue ?? '',
+  }));
+}
+
 export async function seedPrediction(
   coupleId: string,
   createdBy: string,
