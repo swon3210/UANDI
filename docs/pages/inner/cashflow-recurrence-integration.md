@@ -312,6 +312,12 @@ expectedAmount: 감지 평균금액 } })` + **성공 토스트**(`'{name}' 항�
   - **이름 중복 거부**: 내역은 카테고리 **이름**으로 연결되므로 같은 group의 기존 이름(`takenNames`)은 폼 검증에서
     거부한다("이미 같은 이름의 카테고리가 있어요"). (`addCategory`의 중복 검사는 같은 subGroup 안에서만 보기 때문.)
   - **취소**: add와 동일하게 원본 카테고리에 `recurrenceSuggestionDismissed: true`.
+  - **기존 잘못된 데이터 정리**: 이 버그로 변동/비정기 카테고리에 이미 붙은 recurrence는
+    `scripts/migrate-remove-variable-recurrence.ts`(`--dry-run` 지원, 멱등)로 `recurrence: null` 처리한다.
+    판정 규칙은 `hasInvalidRecurrence`(cashbook-core, 단위 테스트). 닫음 플래그는 유지하므로 패턴이 계속되는
+    카테고리는 정리 후 올바른 move 제안으로 다시 뜬다.
+  - **편집 경로 보호**: 카테고리 편집에서 구분을 고정 지출/정기 수입 → 변동/비정기로 바꾸면 recurrence를 함께
+    `null`로 저장한다(폼에서 보이지 않는 recurrence가 남아 캘린더·알림에 계속 잡히는 경로 차단).
 
 > **명시성(요청 반영)**: "등록"이 단순 버튼으로 인지되지 않는 문제를 보완해, 카드 문구("이 카테고리를 정기 지출
 > 항목으로 등록하면…")·버튼 라벨("정기 지출/수입 등록")·성공 토스트로 **"정기 지출/수입으로 등록"** 임을 명확히 한다.

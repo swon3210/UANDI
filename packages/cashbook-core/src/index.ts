@@ -65,6 +65,11 @@ export {
 // Utils
 export { formatCurrency, formatAmount, toWonAmount } from './utils/currency';
 export {
+  hasInvalidRecurrence,
+  planInvalidRecurrenceCleanup,
+  type RecurrenceCleanupCategory,
+} from './utils/recurrence-cleanup';
+export {
   occurrenceDateInMonth,
   shouldFireOn,
   formatRecurrence,

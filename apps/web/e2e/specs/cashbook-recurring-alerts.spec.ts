@@ -119,6 +119,34 @@ test.describe('고정 지출·수입 정기 알림', () => {
       await expect(categoriesPage.recurrenceBadge('월세')).toContainText('매월 25일');
     });
 
+    test('정기 발생이 있는 고정 지출을 변동 지출로 바꾸면 정기 발생이 함께 해제된다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+
+      const categoriesPage = new CashbookCategoriesPage(page);
+      await categoriesPage.goto();
+      await categoriesPage.selectTab('지출');
+
+      await categoriesPage.openEdit('월세');
+      await categoriesPage.recurrenceSwitch.click();
+      await categoriesPage.recurrenceKind('dayOfMonth').click();
+      await categoriesPage.recurrenceDayInput.fill('25');
+      await categoriesPage.saveButton.click();
+      await expect(categoriesPage.recurrenceBadge('월세')).toContainText('매월 25일');
+
+      // 구분을 변동 지출로 변경 → 정기 발생 섹션이 사라지고, 저장하면 recurrence도 제거된다.
+      await categoriesPage.openEdit('월세');
+      await categoriesPage.sheet.getByText('변동 지출 (공통)', { exact: true }).click();
+      await expect(categoriesPage.recurrenceSection).toHaveCount(0);
+      await categoriesPage.saveButton.click();
+      await expect(categoriesPage.sheet).toBeHidden();
+
+      await expect(categoriesPage.categoryItem('월세')).toBeVisible();
+      await expect(categoriesPage.recurrenceBadge('월세')).toHaveCount(0);
+    });
+
     test('고정 지출의 자식 카테고리도 정기 발생을 설정하면 chip에 배지가 표시된다', async ({
       authedContext,
     }) => {

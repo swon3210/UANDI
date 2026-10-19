@@ -73,9 +73,11 @@ export default function CashbookCategoriesPage() {
                   subGroup: editSubGroup,
                   description: data.description,
                   examples: data.examples,
-                  ...(RECURRENCE_SUBGROUPS.includes(editSubGroup)
-                    ? { recurrence: buildRecurrencePayload(data.recurrence) }
-                    : {}),
+                  // 정기 발생은 고정 지출/정기 수입 전용. 변동/비정기로 구분을 바꾸면 함께 해제해
+                  // 폼에서 보이지도 않는 recurrence가 남아 캘린더·알림에 계속 잡히는 일을 막는다.
+                  recurrence: RECURRENCE_SUBGROUPS.includes(editSubGroup)
+                    ? buildRecurrencePayload(data.recurrence)
+                    : null,
                 },
               });
               return;
