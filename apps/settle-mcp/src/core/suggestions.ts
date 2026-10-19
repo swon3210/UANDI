@@ -22,7 +22,7 @@ export type Suggestion =
   | { id: string; kind: 'pastDecision'; rowId: string; category: string; count: number }
   /** 원칙 4: 같은 적요를 서로 다른 카테고리로 고른 이력이 있다 */
   | { id: string; kind: 'inconsistent'; key: string; sample: string; categories: string[] }
-  /** 근거 A-3: 금액 상위 BIG_UNRULED_TOP건 중 규칙 없이 LLM 추정(또는 빈 칸)에 맡겨진 행 */
+  /** 근거 A-3: 커밋 대상(pending) 금액 상위 BIG_UNRULED_TOP건 중 규칙 없이 LLM 추정(또는 빈 칸)에 맡겨진 행 */
   | { id: string; kind: 'bigUnruled'; rowId: string; amount: number };
 
 export type SuggestionBuild = {
@@ -97,8 +97,10 @@ export function buildSuggestions(rows: StagedTransaction[], file: RulesFile): Su
     for (const r of hit) attach(r.id, s.id);
   }
 
-  // 4) bigUnruled — 금액 상위 N건 중 규칙이 정하지 않은 카테고리
-  for (const row of live.slice(0, BIG_UNRULED_TOP)) {
+  // 4) bigUnruled — 커밋 대상(pending) 중 금액 상위 N건에서 규칙이 정하지 않은 카테고리.
+  //    송금 보류·중복은 커밋되지 않으니 여기서 짚지 않는다(needsAttention에 이미 있다)
+  const pending = live.filter((r) => r.status === 'pending');
+  for (const row of pending.slice(0, BIG_UNRULED_TOP)) {
     if (row.categorySource === 'rule') continue;
     const s: Suggestion = { id: newId(), kind: 'bigUnruled', rowId: row.id, amount: row.amount };
     suggestions.push(s);

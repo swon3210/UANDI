@@ -10,7 +10,11 @@ import {
 } from '../src/firebase/keyring-persistence';
 import { SessionManager } from '../src/firebase/session';
 import { JsonFileStore } from '../src/store/json-store';
+import { normalize } from '../src/core/fingerprint';
 import { commitBatch } from '../src/tools/commit-batch';
+import { reviewPlaybookTool } from '../src/tools/review-playbook';
+import { saveRule } from '../src/tools/save-rule';
+import { setCategory } from '../src/tools/set-category';
 import { CategoryCache, type ToolDeps } from '../src/tools/shared';
 import { stageTransactions } from '../src/tools/stage-transactions';
 import { undoBatch } from '../src/tools/undo-batch';
@@ -232,6 +236,140 @@ describe.skipIf(!ENABLED)('에뮬레이터 통합', () => {
     expect(await s.gateway.getExistingEntries('2026-09-01', '2026-09-30')).toHaveLength(1);
     expect(await s.gateway.getEntryCreator('existing-1')).toBe('partner');
   }, 30_000);
+
+  it('두 달 연속 결산 — 인터뷰 → 손으로 고침 → 다음 달 지난 결정 제안 → 승격 → 셋째 달 규칙 적용 (§11.8)', async () => {
+    const tx = (date: string, amount: number, description: string, category: string | null) => ({
+      date,
+      amount,
+      type: 'expense' as const,
+      description,
+      category,
+    });
+
+    // 0) 첫 결산 인터뷰 — 아내 이름 등록(원칙 3), 나머지는 기본
+    const interview = await saveRule(deps, {
+      rule: {
+        kind: 'interview',
+        answers: {
+          cardPayment: { choice: 'byCard' },
+          partnerName: { names: [{ realName: '김영희', alias: '아내' }] },
+          thirdParty: { choice: 'skip' },
+          cashRefund: { choices: ['skip'] },
+        },
+      },
+    });
+    expect(interview.rules.interview.completedAt).toBeTruthy();
+    expect(interview.rules.insiders).toEqual(['김영희']);
+    expect(interview.warnings).toEqual([]);
+
+    // 1) 첫 달: 이디야는 카테고리 없이 들어와 손으로 식비. 아내에게 보낸 돈은 패턴 없이도 송금 보류
+    const m1 = await stageTransactions(deps, {
+      label: '2026-09 KB국민',
+      source: { kind: 'account', name: 'KB국민' },
+      transactions: [
+        tx('2026-09-10', 4000, '이디야 커피', null),
+        tx('2026-09-11', 50000, '김영희', null),
+      ],
+    });
+    expect(m1.playbookDigest).toMatchObject({ interviewDone: true, insiders: 1, categoryRules: 0 });
+    const m1Rows = await deps.store.listStaged(m1.batchId);
+    const wife = m1Rows.find((r) => r.amount === 50000)!;
+    expect(wife).toMatchObject({
+      status: 'transfer',
+      statusReason: 'transfer:insider:아내',
+      description: '아내',
+    });
+    const ediya1 = m1Rows.find((r) => r.amount === 4000)!;
+    expect(m1.needsAttention.map((r) => r.id)).toEqual([wife.id, ediya1.id]); // 금액 큰 순
+    expect(m1.suggestions.map((s) => s.kind)).toEqual(['bigUnruled']); // 결정 로그가 비어 있으니 큰 금액만
+
+    const set1 = await setCategory(deps, {
+      batchId: m1.batchId,
+      changes: [{ id: ediya1.id, category: '식비' }],
+    });
+    expect(set1.promotable).toEqual([]); // 1회
+    const c1 = await commitBatch(deps, { batchId: m1.batchId });
+    expect(c1.committed).toBe(1);
+    expect(c1.retrospective).toMatchObject({
+      byCategorySource: { rule: 0, llm: 0, user: 1 },
+      userOverrides: 1,
+      rulesSavedDuringBatch: 0,
+      principlesTouched: [3], // 송금 보류가 있었다
+    });
+
+    // 2) 둘째 달: 같은 적요가 들어오면 "지난달엔 식비로" 제안이 붙는다. 손으로 다시 식비 → 승격 후보
+    const m2 = await stageTransactions(deps, {
+      label: '2026-10 KB국민',
+      source: { kind: 'account', name: 'KB국민' },
+      transactions: [tx('2026-10-10', 4500, '이디야커피', null)],
+    });
+    const past = m2.suggestions.filter((s) => s.kind === 'pastDecision');
+    expect(past).toHaveLength(1);
+    expect(past[0]).toMatchObject({ category: '식비', count: 1 });
+    const ediya2 = (await deps.store.listStaged(m2.batchId))[0]!;
+    expect(ediya2.suggestionIds).toContain(past[0]!.id);
+
+    const set2 = await setCategory(deps, {
+      batchId: m2.batchId,
+      changes: [{ id: ediya2.id, category: '식비' }],
+    });
+    expect(set2.promotable).toEqual([
+      { key: normalize('이디야 커피'), sample: '이디야커피', category: '식비', count: 2 },
+    ]);
+    const dry2 = await commitBatch(deps, { batchId: m2.batchId, dryRun: true });
+    expect(dry2.retrospective.promotable[0]).toMatchObject({
+      kind: 'promote',
+      rowIds: [ediya2.id],
+    });
+
+    const promoted = await saveRule(deps, {
+      rule: { kind: 'promote', key: '이디야 커피', category: '식비', rationale: '커피는 식비' },
+    });
+    expect(promoted.rules.decisions).toEqual([]);
+    const c2 = await commitBatch(deps, { batchId: m2.batchId });
+    expect(c2.committed).toBe(1);
+    expect(c2.retrospective.rulesSavedDuringBatch).toBe(1);
+    expect(c2.retrospective.promotable).toEqual([]);
+
+    // 3) 셋째 달: 규칙이 적용된다 — 손댈 것이 없다
+    const m3 = await stageTransactions(deps, {
+      label: '2026-11 KB국민',
+      source: { kind: 'account', name: 'KB국민' },
+      transactions: [
+        tx('2026-11-10', 4200, '이디야 커피 판교점', null),
+        tx('2026-11-12', 4000, '이디야 커피', null),
+      ],
+    });
+    const m3Rows = await deps.store.listStaged(m3.batchId);
+    expect(m3Rows.find((r) => r.amount === 4000)).toMatchObject({
+      category: '식비',
+      categorySource: 'rule',
+      appliedRuleId: promoted.savedId,
+    });
+    expect(m3Rows.find((r) => r.amount === 4200)!.category).toBeNull(); // exact 규칙은 지점명이 붙으면 안 맞는다
+    expect(m3.needsAttention).toHaveLength(1);
+
+    // 점검: 승격 규칙에 적용 이력이 남고, 인터뷰 기준 넷이 보인다
+    const review = await reviewPlaybookTool(deps, {});
+    const rule = review.digest.categoryRules;
+    expect(rule).toBe(1);
+    expect(review.principles).toHaveLength(4);
+    expect(review.noRationale).toEqual([]);
+    const onDisk = (await import('node:fs/promises')).readFile;
+    const file = JSON.parse(await onDisk(deps.rulesPath, 'utf8')) as {
+      categoryRules: { id: string; hits: number; examples: string[] }[];
+    };
+    expect(file.categoryRules[0]).toMatchObject({
+      id: promoted.savedId,
+      hits: 1,
+      // promote 때 결정 sample이 첫 예시로, 셋째 달 적용 때 원문이 둘째 예시로
+      examples: ['이디야커피', '이디야 커피'],
+    });
+
+    // 정리 — 두 달치 되돌리기
+    expect((await undoBatch(deps, { batchId: m1.batchId })).deleted).toBe(1);
+    expect((await undoBatch(deps, { batchId: m2.batchId })).deleted).toBe(1);
+  }, 60_000);
 
   it('다른 커플 경로에는 보안 규칙이 쓰기를 거절한다', async () => {
     const { createFirestoreGateway } = await import('../src/firebase/gateway');

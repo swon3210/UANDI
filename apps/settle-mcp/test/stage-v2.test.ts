@@ -194,9 +194,9 @@ describe('stage_transactions v2 응답 (도구)', () => {
       interviewDone: false,
       lastCommitAt: null,
     });
-    // 규칙 없는 큰 금액: 월세·이체·이디야 (배민은 rule)
+    // 규칙 없는 큰 금액: 월세·이디야 (배민은 rule, 이체는 송금 보류라 커밋 대상이 아님)
     const big = out.suggestions.filter((s) => s.kind === 'bigUnruled');
-    expect(big.map((s) => s.kind === 'bigUnruled' && s.amount)).toEqual([800000, 50000, 4000]);
+    expect(big.map((s) => s.kind === 'bigUnruled' && s.amount)).toEqual([800000, 4000]);
     const rows = (await h.call<ListStagedOutput>('list_staged', { batchId: out.batchId })).items;
     const rent = rows.find((r) => r.amount === 800000)!;
     expect(rent.suggestionIds).toEqual([big[0]!.id]);

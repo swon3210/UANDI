@@ -986,7 +986,7 @@ type Suggestion =
 
 `needsAttention`은 **금액 내림차순**으로 정렬한다(근거 A-3). `pastDecision`이 붙은 행은 LLM이 그 카테고리를 **제안**하되 자동 적용하지 않는다(사용자가 "그래"라고 하면 `set_category`).
 
-제안의 범위: `promote`·`inconsistent`는 **이번 배치에 있는 적요**에 대해서만 올라온다(전체 점검은 `review_playbook`). `pastDecision`은 카테고리가 비었거나 LLM 추정인 행에만, 과거 결정 중 가장 많이(동률이면 최근에) 고른 카테고리를 붙이며, LLM 후보와 같은 카테고리면 붙이지 않는다. `bigUnruled`는 무시 행을 뺀 금액 상위 10건 중 `categorySource`가 `rule`이 아닌 행이다. 각 행의 `suggestionIds`에 그 행에 붙은 제안 id가 저장된다. 같은 라벨 경고는 `status==='committed'`인 배치만 본다(스테이징 중인 배치는 다시 넣는 중일 수 있다).
+제안의 범위: `promote`·`inconsistent`는 **이번 배치에 있는 적요**에 대해서만 올라온다(전체 점검은 `review_playbook`). `pastDecision`은 카테고리가 비었거나 LLM 추정인 행에만, 과거 결정 중 가장 많이(동률이면 최근에) 고른 카테고리를 붙이며, LLM 후보와 같은 카테고리면 붙이지 않는다. `bigUnruled`는 커밋 대상(`pending`) 행의 금액 상위 10건 중 `categorySource`가 `rule`이 아닌 행이다(송금 보류·중복은 커밋되지 않으니 제외). 각 행의 `suggestionIds`에 그 행에 붙은 제안 id가 저장된다. 같은 라벨 경고는 `status==='committed'`인 배치만 본다(스테이징 중인 배치는 다시 넣는 중일 수 있다).
 
 #### `set_category` (변경)
 
