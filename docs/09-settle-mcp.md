@@ -1039,13 +1039,13 @@ retrospective: {
 
 ```ts
 // 입력
-{ focus?: ('unused' | 'conflicts' | 'noRationale' | 'promotable' | 'inconsistent' | 'principlesWithoutRules')[] }  // 비우면 전부
+{ focus?: ('unused' | 'conflicts' | 'noRationale' | 'promotable' | 'inconsistent' | 'principlesWithoutRules' | 'principleConflicts')[] }  // 비우면 전부. 주면 그 항목만 계산하고 나머지는 빈 배열. principlesWithoutRules는 principles를 ruleIds가 빈 것으로 좁힌다
 // 출력
 {
   digest: StageOutput['playbookDigest'];
   principles: UserPrinciple[];                       // 전부. ruleIds가 비어 있으면 "말로만 있는 기준"
   unused: (CategoryRule | IgnoreRule | TransferRule)[];   // 근거 E-3: hits===0 && createdAt 60일 초과, 또는 lastHitAt 60일 초과. default는 제외
-  conflicts: { rules: string[]; sample: string }[];  // 근거 B-5: decisions.sample·examples를 모든 categoryRule에 대입해 둘 이상 맞는 것
+  conflicts: { rules: string[]; sample: string }[];  // 근거 B-5: decisions.sample·규칙 examples를 모든 categoryRule(단계·onlyFor 무시)에 대입해 둘 이상 맞는 것. 같은 규칙 조합은 한 번만
   noRationale: string[];                             // 근거 E-2: rationale===null인 user·promoted 규칙 id
   promotable: Suggestion[];                          // 근거 E-1: count>=2 결정
   inconsistent: Suggestion[];                        // 근거 B-1
@@ -1053,7 +1053,7 @@ retrospective: {
 }
 ```
 
-규칙 본문(패턴·실명)이 들어가므로 `UANDI_EXPOSE_ALIASES=false`면 `uandi://rules`와 같은 방식으로 실명 키를 가린다.
+규칙 본문(패턴·실명)이 들어가므로 `UANDI_EXPOSE_ALIASES=false`면 `uandi://rules`와 같은 마스커(`core/mask.ts`)로 unused의 키·예시, conflicts·promotable·inconsistent의 sample에서 실명을 가린다. `unused`는 `source:'default'` 규칙을 제외하고, `lastHitAt`이 있으면 그 시점부터, 없으면 `createdAt`부터 60일을 넘긴 것이다(60일 정확히는 아직 쓰는 규칙).
 
 #### 리소스 (변경·신설)
 

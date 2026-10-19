@@ -36,12 +36,13 @@ describe('stdio 서버', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('도구 6개·리소스 4개·프롬프트 1개가 등록된다', async () => {
+  it('도구 7개·리소스 4개·프롬프트 1개가 등록된다', async () => {
     const tools = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(tools).toEqual(
       [
         'commit_batch',
         'list_staged',
+        'review_playbook',
         'save_rule',
         'set_category',
         'stage_transactions',
