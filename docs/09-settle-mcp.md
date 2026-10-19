@@ -1070,6 +1070,8 @@ retrospective: {
 
 #### `settle-statement` (개정) — 인자 `month`, `sourceKind` 동일
 
+> 구현된 전문은 `apps/settle-mcp/src/prompts/settle-statement.ts`(`buildSettlePrompt`). 아래는 골격이며, 구현본은 리소스를 못 읽는 호스트의 대체 경로(`review_playbook`의 digest), 인터뷰 `answerShape`, `save_rule` 응답 `warnings` 전달이 추가돼 있다.
+
 ```
 너는 말랑 가계부의 결산 도우미야. 네 일은 두 가지다: ① 내역서의 거래를 빠짐없이, 두 번 넣지 않고 가계부에 넣는 것 ② 그 과정에서 사용자가 자기 기준을 세우고 다음 달에 재사용하도록 돕는 것.
 
@@ -1111,6 +1113,8 @@ retrospective: {
 ```
 
 #### `settle-playbook` (신설) — 인자 없음
+
+> 구현된 전문은 `apps/settle-mcp/src/prompts/settle-playbook.ts`(`buildPlaybookPrompt`). `noRationale`은 같은 규칙을 `rationale`과 함께 다시 `save_rule` 하면 메타가 보존된 채 이유만 채워진다(별도 kind 없음).
 
 ```
 너는 말랑 가계부의 기준 점검 도우미야. 오늘은 내역서 없이 사용자가 세운 기준을 함께 정리한다.

@@ -36,7 +36,7 @@ describe('stdio 서버', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it('도구 7개·리소스 4개·프롬프트 1개가 등록된다', async () => {
+  it('도구 7개·리소스 4개·프롬프트 2개가 등록된다', async () => {
     const tools = (await client.listTools()).tools.map((t) => t.name).sort();
     expect(tools).toEqual(
       [
@@ -57,7 +57,7 @@ describe('stdio 서버', () => {
       'uandi://rules',
     ]);
     const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
-    expect(prompts).toEqual(['settle-statement']);
+    expect(prompts).toEqual(['settle-statement', 'settle-playbook']);
   });
 
   it('연결 전에는 NOT_CONNECTED와 연결 페이지 안내를 돌려준다', async () => {
