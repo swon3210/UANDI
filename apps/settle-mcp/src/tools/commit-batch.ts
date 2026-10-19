@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { duplicateScope } from '../core/dedupe';
 import { enforceBeforeCommit, type BlockedRow } from '../core/enforce';
 import { SettleError } from '../core/errors';
+import { buildRetrospective, type Retrospective } from '../core/retrospective';
 import type { StagedTransaction } from '../core/types';
 import { guarded, loadSessionRules, toolResult, type ToolDeps } from './shared';
 
@@ -22,6 +23,8 @@ export type CommitBatchOutput = {
   skipped: { duplicate: number; transfer: number; ignored: number };
   blocked: BlockedRow[];
   entryIds: string[];
+  /** 회고 — dryRun에서도 같은 내용. 커밋 전에 "이번 달: 규칙 r / 추정 l / 손 u"를 보여 줄 수 있게 (§11.5) */
+  retrospective: Retrospective;
 };
 
 /** docs/09-settle-mcp.md §5.5 — 커밋 직전 강제 규칙을 코드가 다시 검사한 뒤 쓴다 */
@@ -72,10 +75,17 @@ export async function commitBatch(
     existing
   );
 
+  const retrospective = buildRetrospective({
+    rows: await deps.store.listStaged(batch.id),
+    committable,
+    file: rules.file,
+    rulesAtStart: batch.rulesAtStart ?? null,
+  });
   const base = {
     batchId: batch.id,
     skipped: { ...skipped, duplicate: skipped.duplicate + newlyDuplicate.length },
     blocked,
+    retrospective,
   };
 
   if (blocked.length > 0) {
@@ -172,15 +182,19 @@ export function registerCommitBatch(server: McpServer, deps: ToolDeps) {
     {
       title: '배치 커밋',
       description:
-        'pending 행을 가계부(Firestore)에 쓴다. 쓰기 직전에 별칭 치환·무시 규칙·카테고리·기존 내역 중복을 코드가 다시 검사하며, 하나라도 막히면 한 건도 쓰지 않는다. 먼저 dryRun:true로 쓸 건수를 사용자에게 확인받아라.',
+        'pending 행을 가계부(Firestore)에 쓴다. 쓰기 직전에 별칭 치환·무시 규칙·카테고리·기존 내역 중복을 코드가 다시 검사하며, 하나라도 막히면 한 건도 쓰지 않는다. 먼저 dryRun:true로 쓸 건수와 회고(retrospective)를 사용자에게 확인받아라. 커밋 후에는 회고 세 줄(규칙/추정/손으로 고친 건수, 새 규칙 수, 규칙 없는 큰 금액)과 promotable("다음 달 전에 규칙으로 올려 둘까요?")을 보여 준다.',
       inputSchema: commitBatchInputShape,
     },
     guarded(async (args) => {
       const out = await commitBatch(deps, args as CommitBatchInput);
+      const r = out.retrospective;
+      const retro = `회고: 규칙 ${r.byCategorySource.rule}건 / 추정 ${r.byCategorySource.llm}건 / 손으로 ${r.userOverrides}건, 이번 배치에서 새 규칙 ${r.rulesSavedDuringBatch}개${
+        r.promotable.length ? `, 규칙으로 올릴 결정 ${r.promotable.length}건` : ''
+      }${r.unruledTop.length ? `, 규칙 없는 큰 금액 ${r.unruledTop.length}건` : ''}`;
       return toolResult(
         args.dryRun
-          ? `dry run — ${out.wouldCommit}건을 쓰게 됩니다 (중복 ${out.skipped.duplicate}·송금 ${out.skipped.transfer}·무시 ${out.skipped.ignored} 제외). 사용자 확인 후 dryRun 없이 다시 호출하세요`
-          : `${out.committed}건을 가계부에 썼습니다. 되돌리려면 undo_batch {batchId:"${out.batchId}"}`,
+          ? `dry run — ${out.wouldCommit}건을 쓰게 됩니다 (중복 ${out.skipped.duplicate}·송금 ${out.skipped.transfer}·무시 ${out.skipped.ignored} 제외). ${retro}. 사용자 확인 후 dryRun 없이 다시 호출하세요`
+          : `${out.committed}건을 가계부에 썼습니다. ${retro}. 되돌리려면 undo_batch {batchId:"${out.batchId}"}`,
         out
       );
     })

@@ -1027,11 +1027,11 @@ retrospective: {
   promotable: Suggestion[];      // kind:'promote' — 아직 규칙으로 안 올린 count>=2 결정
   unruledTop: { rowId: string; description: string; amount: number; category: string }[];
                                  // LLM 추정에 맡겨진 행 중 금액 상위 5건 (근거 A-3)
-  principlesTouched: number[];   // 이번 배치에서 적용된 규칙들의 conflictsWith·기본 규칙이 가리키는 원칙 번호. 예: [2, 3]
+  principlesTouched: number[];   // 이번 배치가 건드린 원칙 번호(오름차순). 무시 행이 있으면 2, 송금 보류가 있으면 3, 쓸 행에 적용된 규칙의 conflictsWith. 예: [2, 3]
 }
 ```
 
-`Batch`에 `rulesAtStart: number`(스테이징 시점의 기계 규칙 수)를 추가한다.
+`Batch`에 `rulesAtStart: number | null`(스테이징 시점의 기계 규칙 수 = categoryRules+ignore+transfer)을 추가한다. v2 이전에 만든 배치는 `null`이고 그때 `rulesSavedDuringBatch`는 0이다. `promotable`은 배치와 무관하게 결정 로그 전체에서 뽑되, 이번 배치의 행이 있으면 `rowIds`에 넣는다. `unruledTop`은 쓸 행 중 `categorySource`가 `rule`이 아닌 것이다. 회고는 `COMMIT_BLOCKED` 에러의 `details`에도 들어간다.
 
 #### `review_playbook` (신설)
 

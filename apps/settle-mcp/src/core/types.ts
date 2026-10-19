@@ -58,6 +58,8 @@ export type Batch = {
   committedCount: number;
   /** undo용. 커밋 전 [] */
   committedEntryIds: string[];
+  /** 스테이징 시점의 기계 규칙 수. 회고의 rulesSavedDuringBatch = 지금 규칙 수 − 이 값. v2 이전 배치는 null */
+  rulesAtStart: number | null;
   status: BatchStatus;
   createdAt: string;
   committedAt: string | null;

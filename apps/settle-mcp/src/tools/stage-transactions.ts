@@ -5,6 +5,7 @@ import { SettleError } from '../core/errors';
 import { fingerprint } from '../core/fingerprint';
 import { newId } from '../core/id';
 import { applyRules, recordHits, writeRules, type RulesFile } from '../core/rules';
+import { machineRuleCount } from '../core/retrospective';
 import { buildSuggestions, type Suggestion } from '../core/suggestions';
 import type { Batch, StagedTransaction } from '../core/types';
 import { guarded, loadSessionRules, toolResult, type ToolDeps } from './shared';
@@ -204,6 +205,7 @@ export async function stageTransactions(deps: ToolDeps, input: StageInput): Prom
     stagedCount: kept.length,
     committedCount: 0,
     committedEntryIds: [],
+    rulesAtStart: machineRuleCount(rules.file),
     status: 'staging',
     createdAt: now,
     committedAt: null,
