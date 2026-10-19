@@ -86,3 +86,25 @@ export const EditCategory: Story = {
     onClose: () => {},
   },
 };
+
+// 정기 발생 제안('move')에서 열리는 모드: 구분이 고정 지출로 잠기고 감지값(발생일·금액)이 prefill된다.
+// 같은 group의 기존 이름은 저장 시 거부된다('구독' 입력 후 저장 → 에러).
+export const AddFixedFromSuggestion: Story = {
+  args: {
+    group: 'expense',
+    lockedSubGroup: 'fixed_expense',
+    title: '고정 지출 카테고리 만들기',
+    takenNames: ['구독', '식비', '월세'],
+    initialValues: {
+      description: "'구독'에서 매월 15일쯤 반복되던 항목",
+      recurrence: {
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: 15,
+        expectedAmount: 15000,
+      },
+    },
+    onSubmit: noop,
+    onClose: () => {},
+  },
+};

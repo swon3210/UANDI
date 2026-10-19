@@ -29,54 +29,13 @@ import {
   useDeleteCategory,
 } from '@/hooks/useCashbookCategories';
 import { countEntriesByCategory } from '@/services/cashbook';
-import { GROUP_LABELS } from '@/constants/default-categories';
+import { GROUP_LABELS, RECURRENCE_SUBGROUPS } from '@/constants/default-categories';
 import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
-import type { CashbookCategory, CategoryGroup, RecurringSchedule } from '@/types';
+import { buildRecurrencePayload } from '@/utils/recurrence-form';
+import type { CashbookCategory, CategoryGroup } from '@/types';
 
 const TAB_ORDER: CategoryGroup[] = ['income', 'expense'];
-
-const RECURRENCE_SUBGROUPS: CashbookCategory['subGroup'][] = ['fixed_expense', 'regular_income'];
-
-type RecurrenceFormValue = {
-  enabled: boolean;
-  kind: 'dayOfMonth' | 'nthWeekday';
-  dayOfMonth?: number;
-  week?: number;
-  weekday?: number;
-  leadDays?: number;
-  expectedAmount?: number | null;
-  intervalMonths?: number;
-  anchorMonth?: string;
-};
-
-// 폼 값 → Firestore 저장용 payload. undefined 필드를 제거하고(Firestore가 거부),
-// 설정이 전혀 없으면 null을 반환한다.
-function buildRecurrencePayload(value: RecurrenceFormValue): RecurringSchedule | null {
-  const hasConfig =
-    value.dayOfMonth != null ||
-    value.week != null ||
-    value.weekday != null ||
-    value.expectedAmount != null;
-  if (!value.enabled && !hasConfig) return null;
-
-  const payload: RecurringSchedule = { enabled: value.enabled, kind: value.kind };
-  if (value.kind === 'dayOfMonth') {
-    if (value.dayOfMonth != null) payload.dayOfMonth = value.dayOfMonth;
-  } else {
-    if (value.week != null) payload.week = value.week as RecurringSchedule['week'];
-    if (value.weekday != null) payload.weekday = value.weekday;
-  }
-  if (value.leadDays != null) payload.leadDays = value.leadDays;
-  payload.expectedAmount = value.expectedAmount ?? null;
-  // 반복 주기: 격월 이상일 때만 저장(매월=기본이라 생략, 하위호환). anchorMonth는 위상 기준.
-  const interval = value.intervalMonths ?? 1;
-  if (interval > 1) {
-    payload.intervalMonths = interval;
-    if (value.anchorMonth) payload.anchorMonth = value.anchorMonth;
-  }
-  return payload;
-}
 
 export default function CashbookCategoriesPage() {
   const router = useRouter();

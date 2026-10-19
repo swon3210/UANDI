@@ -10,7 +10,11 @@ import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
 import { useCashflowPrediction } from '@/hooks/useCashflowPrediction';
 import { useCashflowNegativeAlert } from '@/hooks/useCashflowNegativeAlert';
-import { useRecurrenceSuggestions } from '@/hooks/useRecurrenceSuggestions';
+import {
+  useRecurrenceSuggestions,
+  useMoveRecurrenceToNewCategory,
+} from '@/hooks/useRecurrenceSuggestions';
+import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useUpdateCashflowSettings } from '@/hooks/useCashflowSettings';
 import { useDeletePrediction } from '@/hooks/usePredictions';
 import { resolveInitialCashByUid, type CashflowMember } from '@/utils/cashflow';
@@ -18,12 +22,19 @@ import { CashflowCardList } from '@/components/cashbook/CashflowCardList';
 import { CashflowBaselineCard } from '@/components/cashbook/CashflowBaselineCard';
 import { CashflowNegativeBanner } from '@/components/cashbook/CashflowNegativeBanner';
 import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
-import { RecurrenceSuggestionCard } from '@/components/cashbook/RecurrenceSuggestionCard';
+import {
+  RecurrenceSuggestionCard,
+  type RecurrenceSuggestionView,
+} from '@/components/cashbook/RecurrenceSuggestionCard';
 import {
   CashflowSettingsForm,
   type CashflowSettingsFormValue,
 } from '@/components/cashbook/CashflowSettingsForm';
+import { CategoryForm } from '@/components/cashbook/CategoryForm';
+import { SUB_GROUP_LABELS, recurrenceSubGroupFor } from '@/constants/default-categories';
+import { buildRecurrencePayload } from '@/utils/recurrence-form';
 import { formatDay } from '@/utils/date';
+import type { CashbookCategory } from '@/types';
 
 /**
  * 설정 시트 내용. overlay-kit은 열릴 때 React 트리에서 분리된 위치에 렌더돼
@@ -48,6 +59,66 @@ function SettingsSheetContent({
       members={members}
       initial={initial}
       onSubmit={(value: CashflowSettingsFormValue) => updateMutation.mutate(value)}
+      onClose={onClose}
+    />
+  );
+}
+
+/**
+ * 'move' 제안 수락 시트: 변동 카테고리의 반복 패턴을 새 고정 지출/정기 수입 카테고리로 옮긴다.
+ * CategoryForm을 구분 잠금(고정 지출/정기 수입) + 감지값(발생일·금액) prefill로 연다.
+ * SettingsSheetContent와 같은 이유로 목록(takenNames·sortOrder)은 props로 주입하고 저장 mutation만 내부 사용.
+ */
+function MoveSuggestionSheetContent({
+  coupleId,
+  suggestion,
+  source,
+  takenNames,
+  sortOrder,
+  onClose,
+}: {
+  coupleId: string | null;
+  suggestion: RecurrenceSuggestionView;
+  /** 패턴이 잡힌 원본(변동) 카테고리 — 아이콘·색상 prefill용. */
+  source?: Pick<CashbookCategory, 'icon' | 'color'>;
+  takenNames: string[];
+  sortOrder: number;
+  onClose: () => void;
+}) {
+  const moveMutation = useMoveRecurrenceToNewCategory(coupleId);
+  const targetSubGroup = recurrenceSubGroupFor(suggestion.type);
+
+  return (
+    <CategoryForm
+      group={suggestion.type}
+      lockedSubGroup={targetSubGroup}
+      title={`${SUB_GROUP_LABELS[targetSubGroup]} 카테고리 만들기`}
+      takenNames={takenNames}
+      initialValues={{
+        icon: source?.icon,
+        color: source?.color,
+        description: `'${suggestion.categoryName}'에서 ${suggestion.scheduleLabel} 반복되던 항목`,
+        recurrence: {
+          enabled: true,
+          kind: 'dayOfMonth',
+          dayOfMonth: suggestion.dayOfMonth,
+          expectedAmount: suggestion.amount > 0 ? suggestion.amount : null,
+        },
+      }}
+      onSubmit={async (data) => {
+        await moveMutation.mutateAsync({
+          suggestion,
+          category: {
+            name: data.name,
+            icon: data.icon,
+            color: data.color,
+            description: data.description,
+            examples: data.examples,
+            sortOrder,
+            recurrence: buildRecurrencePayload(data.recurrence),
+          },
+        });
+      }}
       onClose={onClose}
     />
   );
@@ -78,7 +149,40 @@ export default function CashflowCalendarPage() {
     accept: acceptSuggestion,
     dismiss: dismissSuggestion,
   } = useRecurrenceSuggestions(coupleId);
+  // 'move' 제안 시트에 넘길 이름 중복 목록·정렬 순서(useRecurrenceSuggestions와 같은 쿼리 캐시).
+  const { data: categories } = useCashbookCategories(coupleId);
   const deletePredictionMutation = useDeletePrediction(coupleId);
+
+  const openMoveSuggestion = (s: RecurrenceSuggestionView) => {
+    const all = categories ?? [];
+    // 내역은 카테고리 이름으로 연결되므로 같은 group 안에서는 이름이 겹치면 안 된다.
+    const takenNames = all.filter((c) => c.group === s.type).map((c) => c.name);
+    const sortOrder = all.filter((c) => c.group === s.type && c.parentCategoryId === null).length;
+    const source = all.find((c) => c.id === s.categoryId);
+    overlay.open(({ isOpen, close, unmount }) => (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
+        <MoveSuggestionSheetContent
+          coupleId={coupleId}
+          suggestion={s}
+          source={source}
+          takenNames={takenNames}
+          sortOrder={sortOrder}
+          onClose={() => {
+            close();
+            setTimeout(unmount, 300);
+          }}
+        />
+      </Sheet>
+    ));
+  };
+
+  const handleAcceptSuggestion = (s: RecurrenceSuggestionView) => {
+    if (s.kind === 'move') {
+      openMoveSuggestion(s);
+      return;
+    }
+    acceptSuggestion(s);
+  };
 
   const handleDeletePrediction = (txnId: string) => {
     deletePredictionMutation.mutate(txnId);
@@ -166,7 +270,7 @@ export default function CashflowCalendarPage() {
                   <RecurrenceSuggestionCard
                     key={s.categoryId}
                     suggestion={s}
-                    onAccept={() => acceptSuggestion(s)}
+                    onAccept={() => handleAcceptSuggestion(s)}
                     onDismiss={() => dismissSuggestion(s)}
                   />
                 ))}

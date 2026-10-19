@@ -1,22 +1,33 @@
 'use client';
 
-import { Sparkle, Check, X, CalendarX } from 'lucide-react';
+import { Sparkle, Check, X, CalendarX, FolderPlus } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
+import type { CategorySubGroup } from '@/types';
+import { SUB_GROUP_LABELS, recurrenceSubGroupFor } from '@/constants/default-categories';
 import { formatCurrency } from '@/utils/currency';
 
-// 정기 발생 등록/해제 제안 카드(Phase 6·7). firebase 비의존 view 타입으로 Storybook에서 그대로 렌더.
+// 정기 발생 등록/이동/해제 제안 카드(Phase 6·7). firebase 비의존 view 타입으로 Storybook에서 그대로 렌더.
 export type RecurrenceSuggestionView = {
   categoryId: string;
   categoryName: string;
   type: 'income' | 'expense';
-  /** 'add': 미선언 반복 항목을 정기 발생으로 등록 제안. 'remove': 발생이 끊긴 정기 발생 해제 제안. */
-  kind: 'add' | 'remove';
-  /** 'add'일 때 등록에 사용할 발생일(1~31). 'remove'는 표시에 안 쓰임. */
+  /** 패턴이 잡힌(또는 정기 발생이 선언된) 카테고리의 구분. 'move'일 때 안내 문구에 노출. */
+  sourceSubGroup: CategorySubGroup;
+  /**
+   * - 'add': 고정 지출/정기 수입 카테고리의 미선언 반복 항목 → 그 카테고리에 정기 발생 등록 제안.
+   * - 'move': 변동 지출/비정기 수입 카테고리에서 반복 패턴 → 새 고정 지출/정기 수입 카테고리를 만들어
+   *   패턴 내역을 옮기는 제안(변동 카테고리에는 정기 발생을 붙이지 않는다).
+   * - 'remove': 발생이 끊긴 정기 발생 해제 제안.
+   */
+  kind: 'add' | 'move' | 'remove';
+  /** 'add'/'move'일 때 등록에 사용할 발생일(1~31). 'remove'는 표시에 안 쓰임. */
   dayOfMonth: number;
   /** 예상/감지 금액. 0이면 미표시. */
   amount: number;
-  /** 사람이 읽는 발생 주기 표기. add: "매월 15일쯤", remove: "매월 25일"(formatRecurrence). */
+  /** 사람이 읽는 발생 주기 표기. add/move: "매월 15일쯤", remove: "매월 25일"(formatRecurrence). */
   scheduleLabel: string;
+  /** 패턴 클러스터에 속한 내역 id. 'move' 수락 시 새 카테고리로 옮긴다. 'remove'는 빈 배열. */
+  entryIds: string[];
 };
 
 type RecurrenceSuggestionCardProps = {
@@ -31,8 +42,9 @@ function kindNoun(type: 'income' | 'expense'): string {
 }
 
 /**
- * 정기 발생 등록/해제 제안.
- * - add: 과거 반복이 감지됐지만 미선언인 카테고리 → "정기 지출/수입 등록"(카테고리 recurrence 설정).
+ * 정기 발생 등록/이동/해제 제안.
+ * - add: 과거 반복이 감지됐지만 미선언인 고정 카테고리 → "정기 지출/수입 등록"(카테고리 recurrence 설정).
+ * - move: 변동 카테고리에서 반복이 감지됨 → "고정 지출/정기 수입 카테고리 만들기"(새 카테고리 + 내역 이동).
  * - remove: 정기 발생을 켰지만 최근 발생이 끊긴 카테고리 → "정기 발생 해제"(recurrence 제거).
  * 모두 읽기 시점 제안 — 영속 예측 doc 없음.
  */
@@ -42,8 +54,17 @@ export function RecurrenceSuggestionCard({
   onDismiss,
 }: RecurrenceSuggestionCardProps) {
   const isRemove = suggestion.kind === 'remove';
+  const isMove = suggestion.kind === 'move';
   const noun = kindNoun(suggestion.type);
+  const sourceLabel = SUB_GROUP_LABELS[suggestion.sourceSubGroup];
+  const targetLabel = SUB_GROUP_LABELS[recurrenceSubGroupFor(suggestion.type)];
   const amountText = suggestion.amount > 0 ? ` · 약 ${formatCurrency(suggestion.amount)}` : '';
+
+  const description = isRemove
+    ? `최근 발생이 없어요. ${noun} 등록을 해제할까요?`
+    : isMove
+      ? `${sourceLabel} 카테고리에는 ${noun}을 바로 등록할 수 없어요. 새 ${targetLabel} 카테고리를 만들어 반복된 내역 ${suggestion.entryIds.length}건을 옮길까요?`
+      : `이 카테고리를 ${noun} 항목으로 등록하면 현금흐름·내역 예측에 표시돼요`;
 
   return (
     <div
@@ -59,7 +80,13 @@ export function RecurrenceSuggestionCard({
             isRemove ? 'bg-stone-200 text-stone-600' : 'bg-sage-100 text-sage-600'
           )}
         >
-          {isRemove ? <CalendarX size={13} /> : <Sparkle size={13} />}
+          {isRemove ? (
+            <CalendarX size={13} />
+          ) : isMove ? (
+            <FolderPlus size={13} />
+          ) : (
+            <Sparkle size={13} />
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">
@@ -70,11 +97,7 @@ export function RecurrenceSuggestionCard({
               {amountText}
             </span>
           </p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {isRemove
-              ? `최근 발생이 없어요. ${noun} 등록을 해제할까요?`
-              : `이 카테고리를 ${noun} 항목으로 등록하면 현금흐름·내역 예측에 표시돼요`}
-          </p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{description}</p>
         </div>
       </div>
 
@@ -86,8 +109,14 @@ export function RecurrenceSuggestionCard({
           onClick={onAccept}
           data-testid="recurrence-suggestion-accept"
         >
-          {isRemove ? <X size={14} className="mr-1" /> : <Check size={14} className="mr-1" />}
-          {isRemove ? `${noun} 해제` : `${noun} 등록`}
+          {isRemove ? (
+            <X size={14} className="mr-1" />
+          ) : isMove ? (
+            <FolderPlus size={14} className="mr-1" />
+          ) : (
+            <Check size={14} className="mr-1" />
+          )}
+          {isRemove ? `${noun} 해제` : isMove ? `${targetLabel} 카테고리 만들기` : `${noun} 등록`}
         </Button>
         <Button
           size="sm"

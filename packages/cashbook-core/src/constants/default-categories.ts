@@ -42,6 +42,14 @@ export const SUB_GROUPS_BY_GROUP: Record<CategoryGroup, CategorySubGroup[]> = {
   expense: ['fixed_expense', 'variable_common', 'variable_personal'],
 };
 
+/** 정기 발생(recurrence)을 선언할 수 있는 subGroup — 고정 지출 / 정기 수입. */
+export const RECURRENCE_SUBGROUPS: CategorySubGroup[] = ['fixed_expense', 'regular_income'];
+
+/** group별 정기 발생 선언이 가능한 subGroup(수입 → 정기 수입, 지출 → 고정 지출). */
+export function recurrenceSubGroupFor(group: CategoryGroup): CategorySubGroup {
+  return group === 'income' ? 'regular_income' : 'fixed_expense';
+}
+
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   // ── 수입: 정기 ──
   { group: 'income', subGroup: 'regular_income', name: '정기급여', icon: 'wallet', color: '#4CAF86', sortOrder: 0, description: '매달 고정으로 들어오는 급여', examples: ['월급'] },
