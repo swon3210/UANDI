@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { Skeleton, cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
@@ -17,6 +19,8 @@ type Props = {
   /** 지난 달 데이터 로딩 중이면 스켈레톤 */
   isLoading?: boolean;
   group: CategoryGroup;
+  /** 카테고리 행을 누르면 이동할 분석 페이지 링크. 없으면 행은 읽기 전용 */
+  hrefOf?: (category: string) => string;
 };
 
 // 증가가 좋은 그룹(수입)과 나쁜 그룹(지출)을 나눠 색·이모지를 정한다 (기간 비교와 같은 규칙)
@@ -74,14 +78,18 @@ function Headline({
   );
 }
 
-function HighlightRow({ item, group }: { item: CategoryHighlight; group: CategoryGroup }) {
+function HighlightRow({
+  item,
+  group,
+  href,
+}: {
+  item: CategoryHighlight;
+  group: CategoryGroup;
+  href?: string;
+}) {
   const tone = toneClass(item.kind, group);
-  return (
-    <li
-      data-testid={`median-highlight-${item.category}`}
-      data-kind={item.kind}
-      className="flex items-center gap-2 py-1.5 text-sm"
-    >
+  const body = (
+    <>
       <span className={cn('w-4 shrink-0 text-center text-xs', tone)} aria-hidden>
         {KIND_GLYPH[item.kind]}
       </span>
@@ -92,11 +100,37 @@ function HighlightRow({ item, group }: { item: CategoryHighlight; group: Categor
       <span className={cn('w-24 shrink-0 text-right font-semibold tabular-nums', tone)}>
         {formatCurrency(item.current)}
       </span>
+    </>
+  );
+  const rowClass = 'flex items-center gap-2 py-1.5 text-sm';
+  return (
+    <li>
+      {href ? (
+        // 누르면 그 카테고리의 AI 분석 페이지로
+        <Link
+          href={href}
+          data-testid={`median-highlight-${item.category}`}
+          data-kind={item.kind}
+          aria-label={`${item.category} AI 분석 보기`}
+          className={cn(rowClass, '-mx-1 rounded-md px-1 transition-colors hover:bg-accent/40')}
+        >
+          {body}
+          <ChevronRight size={14} className="shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+      ) : (
+        <div
+          data-testid={`median-highlight-${item.category}`}
+          data-kind={item.kind}
+          className={rowClass}
+        >
+          {body}
+        </div>
+      )}
     </li>
   );
 }
 
-export function MedianCompareCard({ comparison, isLoading = false, group }: Props) {
+export function MedianCompareCard({ comparison, isLoading = false, group, hrefOf }: Props) {
   return (
     <div data-testid="median-compare" className="space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -135,7 +169,12 @@ export function MedianCompareCard({ comparison, isLoading = false, group }: Prop
           ) : (
             <ul data-testid="median-compare-highlights" className="divide-y divide-border">
               {comparison.highlights.map((item) => (
-                <HighlightRow key={item.category} item={item} group={group} />
+                <HighlightRow
+                  key={item.category}
+                  item={item}
+                  group={group}
+                  href={hrefOf?.(item.category)}
+                />
               ))}
             </ul>
           )}

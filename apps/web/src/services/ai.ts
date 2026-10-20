@@ -192,6 +192,36 @@ export async function predictCashflow(params: PredictCashflowParams): Promise<Ll
   return predictions;
 }
 
+/** `data: {"text"}` SSE 응답을 텍스트 청크로 풀어낸다. `[DONE]`에서 끝난다. */
+async function* readSseText(res: Response): AsyncGenerator<string> {
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('스트리밍을 시작할 수 없습니다');
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6);
+      if (data === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.text) yield parsed.text as string;
+      } catch {
+        // JSON 파싱 실패 시 무시
+      }
+    }
+  }
+}
+
 export async function analyzeSpending(
   params: AnalyzeSpendingParams,
   onChunk: (text: string) => void
@@ -208,31 +238,42 @@ export async function analyzeSpending(
     throw new Error(error.error ?? '지출 분석에 실패했습니다');
   }
 
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error('스트리밍을 시작할 수 없습니다');
+  for await (const text of readSseText(res)) onChunk(text);
+}
 
-  const decoder = new TextDecoder();
-  let buffer = '';
+// ── 카테고리 AI 분석 (대시보드 "평소와 비교" 드릴다운) ──
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+export type CategoryAnalysisParams = {
+  category: string;
+  group: 'expense' | 'income';
+  year: number;
+  month: number; // 1~12
+  current: {
+    amount: number;
+    count: number;
+    entries: { date: string; amount: number; description: string }[];
+  };
+  /** 직전 달들, 오래된 순 */
+  history: { year: number; month: number; amount: number; count: number }[];
+  /** 표본 부족이면 null */
+  median: number | null;
+};
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+/** 카테고리 분석 보고서를 텍스트 청크 스트림으로 받는다 (streamedQuery용). */
+export async function* streamCategoryAnalysis(
+  params: CategoryAnalysisParams
+): AsyncGenerator<string> {
+  const headers = await getAuthHeaders();
+  const res = await fetch('/api/ai/analyze-category', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(params),
+  });
 
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6);
-        if (data === '[DONE]') return;
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.text) onChunk(parsed.text);
-        } catch {
-          // JSON 파싱 실패 시 무시
-        }
-      }
-    }
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error ?? '카테고리 분석에 실패했습니다');
   }
+
+  yield* readSseText(res);
 }

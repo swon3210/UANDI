@@ -24,6 +24,7 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
 import type { CategoryGroup } from '@/types';
+import { buildCategoryAnalysisHref } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
@@ -452,6 +453,9 @@ export function BudgetDashboard({ coupleId }: Props) {
                 comparison={medianComparison}
                 isLoading={isMedianLoading}
                 group={group}
+                hrefOf={(category) =>
+                  buildCategoryAnalysisHref({ category, group, subGroup, cursor })
+                }
               />
             </div>
           ) : null}

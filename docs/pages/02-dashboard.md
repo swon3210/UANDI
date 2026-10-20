@@ -221,7 +221,7 @@ query(
   - 기록이 있는 달이 **2개월 미만**이면 비교하지 않고 한 줄 안내만 보여준다 (`median-compare-empty`, "지난달 기록이 2개월 이상 쌓이면 평소와 비교해 드려요")
   - 헤더 보조 라벨(`median-compare-caption`): `최근 6개월 중위값`
 - 데이터: 기준 달과 직전 6개월을 `useCashbookEntriesInRange`와 같은 쿼리 키로 월 단위 범위 조회(`useQueries`) — 기간 이동 시 이미 본 달은 캐시를 재사용. 연간 탭에서는 조회하지 않는다. 로딩 중엔 Skeleton
-- 읽기 전용이고 구성은 세 줄뿐이다 (요약 타일·아이콘·배지·펼치기 없음):
+- 구성은 세 줄뿐이다 (요약 타일·아이콘·배지·펼치기 없음). 유일한 상호작용은 카테고리 행 링크(아래 3):
   1. 결론 한 줄(`median-compare-delta`): `평소보다 ▲/▼ 금액 (비율%) 많이/적게 썼어요`(수입은 `들어왔어요`). 기간 비교와 같은 색·이모지 규칙(`median-compare-delta-emoji`: 좋은 변화 😎, 나쁜 변화 🚨, 변동 없음이면 `평소와 같아요`)
   2. 근거 한 줄(`median-compare-summary`): `이번 달 N원 · 평소 N원`
   3. 눈에 띄는 카테고리(`median-compare-highlights`): 카테고리당 한 줄 — `기호 이름 · 평소 N원 · 이번 달 금액`. 이번 달 금액 vs 그 카테고리의 월 금액 중위값(기록 있는 달에서 그 카테고리가 없으면 0원으로 셈)
@@ -233,6 +233,7 @@ query(
      - 평소와의 차이(절댓값) 내림차순으로 **최대 4개**(`HIGHLIGHT_MAX_COUNT`)만 보여준다
      - 해당 없음: `눈에 띄는 카테고리는 없어요`(`median-compare-none`)
      - 색: 지출은 증가(high·new)=expense, 감소(low·missing)=income. 수입은 반대
+     - 행은 **링크**다 (행 끝 `›`). 누르면 그 카테고리의 AI 분석 페이지(`/inner/cashbook/analysis?category=…&group=…[&at=…][&sub=…]`)로 이동 — `docs/pages/inner/cashbook-category-analysis.md`
 
 ### 카테고리 도넛 차트 (`CategoryDonutChart`)
 
@@ -279,5 +280,6 @@ query(
 
 - 가계부 도메인: `03-domain-models.md` → CashbookEntry, CashbookCategory
 - 카테고리 분류: `pages/inner/cashbook-categories.md`
+- 카테고리 AI 분석(중위값 카드 드릴다운): `pages/inner/cashbook-category-analysis.md`
 - 사진 갤러리: `pages/inner/photo-gallery.md`
 - 가계부 상세: `pages/inner/cashbook.md`

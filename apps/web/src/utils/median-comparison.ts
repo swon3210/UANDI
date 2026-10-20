@@ -58,6 +58,23 @@ function sumByCategory(entries: CashbookEntry[]): Map<string, number> {
   return sums;
 }
 
+/**
+ * 한 카테고리의 "평소" 금액. 카드와 같은 규칙으로, 내역이 있는 달만 표본으로 삼고
+ * 그 달에 이 카테고리가 없으면 0원으로 센다. 표본이 `MEDIAN_MIN_SAMPLE_MONTHS` 미만이면 median은 null.
+ */
+export function categoryMedian(
+  previousMonths: CashbookEntry[][],
+  category: string
+): { median: number | null; sampleMonths: number } {
+  const samples = previousMonths.filter((entries) => entries.length > 0);
+  if (samples.length < MEDIAN_MIN_SAMPLE_MONTHS)
+    return { median: null, sampleMonths: samples.length };
+  const values = samples.map((entries) =>
+    entries.reduce((sum, e) => (e.category === category ? sum + e.amount : sum), 0)
+  );
+  return { median: median(values), sampleMonths: samples.length };
+}
+
 function classify(current: number, med: number): HighlightKind | null {
   if (med === 0) return current >= HIGHLIGHT_MIN_DIFF ? 'new' : null;
   if (current === 0) return med >= HIGHLIGHT_MIN_DIFF ? 'missing' : null;

@@ -13,7 +13,7 @@ const meta: Meta<typeof MedianCompareCard> = {
       </div>
     ),
   ],
-  args: { group: 'expense' },
+  args: { group: 'expense', hrefOf: (name) => `/inner/cashbook/analysis?category=${name}` },
 };
 export default meta;
 
@@ -102,6 +102,11 @@ export const LongCategoryName: Story = {
       ],
     },
   },
+};
+
+/** 링크 없이 읽기 전용으로 쓰는 경우 (행 끝 › 없음) */
+export const ReadOnly: Story = {
+  args: { ...Overspent.args, hrefOf: undefined },
 };
 
 /** 지난달 기록이 2개월 미만이라 비교할 수 없는 경우 */

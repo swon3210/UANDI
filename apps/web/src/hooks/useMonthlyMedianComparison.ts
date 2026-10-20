@@ -30,10 +30,47 @@ function combineMonths(results: UseQueryResult<CashbookEntry[]>[]) {
   };
 }
 
+export type MonthWindowEntries = {
+  /** [0] = 기준 달, [1..N] = 직전 N개월 (각 달 로딩 전엔 undefined) */
+  months: (CashbookEntry[] | undefined)[];
+  /** 기준 달·직전 달 각각의 1일 커서. months와 같은 순서 */
+  cursors: Dayjs[];
+  isLoading: boolean;
+};
+
 /**
- * 기준 달(`cursor`)의 내역을 직전 `MEDIAN_WINDOW_MONTHS`개월의 "평소"(중위값)와 비교한다.
- * 기준 달과 지난 달들을 대시보드와 같은 범위 쿼리 키로 조회해 추가 요청 없이 캐시를 함께 쓰고,
- * 기간을 이동하며 이미 본 달도 다시 쓴다. `enabled`가 false(연간 탭 등)면 조회하지 않는다.
+ * 기준 달(`cursor`)과 직전 `MEDIAN_WINDOW_MONTHS`개월의 내역을 달마다 대시보드와 같은
+ * 범위 쿼리 키로 조회한다 (추가 요청 없이 캐시를 함께 쓰고, 기간을 이동하며 이미 본 달도 재사용).
+ * `enabled`가 false면 조회하지 않는다.
+ */
+export function useMonthWindowEntries(
+  coupleId: string | null,
+  cursor: Dayjs,
+  enabled = true
+): MonthWindowEntries {
+  const cursors = useMemo(() => {
+    const base = cursor.startOf('month');
+    return Array.from({ length: MEDIAN_WINDOW_MONTHS + 1 }, (_, i) => base.subtract(i, 'month'));
+  }, [cursor]);
+
+  const { months, isLoading } = useQueries({
+    queries: cursors.map((month) => ({
+      ...cashbookEntriesInRangeOptions(
+        coupleId,
+        month.startOf('month').toDate(),
+        month.endOf('month').toDate()
+      ),
+      enabled: !!coupleId && enabled,
+    })),
+    combine: combineMonths,
+  });
+
+  return { months, cursors, isLoading: enabled && isLoading };
+}
+
+/**
+ * 기준 달의 내역을 직전 `MEDIAN_WINDOW_MONTHS`개월의 "평소"(중위값)와 비교한다.
+ * `enabled`가 false(연간 탭 등)면 조회하지 않는다.
  */
 export function useMonthlyMedianComparison(args: {
   coupleId: string | null;
@@ -44,22 +81,7 @@ export function useMonthlyMedianComparison(args: {
 }): MonthlyMedianComparisonResult {
   const { coupleId, cursor, group, subGroup, enabled } = args;
 
-  // [0] = 기준 달, [1..N] = 직전 N개월
-  const monthRanges = useMemo(() => {
-    const base = cursor.startOf('month');
-    return Array.from({ length: MEDIAN_WINDOW_MONTHS + 1 }, (_, i) => {
-      const month = base.subtract(i, 'month');
-      return { start: month.startOf('month').toDate(), end: month.endOf('month').toDate() };
-    });
-  }, [cursor]);
-
-  const { months, isLoading: isMonthsLoading } = useQueries({
-    queries: monthRanges.map(({ start, end }) => ({
-      ...cashbookEntriesInRangeOptions(coupleId, start, end),
-      enabled: !!coupleId && enabled,
-    })),
-    combine: combineMonths,
-  });
+  const { months, isLoading: isMonthsLoading } = useMonthWindowEntries(coupleId, cursor, enabled);
   const categoriesQuery = useCashbookCategories(coupleId);
 
   const isLoading = enabled && (isMonthsLoading || categoriesQuery.isLoading);
