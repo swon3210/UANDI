@@ -187,7 +187,7 @@ function computeTotal(entries: CashbookEntry[]): number {
 }
 
 /** 엔트리 타입+카테고리 이름 → 고정 여부. 같은 이름이 여러 세부 그룹에 있으면 하나라도 고정이면 고정. */
-function buildFixedLookup(categories: CashbookCategory[] | undefined): Set<string> {
+export function buildFixedLookup(categories: CashbookCategory[] | undefined): Set<string> {
   const fixed = new Set<string>();
   for (const c of categories ?? []) {
     if (FIXED_SUB_GROUPS.has(c.subGroup)) fixed.add(`${c.group}:${c.name}`);
@@ -195,7 +195,7 @@ function buildFixedLookup(categories: CashbookCategory[] | undefined): Set<strin
   return fixed;
 }
 
-function filterEntries(
+export function filterEntries(
   entries: CashbookEntry[],
   group: GroupFilter,
   subGroup: SubGroupFilter,

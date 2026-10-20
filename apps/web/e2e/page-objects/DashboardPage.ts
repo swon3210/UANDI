@@ -83,6 +83,28 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-category-option-${name}`);
   }
 
+  // 월 중위값 비교 카드
+  readonly medianCompare: Locator;
+  readonly medianCompareCaption: Locator;
+  readonly medianCompareSummary: Locator;
+  readonly medianCompareDelta: Locator;
+  readonly medianCompareDeltaEmoji: Locator;
+  readonly medianCompareOngoing: Locator;
+  readonly medianCompareHighlights: Locator;
+  readonly medianCompareNone: Locator;
+  readonly medianCompareEmpty: Locator;
+  readonly medianCompareMore: Locator;
+
+  /** 눈에 띄는 카테고리 행 */
+  medianHighlight(name: string): Locator {
+    return this.page.getByTestId(`median-highlight-${name}`);
+  }
+
+  /** 눈에 띄는 카테고리의 최근 N개월 최고/최저 배지 */
+  medianHighlightRecord(name: string): Locator {
+    return this.page.getByTestId(`median-highlight-record-${name}`);
+  }
+
   // 제거된 영역 검증용
   readonly recentPhotosSection: Locator;
   readonly monthlySummarySection: Locator;
@@ -136,6 +158,17 @@ export class DashboardPage {
     this.meterIncome = page.getByTestId('meter-income');
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
+
+    this.medianCompare = page.getByTestId('median-compare');
+    this.medianCompareCaption = page.getByTestId('median-compare-caption');
+    this.medianCompareSummary = page.getByTestId('median-compare-summary');
+    this.medianCompareDelta = page.getByTestId('median-compare-delta');
+    this.medianCompareDeltaEmoji = page.getByTestId('median-compare-delta-emoji');
+    this.medianCompareOngoing = page.getByTestId('median-compare-ongoing');
+    this.medianCompareHighlights = page.getByTestId('median-compare-highlights');
+    this.medianCompareNone = page.getByTestId('median-compare-none');
+    this.medianCompareEmpty = page.getByTestId('median-compare-empty');
+    this.medianCompareMore = page.getByTestId('median-compare-more');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');
