@@ -1311,8 +1311,7 @@ test.describe('대시보드', () => {
 
       const dashboard = await openExpenseMonthly(page);
       await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
-      await expect(dashboard.medianCompareCaption).toContainText('최근 6개월 중위값');
-      await expect(dashboard.medianCompareCaption).toContainText('4개월 기록');
+      await expect(dashboard.medianCompareCaption).toHaveText('최근 6개월 중위값');
 
       await expect(dashboard.medianCompareSummary).toContainText('100,000');
       await expect(dashboard.medianCompareSummary).toContainText('45,000');
@@ -1320,15 +1319,12 @@ test.describe('대시보드', () => {
       await expect(dashboard.medianCompareDelta).toContainText('122%');
       await expect(dashboard.medianCompareDelta).toContainText('많이 썼어요');
       await expect(dashboard.medianCompareDeltaEmoji).toHaveText(/🚨/);
-      // 이번 달은 아직 진행 중
-      await expect(dashboard.medianCompareOngoing).toContainText('진행 중');
 
       const food = dashboard.medianHighlight('식비');
       await expect(food).toBeVisible();
       await expect(food).toHaveAttribute('data-kind', 'high');
       await expect(food).toContainText('100,000');
       await expect(food).toContainText('평소 45,000원');
-      await expect(dashboard.medianHighlightRecord('식비')).toHaveText('최근 6개월 최고');
     });
 
     test('적게 쓴 카테고리·이번 달 없는 항목·처음 나온 항목을 구분해 알려준다', async ({
@@ -1361,15 +1357,15 @@ test.describe('대시보드', () => {
       const transport = dashboard.medianHighlight('교통');
       await expect(transport).toHaveAttribute('data-kind', 'low');
       await expect(transport).toContainText('평소 50,000원');
-      await expect(dashboard.medianHighlightRecord('교통')).toHaveText('최근 6개월 최저');
 
       const rent = dashboard.medianHighlight('월세');
       await expect(rent).toHaveAttribute('data-kind', 'missing');
-      await expect(rent).toContainText('이번 달엔 아직 없어요');
+      await expect(rent).toContainText('0원');
+      await expect(rent).toContainText('평소 700,000원');
 
       const date = dashboard.medianHighlight('데이트');
       await expect(date).toHaveAttribute('data-kind', 'new');
-      await expect(date).toContainText('지난 6개월엔 없던 항목');
+      await expect(date).toContainText('평소엔 없음');
 
       // 평소와 같은 카테고리는 목록에 없다
       await expect(dashboard.medianHighlight('식비')).toHaveCount(0);
@@ -1472,9 +1468,7 @@ test.describe('대시보드', () => {
       await expect(dashboard.medianHighlight('정기급여')).toHaveAttribute('data-kind', 'low');
     });
 
-    test('눈에 띄는 카테고리가 많으면 5개까지 보여주고 더 보기로 펼친다', async ({
-      authedContext,
-    }) => {
+    test('눈에 띄는 카테고리는 차이가 큰 순으로 4개까지만 보여준다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       const names = ['식비', '교통', '여행', '소비', '월세', '보험'];
@@ -1486,6 +1480,7 @@ test.describe('대시보드', () => {
           names.map((name) => [name, 10000])
         );
       }
+      // 식비가 가장 적게, 보험이 가장 많이 늘었다
       await seedMonth(
         coupleId,
         uid,
@@ -1495,12 +1490,13 @@ test.describe('대시보드', () => {
 
       const dashboard = await openExpenseMonthly(page);
       await expect(dashboard.medianCompareHighlights).toBeVisible({ timeout: 10000 });
-      await expect(dashboard.medianCompareHighlights.locator('[data-kind]')).toHaveCount(5);
-      await expect(dashboard.medianCompareMore).toHaveText('1개 더 보기');
-
-      await dashboard.medianCompareMore.click();
-      await expect(dashboard.medianCompareHighlights.locator('[data-kind]')).toHaveCount(6);
-      await expect(dashboard.medianCompareMore).toHaveCount(0);
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]')).toHaveCount(4);
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]').first()).toContainText(
+        '보험'
+      );
+      // 차이가 가장 작은 둘은 잘린다
+      await expect(dashboard.medianHighlight('식비')).toHaveCount(0);
+      await expect(dashboard.medianHighlight('교통')).toHaveCount(0);
     });
   });
 });

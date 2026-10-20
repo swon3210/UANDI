@@ -9,8 +9,8 @@ export const HIGHLIGHT_HIGH_RATIO = 1.5;
 export const HIGHLIGHT_LOW_RATIO = 0.5;
 /** 비율이 커도 이 금액보다 작은 차이는 무시한다 (예: 2,000원 → 6,000원) */
 export const HIGHLIGHT_MIN_DIFF = 10_000;
-/** 처음에 보여줄 눈에 띄는 카테고리 수. 나머지는 더 보기로 펼친다 */
-export const HIGHLIGHT_VISIBLE_COUNT = 5;
+/** 카드에 보여줄 눈에 띄는 카테고리 최대 수 (차이 큰 순) */
+export const HIGHLIGHT_MAX_COUNT = 4;
 
 export type HighlightKind =
   /** 평소보다 유난히 많이 (중위값 × 1.5 이상) */
@@ -29,10 +29,6 @@ export type CategoryHighlight = {
   current: number;
   /** 지난 달들의 월 금액 중위값 */
   median: number;
-  /** 지난 N개월 중 이 카테고리가 기록된 달 수 (`new`에서 "없던 항목"/"드문 항목" 구분용) */
-  seenMonths: number;
-  /** 이번 달이 지난 N개월 중 최고/최저인지 (`high`/`low`에서만) */
-  record: 'max' | 'min' | null;
 };
 
 export type MedianComparison = {
@@ -44,7 +40,7 @@ export type MedianComparison = {
     current: number;
     median: number;
   };
-  /** 평소와의 차이(절댓값) 내림차순 */
+  /** 평소와의 차이(절댓값) 내림차순, 최대 HIGHLIGHT_MAX_COUNT개 */
   highlights: CategoryHighlight[];
 };
 
@@ -65,8 +61,7 @@ function sumByCategory(entries: CashbookEntry[]): Map<string, number> {
 function classify(current: number, med: number): HighlightKind | null {
   if (med === 0) return current >= HIGHLIGHT_MIN_DIFF ? 'new' : null;
   if (current === 0) return med >= HIGHLIGHT_MIN_DIFF ? 'missing' : null;
-  const diff = current - med;
-  if (Math.abs(diff) < HIGHLIGHT_MIN_DIFF) return null;
+  if (Math.abs(current - med) < HIGHLIGHT_MIN_DIFF) return null;
   if (current >= med * HIGHLIGHT_HIGH_RATIO) return 'high';
   if (current <= med * HIGHLIGHT_LOW_RATIO) return 'low';
   return null;
@@ -100,24 +95,10 @@ export function buildMedianComparison(
 
   const highlights: CategoryHighlight[] = [];
   for (const category of categories) {
-    const values = sampleSums.map((sums) => sums.get(category) ?? 0);
-    const med = median(values);
+    const med = median(sampleSums.map((sums) => sums.get(category) ?? 0));
     const cur = currentSums.get(category) ?? 0;
     const kind = classify(cur, med);
-    if (!kind) continue;
-
-    let record: CategoryHighlight['record'] = null;
-    if (kind === 'high' && cur > Math.max(...values)) record = 'max';
-    if (kind === 'low' && cur < Math.min(...values)) record = 'min';
-
-    highlights.push({
-      category,
-      kind,
-      current: cur,
-      median: med,
-      seenMonths: values.filter((v) => v > 0).length,
-      record,
-    });
+    if (kind) highlights.push({ category, kind, current: cur, median: med });
   }
   highlights.sort((a, b) => Math.abs(b.current - b.median) - Math.abs(a.current - a.median));
 
@@ -125,6 +106,6 @@ export function buildMedianComparison(
     windowMonths: previousMonths.length,
     sampleMonths: samples.length,
     total: { current: currentTotal, median: median(monthTotals) },
-    highlights,
+    highlights: highlights.slice(0, HIGHLIGHT_MAX_COUNT),
   };
 }

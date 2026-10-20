@@ -448,15 +448,10 @@ export function BudgetDashboard({ coupleId }: Props) {
           </div>
           {isMedianEnabled ? (
             <div className="rounded-xl border border-border bg-card p-4">
-              {/* 기간·그룹·세부 필터가 바뀌면 펼친 "더 보기"도 접힌 상태로 */}
               <MedianCompareCard
-                key={`${cursor.valueOf()}-${group}-${subGroup}`}
                 comparison={medianComparison}
                 isLoading={isMedianLoading}
                 group={group}
-                currentLabel={label}
-                ongoingDay={isCurrentPeriod('monthly', cursor) ? dayjs().date() : undefined}
-                colorOf={colorOf}
               />
             </div>
           ) : null}
