@@ -22,7 +22,9 @@ import {
 } from '@/hooks/useDashboardData';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
+import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
 import type { CategoryGroup } from '@/types';
+import { buildCategoryAnalysisHref } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import {
   getPeriodLabel,
@@ -41,6 +43,7 @@ import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
+import { MedianCompareCard } from './MedianCompareCard';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 
 type Props = {
@@ -130,6 +133,16 @@ export function BudgetDashboard({ coupleId }: Props) {
     subGroup,
     cursor,
     compareCursor,
+  });
+
+  // 월간 탭의 지출/수입에서만 "평소"(직전 6개월 중위값)와 비교한다. 연간·전체 탭에선 조회하지 않는다.
+  const isMedianEnabled = period === 'monthly' && group !== 'all';
+  const { comparison: medianComparison, isLoading: isMedianLoading } = useMonthlyMedianComparison({
+    coupleId,
+    cursor,
+    group,
+    subGroup,
+    enabled: isMedianEnabled,
   });
 
   // 기간 단위/기준 기간이 바뀌면 비교 기간과 비교 대상 카테고리는 기본값으로 돌아간다.
@@ -434,6 +447,18 @@ export function BudgetDashboard({ coupleId }: Props) {
               onSelectCategoriesClick={isGroupOverview ? undefined : handleOpenCategorySheet}
             />
           </div>
+          {isMedianEnabled ? (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <MedianCompareCard
+                comparison={medianComparison}
+                isLoading={isMedianLoading}
+                group={group}
+                hrefOf={(category) =>
+                  buildCategoryAnalysisHref({ category, group, subGroup, cursor })
+                }
+              />
+            </div>
+          ) : null}
         </>
       )}
     </section>

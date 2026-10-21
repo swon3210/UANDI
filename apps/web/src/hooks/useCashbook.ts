@@ -77,12 +77,17 @@ export function useMonthlyEntries(coupleId: string | null) {
   return useCashbookEntries(coupleId, now.year(), now.month());
 }
 
-export function useCashbookEntriesInRange(coupleId: string | null, start: Date, end: Date) {
-  return useQuery({
+/** 범위 조회 쿼리 옵션. 같은 범위를 여러 곳(대시보드·중위값 비교)에서 쓰면 캐시를 공유한다. */
+export function cashbookEntriesInRangeOptions(coupleId: string | null, start: Date, end: Date) {
+  return queryOptions({
     queryKey: [QUERY_KEY, coupleId, 'range', start.toISOString(), end.toISOString()],
     queryFn: () => getEntriesInRange(coupleId!, start, end),
     enabled: !!coupleId,
   });
+}
+
+export function useCashbookEntriesInRange(coupleId: string | null, start: Date, end: Date) {
+  return useQuery(cashbookEntriesInRangeOptions(coupleId, start, end));
 }
 
 /**

@@ -1273,4 +1273,230 @@ test.describe('대시보드', () => {
       await expect(dashboard.categoryDonutItem('교통').getByRole('button')).toHaveCount(0);
     });
   });
+
+  test.describe('월 중위값 비교 카드', () => {
+    /** offset개월 전 달의 1일 정오로 지출 내역을 시드한다 (0 = 이번 달) */
+    async function seedMonth(
+      coupleId: string,
+      uid: string,
+      offset: number,
+      rows: Array<[string, number]>,
+      type: 'expense' | 'income' = 'expense'
+    ) {
+      const date = dayjs().subtract(offset, 'month').startOf('month').add(12, 'hour').toISOString();
+      for (const [category, amount] of rows) {
+        await seedCashbookEntry(coupleId, uid, { type, amount, category, date });
+      }
+    }
+
+    async function openExpenseMonthly(page: DashboardPage['page']) {
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabExpense.click();
+      return dashboard;
+    }
+
+    test('이번 달 합계를 최근 6개월 중위값과 비교하고 많이 쓴 카테고리를 알려준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      // 식비: 4개월 전부터 30k, 40k, 50k, 60k → 중위값 45,000
+      const previous = [60000, 50000, 40000, 30000];
+      for (const [i, amount] of previous.entries()) {
+        await seedMonth(coupleId, uid, i + 1, [['식비', amount]]);
+      }
+      await seedMonth(coupleId, uid, 0, [['식비', 100000]]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.medianCompareCaption).toHaveText('최근 6개월 중위값');
+
+      await expect(dashboard.medianCompareSummary).toContainText('100,000');
+      await expect(dashboard.medianCompareSummary).toContainText('45,000');
+      await expect(dashboard.medianCompareDelta).toContainText('55,000');
+      await expect(dashboard.medianCompareDelta).toContainText('122%');
+      await expect(dashboard.medianCompareDelta).toContainText('많이 썼어요');
+      await expect(dashboard.medianCompareDeltaEmoji).toHaveText(/🚨/);
+
+      const food = dashboard.medianHighlight('식비');
+      await expect(food).toBeVisible();
+      await expect(food).toHaveAttribute('data-kind', 'high');
+      await expect(food).toContainText('100,000');
+      await expect(food).toContainText('평소 45,000원');
+    });
+
+    test('적게 쓴 카테고리·이번 달 없는 항목·처음 나온 항목을 구분해 알려준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      for (const offset of [1, 2, 3]) {
+        await seedMonth(coupleId, uid, offset, [
+          ['월세', 700000],
+          ['교통', 50000],
+          ['식비', 30000],
+        ]);
+      }
+      await seedMonth(coupleId, uid, 0, [
+        ['교통', 10000],
+        ['식비', 30000],
+        ['데이트', 20000],
+      ]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
+
+      // 합계: 60,000 vs 중위값 780,000 → 720,000 적게 (92%)
+      await expect(dashboard.medianCompareDelta).toContainText('720,000');
+      await expect(dashboard.medianCompareDelta).toContainText('92%');
+      await expect(dashboard.medianCompareDelta).toContainText('적게 썼어요');
+      await expect(dashboard.medianCompareDeltaEmoji).toHaveText(/😎/);
+
+      const transport = dashboard.medianHighlight('교통');
+      await expect(transport).toHaveAttribute('data-kind', 'low');
+      await expect(transport).toContainText('평소 50,000원');
+
+      const rent = dashboard.medianHighlight('월세');
+      await expect(rent).toHaveAttribute('data-kind', 'missing');
+      await expect(rent).toContainText('0원');
+      await expect(rent).toContainText('평소 700,000원');
+
+      const date = dashboard.medianHighlight('데이트');
+      await expect(date).toHaveAttribute('data-kind', 'new');
+      await expect(date).toContainText('평소엔 없음');
+
+      // 평소와 같은 카테고리는 목록에 없다
+      await expect(dashboard.medianHighlight('식비')).toHaveCount(0);
+      // 차이가 큰 순서: 월세 → 교통 → 데이트
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]')).toHaveCount(3);
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]').first()).toContainText(
+        '월세'
+      );
+    });
+
+    test('평소와 비슷하면 눈에 띄는 카테고리가 없다고 알려준다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await seedMonth(coupleId, uid, 1, [['식비', 50000]]);
+      await seedMonth(coupleId, uid, 2, [['식비', 50000]]);
+      await seedMonth(coupleId, uid, 0, [['식비', 52000]]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.medianCompareDelta).toContainText('2,000');
+      await expect(dashboard.medianCompareNone).toBeVisible();
+      await expect(dashboard.medianHighlight('식비')).toHaveCount(0);
+    });
+
+    test('지난달 기록이 2개월 미만이면 비교하지 않고 안내만 보여준다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await seedMonth(coupleId, uid, 1, [['식비', 30000]]);
+      await seedMonth(coupleId, uid, 0, [['식비', 50000]]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.medianCompareEmpty).toBeVisible();
+      await expect(dashboard.medianCompareSummary).toHaveCount(0);
+    });
+
+    test('연간 탭과 전체 탭에서는 보이지 않는다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await seedMonth(coupleId, uid, 1, [['식비', 30000]]);
+      await seedMonth(coupleId, uid, 2, [['식비', 30000]]);
+      await seedMonth(coupleId, uid, 0, [['식비', 50000]]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompare).toBeVisible({ timeout: 10000 });
+
+      await dashboard.periodTabYearly.click();
+      await expect(dashboard.trendChart).toBeVisible();
+      await expect(dashboard.medianCompare).toHaveCount(0);
+
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabAll.click();
+      await expect(dashboard.meterPercent).toBeVisible();
+      await expect(dashboard.medianCompare).toHaveCount(0);
+    });
+
+    test('고정/변동 세부 탭을 고르면 그 세부 그룹만 비교한다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      for (const offset of [1, 2]) {
+        await seedMonth(coupleId, uid, offset, [
+          ['월세', 700000],
+          ['식비', 30000],
+        ]);
+      }
+      await seedMonth(coupleId, uid, 0, [
+        ['월세', 700000],
+        ['식비', 100000],
+      ]);
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompareSummary).toContainText('800,000', { timeout: 10000 });
+      await expect(dashboard.medianCompareSummary).toContainText('730,000');
+
+      await dashboard.subGroupTab('변동 지출').click();
+      await expect(dashboard.medianCompareSummary).toContainText('100,000');
+      await expect(dashboard.medianCompareSummary).toContainText('30,000');
+      await expect(dashboard.medianCompareSummary).not.toContainText('730,000');
+    });
+
+    test('수입 탭에서는 수입 기준 문구와 색으로 보여준다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await seedMonth(coupleId, uid, 1, [['정기급여', 3000000]], 'income');
+      await seedMonth(coupleId, uid, 2, [['정기급여', 3000000]], 'income');
+      await seedMonth(coupleId, uid, 0, [['정기급여', 1000000]], 'income');
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.periodTabMonthly.click();
+      await dashboard.groupTabIncome.click();
+
+      // 1,000,000 vs 중위값 3,000,000 → 2,000,000 적게 (67%)
+      await expect(dashboard.medianCompareDelta).toContainText('2,000,000', { timeout: 10000 });
+      await expect(dashboard.medianCompareDelta).toContainText('67%');
+      await expect(dashboard.medianCompareDelta).toContainText('적게 들어왔어요');
+      await expect(dashboard.medianCompareDeltaEmoji).toHaveText(/🚨/);
+      await expect(dashboard.medianHighlight('정기급여')).toHaveAttribute('data-kind', 'low');
+    });
+
+    test('눈에 띄는 카테고리는 차이가 큰 순으로 4개까지만 보여준다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      const names = ['식비', '교통', '여행', '소비', '월세', '보험'];
+      for (const offset of [1, 2]) {
+        await seedMonth(
+          coupleId,
+          uid,
+          offset,
+          names.map((name) => [name, 10000])
+        );
+      }
+      // 식비가 가장 적게, 보험이 가장 많이 늘었다
+      await seedMonth(
+        coupleId,
+        uid,
+        0,
+        names.map((name, i) => [name, 100000 + i * 1000])
+      );
+
+      const dashboard = await openExpenseMonthly(page);
+      await expect(dashboard.medianCompareHighlights).toBeVisible({ timeout: 10000 });
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]')).toHaveCount(4);
+      await expect(dashboard.medianCompareHighlights.locator('[data-kind]').first()).toContainText(
+        '보험'
+      );
+      // 차이가 가장 작은 둘은 잘린다
+      await expect(dashboard.medianHighlight('식비')).toHaveCount(0);
+      await expect(dashboard.medianHighlight('교통')).toHaveCount(0);
+    });
+  });
 });

@@ -21,7 +21,8 @@ Next.js API Route를 통해 서버 사이드에서 호출한다 (API 키 보호)
 apps/web/src/app/api/ai/
 ├── parse-entry/route.ts      # 자연어 가계부 파싱
 ├── suggest-tags/route.ts     # 사진 자동 태깅
-└── analyze-spending/route.ts # 지출 패턴 분석
+├── analyze-spending/route.ts # 지출 패턴 분석
+└── analyze-category/route.ts # 카테고리 하나 심층 분석 (대시보드 중위값 카드 드릴다운)
 ```
 
 ### 공통 규칙
@@ -56,14 +57,15 @@ textarea에 📎 버튼으로 영수증/거래내역 스크린샷을 첨부할 �
 
 단건 입력:
 
-| 입력 | 출력 (entries[0]) |
-|------|------|
-| "점심 김치찌개 9000원" | `{ type: "expense", amount: 9000, category: "식비", description: "김치찌개", date: "오늘" }` |
-| "월급 350만원" | `{ type: "income", amount: 3500000, category: "정기급여", description: "월급", date: "오늘" }` |
+| 입력                   | 출력 (entries[0])                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| "점심 김치찌개 9000원" | `{ type: "expense", amount: 9000, category: "식비", description: "김치찌개", date: "오늘" }`   |
+| "월급 350만원"         | `{ type: "income", amount: 3500000, category: "정기급여", description: "월급", date: "오늘" }` |
 
 다건 입력:
 
 입력:
+
 ```
 점심 김치찌개 9000원
 어제 택시 15000원
@@ -71,13 +73,35 @@ textarea에 📎 버튼으로 영수증/거래내역 스크린샷을 첨부할 �
 ```
 
 출력:
+
 ```ts
 {
   entries: [
-    { type: "expense", amount: 9000, category: "식비", description: "김치찌개", date: "오늘", confidence: 0.95 },
-    { type: "expense", amount: 15000, category: "교통", description: "택시", date: "어제", confidence: 0.9 },
-    { type: "income", amount: 3500000, category: "정기급여", description: "월급", date: "오늘", confidence: 0.95 },
-  ]
+    {
+      type: 'expense',
+      amount: 9000,
+      category: '식비',
+      description: '김치찌개',
+      date: '오늘',
+      confidence: 0.95,
+    },
+    {
+      type: 'expense',
+      amount: 15000,
+      category: '교통',
+      description: '택시',
+      date: '어제',
+      confidence: 0.9,
+    },
+    {
+      type: 'income',
+      amount: 3500000,
+      category: '정기급여',
+      description: '월급',
+      date: '오늘',
+      confidence: 0.95,
+    },
+  ];
 }
 ```
 
@@ -88,6 +112,7 @@ textarea에 📎 버튼으로 영수증/거래내역 스크린샷을 첨부할 �
 **`POST /api/ai/parse-entries`**
 
 Request:
+
 ```ts
 {
   text?: string;          // 사용자 자연어 입력 (여러 줄 가능, max 1000자)
@@ -133,16 +158,18 @@ Request:
 - 텍스트가 함께 오면 첫 이미지 호출에 같이 싣는다.
 
 Response:
+
 ```ts
 {
   entries: {
-    type: CashbookEntryType;  // 'income' | 'expense'
+    type: CashbookEntryType; // 'income' | 'expense'
     amount: number;
-    category: string;         // categories 목록에서 가장 적합한 것 선택
+    category: string; // categories 목록에서 가장 적합한 것 선택
     description: string;
-    date: string;             // ISO 8601 (YYYY-MM-DD)
-    confidence: number;       // 0~1 (파싱 신뢰도)
-  }[];                        // 1~100개
+    date: string; // ISO 8601 (YYYY-MM-DD)
+    confidence: number; // 0~1 (파싱 신뢰도)
+  }
+  []; // 1~100개
 }
 ```
 
@@ -189,6 +216,7 @@ Response:
 **`POST /api/ai/suggest-tags`**
 
 Request:
+
 ```ts
 {
   imageUrl: string;         // Firebase Storage URL (업로드 완료 후)
@@ -197,6 +225,7 @@ Request:
 ```
 
 Response:
+
 ```ts
 {
   suggestedTags: string[];  // 3~5개 태그 제안
@@ -235,6 +264,7 @@ Response:
 **`POST /api/ai/analyze-spending`**
 
 Request:
+
 ```ts
 {
   entries: {
@@ -255,6 +285,7 @@ Request:
 ```
 
 Response (스트리밍):
+
 ```ts
 // text/event-stream (SSE)
 // 청크 단위로 마크다운 텍스트 전달
@@ -283,6 +314,25 @@ Response (스트리밍):
 
 ---
 
+## 기능 4: 카테고리 AI 분석
+
+### 목적
+
+대시보드 "평소와 비교" 카드에서 눈에 띄는 카테고리를 눌렀을 때, 그 카테고리 하나의 이번 달 내역을
+최근 달들의 평소(중위값)와 비교해 원인·눈에 띄는 내역·제안을 설명한다.
+
+### UI 위치
+
+`/inner/cashbook/analysis` 페이지 (진입: 대시보드 `MedianCompareCard` 행). 페이지 진입 시 자동 실행,
+"다시 분석"으로 재생성. 상세는 `docs/pages/inner/cashbook-category-analysis.md`.
+
+### API Route
+
+**`POST /api/ai/analyze-category`** — 요청/응답 형식과 프롬프트 섹션은 위 페이지 명세 참고.
+응답은 `analyze-spending`과 같은 SSE 스트리밍. 인증·일일 한도·AI 설정(말투/관점)도 동일하게 적용된다.
+
+---
+
 ## 환경 변수
 
 ```env
@@ -290,7 +340,7 @@ Response (스트리밍):
 OPENAI_API_KEY=sk-...
 ```
 
-> 이 값은 **서버 사이드 전용** (NEXT_PUBLIC_ 접두사 없음).
+> 이 값은 **서버 사이드 전용** (NEXT*PUBLIC* 접두사 없음).
 > 클라이언트에 노출되지 않는다.
 
 ---
@@ -299,7 +349,7 @@ OPENAI_API_KEY=sk-...
 
 과도한 API 비용을 방지하기 위해 사용량을 제한한다.
 
-- **일일 제한**: 커플당 50회/일 (3개 API 합산)
+- **일일 제한**: 커플당 50회/일 (모든 AI API 합산)
 - **저장 위치**: `couples/{coupleId}/meta/aiUsage`
 - **필드**: `{ date: string, count: number }`
 - **초과 시**: `{ error: "일일 사용 한도를 초과했습니다" }` (429)
@@ -308,11 +358,11 @@ OPENAI_API_KEY=sk-...
 
 ## 비용 추정
 
-| 기능 | 모델 | 입력 토큰 | 출력 토큰 | 건당 비용 (약) |
-|------|------|----------|----------|--------------|
-| 자연어/영수증 파싱 | GPT-5 mini | ~200 (텍스트) / ~수천 (이미지) | ~100~수천 | $0.001~ |
-| 사진 태깅 | GPT-4o | ~1000 (이미지) | ~100 | $0.01 |
-| 지출 분석 | GPT-4o | ~500 | ~500 | $0.01 |
+| 기능               | 모델       | 입력 토큰                      | 출력 토큰 | 건당 비용 (약) |
+| ------------------ | ---------- | ------------------------------ | --------- | -------------- |
+| 자연어/영수증 파싱 | GPT-5 mini | ~200 (텍스트) / ~수천 (이미지) | ~100~수천 | $0.001~        |
+| 사진 태깅          | GPT-4o     | ~1000 (이미지)                 | ~100      | $0.01          |
+| 지출 분석          | GPT-4o     | ~500                           | ~500      | $0.01          |
 
 **월 예상**: 커플 1쌍이 매일 사용 시 약 $5~10/월
 
