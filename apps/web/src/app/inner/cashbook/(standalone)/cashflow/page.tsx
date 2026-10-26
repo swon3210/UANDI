@@ -21,7 +21,6 @@ import { resolveInitialCashByUid, type CashflowMember } from '@/utils/cashflow';
 import { CashflowCardList } from '@/components/cashbook/CashflowCardList';
 import { CashflowBaselineCard } from '@/components/cashbook/CashflowBaselineCard';
 import { CashflowNegativeBanner } from '@/components/cashbook/CashflowNegativeBanner';
-import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
 import {
   RecurrenceSuggestionCard,
   type RecurrenceSuggestionView,
@@ -223,8 +222,6 @@ export default function CashflowCalendarPage() {
           </Button>
         }
       />
-
-      <CashbookTabs />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         {isLoading ? (

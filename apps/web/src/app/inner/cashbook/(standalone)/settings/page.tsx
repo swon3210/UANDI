@@ -39,6 +39,14 @@ export default function CashbookSettingsPage() {
         <section className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">관리</h2>
           <Link
+            href="/inner/cashbook/plan/annual"
+            data-testid="settings-link-annual-plan"
+            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
+          >
+            경제 목표
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
+          <Link
             href="/inner/cashbook/categories"
             data-testid="settings-link-categories"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
