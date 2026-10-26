@@ -15,6 +15,18 @@ test.describe('가계부 진입 경로 (상단 탭 없음)', () => {
     await expect(authedPage.getByTestId('cashbook-tabs')).toHaveCount(0);
   });
 
+  test('좌우 버튼 폭이 달라도 대시보드 제목은 헤더 정중앙에 있다', async ({ authedPage }) => {
+    await authedPage.goto('/inner/cashbook');
+    const header = authedPage.getByTestId('dashboard-header');
+    const title = header.getByText('대시보드', { exact: true });
+    const headerBox = await header.boundingBox();
+    const titleBox = await title.boundingBox();
+    if (!headerBox || !titleBox) throw new Error('헤더/제목 위치를 읽지 못했다');
+    const headerCenter = headerBox.x + headerBox.width / 2;
+    const titleCenter = titleBox.x + titleBox.width / 2;
+    expect(Math.abs(headerCenter - titleCenter)).toBeLessThan(2);
+  });
+
   test('대시보드 헤더의 내역 버튼으로 내역에 진입한다', async ({ authedPage }) => {
     await authedPage.goto('/inner/cashbook');
     await authedPage.getByTestId('dashboard-history-link').click();
