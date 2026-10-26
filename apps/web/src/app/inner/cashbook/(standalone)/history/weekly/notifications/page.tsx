@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, Smartphone } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
@@ -17,6 +16,7 @@ import { NotificationSettingsForm } from '@/components/cashbook/NotificationSett
 import { InstallPwaBanner } from '@/components/InstallPwaBanner';
 import { MascotLoader } from '@/components/MascotLoader';
 import { sendTestPush } from '@/services/test-push';
+import { BackButton } from '@/components/shell/BackButton';
 
 function reportFcmResult(result: FcmEnableState) {
   if (result === 'denied') {
@@ -47,7 +47,6 @@ const DEFAULT_VALUES = {
 };
 
 export default function NotificationSettingsPage() {
-  const router = useRouter();
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
   const coupleId = user?.coupleId ?? '';
@@ -138,17 +137,7 @@ export default function NotificationSettingsPage() {
       <Header
         title="알림 설정"
         data-testid="notification-settings-header"
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => router.back()}
-            aria-label="뒤로가기"
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
+        leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
       />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4">

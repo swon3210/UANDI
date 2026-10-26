@@ -13,20 +13,21 @@ export function Header({ title, leftSlot, rightSlot, className, ...props }: Head
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 h-14 flex items-center gap-2 px-4 bg-background border-b border-border',
+        // 좌우 슬롯 폭이 달라도 제목이 화면 정중앙에 오도록 양옆 칸을 같은 폭(1fr)으로 둔다
+        'sticky top-0 z-50 h-14 grid grid-cols-[minmax(2.5rem,1fr)_minmax(0,auto)_minmax(2.5rem,1fr)] items-center gap-2 px-4 bg-background border-b border-border',
         className
       )}
       {...props}
     >
-      <div className="flex items-center gap-1 min-w-10">{leftSlot}</div>
+      <div className="flex items-center gap-1 justify-self-start">{leftSlot}</div>
       {title ? (
-        <span className="flex-1 text-center text-base font-semibold text-foreground truncate">
+        <span className="text-center text-base font-semibold text-foreground truncate">
           {title}
         </span>
       ) : (
-        <span className="flex-1" aria-hidden="true" />
+        <span aria-hidden="true" />
       )}
-      <div className="flex items-center gap-1 min-w-10 justify-end">{rightSlot}</div>
+      <div className="flex items-center gap-1 justify-self-end">{rightSlot}</div>
     </header>
   );
 }

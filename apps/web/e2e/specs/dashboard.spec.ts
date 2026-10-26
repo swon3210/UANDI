@@ -188,7 +188,7 @@ test.describe('대시보드', () => {
       await dashboard.periodPrevButton.click();
       await expect(dashboard.periodNavLabel).toHaveText(`${year}년`);
 
-      await authedPage.getByTestId('cashbook-tab-history').click();
+      await authedPage.getByTestId('dashboard-history-link').click();
       await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
       await authedPage.goBack();
 
@@ -242,7 +242,7 @@ test.describe('대시보드', () => {
         await dashboard.groupTabExpense.click();
         await expect(authedPage).toHaveURL(/group=expense/);
 
-        await authedPage.getByTestId('cashbook-tab-history').click();
+        await authedPage.getByTestId('dashboard-history-link').click();
         await expect(authedPage).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
         await authedPage.goBack();
 

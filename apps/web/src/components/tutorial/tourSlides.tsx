@@ -2,15 +2,7 @@
 
 import type { FC } from 'react';
 import Image, { type StaticImageData } from 'next/image';
-import {
-  LayoutDashboard,
-  Receipt,
-  ArrowRightLeft,
-  Target,
-  Image as ImageIcon,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
+import { Image as ImageIcon, TrendingUp, Users } from 'lucide-react';
 import { cn } from '@uandi/ui';
 // 둘이 함께 가계부 쓰는 마스코트(환영) / 성공 마스코트(마무리). 정적 PNG라 screenshots:tour와 무관하다.
 import mascotSplash from '@uandi/ui/assets/mascot-splash.png';
@@ -66,34 +58,9 @@ function MascotPreview({ src, widthClassName }: { src: StaticImageData; widthCla
   );
 }
 
-/** 슬라이드 1 — 환영 + 가계부 상단 탭 4개 안내(실제 CashbookTabs와 동일한 구성) */
-const CASHBOOK_TABS = [
-  { label: '대시보드', Icon: LayoutDashboard },
-  { label: '내역', Icon: Receipt },
-  { label: '현금흐름', Icon: ArrowRightLeft },
-  { label: '목표', Icon: Target },
-] as const;
-
+/** 슬라이드 1 — 환영. 둘이 함께 가계부 쓰는 마스코트 */
 const WelcomePreview: FC = () => (
-  <div className="space-y-4">
-    <MascotPreview src={mascotSplash} widthClassName="w-[200px] sm:w-[220px]" />
-    <nav className="flex items-stretch gap-1.5" aria-label="가계부 메뉴 미리보기">
-      {CASHBOOK_TABS.map((t, i) => (
-        <div
-          key={t.label}
-          className={cn(
-            'flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 py-2.5 text-sm font-medium',
-            i === 0
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-muted text-muted-foreground'
-          )}
-        >
-          <t.Icon size={15} aria-hidden className="shrink-0" />
-          {t.label}
-        </div>
-      ))}
-    </nav>
-  </div>
+  <MascotPreview src={mascotSplash} widthClassName="w-[200px] sm:w-[220px]" />
 );
 
 /** 슬라이드 2~5 — 가계부 실제 화면 스크린샷 */
@@ -167,13 +134,15 @@ export const TOUR_SLIDES: TourSlide[] = [
   {
     id: 'cashbook-budget',
     title: '목표 세우기',
-    description: '한 해 예산을 미리 세우고 월별로 분배해요.',
+    description:
+      '한 해 예산을 미리 세우고 월별로 분배해요.\n목표는 가계부 설정에서 언제든 다시 볼 수 있어요.',
     Preview: BudgetPreview,
   },
   {
     id: 'cashbook-cashflow',
     title: '현금흐름으로 예측하기',
-    description: '날짜별 들어올 돈·나갈 돈과 예정된 내역을 한눈에 확인해요.',
+    description:
+      '날짜별 들어올 돈·나갈 돈과 예정된 내역을 한눈에 확인해요.\n내역 화면의 “예상금액 조회하기”로 들어가요.',
     Preview: CashflowPreview,
   },
   {

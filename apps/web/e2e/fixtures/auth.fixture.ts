@@ -39,6 +39,18 @@ async function maybeSeedTourSeen(context: BrowserContext, seed: boolean) {
   });
 }
 
+/**
+ * 올해 경제 목표 자동 진입(목표 미설정 시 대시보드 → 위저드 연 1회 이동) 플래그를 미리 심는다.
+ * 목표 없이 대시보드를 쓰는 테스트가 위저드로 튕기지 않게 막는다.
+ * 자동 진입 자체를 검증하는 spec은 test.use({ seedAnnualPlanPrompted: false })로 해제한다.
+ */
+async function maybeSeedAnnualPlanPrompted(context: BrowserContext, seed: boolean) {
+  if (!seed) return;
+  await context.addInitScript(() => {
+    window.localStorage.setItem(`moa:annual-plan-prompt:${new Date().getFullYear()}`, 'true');
+  });
+}
+
 type AuthContext = {
   page: Page;
   uid: string;
@@ -68,10 +80,13 @@ type Fixtures = {
 type TourFixtureOptions = {
   /** 튜토리얼 자동 노출 플래그를 미리 심을지 여부 (기본 true → 자동 노출 비활성) */
   seedTourSeen: boolean;
+  /** 올해 목표 자동 진입 플래그를 미리 심을지 여부 (기본 true → 자동 진입 비활성) */
+  seedAnnualPlanPrompted: boolean;
 };
 
 export const test = base.extend<Fixtures & TourFixtureOptions>({
   seedTourSeen: [true, { option: true }],
+  seedAnnualPlanPrompted: [true, { option: true }],
 
   noCoupleAuthedPage: async ({ page, context }, use) => {
     await clearEmulatorData();
@@ -87,7 +102,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await use(page);
   },
 
-  authedPage: async ({ page, context, seedTourSeen }, use) => {
+  authedPage: async ({ page, context, seedTourSeen, seedAnnualPlanPrompted }, use) => {
     await clearEmulatorData();
     // 이전 테스트에서 남은 쿠키 제거 (미들웨어가 잘못 리다이렉트하지 않도록)
     await context.clearCookies();
@@ -99,6 +114,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await seedUserDocument(uid2, EMAIL_2, coupleId);
 
     await maybeSeedTourSeen(context, seedTourSeen);
+    await maybeSeedAnnualPlanPrompted(context, seedAnnualPlanPrompted);
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
     // 로그인 후 AuthInit이 coupleId를 감지하고 대시보드를 렌더링할 때까지 대기
@@ -107,7 +123,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await use(page);
   },
 
-  authedContext: async ({ page, context, seedTourSeen }, use) => {
+  authedContext: async ({ page, context, seedTourSeen, seedAnnualPlanPrompted }, use) => {
     await clearEmulatorData();
     await context.clearCookies();
 
@@ -118,6 +134,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await seedUserDocument(uid2, EMAIL_2, coupleId);
 
     await maybeSeedTourSeen(context, seedTourSeen);
+    await maybeSeedAnnualPlanPrompted(context, seedAnnualPlanPrompted);
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
@@ -125,7 +142,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await use({ page, uid: uid1, coupleId });
   },
 
-  twoUserAuthedContext: async ({ page, context, seedTourSeen }, use) => {
+  twoUserAuthedContext: async ({ page, context, seedTourSeen, seedAnnualPlanPrompted }, use) => {
     await clearEmulatorData();
     await context.clearCookies();
 
@@ -142,6 +159,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     });
 
     await maybeSeedTourSeen(context, seedTourSeen);
+    await maybeSeedAnnualPlanPrompted(context, seedAnnualPlanPrompted);
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });
@@ -149,7 +167,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await use({ page, uid1, uid2, coupleId });
   },
 
-  adminAuthedContext: async ({ page, context, seedTourSeen }, use) => {
+  adminAuthedContext: async ({ page, context, seedTourSeen, seedAnnualPlanPrompted }, use) => {
     await clearEmulatorData();
     await context.clearCookies();
 
@@ -161,6 +179,7 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
     await seedAdminConfig(uid1);
 
     await maybeSeedTourSeen(context, seedTourSeen);
+    await maybeSeedAnnualPlanPrompted(context, seedAnnualPlanPrompted);
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
     await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 15000 });

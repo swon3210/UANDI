@@ -19,7 +19,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@uandi/ui';
-import { ChevronLeft, Inbox, Plus } from 'lucide-react';
+import { Inbox, Plus } from 'lucide-react';
 import { userAtom } from '@/stores/auth.store';
 import {
   useCashbookCategories,
@@ -34,6 +34,7 @@ import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
 import { buildRecurrencePayload } from '@/utils/recurrence-form';
 import type { CashbookCategory, CategoryGroup } from '@/types';
+import { BackButton } from '@/components/shell/BackButton';
 
 const TAB_ORDER: CategoryGroup[] = ['income', 'expense'];
 
@@ -196,17 +197,7 @@ export default function CashbookCategoriesPage() {
       <Header
         data-testid="categories-header"
         title="카테고리 설정"
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            data-testid="header-left"
-            onClick={() => router.back()}
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
+        leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" data-testid="header-left" />}
         rightSlot={
           <Button
             variant="ghost"

@@ -33,7 +33,6 @@ import {
   monthKeyOf,
 } from '@/hooks/useSettlement';
 import { MonthSelector } from '@/components/cashbook/MonthSelector';
-import { CashbookTabs } from '@/components/cashbook/CashbookTabs';
 import { SettlementReport, type SettlementChart } from '@/components/cashbook/SettlementReport';
 import { SettlementSummaryHeader } from '@/components/cashbook/SettlementSummaryHeader';
 import { SettlementAttachmentGallery } from '@/components/cashbook/SettlementAttachmentGallery';
@@ -290,7 +289,6 @@ export default function CashbookSettlementPage() {
 
   return (
     <>
-      <CashbookTabs />
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <MonthSelector selectedDate={selectedDate} onChange={handleMonthChange} />
 
