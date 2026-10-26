@@ -4,14 +4,15 @@ import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { ChevronLeft, Pencil, RotateCcw } from 'lucide-react';
-import { Button, Header } from '@uandi/ui';
+import { Pencil, RotateCcw } from 'lucide-react';
+import { Header } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
+import { BackButton } from '@/components/shell/BackButton';
 
 const WIZARD_INTRO = '/inner/cashbook/plan/annual/wizard?step=intro';
 
@@ -71,17 +72,7 @@ export default function AnnualPlanPage() {
       <Header
         data-testid="annual-plan-header"
         title={`${year}년 경제 목표`}
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label="뒤로 가기"
-            onClick={() => router.back()}
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
+        leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
         rightSlot={
           <div className="flex items-center gap-1">
             {canBulkEdit && (

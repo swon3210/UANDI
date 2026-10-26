@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Header, Button, Separator } from '@uandi/ui';
+import { ChevronRight } from 'lucide-react';
+import { Header, Separator } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
   useCashbookDisplaySettings,
@@ -14,9 +13,9 @@ import {
 import { BackgroundImageUploader } from '@/components/cashbook/BackgroundImageUploader';
 import { OpacitySlider } from '@/components/cashbook/OpacitySlider';
 import { FloatingBubbleToggle } from '@/components/cashbook/FloatingBubbleToggle';
+import { BackButton } from '@/components/shell/BackButton';
 
 export default function CashbookSettingsPage() {
-  const router = useRouter();
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
 
@@ -26,14 +25,7 @@ export default function CashbookSettingsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header
-        title="가계부 설정"
-        leftSlot={
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
-            <ChevronLeft size={20} />
-          </Button>
-        }
-      />
+      <Header title="가계부 설정" leftSlot={<BackButton />} />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <section className="space-y-2">

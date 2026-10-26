@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { ChevronLeft, CalendarRange, Sparkles, Loader2, RefreshCw, Info } from 'lucide-react';
+import { CalendarRange, Sparkles, Loader2, RefreshCw, Info } from 'lucide-react';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashflowCalendar } from '@/hooks/useCashflowCalendar';
@@ -34,6 +33,7 @@ import { SUB_GROUP_LABELS, recurrenceSubGroupFor } from '@/constants/default-cat
 import { buildRecurrencePayload } from '@/utils/recurrence-form';
 import { formatDay } from '@/utils/date';
 import type { CashbookCategory } from '@/types';
+import { BackButton } from '@/components/shell/BackButton';
 
 /**
  * 설정 시트 내용. overlay-kit은 열릴 때 React 트리에서 분리된 위치에 렌더돼
@@ -124,7 +124,6 @@ function MoveSuggestionSheetContent({
 }
 
 export default function CashflowCalendarPage() {
-  const router = useRouter();
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
@@ -214,14 +213,7 @@ export default function CashflowCalendarPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header
-        title="현금흐름"
-        leftSlot={
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}>
-            <ChevronLeft size={20} />
-          </Button>
-        }
-      />
+      <Header title="현금흐름" leftSlot={<BackButton fallbackHref="/inner/cashbook/history" />} />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         {isLoading ? (

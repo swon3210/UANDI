@@ -22,6 +22,35 @@ test.describe('가계부 진입 경로 (상단 탭 없음)', () => {
     await expect(authedPage.getByTestId('cashbook-tabs')).toHaveCount(0);
   });
 
+  test('내역 페이지는 제목이 내역이고 사이드바 토글 대신 뒤로가기로 대시보드에 돌아간다', async ({
+    authedPage,
+  }) => {
+    await authedPage.goto('/inner/cashbook');
+    await authedPage.getByTestId('dashboard-history-link').click();
+    await authedPage.waitForURL(/\/inner\/cashbook\/history$/, { timeout: 60000 });
+
+    const header = authedPage.getByTestId('cashbook-header');
+    await expect(header).toContainText('내역');
+    await expect(header).not.toContainText('가계부');
+    await expect(authedPage.getByTestId('sidebar-trigger')).toHaveCount(0);
+
+    await authedPage.getByTestId('header-back').click();
+    await authedPage.waitForURL(/\/inner\/cashbook$/, { timeout: 60000 });
+    await expect(authedPage.getByTestId('dashboard-header')).toBeVisible();
+  });
+
+  test('하위 페이지에 직접 진입해도 뒤로가기는 앱 안의 부모 페이지로 간다', async ({
+    authedPage,
+  }) => {
+    // 딥링크처럼 현금흐름에 바로 진입(전체 로드) → 내역 → 대시보드로 거슬러 올라간다
+    await authedPage.goto('/inner/cashbook/cashflow');
+    await authedPage.getByTestId('header-back').click();
+    await authedPage.waitForURL(/\/inner\/cashbook\/history$/, { timeout: 60000 });
+    await authedPage.getByTestId('header-back').click();
+    await authedPage.waitForURL(/\/inner\/cashbook$/, { timeout: 60000 });
+    await expect(authedPage.getByTestId('dashboard-header')).toBeVisible();
+  });
+
   test('내역의 예상금액 조회하기로 현금흐름에 진입한다', async ({ authedPage }) => {
     await authedPage.goto('/inner/cashbook/history');
     const link = authedPage.getByTestId('history-cashflow-link');
