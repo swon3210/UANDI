@@ -43,6 +43,8 @@ export function useCashbookEntryAutoOpen(coupleId: string | null) {
     if (planPending) return;
     handledRef.current = true;
     if (plan || planPrompted) return;
+    // 위저드가 진입 즉시 plan을 생성하므로, 중간에 나가도 이후 진입에선 plan 존재로 다시 뜨지 않는다.
+    // 플래그는 plan 생성 전에 이탈한 경우를 위한 보조 가드다.
     setPlanPrompted(true);
     router.push(WIZARD_INTRO);
   }, [coupleId, tourSeen, setTourSeen, plan, planPending, planPrompted, setPlanPrompted, router]);
