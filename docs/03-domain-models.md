@@ -346,50 +346,92 @@ type ForexHolding = {
 
 ---
 
-### Position (투자 포지션)
+### SavingsAccount (예적금 상품)
 
 ```ts
-type Position = {
-  id: string;
-  coupleId: string;
-  uid: string;
-  symbol: string;                   // 종목 코드 (예: '005930', 'AAPL')
-  market: 'KOSPI' | 'KOSDAQ' | 'NASDAQ' | 'NYSE' | 'OTHER';
-  name: string;                     // 사용자 표기명 (자유 입력)
-  quantity: number;                 // 보유 수량 (소수 허용 — 해외 주식 분수 매수)
-  averageCostKrw: number;           // 평균 매입 단가(원)
-  currentValueKrw: number | null;   // 현재 평가액(시세 갱신 시; v1.1 초기는 수동 입력 허용)
-  currency: 'KRW' | 'USD';          // 매입 통화
-  openedAt: Timestamp;
-  updatedAt: Timestamp;
-};
-```
+type SavingsProductType = 'installment' | 'deposit'; // 적금(적립식) | 예금(거치식)
+type SavingsInterestMethod = 'simple' | 'compound';   // 단리 | 월복리
+type SavingsDepositCycle = 'monthly' | 'weekly';
+type SavingsTaxType = 'normal' | 'preferential' | 'taxFree'; // 15.4% | 9.5% | 0%
 
-**Firestore 경로**: `couples/{coupleId}/sideHustles/{uid}/positions/{positionId}`
-
-> v1.1 초기에는 시세 자동 갱신을 다루지 않는다. 평가액은 사용자가 직접 입력하거나 비워 둔다.
-
----
-
-### SavingsAccount (적금 계좌)
-
-```ts
 type SavingsAccount = {
   id: string;
   coupleId: string;
   uid: string;
-  name: string;                     // 계좌 별칭 (예: "신한 정기적금")
+  name: string;                     // 상품명 (예: "우리 청년적금")
   bank: string;
-  principalKrw: number;             // 현재 원금(원)
-  monthlyContributionKrw: number;   // 월 납입액
-  interestRate: number;             // 연이율 (소수, 예: 0.035 = 3.5%)
-  startedAt: Timestamp;
-  maturesAt: Timestamp;             // 만기일
+  productType: SavingsProductType;
+  interestRate: number;             // 연이율 % (예: 4.5)
+  interestMethod: SavingsInterestMethod;
+  startDate: string;                // 가입일(=1회차 납입일) YYYY-MM-DD
+  maturityDate: string;             // 만기일 YYYY-MM-DD
+  depositAmount: number;            // 적금: 회차당 납입액 / 예금: 예치 원금 (원)
+  depositCycle: SavingsDepositCycle; // 예금이면 무시
+  depositDay: number;               // monthly: 1~31(말일 clamp) / weekly: 0(일)~6(토)
+  taxType: SavingsTaxType;
+  createdAt: Timestamp;
   updatedAt: Timestamp;
 };
 ```
 
 **Firestore 경로**: `couples/{coupleId}/sideHustles/{uid}/savings/{accountId}`
+
+> 납입 원금·만기 예상 수령액은 저장하지 않고 상품 조건으로 매번 계산한다 (`utils/savings.ts`, 상세는 `pages/outer/savings.md`).
+
+---
+
+### StockHolding (보유 주식)
+
+```ts
+type StockMarket = 'KR' | 'US';
+
+type StockHolding = {
+  id: string;
+  coupleId: string;
+  uid: string;
+  name: string;                     // 종목명
+  symbol: string;                   // 국내 6자리 코드 / 미국 티커. 모르면 '' (시세 미조회)
+  market: StockMarket;
+  currency: 'KRW' | 'USD';
+  quantity: number;                 // 보유 수량 (소수 허용)
+  averagePrice: number;             // 평균 매수 단가 (currency 기준)
+  dividendPerShare: number | null;  // 다음 배당 주당 배당금 (currency, 세전)
+  nextDividendDate: string | null;  // 배당 예정일 YYYY-MM-DD
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+```
+
+**Firestore 경로**: `couples/{coupleId}/sideHustles/{uid}/stockHoldings/{holdingId}`
+
+> 현재가는 저장하지 않는다. `/api/investment/quotes`가 시세를 내려주고 클라이언트가 평가손익을 계산한다.
+
+---
+
+### RealEstateHolding (보유 부동산 — 아파트)
+
+```ts
+type RealEstateHolding = {
+  id: string;
+  coupleId: string;
+  uid: string;
+  aptName: string;                  // 단지명 (실거래가 API aptNm과 매칭)
+  lawdCd: string;                   // 시군구 법정동 코드 5자리 (국토부 LAWD_CD)
+  regionName: string;               // 표시용 (예: "서울특별시 송파구")
+  dong: string | null;              // 법정동 (실거래에서 선택 시)
+  exclusiveArea: number;            // 전용면적 ㎡
+  purchasePrice: number;            // 매수가 (원)
+  purchaseDate: string;             // YYYY-MM-DD
+  isSingleHome: boolean;            // 1세대 1주택 여부 (세금 추정용)
+  manualMarketPrice: number | null; // 실거래가 없을 때 수동 시세 (원)
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+```
+
+**Firestore 경로**: `couples/{coupleId}/sideHustles/{uid}/realEstateHoldings/{holdingId}`
+
+> 시세는 `/api/investment/apt-trades`(국토부 실거래가, 1일 캐시)로 조회하고, 세금은 `utils/real-estate-tax.ts`에서 추정한다.
 
 ---
 

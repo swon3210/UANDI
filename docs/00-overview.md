@@ -58,8 +58,8 @@
 | 셸       | 공간 스위처 + 재테크 하단탭                         | P0       |
 | 환테크   | 통화별 환율 차트 + 지표 + AI 전망 (기존 이주)     | P0       |
 | 대시보드 | 재테크 요약 (개인 환차익 + 커플 합산)               | P0       |
-| 투자     | placeholder("v1.1 준비 중")                       | P0       |
-| 적금     | placeholder("v1.1 준비 중")                       | P0       |
+| 투자     | 주식(잔고 캡처·시세 손익·배당), 부동산(실거래·세금) | P1       |
+| 예적금   | 상품 캡처 등록, 자동이체 누적, 만기 예상 수령액     | P1       |
 
 > **v1.1 이후**: 투자 포지션 관리, 적금 트래커, 재테크 합산 통계 상세.
 
@@ -86,8 +86,8 @@
 /outer                       → 재테크 대시보드 (개인 환차익 + 커플 합산)
 /outer/forex                 → 환테크 통화 목록
 /outer/forex/[currency]      → 통화별 환율 차트 + AI 전망
-/outer/investment            → (v1: placeholder, v1.1: 포지션 관리)
-/outer/savings               → (v1: placeholder, v1.1: 적금 트래커)
+/outer/investment            → 투자 (주식·부동산 탭, 시세 기준 평가손익)
+/outer/savings               → 예적금 트래커 (자동이체 누적·만기 예상)
 
 # 커뮤니티 (전역 공유 — 커플 격리 예외)
 /community                   → 신혼부부 공개 피드 (유저 글 + 스크래핑 링크 혼합)
@@ -133,8 +133,8 @@
 | --------------------------------- | ------------------------------------- | ------------- |
 | `pages/outer/dashboard.md`        | `/outer`                              | 재테크 대시보드 |
 | `pages/outer/forex.md`            | `/outer/forex`, `/outer/forex/[c]`    | 환테크        |
-| `pages/outer/investment.md`       | `/outer/investment`                   | v1.1 준비 중  |
-| `pages/outer/savings.md`          | `/outer/savings`                      | v1.1 준비 중  |
+| `pages/outer/investment.md`       | `/outer/investment`                   | 주식·부동산   |
+| `pages/outer/savings.md`          | `/outer/savings`                      | 예적금        |
 
 ---
 

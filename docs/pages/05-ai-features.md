@@ -22,7 +22,9 @@ apps/web/src/app/api/ai/
 ├── parse-entry/route.ts      # 자연어 가계부 파싱
 ├── suggest-tags/route.ts     # 사진 자동 태깅
 ├── analyze-spending/route.ts # 지출 패턴 분석
-└── analyze-category/route.ts # 카테고리 하나 심층 분석 (대시보드 중위값 카드 드릴다운)
+├── analyze-category/route.ts # 카테고리 하나 심층 분석 (대시보드 중위값 카드 드릴다운)
+├── parse-savings/route.ts    # 예적금 상품설명 캡처 → 상품 조건 (pages/outer/savings.md)
+└── parse-stock-holdings/route.ts # 증권사 잔고 캡처 → 보유 종목 (pages/outer/investment.md)
 ```
 
 ### 공통 규칙

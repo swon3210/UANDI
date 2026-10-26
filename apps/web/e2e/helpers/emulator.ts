@@ -1108,3 +1108,45 @@ export async function seedNotificationSettings(
     }
   );
 }
+
+type PlainFieldValue = string | number | boolean | null;
+
+function toRestValue(value: PlainFieldValue) {
+  if (value === null) return { nullValue: null };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  return { stringValue: value };
+}
+
+/**
+ * 재테크 보유 자산(예적금·주식·부동산) 시드 — sideHustles/{uid}/<collection>/{autoId}.
+ * fields는 앱 도메인 타입의 입력 필드(SavingsAccountInput 등)를 평문으로 넘긴다.
+ */
+export async function seedOuterAsset(
+  coupleId: string,
+  uid: string,
+  collection: 'savings' | 'stockHoldings' | 'realEstateHoldings',
+  fields: Record<string, PlainFieldValue>
+): Promise<string> {
+  const now = new Date().toISOString();
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/sideHustles/${uid}/${collection}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toRestValue(v)])),
+          uid: { stringValue: uid },
+          coupleId: { stringValue: coupleId },
+          createdAt: { timestampValue: now },
+          updatedAt: { timestampValue: now },
+        },
+      }),
+    }
+  );
+  const data = (await res.json()) as { name: string };
+  return data.name.split('/').pop()!;
+}

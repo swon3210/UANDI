@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { PieChart, PiggyBank, TrendingUp } from 'lucide-react';
 import { getDisplayRate } from '@uandi/investment-core';
-import { Badge } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { fetchForexRates } from '@/services/forex';
 import { InvestmentEntryCard } from '@/components/investment/InvestmentEntryCard';
 
-type PlaceholderCardProps = {
+type AssetEntryCardProps = {
   Icon: ComponentType<{ size?: number }>;
   title: string;
   description: string;
@@ -18,24 +17,19 @@ type PlaceholderCardProps = {
   testId: string;
 };
 
-function PlaceholderCard({ Icon, title, description, href, testId }: PlaceholderCardProps) {
+function AssetEntryCard({ Icon, title, description, href, testId }: AssetEntryCardProps) {
   return (
     <Link
       href={href}
       data-testid={testId}
-      className="block rounded-xl border border-border bg-muted/40 p-4 text-card-foreground transition-colors hover:bg-accent/40"
+      className="block rounded-xl border border-border bg-card p-4 text-card-foreground transition-colors hover:bg-accent/40"
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Icon size={18} />
         </span>
         <div className="flex-1">
-          <p className="flex items-center gap-2 text-base font-semibold">
-            {title}
-            <Badge variant="outline" className="text-xs">
-              v1.1
-            </Badge>
-          </p>
+          <p className="text-base font-semibold">{title}</p>
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
@@ -85,19 +79,19 @@ export function OuterDashboard() {
             </div>
           </div>
         </Link>
-        <PlaceholderCard
+        <AssetEntryCard
           Icon={TrendingUp}
           title="투자"
-          description="종목 보유·평가액 관리"
+          description="주식·부동산 시세 기준 평가손익"
           href="/outer/investment"
-          testId="outer-investment-placeholder"
+          testId="outer-investment-entry"
         />
-        <PlaceholderCard
+        <AssetEntryCard
           Icon={PiggyBank}
-          title="적금"
-          description="적금 만기·이율 추적"
+          title="예적금"
+          description="자동이체로 쌓이는 원금·만기 예상 금액"
           href="/outer/savings"
-          testId="outer-savings-placeholder"
+          testId="outer-savings-entry"
         />
       </main>
     </>

@@ -22,12 +22,12 @@ v1 시점에는 환테크가 유일한 실제 기능이므로 **환테크 요약
 ```
 /outer                            → 재테크 대시보드 (이 문서)
   ↘ /outer/forex                  → 환테크 통화 목록 (forex.md)
-  ↘ /outer/investment             → 투자 placeholder (investment.md)
-  ↘ /outer/savings                → 적금 placeholder (savings.md)
+  ↘ /outer/investment             → 투자 — 주식·부동산 (investment.md)
+  ↘ /outer/savings                → 예적금 트래커 (savings.md)
 ```
 
 - 진입점: 사이드바 재테크 섹션의 "홈" 항목
-- 사이드바 재테크 섹션: 홈(/outer) · 환테크(/outer/forex) · 투자(/outer/investment) · 적금(/outer/savings)
+- 사이드바 재테크 섹션: 홈(/outer) · 환테크(/outer/forex) · 투자(/outer/investment) · 예적금(/outer/savings)
 
 ---
 
@@ -89,12 +89,11 @@ v1 시점에는 환테크가 유일한 실제 기능이므로 **환테크 요약
 - **로딩**: Skeleton
 - **에러**: 카드 영역 안에 "환율을 불러오지 못했어요" — 다른 카드는 정상
 
-#### 3. PlaceholderCard (투자/적금)
+#### 3. AssetEntryCard (투자/예적금)
 
-- **표시**: 아이콘 + 영역명 + `v1.1` 뱃지 + 한 줄 설명("곧 만나요" + 부제)
-- **인터랙션**:
-  - 클릭 → `/outer/investment` 또는 `/outer/savings`로 이동 (해당 placeholder 페이지가 동일한 "준비 중" 메시지를 안내)
-- **스타일**: 배경을 살짝 muted 처리해 활성 카드와 시각적으로 구분
+- **표시**: 아이콘 + 영역명 + 한 줄 설명 ("주식·부동산 시세 기준 평가손익" / "자동이체로 쌓이는 원금·만기 예상 금액")
+- **인터랙션**: 클릭 → `/outer/investment` 또는 `/outer/savings`
+- testId: `outer-investment-entry`, `outer-savings-entry`
 
 ---
 

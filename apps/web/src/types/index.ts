@@ -332,6 +332,88 @@ export const DEFAULT_ASSET_ALLOCATION: AssetAllocationInput = {
   forex: 10,
 };
 
+// ── 재테크 예적금 (개인 소유) ──
+// 저장 경로: couples/{coupleId}/sideHustles/{uid}/savings/{accountId}
+// 납입 원금·만기 예상 금액은 저장하지 않고 utils/savings.ts에서 매번 계산한다.
+export type SavingsProductType = 'installment' | 'deposit'; // 적금(적립식) | 예금(거치식)
+export type SavingsInterestMethod = 'simple' | 'compound'; // 단리 | 월복리
+export type SavingsDepositCycle = 'monthly' | 'weekly';
+export type SavingsTaxType = 'normal' | 'preferential' | 'taxFree'; // 15.4% | 9.5% | 0%
+
+export type SavingsAccount = {
+  id: string;
+  coupleId: string;
+  uid: string;
+  name: string;
+  bank: string;
+  productType: SavingsProductType;
+  interestRate: number; // 연이율 % (예: 4.5)
+  interestMethod: SavingsInterestMethod;
+  startDate: string; // 가입일(=1회차 납입일) YYYY-MM-DD
+  maturityDate: string; // 만기일 YYYY-MM-DD
+  depositAmount: number; // 적금: 회차당 납입액 / 예금: 예치 원금 (원)
+  depositCycle: SavingsDepositCycle; // 예금이면 무시
+  depositDay: number; // monthly: 1~31(말일 clamp) / weekly: 0(일)~6(토)
+  taxType: SavingsTaxType;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type SavingsAccountInput = Omit<
+  SavingsAccount,
+  'id' | 'coupleId' | 'uid' | 'createdAt' | 'updatedAt'
+>;
+
+// ── 재테크 보유 주식 (개인 소유) ──
+// 저장 경로: couples/{coupleId}/sideHustles/{uid}/stockHoldings/{holdingId}
+export type StockMarket = 'KR' | 'US';
+export type StockCurrency = 'KRW' | 'USD';
+
+export type StockHolding = {
+  id: string;
+  coupleId: string;
+  uid: string;
+  name: string;
+  symbol: string; // 국내 6자리 코드 / 미국 티커. 모르면 '' (시세 미조회)
+  market: StockMarket;
+  currency: StockCurrency;
+  quantity: number;
+  averagePrice: number; // 평균 매수 단가 (currency 기준)
+  dividendPerShare: number | null; // 다음 배당 주당 배당금 (currency, 세전)
+  nextDividendDate: string | null; // 배당 예정일 YYYY-MM-DD
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type StockHoldingInput = Omit<
+  StockHolding,
+  'id' | 'coupleId' | 'uid' | 'createdAt' | 'updatedAt'
+>;
+
+// ── 재테크 보유 부동산(아파트) (개인 소유) ──
+// 저장 경로: couples/{coupleId}/sideHustles/{uid}/realEstateHoldings/{holdingId}
+export type RealEstateHolding = {
+  id: string;
+  coupleId: string;
+  uid: string;
+  aptName: string; // 단지명 (실거래가 API aptNm과 매칭)
+  lawdCd: string; // 시군구 법정동 코드 5자리
+  regionName: string; // 표시용 (예: "서울특별시 송파구")
+  dong: string | null; // 법정동
+  exclusiveArea: number; // 전용면적 ㎡
+  purchasePrice: number; // 매수가 (원)
+  purchaseDate: string; // YYYY-MM-DD
+  isSingleHome: boolean; // 1세대 1주택 여부 (세금 추정용)
+  manualMarketPrice: number | null; // 실거래가 없을 때 수동 시세 (원)
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+};
+
+export type RealEstateHoldingInput = Omit<
+  RealEstateHolding,
+  'id' | 'coupleId' | 'uid' | 'createdAt' | 'updatedAt'
+>;
+
 // ── 커뮤니티 (전역 공유 공간 — couples/ 격리 예외) ──
 // 자세히는 docs/pages/community/community-feed.md, docs/08-spaces.md 참고.
 

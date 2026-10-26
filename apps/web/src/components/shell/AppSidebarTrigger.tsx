@@ -47,7 +47,7 @@ const SECTIONS: SidebarSection[] = [
       { id: 'outer-home', label: '홈', href: '/outer', Icon: LayoutDashboard },
       { id: 'forex', label: '환테크', href: '/outer/forex', Icon: Wallet },
       { id: 'investment', label: '투자', href: '/outer/investment', Icon: TrendingUp },
-      { id: 'savings', label: '적금', href: '/outer/savings', Icon: PiggyBank },
+      { id: 'savings', label: '예적금', href: '/outer/savings', Icon: PiggyBank },
     ],
   },
   {
