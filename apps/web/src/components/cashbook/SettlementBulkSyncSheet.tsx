@@ -7,6 +7,7 @@ import type { CashbookCategory, CashbookEntryType, SettlementAttachment } from '
 import { useAnalyzeAttachments } from '@/hooks/useSettlement';
 import { useDuplicateScopeEntries, useCategoryHints } from '@/hooks/useCashbook';
 import { findDuplicate } from '@/utils/cashbook-duplicate';
+import { needsCategoryReview } from '@/utils/parsed-entry-category';
 import { BulkSyncResultView, type BulkSyncEntryData } from './BulkSyncResultView';
 import type { ConfirmedEntry } from './AiBulkPreviewSheet';
 
@@ -76,9 +77,9 @@ export function SettlementBulkSyncSheet({
       const duplicate = findDuplicate({ amount: e.amount, date: e.date }, existing);
       // 선택 결산월 + 비중복 + 비송금만 기본 ON
       const selected = !duplicate && !e.isTransfer && e.month === monthKey;
-      return { ...e, duplicate, selected };
+      return { ...e, duplicate, selected, needsCategory: needsCategoryReview(e, categories) };
     });
-  }, [flatEntries, existing, monthKey]);
+  }, [flatEntries, existing, monthKey, categories]);
 
   // 중복 결과가 비동기로 도착하면 View를 새 초기 상태로 리마운트.
   const bodyKey = annotated

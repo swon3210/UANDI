@@ -4,11 +4,12 @@ import { useMemo, useState } from 'react';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import { Timestamp } from 'firebase/firestore';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle, HelpCircle } from 'lucide-react';
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType } from '@/types';
 import { useDuplicateScopeEntries } from '@/hooks/useCashbook';
 import { findDuplicate } from '@/utils/cashbook-duplicate';
+import { needsCategoryReview } from '@/utils/parsed-entry-category';
 import { EntryForm } from './EntryForm';
 import { ParsedEntryCard, type ParsedEntryCardData } from './ParsedEntryCard';
 
@@ -21,8 +22,11 @@ export type ConfirmedEntry = {
   createdBy: string;
 };
 
-/** 외부에서 받는 entry 타입 (selected/duplicate는 내부에서 계산) */
-export type InitialParsedEntry = Omit<ParsedEntryCardData, 'selected' | 'duplicate'>;
+/** 외부에서 받는 entry 타입 (selected/duplicate/needsCategory는 내부에서 계산) */
+export type InitialParsedEntry = Omit<
+  ParsedEntryCardData,
+  'selected' | 'duplicate' | 'needsCategory'
+>;
 
 type AiBulkPreviewSheetProps = {
   initialEntries: InitialParsedEntry[];
@@ -46,9 +50,10 @@ export function AiBulkPreviewSheet(props: AiBulkPreviewSheetProps) {
     () =>
       props.initialEntries.map((e) => {
         const duplicate = findDuplicate({ amount: e.amount, date: e.date }, existing);
-        return { ...e, duplicate, selected: !duplicate };
+        const needsCategory = needsCategoryReview(e, props.categories);
+        return { ...e, duplicate, selected: !duplicate, needsCategory };
       }),
-    [props.initialEntries, existing]
+    [props.initialEntries, existing, props.categories]
   );
 
   // existing이 비동기로 채워지므로, annotated의 길이를 key로 사용해
@@ -92,6 +97,8 @@ function AiBulkPreviewSheetBody({
 
   const duplicateCount = entries.filter((e) => e.duplicate).length;
   const selectedCount = entries.filter((e) => e.selected).length;
+  // 카테고리를 골라야 하는 항목이 추가 대상에 남아 있으면 저장을 막는다.
+  const needsCategoryCount = entries.filter((e) => e.selected && e.needsCategory).length;
 
   const handleToggle = (index: number, next: boolean) => {
     setEntries((prev) => prev.map((e, i) => (i === index ? { ...e, selected: next } : e)));
@@ -125,6 +132,7 @@ function AiBulkPreviewSheetBody({
                       confidence: 1,
                       duplicate: null,
                       selected: true,
+                      needsCategory: false,
                     }
                   : e
               )
@@ -184,6 +192,18 @@ function AiBulkPreviewSheetBody({
             </span>
           </div>
         )}
+        {needsCategoryCount > 0 && (
+          <div
+            data-testid="ai-bulk-needs-category-banner"
+            className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50/50 p-3 text-xs text-amber-700 dark:bg-amber-500/5 dark:text-amber-400"
+          >
+            <HelpCircle size={14} className="mt-0.5 shrink-0" />
+            <span>
+              기존 카테고리 중 어디에 넣을지 확실하지 않은 {needsCategoryCount}건이 있어요. 항목을
+              탭해 카테고리를 골라 주세요.
+            </span>
+          </div>
+        )}
         <p className="mb-3 text-xs text-muted-foreground">
           항목을 탭하면 상세 편집이 가능하고, 우측 스위치로 추가 여부를 정할 수 있어요.
         </p>
@@ -208,7 +228,7 @@ function AiBulkPreviewSheetBody({
           data-testid="ai-bulk-confirm"
           className="flex-1"
           onClick={handleConfirm}
-          disabled={selectedCount === 0}
+          disabled={selectedCount === 0 || needsCategoryCount > 0}
         >
           {selectedCount}건 추가
         </Button>

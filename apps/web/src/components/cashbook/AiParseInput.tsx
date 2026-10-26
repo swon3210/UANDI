@@ -366,6 +366,12 @@ export function AiParseInput({
           </Button>
         </div>
       </div>
+      {attachments.length > 0 && (
+        <p data-testid="ai-parse-order-hint" className="text-xs text-muted-foreground">
+          카드 이용내역과 함께 네이버·카카오·쿠팡 결제내역 캡처도 첨부하면, 산 물건에 맞게
+          카테고리를 분류해요.
+        </p>
+      )}
       {mutation.error && (
         <p className="text-xs text-destructive">
           {mutation.error.message || 'AI 파싱에 실패했습니다'}

@@ -147,3 +147,38 @@ export const DuplicateButReSelected: Story = {
     },
   },
 };
+
+/** AI가 기존 카테고리에 맞추지 못해 사용자가 직접 골라야 하는 항목 */
+export const NeedsCategory: Story = {
+  args: {
+    ...commonHandlers,
+    entry: {
+      type: 'expense',
+      amount: 55000,
+      category: '',
+      description: 'SKT 휴대폰 요금',
+      date: today,
+      confidence: 0.9,
+      duplicate: null,
+      selected: true,
+      needsCategory: true,
+    },
+  },
+};
+
+/** 쿠팡 결제내역 캡처와 매칭돼 품목이 설명에 붙은 항목 */
+export const MatchedWithOrderDetails: Story = {
+  args: {
+    ...commonHandlers,
+    entry: {
+      type: 'expense',
+      amount: 32000,
+      category: '식비',
+      description: '쿠팡(쿠페이) · 생수 2L 12개',
+      date: today,
+      confidence: 0.9,
+      duplicate: null,
+      selected: true,
+    },
+  },
+};

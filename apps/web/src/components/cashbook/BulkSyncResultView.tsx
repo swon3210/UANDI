@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
 import { Timestamp } from 'firebase/firestore';
-import { Sparkles, ArrowLeftRight, CalendarClock, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowLeftRight, CalendarClock, AlertCircle, HelpCircle } from 'lucide-react';
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import type { CashbookCategory } from '@/types';
 import { EntryForm } from './EntryForm';
@@ -74,6 +74,8 @@ export function BulkSyncResultView({
   }, [entries, selectedMonth]);
 
   const selectedCount = entries.filter((e) => e.selected).length;
+  // 카테고리를 골라야 하는 항목이 추가 대상에 남아 있으면 저장을 막는다.
+  const needsCategoryCount = entries.filter((e) => e.selected && e.needsCategory).length;
   const missingCount = entries.filter((e) => !e.duplicate && !e.isTransfer).length;
   const transferCount = transferRows.length;
   const duplicateCount = entries.filter((e) => e.duplicate).length;
@@ -113,6 +115,7 @@ export function BulkSyncResultView({
                       confidence: 1,
                       duplicate: null,
                       selected: true,
+                      needsCategory: false,
                     }
                   : e
               )
@@ -175,6 +178,19 @@ export function BulkSyncResultView({
             <span>
               일부 이미지({mismatchCount}장)가 선택한 분류(계좌/카드)와 다른 종류 같아요. 결과를
               확인해 주세요.
+            </span>
+          </div>
+        )}
+
+        {needsCategoryCount > 0 && (
+          <div
+            data-testid="bulk-sync-needs-category-banner"
+            className="flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50/50 p-3 text-xs text-amber-700 dark:bg-amber-500/5 dark:text-amber-400"
+          >
+            <HelpCircle size={14} className="mt-0.5 shrink-0" />
+            <span>
+              기존 카테고리 중 어디에 넣을지 확실하지 않은 {needsCategoryCount}건이 있어요. 항목을
+              탭해 카테고리를 골라 주세요.
             </span>
           </div>
         )}
@@ -243,7 +259,7 @@ export function BulkSyncResultView({
           data-testid="bulk-sync-confirm"
           className="flex-1"
           onClick={handleConfirm}
-          disabled={selectedCount === 0}
+          disabled={selectedCount === 0 || needsCategoryCount > 0}
         >
           {selectedCount}건 추가
         </Button>

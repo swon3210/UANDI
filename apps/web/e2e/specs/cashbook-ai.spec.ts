@@ -405,3 +405,77 @@ test.describe('이용내역서 PDF 첨부', () => {
     await expect(page.getByTestId('ai-parse-submit')).toHaveAttribute('aria-label', '직접 입력');
   });
 });
+
+test.describe('AI 카테고리 매핑 — 기존 카테고리만 사용', () => {
+  test('목록에 없는 카테고리는 "카테고리 선택" 표시 + 저장 차단, 직접 고르면 추가할 수 있다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    // mock: '미분류'가 있으면 첫 entry 카테고리를 목록에 없는 "통신비"로 돌려준다 → 서버가 ''로 비운다
+    await page.getByTestId('ai-parse-input').fill('미분류 휴대폰 요금 9000원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    const card = page.getByTestId('parsed-entry-card').first();
+    await expect(card).toHaveAttribute('data-needs-category', 'true');
+    await expect(card.getByTestId('parsed-entry-category-missing')).toBeVisible();
+    // 지어낸 카테고리 이름은 어디에도 보이지 않는다
+    await expect(page.getByTestId('ai-bulk-preview-sheet')).not.toContainText('통신비');
+    await expect(page.getByTestId('ai-bulk-needs-category-banner')).toBeVisible();
+    await expect(page.getByTestId('ai-bulk-confirm')).toBeDisabled();
+
+    // 카드 탭 → 기존 카테고리 선택 → 저장
+    await card.click();
+    const entryFormSheet = page.getByTestId('entry-form-sheet');
+    await expect(entryFormSheet).toBeVisible();
+    await entryFormSheet.getByTestId('category-chip-식비').first().click();
+    await entryFormSheet.getByRole('button', { name: '저장', exact: true }).click();
+
+    await expect(card).toHaveAttribute('data-needs-category', 'false');
+    await expect(card).toContainText('식비');
+    await expect(page.getByTestId('ai-bulk-needs-category-banner')).not.toBeVisible();
+    await expect(page.getByTestId('ai-bulk-confirm')).toBeEnabled();
+  });
+
+  test('카테고리를 골라야 하는 항목도 스위치로 제외하면 나머지는 추가할 수 있다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    await page.getByTestId('ai-parse-input').fill('미분류 휴대폰 요금 9000원\n어제 택시 15000원');
+    await page.getByTestId('ai-parse-submit').click();
+
+    await expect(page.getByTestId('parsed-entry-card')).toHaveCount(2);
+    await expect(page.getByTestId('ai-bulk-confirm')).toBeDisabled();
+
+    await page.getByTestId('parsed-entry-toggle').first().click();
+    await expect(page.getByTestId('ai-bulk-confirm')).toBeEnabled();
+    await expect(page.getByTestId('ai-bulk-confirm')).toHaveText('1건 추가');
+  });
+
+  test('카드 내역과 쿠팡 결제내역 캡처를 함께 넣으면 품목 기준 카테고리로 분류된다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAdd(page);
+
+    const fileInput = page.locator('input[type="file"][data-testid="ai-parse-file-input"]');
+    await fileInput.setInputFiles([tinyPng('card.png'), tinyPng('coupang-order.png')]);
+    await expect(page.getByTestId('ai-parse-order-hint')).toBeVisible();
+
+    // mock: '결제내역'이 있으면 카드 "쿠팡"(소비) 1건 + 같은 금액·날짜의 쿠팡 주문(식비, 생수)
+    await page.getByTestId('ai-parse-input').fill('결제내역 같이 첨부');
+    await page.getByTestId('ai-parse-submit').click();
+
+    const cards = page.getByTestId('parsed-entry-card');
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toContainText('식비');
+    await expect(cards.first()).toContainText('쿠팡 · 생수 2L 12개');
+    await expect(page.getByTestId('ai-bulk-confirm')).toBeEnabled();
+  });
+});
