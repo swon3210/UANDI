@@ -13,6 +13,7 @@ import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
 import { KeyboardInsetSync } from '@/components/KeyboardInsetSync';
 import { QuickAddBridge } from '@/components/QuickAddBridge';
 import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler';
+import { NavigationTracker } from '@/components/NavigationTracker';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -29,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <KeyboardInsetSync />
             <QuickAddBridge />
             <OverlayBackButtonHandler />
+            <NavigationTracker />
             {children}
             <Toaster />
           </OverlayProvider>

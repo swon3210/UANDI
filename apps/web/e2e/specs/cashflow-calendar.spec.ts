@@ -249,11 +249,11 @@ test.describe('현금흐름 캘린더', () => {
     await expect(cashflow.baselineCard).toContainText('2,000,000원');
   });
 
-  test('가계부 캘린더 탭으로 현금흐름 캘린더에 진입할 수 있다', async ({ authedContext }) => {
+  test('내역의 예상금액 조회하기로 현금흐름 캘린더에 진입할 수 있다', async ({ authedContext }) => {
     const { page } = authedContext;
 
     await page.goto('/inner/cashbook/history');
-    await page.getByTestId('cashbook-tab-cashflow').click();
+    await page.getByTestId('history-cashflow-link').click();
 
     await page.waitForURL('**/inner/cashbook/cashflow');
     await expect(page.getByTestId('cashflow-setup-button')).toBeVisible();

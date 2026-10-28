@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, CalendarRange } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
@@ -435,6 +436,15 @@ export default function CashbookPage() {
 
   return (
     <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
+      {/* 현금흐름(앞으로의 잔액 예측) 진입점 — 상단 탭 대신 내역 안에서 들어간다 */}
+      <div className="mb-3 flex justify-end">
+        <Button asChild variant="outline" size="sm" className="gap-1.5">
+          <Link href="/inner/cashbook/cashflow" data-testid="history-cashflow-link">
+            <CalendarRange size={15} aria-hidden />
+            예상금액 조회하기
+          </Link>
+        </Button>
+      </div>
       <div>
         <CashbookFilterBar
           period={filter.period}

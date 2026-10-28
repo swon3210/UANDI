@@ -1,19 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
-import { ChevronLeft, Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useOrphanedEntries, type OrphanGroup } from '@/hooks/useOrphanedEntries';
 import { useBulkUpdateEntriesCategory } from '@/hooks/useBulkUpdateEntriesCategory';
 import { OrphanGroupCard } from '@/components/cashbook/OrphanGroupCard';
 import { RemapCategorySheet } from '@/components/cashbook/RemapCategorySheet';
+import { BackButton } from '@/components/shell/BackButton';
 
 export default function CashbookOrphansPage() {
-  const router = useRouter();
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
@@ -56,15 +55,7 @@ export default function CashbookOrphansPage() {
         data-testid="orphans-header"
         title="미분류 내역 정리"
         leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            data-testid="header-left"
-            onClick={() => router.back()}
-          >
-            <ChevronLeft size={20} />
-          </Button>
+          <BackButton fallbackHref="/inner/cashbook/categories" data-testid="header-left" />
         }
       />
 

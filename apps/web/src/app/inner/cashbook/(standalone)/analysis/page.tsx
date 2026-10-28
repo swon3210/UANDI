@@ -4,7 +4,7 @@ import { Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { ChevronLeft, SearchX } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 import { Button, EmptyState, Header, Skeleton } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
 import { AiReportCard, type AiReportStatus } from '@/components/cashbook/AiReportCard';
@@ -18,6 +18,7 @@ import { parseCategoryAnalysisParams } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { formatDay, getPeriodLabel } from '@/utils/date';
 import { MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
+import { BackButton } from '@/components/shell/BackButton';
 
 const SCOPE_LABEL: Record<Exclude<SubGroupFilter, 'all'>, Record<CategoryGroup, string>> = {
   fixed: { expense: '고정 지출', income: '고정 수입' },
@@ -71,18 +72,7 @@ function CategoryAnalysisPageInner() {
       <Header
         title="카테고리 AI 분석"
         data-testid="category-analysis-header"
-        leftSlot={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => router.back()}
-            data-testid="category-analysis-back"
-            aria-label="뒤로 가기"
-          >
-            <ChevronLeft size={20} />
-          </Button>
-        }
+        leftSlot={<BackButton data-testid="category-analysis-back" />}
       />
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-3 px-4 pb-20 pt-4">

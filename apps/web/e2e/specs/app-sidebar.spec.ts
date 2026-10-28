@@ -58,13 +58,11 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await expect(nav.linkCashbook).toHaveAttribute('aria-current', 'page');
   });
 
-  test('가계부 하위 페이지에서도 사이드바에서 가계부가 활성 상태로 유지된다', async ({
-    authedPage,
-  }) => {
+  test('가계부 하위 페이지에는 사이드바 토글 대신 뒤로가기만 있다', async ({ authedPage }) => {
     const nav = new AppSidebarPage(authedPage);
     await authedPage.goto('/inner/cashbook/review');
-    await nav.open();
-    await expect(nav.linkCashbook).toHaveAttribute('aria-current', 'page');
+    await expect(authedPage.getByTestId('header-back')).toBeVisible();
+    await expect(nav.trigger).toHaveCount(0);
   });
 
   test('항목을 누르면 사이드바가 닫힌다', async ({ authedPage }) => {
@@ -83,9 +81,7 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await expect(nav.spaceRoot('outer')).toBeVisible();
   });
 
-  test('커뮤니티로 진입하면 violet 톤(data-space=community)이 적용된다', async ({
-    authedPage,
-  }) => {
+  test('커뮤니티로 진입하면 violet 톤(data-space=community)이 적용된다', async ({ authedPage }) => {
     const nav = new AppSidebarPage(authedPage);
     await nav.open();
     await nav.linkCommunity.click();
