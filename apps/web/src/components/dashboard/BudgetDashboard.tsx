@@ -77,7 +77,7 @@ const PICKER_TITLE: Record<PeriodKind, string> = {
 };
 
 const COMPARE_PICKER_TITLE: Record<PeriodKind, string> = {
-  monthly: '비교할 월 선택',
+  monthly: '비교 대상 선택', // 평소 또는 특정 달
   yearly: '비교할 연도 선택',
 };
 

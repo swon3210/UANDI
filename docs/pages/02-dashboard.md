@@ -174,7 +174,7 @@ query(
 
 - `data-testid="period-compare"`, 막대 차트는 `data-testid="trend-chart"`
 - 비교 기간 기본값: 직전 기간 (월간=전월, 연간=전년). 기본값일 땐 버튼에 `(전월)` 같은 보조 라벨 표시
-- 비교 대상 선택: 헤더 버튼(`compare-period-button`) → 바텀 시트(`compare-picker-sheet`)의 `CompareTargetPicker`
+- 비교 대상 선택: 헤더 버튼(`compare-period-button`) → 바텀 시트(`compare-picker-sheet`, 월간 제목 `비교 대상 선택`)의 `CompareTargetPicker`
   - 같은 단위의 기간 선택 (`PeriodPicker`, 미래 기간 불가). 직전 기간을 다시 고르면 기본값으로 되돌린다
   - **월간 탭만** 맨 위에 `평소와 비교 · 최근 6개월 중위값`(`compare-target-median`) 옵션. 그 아래 "또는 특정 달과 비교" 구분선 + 달 선택. 평소를 고른 상태에선 달 선택 표시가 없다
   - 기간 단위 변경·기준 기간 이동 시 비교 기간은 직전 기간으로 리셋. 단 **평소는 기준 달을 따라 움직이는 비교 대상이라 기준 달을 옮겨도 유지**하고, 연간 탭으로 바꿀 때만 리셋한다
