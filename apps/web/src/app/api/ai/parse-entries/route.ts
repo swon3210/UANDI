@@ -13,8 +13,26 @@ import {
   buildSystemPrompt,
   categoryHintsSchema,
   buildMockParseResponse,
-  type ParsedEntry,
+  applyOrderDetails,
+  normalizeEntryCategories,
+  type ParseResponse,
 } from '@/lib/ai/parse-entries-core';
+
+/**
+ * 첨부별 파싱 결과를 합친다.
+ * 결제내역 캡처의 주문(orders)은 카드 내역 entry에 붙여 카테고리를 보강하고,
+ * 마지막으로 모든 카테고리를 기존 카테고리 목록으로 맞춘다(목록에 없는 이름은 '' = 사용자 확인).
+ */
+function mergeResults(results: ParseResponse[], categories: string[]) {
+  const entries = applyOrderDetails(
+    results.flatMap((r) => r.entries),
+    results.flatMap((r) => r.orders)
+  );
+  return {
+    entries: normalizeEntryCategories(entries, categories),
+    imageKindMismatch: results.some((r) => r.imageKindMismatch),
+  };
+}
 
 const requestSchema = z
   .object({
@@ -79,9 +97,12 @@ export async function POST(req: NextRequest) {
   const hasImages = (images?.length ?? 0) > 0 || (pdfs?.length ?? 0) > 0;
 
   if (process.env.USE_AI_MOCK === 'true') {
-    return NextResponse.json(
-      buildMockParseResponse(text, (images?.length ?? 0) + (pdfs?.length ?? 0), imageKind)
+    const mock = buildMockParseResponse(
+      text,
+      (images?.length ?? 0) + (pdfs?.length ?? 0),
+      imageKind
     );
+    return NextResponse.json(mergeResults([mock], categories));
   }
 
   // PDF 페이지는 이미 이미지라 이미지 목록 뒤에 그대로 이어 붙인다.
@@ -100,6 +121,7 @@ export async function POST(req: NextRequest) {
     todayYear: todayDayjs.year(),
     customRulesSection,
     categoryHints,
+    allowOrderDetails: true,
   });
 
   try {
@@ -124,10 +146,7 @@ export async function POST(req: NextRequest) {
 
     const results = await Promise.all(jobs);
 
-    const entries: ParsedEntry[] = results.flatMap((r) => r.entries);
-    const imageKindMismatch = results.some((r) => r.imageKindMismatch);
-
-    return NextResponse.json({ entries, imageKindMismatch });
+    return NextResponse.json(mergeResults(results, categories));
   } catch (error) {
     console.error('[parse-entries] AI 호출 실패:', error);
     return NextResponse.json(

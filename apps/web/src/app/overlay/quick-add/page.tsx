@@ -108,6 +108,7 @@ export default function OverlayQuickAddPage() {
 
       <p className="mt-3 text-xs text-muted-foreground">
         자연어로 입력하거나 영수증 사진·이용내역서 PDF를 첨부하면 AI가 내역을 정리해드려요.
+        네이버·카카오·쿠팡 결제내역 캡처를 함께 넣으면 카테고리를 더 정확히 분류해요.
       </p>
 
       {/* 하단: 말랑 가계부 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}

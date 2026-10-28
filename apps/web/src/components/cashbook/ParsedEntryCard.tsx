@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, HelpCircle } from 'lucide-react';
 import { Switch } from '@uandi/ui';
 import { GROUP_LABELS } from '@uandi/cashbook-core';
 import type { CashbookEntryType } from '@/types';
@@ -17,6 +17,8 @@ export type ParsedEntryCardData = {
   confidence: number;
   duplicate?: DuplicateMatch | null;
   selected: boolean;
+  /** AI가 기존 카테고리에 맞추지 못해 사용자가 직접 골라야 하는 항목 */
+  needsCategory?: boolean;
 };
 
 type ParsedEntryCardProps = {
@@ -29,10 +31,11 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
   const lowConfidence = entry.confidence < 0.7;
   const isDuplicate = !!entry.duplicate;
   const isUnselected = !entry.selected;
+  const needsCategory = !!entry.needsCategory;
 
   const borderClass = isDuplicate
     ? 'border-destructive/60 bg-destructive/5'
-    : lowConfidence
+    : lowConfidence || needsCategory
       ? 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-500/5'
       : 'border-border bg-card';
 
@@ -41,6 +44,7 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
       data-testid="parsed-entry-card"
       data-duplicate={isDuplicate ? 'true' : 'false'}
       data-selected={entry.selected ? 'true' : 'false'}
+      data-needs-category={needsCategory ? 'true' : 'false'}
       className={`group relative flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${borderClass}`}
     >
       <button
@@ -55,7 +59,17 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium truncate">{entry.category}</span>
+            {needsCategory ? (
+              <span
+                data-testid="parsed-entry-category-missing"
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+              >
+                <HelpCircle size={12} />
+                카테고리 선택
+              </span>
+            ) : (
+              <span className="text-sm font-medium truncate">{entry.category}</span>
+            )}
             {isDuplicate && (
               <span
                 data-testid="parsed-entry-duplicate-badge"
@@ -64,7 +78,7 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
                 중복 의심 · {dayjs(entry.duplicate!.existingDate).format('M/D')}
               </span>
             )}
-            {!isDuplicate && lowConfidence && (
+            {!isDuplicate && !needsCategory && lowConfidence && (
               <AlertTriangle
                 size={14}
                 className="shrink-0 text-amber-500"

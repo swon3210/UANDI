@@ -11,6 +11,7 @@ import {
   buildSystemPrompt,
   categoryHintsSchema,
   normalizeEntries,
+  normalizeEntryCategories,
   buildMockAttachmentEntries,
   detectedMonthsOf,
   type CategoryHint,
@@ -61,18 +62,20 @@ async function analyzeOne(
     categoryHints,
   });
 
-  const { entries, imageKindMismatch } = await parseEntriesWithModel({
+  const parsed = await parseEntriesWithModel({
     client,
     systemPrompt,
     imageUrl: attachment.url,
     text: '첨부된 거래 내역을 파싱해줘.',
     tag: 'sync-attachments',
   });
+  // 목록에 없는 카테고리 이름은 ''(사용자 확인 필요)로 바꾼다.
+  const entries = normalizeEntryCategories(parsed.entries, categories);
   return {
     attachmentId: attachment.id,
     kind: attachment.kind,
     detectedMonths: detectedMonthsOf(entries),
-    imageKindMismatch,
+    imageKindMismatch: parsed.imageKindMismatch,
     entries,
   };
 }
@@ -99,7 +102,10 @@ export async function POST(req: NextRequest) {
 
   if (process.env.USE_AI_MOCK === 'true') {
     const results: AttachmentSyncResult[] = attachments.map((a) => {
-      const entries = normalizeEntries(buildMockAttachmentEntries(a.kind));
+      const entries = normalizeEntryCategories(
+        normalizeEntries(buildMockAttachmentEntries(a.kind)),
+        categories
+      );
       return {
         attachmentId: a.id,
         kind: a.kind,
