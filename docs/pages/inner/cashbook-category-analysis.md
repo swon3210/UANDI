@@ -1,26 +1,31 @@
-# 페이지 명세: 카테고리 AI 분석 (/inner/cashbook/analysis)
+# 페이지 명세: 카테고리 AI 종합 분석 (/inner/cashbook/analysis)
 
 ## 목적
 
-대시보드 "평소와 비교" 카드에서 눈에 띄는 카테고리를 눌렀을 때, **그 카테고리 하나**를 깊이 들여다보는 드릴다운 페이지.
-최근 달들의 추이와 이번 달 내역을 보여주고, AI가 평소 대비 변화의 원인과 제안을 한국어 마크다운으로 설명한다.
+대시보드 기간 비교 카드에서 **비교하던 카테고리 묶음 전체**(고른 게 없으면 그 범위 전체)를 한 번에 들여다보는 드릴다운 페이지.
+카테고리마다 따로 보고서를 만들지 않고, 묶음 전체를 **하나의 종합 리포트**로 분석한다.
+이번 달 합계를 대시보드에서 고른 비교 대상(전월·고른 달·평소)과 견주고, 카테고리별 증감·최근 추이·이번 달 내역을 함께 보여준다.
 
 ---
 
 ## 사용자 스토리
 
-- 커플로서, 이번 달 유난히 많이(적게) 쓴 카테고리가 왜 그런지 바로 알고 싶다.
-- 커플로서, 그 카테고리의 최근 몇 달 흐름을 한눈에 보고 싶다.
+- 커플로서, 기간 비교에서 고른 카테고리들이 이번 달 왜 그렇게 움직였는지 한 번에 알고 싶다.
+- 커플로서, 그 묶음 안에서 어떤 카테고리가 증감을 이끌었는지 보고 싶다.
+- 커플로서, 그 묶음의 최근 몇 달 흐름을 한눈에 보고 싶다.
 - 커플로서, AI가 짚어주는 눈에 띄는 내역과 제안을 읽고 싶다.
 
 ---
 
 ## 진입
 
-- 대시보드 `MedianCompareCard`의 카테고리 행(`median-highlight-{카테고리}`)이 링크다 (행 끝에 `›`)
-- URL: `/inner/cashbook/analysis?category={이름}&group={expense|income}[&at=YYYY-MM-DD][&sub=fixed|variable]`
-  - `at` = 기준 달 시작일 (생략 시 이번 달), `sub` = 대시보드의 고정/변동 세부 필터 (생략 시 전체)
-  - `category`/`group`이 없거나 잘못되면 안내(`category-analysis-empty`, "분석할 카테고리를 찾을 수 없어요") + 뒤로 가기
+- 대시보드 `PeriodCompareChart` 아래 `AI 분석` 버튼(`compare-ai-analysis`, 월간 탭 전용) — `docs/pages/02-dashboard.md` 「기간 비교 차트」
+- URL: `/inner/cashbook/analysis?group={expense|income}[&sub=fixed|variable][&at=YYYY-MM-DD][&cat={이름}…][&cmp=median|YYYY-MM-DD]`
+  - `group` 필수. 없거나 잘못되면 안내(`category-analysis-empty`, "분석할 카테고리를 찾을 수 없어요") + 뒤로 가기
+  - `sub` = 대시보드 고정/변동 세부 필터 (생략 시 전체)
+  - `at` = 기준 달 시작일 (생략 시 이번 달, 미래면 이번 달)
+  - `cat` = 고른 카테고리 (반복 키). **생략하면 그룹·세부 필터 범위 전체**를 분석
+  - `cmp` = 비교 대상. `median` = 평소, 날짜 = 그 달, 생략 = 전월
 - 월간 탭 전용 기능이라 기준은 항상 **달** 단위
 
 ---
@@ -29,27 +34,37 @@
 
 ```
 ┌─────────────────────────┐
-│ ‹   카테고리 AI 분석      │  ← Header (뒤로 가기 = router.back)
+│ ←   카테고리 AI 분석      │  ← Header (BackButton)
 ├─────────────────────────┤
-│  여행              지출  │  ← 카테고리 이름 + 그룹 (category-analysis-title)
-│  2026년 10월 기준        │  ← 기준 달 (category-analysis-month)
+│  선택한 카테고리 3개  지출 │  ← 범위 이름 (category-analysis-title)
+│  2026년 10월 기준        │     카테고리 1개면 그 이름, 고른 게 없으면 "전체 변동 지출" 등
+│  (●여행)(●식비)(●데이트)  │  ← 칩 (category-analysis-chip-{이름}), 범위 전체면 없음
 │  ┌─────────┐┌─────────┐ │
-│  │이번 달   ││평소(중위값)│ │  ← category-analysis-current / -median
-│  │3,533,000││ 92,000원 │ │
+│  │이번 달   ││평소·5개월 중위값│ ← category-analysis-current / -compare(-label)
+│  │4,693,000││1,650,000 │ │
 │  └─────────┘└─────────┘ │
-│  [최근 6개월 + 이번 달 막대]│  ← CategoryTrendChart (category-analysis-chart)
-│                         │     이번 달 막대만 그룹 색, 평소 점선(ReferenceLine)
+│  🚨 평소 대비 ▲ 3,043,000원 (184%)│ ← category-analysis-delta
+│                         │
+│  최근 6개월 추이 · 점선 = 평소│
+│  [묶음 월 합계 막대 + 점선]  │  ← CategoryTrendChart (category-analysis-chart)
+│                         │
+│  카테고리별 · 3개  평소 → 이번 달│ ← CategoryAnalysisBreakdown (2개 이상일 때)
+│  ● 여행   3,533,000원     │     category-analysis-row-{이름}
+│           200,000원 · ▲ 3,333,000원│
+│  ● 식비   …               │
+│                         │
 │  ✨ AI 분석              │
 │  ┌───────────────────┐  │
-│  │ ## 📊 이번 달 요약  │  │  ← AiReportCard (category-analysis-report)
-│  │ ## 📈 평소와 비교   │  │     스트리밍으로 점진 표시, 마크다운 렌더
+│  │ ## 📊 이번 달 요약  │  │  ← AiReportCard (category-analysis-report) — 1개만
+│  │ ## 📈 비교          │  │
+│  │ ## 🧩 카테고리별로 보면│ │
 │  │ ## 🔍 눈에 띄는 내역│  │
 │  │ ## 💡 제안         │  │
 │  └───────────────────┘  │
 │  [↻ 다시 분석]           │  ← category-analysis-retry
 │                         │
-│  이번 달 내역 N건         │  ← category-analysis-entries (날짜·설명·금액, 최신순)
-│  10/12  제주 항공권  …원  │
+│  이번 달 내역 N건         │  ← category-analysis-entries (날짜·설명·카테고리·금액, 최신순)
+│  10/12  제주 항공권  여행  …원│
 └─────────────────────────┘
 ```
 
@@ -57,13 +72,18 @@
 
 ## 기술 명세
 
-### 데이터
+### 데이터 (`useCategoryAnalysisData`)
 
-- 기준 달 + 직전 6개월(`MEDIAN_WINDOW_MONTHS`)을 대시보드와 같은 월 범위 쿼리 키(`useCashbookEntriesInRange`)로 조회 (`useMonthWindowEntries`) → 대시보드에서 넘어오면 캐시를 그대로 쓴다
-- 그룹·세부 필터를 대시보드와 같은 기준(`filterEntries`)으로 적용한 뒤 `category` 이름이 같은 내역만 남긴다
-- 평소(중위값)는 카드와 같은 규칙: 직전 6개월 중 그 그룹에 기록이 있는 달들만 표본으로, 그 달에 이 카테고리가 없으면 0원 (`categoryMedian`)
-- 표본이 2개월 미만이면 평소 칸은 `—`, 차트에 평소 선 없음. AI 분석은 그래도 진행한다 (이번 달 내역이 있을 때)
-- 이번 달 내역이 0건이면(`missing`) 내역 목록 대신 "이번 달엔 기록이 없어요"를 보여주고 AI 분석은 평소 금액만으로 진행
+- 기준 달 + 직전 6개월(`MEDIAN_WINDOW_MONTHS`)을 대시보드와 같은 월 범위 쿼리 키로 조회 (`useMonthWindowEntries`) → 대시보드에서 넘어오면 캐시를 그대로 쓴다
+- 비교 달(`cmp`가 날짜이거나 전월)은 `cashbookEntriesInRangeOptions`로 조회 — 최근 6개월 안이면 같은 쿼리 키라 추가 요청 없음
+- 그룹·세부 필터를 대시보드와 같은 기준(`filterEntries`)으로 적용한 뒤 `cat`이 있으면 그 카테고리만 남긴다
+- 비교 대상 합계(`compareAmount`)
+  - 달: 그 달의 묶음 합계
+  - 평소: 직전 6개월 중 그 그룹(+세부 필터)에 기록이 있는 달들을 표본으로, **달마다 묶음 합계를 낸 뒤의 중위값** (`selectionMedian`) — 대시보드 평소 비교 요약과 같은 값
+  - 평소 표본이 2개월 미만이면 `—` + 안내 ("지난달 기록이 2개월 이상 쌓이면 평소와 비교해 드려요"), 증감 줄 없음
+- 카테고리별 행(`rows`): 고른 카테고리 전부(금액 0이어도), 범위 전체면 이번 달 또는 비교 대상에 금액이 있는 카테고리. 비교 금액은 그 달 금액 또는 카테고리별 중위값. 이번 달 → 비교 금액 내림차순
+- 추이 차트: 묶음의 월 합계, 점선은 묶음 평소(중위값, 표본 부족이면 없음) — 비교 대상이 특정 달이어도 점선은 평소
+- 이번 달 내역이 0건이면 내역 목록 대신 "이번 달엔 기록이 없어요". 범위에 카테고리가 하나도 없으면(어느 달에도 기록 없음) AI 분석은 하지 않는다
 
 ### AI 분석 (`POST /api/ai/analyze-category`)
 
@@ -71,54 +91,69 @@
 
   ```ts
   {
-    category: string; // 1~60자
     group: 'expense' | 'income';
+    scope: string; // 범위 이름 (예: "여행·식비·데이트", "전체 변동 지출"), 1~200자
     year: number;
-    month: number; // 기준 달 (month 1~12)
+    month: number; // 기준 달 (1~12)
+    compare: {
+      label: string;
+      amount: number | null;
+    } // "평소(최근 6개월 중위값)" | "2026년 9월"
     current: {
       amount: number;
       count: number;
       entries: {
         date: string;
+        category: string;
         amount: number;
         description: string;
       }
       []; // 최대 100건
     }
+    categories: {
+      category: string;
+      current: number;
+      compare: number | null;
+      count: number;
+    }
+    []; // 1~30개
     history: {
       year: number;
       month: number;
       amount: number;
       count: number;
     }
-    []; // 직전 달들, 오래된 순, 최대 12
-    median: number | null; // 표본 부족이면 null
+    []; // 묶음 월 합계, 오래된 순, 최대 12
+    median: number | null; // 묶음 평소, 표본 부족이면 null
   }
   ```
 
 - 응답: `text/event-stream`, `data: {"text": "..."}` 청크 + `data: [DONE]` (지출 분석과 동일)
-- 인증·일일 한도·AI 설정(말투/관점) 처리는 `analyze-spending`과 같다. `USE_AI_MOCK=true`면 카테고리 이름을 넣은 고정 텍스트
-- 섹션 고정: `## 📊 이번 달 요약` / `## 📈 평소와 비교` / `## 🔍 눈에 띄는 내역` / `## 💡 제안`. 각 1~3문장, 격려하는 톤, 수입이면 "썼어요" 대신 "들어왔어요" 맥락
-- 내역 설명은 서버에서 제어문자·따옴표 제거 + 40자로 잘라 프롬프트에 넣는다
+- 인증·일일 한도·AI 설정(말투/관점) 처리는 `analyze-spending`과 같다. `USE_AI_MOCK=true`면 범위 이름·카테고리 이름을 넣은 고정 텍스트
+- 섹션 고정: `## 📊 이번 달 요약` / `## 📈 비교` / `## 🧩 카테고리별로 보면` / `## 🔍 눈에 띄는 내역` / `## 💡 제안`
+  - 카테고리마다 따로 쓰지 말고 묶음 전체의 흐름 안에서 각 카테고리의 역할을 엮어 설명하도록 지시
+  - 각 1~3문장, 격려하는 톤, 수입이면 "썼어요" 대신 "들어왔어요" 맥락
+- 카테고리 이름·내역 설명은 서버에서 제어문자·따옴표 제거 후 길이 제한(이름 60자, 설명 40자)을 두고 프롬프트에 넣는다
 
 ### 클라이언트
 
-- `useCategoryAnalysis`: `useQuery` + `experimental_streamedQuery`(청크를 문자열로 누적)로 **페이지 진입 시 자동 실행**.
-  쿼리 키 `['categoryAnalysis', coupleId, group, sub, category, year, month]`, `staleTime: Infinity` → 뒤로 갔다 다시 와도 재호출하지 않는다 (일일 한도 보호)
+- `useCategoryAnalysisReport`: `useQuery` + `experimental_streamedQuery`(청크를 문자열로 누적)로 **페이지 진입 시 자동 실행**.
+  쿼리 키 `['categoryAnalysis', coupleId, group, sub, 정렬된 카테고리, YYYY-MM, 비교 대상]`, `staleTime: Infinity` → 뒤로 갔다 다시 와도 재호출하지 않는다 (일일 한도 보호)
 - "다시 분석"(`category-analysis-retry`)은 `refetch()` (기본 `reset` 모드라 처음부터 다시 스트리밍)
 - 상태: 첫 청크 전 로딩(`category-analysis-loading`) → 스트리밍/완료 본문(`category-analysis-report`, `react-markdown`) → 실패 시 메시지(`category-analysis-error`) + 다시 분석
 
 ### 컴포넌트
 
-| 컴포넌트                  | 역할                                                    |
-| ------------------------- | ------------------------------------------------------- |
-| `CategoryAnalysisSummary` | 이름·그룹·기준 달·이번 달/평소 두 칸                    |
-| `CategoryTrendChart`      | 월별 막대 + 평소 점선 (`recharts BarChart`)             |
-| `AiReportCard`            | 로딩/스트리밍/완료/실패 상태의 마크다운 보고서 + 재시도 |
+| 컴포넌트                    | 역할                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `CategoryAnalysisSummary`   | 범위 이름·칩·기준 달·이번 달/비교 대상 두 칸·증감 한 줄      |
+| `CategoryTrendChart`        | 묶음 월 합계 막대 + 평소 점선 (`recharts BarChart`)          |
+| `CategoryAnalysisBreakdown` | 카테고리별 이번 달 금액 + 비교 금액·증감 (2개 이상일 때만)   |
+| `AiReportCard`              | 로딩/스트리밍/완료/실패 상태의 마크다운 종합 보고서 + 재시도 |
 
 ---
 
 ## 관련 문서
 
-- 대시보드 중위값 비교 카드: `docs/pages/02-dashboard.md` → 「월 중위값 비교 카드」
+- 대시보드 기간 비교(평소 비교·AI 분석 버튼): `docs/pages/02-dashboard.md` → 「기간 비교 차트」
 - AI 공통 규칙: `docs/pages/05-ai-features.md`

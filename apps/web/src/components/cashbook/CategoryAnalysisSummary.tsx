@@ -4,19 +4,28 @@ import { cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 
+export type AnalysisCategoryChip = {
+  name: string;
+  color: string;
+};
+
 type Props = {
-  category: string;
+  /** 분석 범위 이름 (예: 선택한 카테고리 2개, 전체 변동 지출) */
+  title: string;
+  /** 고른 카테고리 칩. 비어 있으면(범위 전체) 칩 없이 제목만 */
+  categories: AnalysisCategoryChip[];
   group: CategoryGroup;
   /** 기준 달 라벨 (예: 2026년 10월) */
   monthLabel: string;
-  /** 고정/변동 세부 필터 라벨 (예: 변동 지출). 없으면 그룹 이름만 */
-  scopeLabel?: string;
   currentAmount: number;
-  /** 평소(중위값). 표본 부족이면 null → `—` */
-  median: number | null;
-  /** 평소 계산에 들어간 달 수 */
-  sampleMonths: number;
-  windowMonths: number;
+  /** 비교 대상 라벨 (예: 평소, 2026년 9월) */
+  compareLabel: string;
+  /** 비교 대상 보조 설명 (예: 최근 5개월 중위값) */
+  compareHint?: string;
+  /** 비교 대상 합계. null이면 `—`와 함께 안내 */
+  compareAmount: number | null;
+  /** 비교 금액이 없을 때 안내 문구 */
+  unavailableMessage?: string;
 };
 
 const GROUP_LABEL: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
@@ -24,32 +33,80 @@ const GROUP_TONE: Record<CategoryGroup, string> = {
   expense: 'text-expense',
   income: 'text-income',
 };
+// 증가가 좋은 그룹(수입)과 나쁜 그룹(지출)을 나눠 증감 색을 정한다 (기간 비교와 같은 규칙)
+const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = { expense: false, income: true };
 
-/** 카테고리 분석 페이지 상단: 이름·기준 달 + 이번 달/평소 두 칸 */
+function Delta({
+  current,
+  compare,
+  compareLabel,
+  group,
+}: {
+  current: number;
+  compare: number;
+  compareLabel: string;
+  group: CategoryGroup;
+}) {
+  const delta = current - compare;
+  if (delta === 0) {
+    return <span className="text-muted-foreground">{compareLabel} 대비 변동 없음</span>;
+  }
+  const good = delta > 0 === INCREASE_IS_GOOD[group];
+  const rate = compare !== 0 ? Math.round((Math.abs(delta) / Math.abs(compare)) * 100) : null;
+  return (
+    <>
+      <span>{good ? '😎' : '🚨'} </span>
+      <span className="text-muted-foreground">{compareLabel} 대비 </span>
+      <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
+        {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
+        {rate !== null ? ` (${rate}%)` : ''}
+      </span>
+    </>
+  );
+}
+
+/** AI 분석 페이지 상단: 분석 범위(칩)·기준 달 + 이번 달/비교 대상 두 칸 + 증감 한 줄 */
 export function CategoryAnalysisSummary({
-  category,
+  title,
+  categories,
   group,
   monthLabel,
-  scopeLabel,
   currentAmount,
-  median,
-  sampleMonths,
-  windowMonths,
+  compareLabel,
+  compareHint,
+  compareAmount,
+  unavailableMessage,
 }: Props) {
   return (
     <section data-testid="category-analysis-summary" className="space-y-3">
       <div>
         <div className="flex items-baseline justify-between gap-2">
           <h2 data-testid="category-analysis-title" className="truncate text-xl font-semibold">
-            {category}
+            {title}
           </h2>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {scopeLabel ?? GROUP_LABEL[group]}
-          </span>
+          <span className="shrink-0 text-xs text-muted-foreground">{GROUP_LABEL[group]}</span>
         </div>
         <p data-testid="category-analysis-month" className="mt-0.5 text-xs text-muted-foreground">
           {monthLabel} 기준
         </p>
+        {categories.length > 0 ? (
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {categories.map((c) => (
+              <li
+                key={c.name}
+                data-testid={`category-analysis-chip-${c.name}`}
+                className="flex max-w-full items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: c.color }}
+                  aria-hidden
+                />
+                <span className="truncate">{c.name}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <dl className="grid grid-cols-2 gap-2">
@@ -63,22 +120,35 @@ export function CategoryAnalysisSummary({
           </dd>
         </div>
         <div className="rounded-lg bg-muted/50 px-3 py-2">
-          <dt className="text-[11px] text-muted-foreground">
-            평소 (중위값)
-            {median !== null ? ` · ${sampleMonths}개월` : ''}
+          <dt
+            data-testid="category-analysis-compare-label"
+            className="truncate text-[11px] text-muted-foreground"
+          >
+            {compareLabel}
+            {compareHint ? ` · ${compareHint}` : ''}
           </dt>
           <dd
-            data-testid="category-analysis-median"
+            data-testid="category-analysis-compare"
             className="mt-0.5 text-lg font-semibold tabular-nums"
           >
-            {median !== null ? formatCurrency(median) : '—'}
+            {compareAmount !== null ? formatCurrency(compareAmount) : '—'}
           </dd>
         </div>
       </dl>
-      {median === null ? (
-        <p className="text-[11px] text-muted-foreground">
-          지난 {windowMonths}개월 중 기록이 2개월 이상 쌓이면 평소 금액이 보여요
-        </p>
+      {compareAmount !== null ? (
+        <div
+          data-testid="category-analysis-delta"
+          className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
+        >
+          <Delta
+            current={currentAmount}
+            compare={compareAmount}
+            compareLabel={compareLabel}
+            group={group}
+          />
+        </div>
+      ) : unavailableMessage ? (
+        <p className="text-[11px] text-muted-foreground">{unavailableMessage}</p>
       ) : null}
     </section>
   );

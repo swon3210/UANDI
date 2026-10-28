@@ -4,6 +4,12 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { supportsSubGroup, type GroupFilter, type SubGroupFilter } from '@/hooks/useDashboardData';
 import { isCurrentPeriod, normalizeCursor, type PeriodKind } from '@/utils/date';
 
+/** 기간 비교의 비교 대상을 "평소"(최근 달 중위값)로 고른 상태. 월간 탭 전용 */
+export const MEDIAN_COMPARE = 'median';
+
+/** null = 기본(직전 기간), Dayjs = 직접 고른 비교 기간, 'median' = 평소 */
+export type CompareSelection = Dayjs | typeof MEDIAN_COMPARE | null;
+
 export type DashboardFilters = {
   period: PeriodKind;
   /** 기준 기간 커서 */
@@ -15,8 +21,8 @@ export type DashboardFilters = {
   altCursor: Dayjs | null;
   group: GroupFilter;
   subGroup: SubGroupFilter;
-  /** null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간 */
-  compareSelection: Dayjs | null;
+  /** null = 기본(직전 기간), 값 = 사용자가 직접 고른 비교 기간 또는 평소 */
+  compareSelection: CompareSelection;
   /** null = 기본(그룹별 기본 선택), 배열 = 사용자가 직접 고른 비교 대상 카테고리 */
   categorySelection: string[] | null;
   /** 지출·수입 '전체' 도넛에 표시할 카테고리. 빈 배열 = 기본(고정/변동) */
@@ -49,7 +55,17 @@ function parseFilters(params: URLSearchParams): DashboardFilters {
   const subParam = params.get('sub') as SubGroupFilter | null;
   const subGroup =
     supportsSubGroup(group) && subParam && SUB_GROUPS.includes(subParam) ? subParam : 'all';
-  const cmp = parseDate(params.get('cmp'));
+  const cmpParam = params.get('cmp');
+  const cmp = parseDate(cmpParam);
+  // 평소 비교는 월간 탭에서만 쓸 수 있다
+  const compareSelection: CompareSelection =
+    cmpParam === MEDIAN_COMPARE
+      ? period === 'monthly'
+        ? MEDIAN_COMPARE
+        : null
+      : cmp
+        ? normalizeCursor(period, cmp)
+        : null;
 
   return {
     period,
@@ -58,7 +74,7 @@ function parseFilters(params: URLSearchParams): DashboardFilters {
     altCursor: alt ? normalizeCursor(otherPeriod(period), alt) : null,
     group,
     subGroup,
-    compareSelection: cmp ? normalizeCursor(period, cmp) : null,
+    compareSelection,
     // 'cat' 키가 있으면 빈 값만 있어도 "직접 모두 해제"한 상태로 본다
     categorySelection: params.has('cat') ? params.getAll('cat').filter(Boolean) : null,
     donutSelection: params.getAll('donut').filter(Boolean),
@@ -71,7 +87,8 @@ function serializeFilters(f: DashboardFilters): string {
   if (!isCurrentPeriod(f.period, f.cursor)) params.set('at', f.cursor.format(DATE_FORMAT));
   if (f.group !== 'all') params.set('group', f.group);
   if (f.subGroup !== 'all') params.set('sub', f.subGroup);
-  if (f.compareSelection) params.set('cmp', f.compareSelection.format(DATE_FORMAT));
+  if (f.compareSelection === MEDIAN_COMPARE) params.set('cmp', MEDIAN_COMPARE);
+  else if (f.compareSelection) params.set('cmp', f.compareSelection.format(DATE_FORMAT));
   if (f.categorySelection) {
     if (f.categorySelection.length === 0) params.set('cat', '');
     for (const name of f.categorySelection) params.append('cat', name);

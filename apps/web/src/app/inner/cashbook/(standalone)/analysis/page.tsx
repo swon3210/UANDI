@@ -5,25 +5,52 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { SearchX } from 'lucide-react';
+import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
 import { Button, EmptyState, Header, Skeleton } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
 import { AiReportCard, type AiReportStatus } from '@/components/cashbook/AiReportCard';
+import { CategoryAnalysisBreakdown } from '@/components/cashbook/CategoryAnalysisBreakdown';
 import { CategoryAnalysisSummary } from '@/components/cashbook/CategoryAnalysisSummary';
 import { CategoryTrendChart } from '@/components/cashbook/CategoryTrendChart';
-import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
+import {
+  compareTargetLabel,
+  useCategoryAnalysisData,
+  useCategoryAnalysisReport,
+} from '@/hooks/useCategoryAnalysis';
+import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import { userAtom } from '@/stores/auth.store';
 import type { CategoryGroup, CashbookEntry } from '@/types';
-import { parseCategoryAnalysisParams } from '@/utils/category-analysis';
+import {
+  parseCategoryAnalysisParams,
+  type CategoryAnalysisParams,
+} from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { formatDay, getPeriodLabel } from '@/utils/date';
-import { MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
+import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import { BackButton } from '@/components/shell/BackButton';
 
-const SCOPE_LABEL: Record<Exclude<SubGroupFilter, 'all'>, Record<CategoryGroup, string>> = {
-  fixed: { expense: '고정 지출', income: '고정 수입' },
-  variable: { expense: '변동 지출', income: '변동 수입' },
+const GROUP_NAME: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
+const SUB_GROUP_PREFIX: Record<SubGroupFilter, string> = {
+  all: '',
+  fixed: '고정 ',
+  variable: '변동 ',
 };
+
+/** 분석 범위 이름: 고른 카테고리가 있으면 그 이름들, 없으면 `전체 변동 지출` 같은 범위 */
+function scopeName(params: CategoryAnalysisParams): { title: string; scope: string } {
+  if (params.categories.length === 0) {
+    const all = `전체 ${SUB_GROUP_PREFIX[params.subGroup]}${GROUP_NAME[params.group]}`;
+    return { title: all, scope: all };
+  }
+  return {
+    title:
+      params.categories.length === 1
+        ? params.categories[0]
+        : `선택한 카테고리 ${params.categories.length}개`,
+    scope: params.categories.join('·'),
+  };
+}
 
 function entryDate(entry: CashbookEntry): Date {
   return entry.date instanceof Date ? entry.date : entry.date.toDate();
@@ -44,9 +71,22 @@ function CategoryAnalysisPageInner() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
-  const params = parseCategoryAnalysisParams(searchParams);
+  // 매 렌더 새 객체가 되면 아래 데이터 계산이 매번 다시 돌아 쿼리 키 문자열로 고정한다
+  const query = searchParams.toString();
+  const params = useMemo(() => parseCategoryAnalysisParams(new URLSearchParams(query)), [query]);
+  const names = params ? scopeName(params) : null;
   const { data, isLoading } = useCategoryAnalysisData(coupleId, params);
-  const report = useCategoryAnalysisReport(coupleId, params, data);
+  const hasData = data !== null && data.rows.length > 0;
+  const report = useCategoryAnalysisReport(
+    coupleId,
+    params,
+    hasData ? data : null,
+    names?.scope ?? ''
+  );
+
+  const { data: categories } = useCashbookCategories(coupleId);
+  const colorMap = useMemo(() => buildCategoryColorMap(categories), [categories]);
+  const colorOf = (name: string) => getCategoryColor(colorMap, params?.group ?? 'expense', name);
 
   // 스트리밍 중 매 청크마다 다시 렌더되므로 차트 데이터는 고정해 둔다
   const trendPoints = useMemo(
@@ -84,7 +124,7 @@ function CategoryAnalysisPageInner() {
             <EmptyState
               icon={<SearchX size={32} />}
               title="분석할 카테고리를 찾을 수 없어요"
-              description="대시보드의 '평소와 비교'에서 카테고리를 골라 들어와 주세요"
+              description="대시보드 기간 비교의 'AI 분석'으로 들어와 주세요"
               action={
                 <Button variant="outline" size="sm" onClick={() => router.back()}>
                   뒤로 가기
@@ -92,7 +132,7 @@ function CategoryAnalysisPageInner() {
               }
             />
           </div>
-        ) : isLoading || !data ? (
+        ) : isLoading || !data || !names ? (
           <>
             <Skeleton className="h-[140px] w-full rounded-xl" />
             <Skeleton className="h-[200px] w-full rounded-xl" />
@@ -102,16 +142,23 @@ function CategoryAnalysisPageInner() {
           <>
             <div className="rounded-xl border border-border bg-card p-4">
               <CategoryAnalysisSummary
-                category={params.category}
+                title={names.title}
+                categories={params.categories.map((name) => ({ name, color: colorOf(name) }))}
                 group={params.group}
                 monthLabel={getPeriodLabel('monthly', params.cursor)}
-                scopeLabel={
-                  params.subGroup === 'all' ? undefined : SCOPE_LABEL[params.subGroup][params.group]
-                }
                 currentAmount={data.currentAmount}
-                median={data.median}
-                sampleMonths={data.sampleMonths}
-                windowMonths={MEDIAN_WINDOW_MONTHS}
+                compareLabel={compareTargetLabel(params.compare)}
+                compareHint={
+                  params.compare === 'median'
+                    ? data.median !== null
+                      ? `최근 ${data.sampleMonths}개월 중위값`
+                      : undefined
+                    : params.compare.isSame(params.cursor.subtract(1, 'month'), 'month')
+                      ? '전월'
+                      : undefined
+                }
+                compareAmount={data.compareAmount}
+                unavailableMessage={MEDIAN_UNAVAILABLE_MESSAGE}
               />
             </div>
 
@@ -123,12 +170,24 @@ function CategoryAnalysisPageInner() {
               <CategoryTrendChart group={params.group} median={data.median} points={trendPoints} />
             </div>
 
-            <AiReportCard
-              content={report.data ?? ''}
-              status={reportStatus}
-              errorMessage={report.error?.message}
-              onRetry={() => report.refetch()}
-            />
+            {data.rows.length > 1 ? (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <CategoryAnalysisBreakdown
+                  group={params.group}
+                  compareLabel={params.compare === 'median' ? '평소' : params.compare.format('M월')}
+                  rows={data.rows.map((r) => ({ ...r, color: colorOf(r.category) }))}
+                />
+              </div>
+            ) : null}
+
+            {hasData ? (
+              <AiReportCard
+                content={report.data ?? ''}
+                status={reportStatus}
+                errorMessage={report.error?.message}
+                onRetry={() => report.refetch()}
+              />
+            ) : null}
 
             <section className="rounded-xl border border-border bg-card p-4">
               <div className="mb-1 text-xs text-muted-foreground">
@@ -146,6 +205,12 @@ function CategoryAnalysisPageInner() {
                       <span className="min-w-0 flex-1 truncate">
                         {entry.description || dayjs(entryDate(entry)).format('M월 D일 내역')}
                       </span>
+                      {/* 여러 카테고리를 함께 보므로 어느 카테고리 내역인지 표시 */}
+                      {params.categories.length !== 1 ? (
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {entry.category}
+                        </span>
+                      ) : null}
                       <span className="shrink-0 font-semibold tabular-nums">
                         {formatCurrency(entry.amount)}
                       </span>

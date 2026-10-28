@@ -8,8 +8,10 @@ import type { PeriodKind } from '@/utils/date';
 
 type Props = {
   kind: PeriodKind;
-  /** 현재 선택된 기간의 커서 */
+  /** 현재 선택된 기간의 커서 (처음 보여줄 페이지 기준) */
   value: Dayjs;
+  /** false면 value를 선택 표시하지 않는다 (다른 비교 대상이 선택된 경우). 기본 true */
+  highlightValue?: boolean;
   /** 미래 기간 비활성화 기준. 스토리 등에서 고정값 주입용 */
   today?: Dayjs;
   onSelect: (cursor: Dayjs) => void;
@@ -17,12 +19,22 @@ type Props = {
 
 const YEARS_PER_PAGE = 12;
 
-export function PeriodPicker({ kind, value, today = dayjs(), onSelect }: Props) {
-  if (kind === 'monthly') return <MonthPicker value={value} today={today} onSelect={onSelect} />;
-  return <YearPicker value={value} today={today} onSelect={onSelect} />;
+export function PeriodPicker({
+  kind,
+  value,
+  highlightValue = true,
+  today = dayjs(),
+  onSelect,
+}: Props) {
+  const props = { value, highlightValue, today, onSelect };
+  if (kind === 'monthly') return <MonthPicker {...props} />;
+  return <YearPicker {...props} />;
 }
 
-type PickerProps = Omit<Props, 'kind' | 'today'> & { today: Dayjs };
+type PickerProps = Omit<Props, 'kind' | 'today' | 'highlightValue'> & {
+  today: Dayjs;
+  highlightValue: boolean;
+};
 
 function PickerNav({
   title,
@@ -63,7 +75,7 @@ function PickerNav({
   );
 }
 
-function MonthPicker({ value, today, onSelect }: PickerProps) {
+function MonthPicker({ value, highlightValue, today, onSelect }: PickerProps) {
   const [viewYear, setViewYear] = useState(() => value.startOf('year'));
 
   return (
@@ -77,7 +89,7 @@ function MonthPicker({ value, today, onSelect }: PickerProps) {
       <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: 12 }, (_, i) => {
           const m = viewYear.month(i);
-          const selected = m.isSame(value, 'month');
+          const selected = highlightValue && m.isSame(value, 'month');
           return (
             <Button
               key={i}
@@ -97,7 +109,7 @@ function MonthPicker({ value, today, onSelect }: PickerProps) {
   );
 }
 
-function YearPicker({ value, today, onSelect }: PickerProps) {
+function YearPicker({ value, highlightValue, today, onSelect }: PickerProps) {
   // 선택된 연도가 들어 있는 페이지에서 시작. 페이지 끝은 올해 기준으로 정렬한다.
   const [pageEnd, setPageEnd] = useState(() => {
     const offset = Math.floor((today.year() - value.year()) / YEARS_PER_PAGE);
@@ -116,7 +128,7 @@ function YearPicker({ value, today, onSelect }: PickerProps) {
       <div className="grid grid-cols-4 gap-2">
         {Array.from({ length: YEARS_PER_PAGE }, (_, i) => {
           const year = pageStart + i;
-          const selected = year === value.year();
+          const selected = highlightValue && year === value.year();
           return (
             <Button
               key={year}
