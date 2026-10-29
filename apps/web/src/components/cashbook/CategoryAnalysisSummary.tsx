@@ -1,6 +1,7 @@
 'use client';
 
-import { cn } from '@uandi/ui';
+import { ChevronRight } from 'lucide-react';
+import { Button, cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 
@@ -26,6 +27,8 @@ type Props = {
   compareAmount: number | null;
   /** 비교 금액이 없을 때 안내 문구 */
   unavailableMessage?: string;
+  /** 분석할 카테고리를 다시 고르는 시트를 연다. 없으면 버튼을 숨긴다 */
+  onSelectCategories?: () => void;
 };
 
 const GROUP_LABEL: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
@@ -76,6 +79,7 @@ export function CategoryAnalysisSummary({
   compareHint,
   compareAmount,
   unavailableMessage,
+  onSelectCategories,
 }: Props) {
   return (
     <section data-testid="category-analysis-summary" className="space-y-3">
@@ -89,23 +93,37 @@ export function CategoryAnalysisSummary({
         <p data-testid="category-analysis-month" className="mt-0.5 text-xs text-muted-foreground">
           {monthLabel} 기준
         </p>
-        {categories.length > 0 ? (
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {categories.map((c) => (
-              <li
-                key={c.name}
-                data-testid={`category-analysis-chip-${c.name}`}
-                className="flex max-w-full items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+        {categories.length > 0 || onSelectCategories ? (
+          <div className="mt-2 flex items-start gap-2">
+            <ul className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+              {categories.map((c) => (
+                <li
+                  key={c.name}
+                  data-testid={`category-analysis-chip-${c.name}`}
+                  className="flex max-w-full items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+                >
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: c.color }}
+                    aria-hidden
+                  />
+                  <span className="truncate">{c.name}</span>
+                </li>
+              ))}
+            </ul>
+            {onSelectCategories ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSelectCategories}
+                data-testid="category-analysis-category-button"
+                className="-mr-2 -mt-1 h-7 shrink-0 gap-0.5 px-2 text-xs"
               >
-                <span
-                  className="h-2 w-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: c.color }}
-                  aria-hidden
-                />
-                <span className="truncate">{c.name}</span>
-              </li>
-            ))}
-          </ul>
+                카테고리 선택
+                <ChevronRight size={14} />
+              </Button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

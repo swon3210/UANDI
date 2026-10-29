@@ -20,6 +20,10 @@ export class CategoryAnalysisPage {
   readonly error: Locator;
   readonly entries: Locator;
   readonly empty: Locator;
+  readonly categoryButton: Locator;
+  readonly categorySheet: Locator;
+  readonly categoryApply: Locator;
+  readonly categoryClear: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -40,6 +44,11 @@ export class CategoryAnalysisPage {
     this.error = page.getByTestId('category-analysis-error');
     this.entries = page.getByTestId('category-analysis-entries');
     this.empty = page.getByTestId('category-analysis-empty');
+    this.categoryButton = page.getByTestId('category-analysis-category-button');
+    // 대시보드 기간 비교와 같은 카테고리 선택 시트
+    this.categorySheet = page.getByTestId('compare-category-sheet');
+    this.categoryApply = page.getByTestId('compare-category-apply');
+    this.categoryClear = page.getByTestId('compare-category-clear');
   }
 
   /** 분석 대상 카테고리 칩 */
@@ -50,6 +59,11 @@ export class CategoryAnalysisPage {
   /** 추이 차트 카테고리 필터 칩 ('전체' = 묶음 전체) */
   trendFilter(name: string): Locator {
     return this.page.getByTestId(`category-analysis-trend-filter-${name}`);
+  }
+
+  /** 카테고리 선택 시트의 항목 */
+  categoryOption(name: string): Locator {
+    return this.page.getByTestId(`compare-category-option-${name}`);
   }
 
   /** 카테고리별 이번 달 vs 비교 대상 행 */

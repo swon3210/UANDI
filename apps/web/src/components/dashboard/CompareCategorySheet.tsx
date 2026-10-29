@@ -5,6 +5,7 @@ import { Check, Minus, Search } from 'lucide-react';
 import { Button, cn, Input, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
 import { CATEGORY_ICON_MAP } from '@/constants/category-icons';
+import type { CashbookCategory, CategoryGroup } from '@/types';
 
 export type CompareCategoryOption = {
   name: string;
@@ -18,6 +19,31 @@ export type CompareCategoryOption = {
   /** 상위 카테고리 색. 묶음 헤더만 그릴 때 아이콘 색으로 쓴다 */
   parentColor?: string;
 };
+
+/**
+ * 카테고리 메타로 시트 항목을 만드는 함수를 돌려준다 (아이콘·상위/하위 묶음 정보).
+ * 메타에 없는 카테고리(삭제·이름 변경)는 아이콘·상위 없이 색 점만.
+ */
+export function makeCategoryOption(
+  categories: CashbookCategory[] | undefined,
+  group: CategoryGroup
+): (name: string, color: string) => CompareCategoryOption {
+  const groupCategories = (categories ?? []).filter((c) => c.group === group);
+  const byId = new Map(groupCategories.map((c) => [c.id, c]));
+  const byName = new Map(groupCategories.map((c) => [c.name, c]));
+  return (name, color) => {
+    const meta = byName.get(name);
+    const parent = meta?.parentCategoryId ? byId.get(meta.parentCategoryId) : undefined;
+    return {
+      name,
+      color,
+      icon: meta?.icon,
+      parent: parent?.name ?? null,
+      parentIcon: parent?.icon,
+      parentColor: parent?.color,
+    };
+  };
+}
 
 type CategoryGroupNode = {
   /** 상위 카테고리 이름 */

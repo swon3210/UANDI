@@ -26,6 +26,7 @@ const meta: Meta<typeof CategoryAnalysisSummary> = {
     compareHint: '최근 5개월 중위값',
     compareAmount: 1_650_000,
     unavailableMessage: '지난달 기록이 2개월 이상 쌓이면 평소와 비교해 드려요',
+    onSelectCategories: () => {},
   },
 };
 export default meta;
@@ -73,4 +74,9 @@ export const ManyLongNames: Story = {
     ].map((name) => ({ name, color: '#9B9B9B' })),
     currentAmount: 123_456_789,
   },
+};
+
+/** 카테고리 선택 버튼 없이 (읽기 전용) */
+export const WithoutCategoryButton: Story = {
+  args: { onSelectCategories: undefined },
 };

@@ -57,7 +57,11 @@ import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareAiSummary } from './CompareAiSummary';
 import { CompareTargetPicker } from './CompareTargetPicker';
-import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
+import {
+  CompareCategorySheet,
+  makeCategoryOption,
+  type CompareCategoryOption,
+} from './CompareCategorySheet';
 
 type Props = {
   coupleId: string;
@@ -282,25 +286,8 @@ export function BudgetDashboard({ coupleId }: Props) {
   const colorMap = buildCategoryColorMap(categories);
   const colorOf = (name: string) =>
     categoryColors[name] ?? getCategoryColor(colorMap, group === 'all' ? 'expense' : group, name);
-  // 카테고리 선택 시트의 상위/하위 묶음용: 현재 그룹 카테고리 이름 → 상위 카테고리 이름
-  const groupCategories = (categories ?? []).filter((c) => c.group === group);
-  const categoryById = new Map(groupCategories.map((c) => [c.id, c]));
-  const parentOf = (name: string) => {
-    const parentId = groupCategories.find((c) => c.name === name)?.parentCategoryId;
-    return parentId ? categoryById.get(parentId) : undefined;
-  };
-  const iconOf = (name: string) => groupCategories.find((c) => c.name === name)?.icon;
-  const toOption = (name: string, color: string): CompareCategoryOption => {
-    const parent = parentOf(name);
-    return {
-      name,
-      color,
-      icon: iconOf(name),
-      parent: parent?.name ?? null,
-      parentIcon: parent?.icon,
-      parentColor: parent?.color,
-    };
-  };
+  // 카테고리 선택 시트 항목 (아이콘·상위/하위 묶음)
+  const toOption = makeCategoryOption(categories, group === 'all' ? 'expense' : group);
   // 기간 비교 차트에 넣을 비교: 평소면 카테고리별 중위값, 아니면 비교 기간 금액
   const shownComparison = isMedianCompare ? (medianComparison ?? { rows: [] }) : comparison;
   const categoryOptions: CompareCategoryOption[] = shownComparison.rows.map((r) =>

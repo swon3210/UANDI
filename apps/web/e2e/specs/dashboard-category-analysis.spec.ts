@@ -188,6 +188,40 @@ test.describe('카테고리 AI 분석 페이지', () => {
     await expect(dashboard.compareSummaryCaption).toContainText('2개', { timeout: 15000 });
   });
 
+  test('분석 페이지에서 카테고리를 다시 골라 그 묶음으로 분석한다', async ({ authedContext }) => {
+    test.slow();
+    const { page, uid, coupleId } = authedContext;
+    await seedThreeCategories(coupleId, uid);
+
+    const dashboard = await openVariableExpense(page);
+    await selectCategories(dashboard, ['식비', '교통']);
+    await dashboard.compareAiAnalysis.click();
+
+    const analysis = new CategoryAnalysisPage(page);
+    await expect(analysis.current).toContainText('120,000원', { timeout: 30000 });
+
+    // 범위의 카테고리가 모두 후보로 나오고, 고른 것은 체크돼 있다
+    await analysis.categoryButton.click();
+    await expect(analysis.categorySheet).toBeVisible();
+    await expect(analysis.categoryOption('식비')).toHaveAttribute('data-state', 'selected');
+    await analysis.categoryOption('여행').click();
+    await analysis.categoryApply.click();
+    await expect(analysis.categorySheet).toBeHidden();
+
+    await expect(page).toHaveURL(/cat=%EC%97%AC%ED%96%89/);
+    await expect(analysis.chip('여행')).toBeVisible();
+    await expect(analysis.current).toContainText('130,000원');
+    await expectReport(analysis);
+    await expect(analysis.report).toContainText('여행');
+
+    // 모두 해제하면 범위 전체(전체 변동 지출)
+    await analysis.categoryButton.click();
+    await analysis.categoryClear.click();
+    await analysis.categoryApply.click();
+    await expect(analysis.title).toContainText('전체 변동 지출');
+    await expect(analysis.chip('식비')).toHaveCount(0);
+  });
+
   test('평소와 비교 중이었다면 평소(중위값) 기준으로 분석한다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
     await seedThreeCategories(coupleId, uid);

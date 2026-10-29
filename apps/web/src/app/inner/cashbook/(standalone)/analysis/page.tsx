@@ -4,8 +4,9 @@ import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { SearchX } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
-import { Button, EmptyState, Header, Skeleton } from '@uandi/ui';
+import { Button, EmptyState, Header, Sheet, Skeleton } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
 import { AiReportCard, type AiReportStatus } from '@/components/cashbook/AiReportCard';
 import { CategoryAnalysisBreakdown } from '@/components/cashbook/CategoryAnalysisBreakdown';
@@ -13,13 +14,21 @@ import { CategoryAnalysisSummary } from '@/components/cashbook/CategoryAnalysisS
 import { CategoryTrendChart } from '@/components/cashbook/CategoryTrendChart';
 import { TrendCategoryFilter } from '@/components/cashbook/TrendCategoryFilter';
 import {
+  CompareCategorySheet,
+  makeCategoryOption,
+} from '@/components/dashboard/CompareCategorySheet';
+import {
   compareTargetLabel,
   useCategoryAnalysisData,
   useCategoryAnalysisReport,
 } from '@/hooks/useCategoryAnalysis';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { userAtom } from '@/stores/auth.store';
-import { analysisScopeName, parseCategoryAnalysisParams } from '@/utils/category-analysis';
+import {
+  analysisScopeName,
+  buildCategoryAnalysisHref,
+  parseCategoryAnalysisParams,
+} from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { getPeriodLabel } from '@/utils/date';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
@@ -56,6 +65,34 @@ function CategoryAnalysisPageInner() {
   const { data: categories } = useCashbookCategories(coupleId);
   const colorMap = useMemo(() => buildCategoryColorMap(categories), [categories]);
   const colorOf = (name: string) => getCategoryColor(colorMap, params?.group ?? 'expense', name);
+
+  // 분석할 카테고리를 다시 고르면 URL만 바꿔(기록 추가 없이) 그 묶음으로 다시 분석한다
+  const handleOpenCategorySheet = () => {
+    if (!params || !data) return;
+    const toOption = makeCategoryOption(categories, params.group);
+    const options = data.scopeCategories.map((name) => toOption(name, colorOf(name)));
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <CompareCategorySheet
+            title="분석할 카테고리 선택"
+            options={options}
+            initialSelected={params.categories}
+            onApply={(names) =>
+              router.replace(buildCategoryAnalysisHref({ ...params, categories: names }), {
+                scroll: false,
+              })
+            }
+            onClose={closeAndUnmount}
+          />
+        </Sheet>
+      );
+    });
+  };
 
   // 추이 차트 카테고리 필터. null = 묶음 전체
   const [trendCategory, setTrendCategory] = useState<string | null>(null);
@@ -133,6 +170,7 @@ function CategoryAnalysisPageInner() {
                 }
                 compareAmount={data.compareAmount}
                 unavailableMessage={MEDIAN_UNAVAILABLE_MESSAGE}
+                onSelectCategories={handleOpenCategorySheet}
               />
             </div>
 

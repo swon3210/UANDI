@@ -62,6 +62,11 @@ export type CategoryAnalysisData = {
   points: CategoryMonthPoint[];
   /** `rows`와 같은 순서의 카테고리별 추이 */
   trends: CategoryTrend[];
+  /**
+   * 카테고리 선택 후보: 고른 것과 상관없이 범위(그룹·세부 필터) 안에서 이번 달이나 비교 대상에
+   * 금액이 있는 카테고리 + 지금 고른 카테고리. 이번 달 금액 내림차순
+   */
+  scopeCategories: string[];
 };
 
 /** AI 요청 바디 상한 (내역은 금액 큰 순, 카테고리는 이번 달 금액 순으로 자른다) */
@@ -142,6 +147,17 @@ export function useCategoryAnalysisData(
     }
 
     const currentByCategory = sumByCategory(current);
+
+    const scopeCurrent = sumByCategory(scoped(months[0] ?? []));
+    const scopeNames = new Set<string>([...scopeCurrent.keys(), ...params.categories]);
+    if (compareMonth) {
+      for (const e of scoped(compareQuery.data ?? [])) scopeNames.add(e.category);
+    } else if (samples) {
+      for (const [name, amount] of categoryMedians(samples)) if (amount > 0) scopeNames.add(name);
+    }
+    const scopeCategories = [...scopeNames].sort(
+      (a, b) => (scopeCurrent.get(b)?.amount ?? 0) - (scopeCurrent.get(a)?.amount ?? 0)
+    );
     const names = new Set<string>(selected ? params.categories : currentByCategory.keys());
     if (!selected && compareByCategory) {
       for (const [name, amount] of compareByCategory) if (amount > 0) names.add(name);
@@ -182,6 +198,7 @@ export function useCategoryAnalysisData(
       sampleMonths: samples?.length ?? 0,
       points,
       trends,
+      scopeCategories,
     };
   }, [params, isLoading, months, cursors, compareMonth, compareQuery.data, categoriesQuery.data]);
 
