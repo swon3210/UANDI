@@ -72,7 +72,7 @@ export function CompareAiSummary({
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
           <Sparkles size={14} className="shrink-0 text-primary" />
-          <span className="shrink-0 font-semibold text-foreground">AI 요약</span>
+          <span className="shrink-0 font-medium text-foreground">AI 요약</span>
           <span className="truncate">· {scopeTitle}</span>
         </h3>
         <span className="shrink-0 text-[11px] text-muted-foreground">{compareLabel} 대비</span>
@@ -81,7 +81,7 @@ export function CompareAiSummary({
       {overall ? (
         <p
           data-testid="compare-ai-summary-overall"
-          className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
+          className="rounded-lg bg-background/80 px-3 py-2 text-sm leading-relaxed"
         >
           {overall}
         </p>
@@ -106,10 +106,10 @@ export function CompareAiSummary({
                   style={{ backgroundColor: item.color }}
                   aria-hidden
                 />
-                <span className="min-w-0 flex-1 truncate font-medium">{item.category}</span>
+                <span className="min-w-0 flex-1 truncate">{item.category}</span>
                 <span
                   className={cn(
-                    'shrink-0 text-xs font-semibold tabular-nums',
+                    'shrink-0 text-xs font-medium tabular-nums',
                     tone === 'good' && 'text-income',
                     tone === 'bad' && 'text-expense',
                     tone === 'muted' && 'text-muted-foreground'
@@ -144,7 +144,7 @@ export function CompareAiSummary({
                     <span
                       className={cn(
                         'w-14 shrink-0 text-right tabular-nums',
-                        which === 'current' && 'font-semibold text-foreground'
+                        which === 'current' && 'text-foreground'
                       )}
                     >
                       {formatCurrencyMan(amount)}원
