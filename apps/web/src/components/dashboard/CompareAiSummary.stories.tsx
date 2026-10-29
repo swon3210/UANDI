@@ -49,7 +49,8 @@ const meta: Meta<typeof CompareAiSummary> = {
     compareLabel: '평소',
     group: 'expense',
     items: ITEMS,
-    overall: '여행이 몰려 늘었지만 나머지는 평소보다 아꼈어요',
+    overall:
+      '여행(▲125만원)·식비(▲10만원) 영향으로 평소보다 총 132만원 늘었어요. 여행·식비는 늘고 교통·소비는 줄었어요.',
     status: 'success',
     onRetry: () => {},
     href: '#',

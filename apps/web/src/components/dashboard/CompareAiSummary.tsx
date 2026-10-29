@@ -25,7 +25,7 @@ type Props = {
   group: CategoryGroup;
   /** 변화가 큰 순으로 정렬된 카테고리 (최대 5개) */
   items: CompareAiSummaryItem[];
-  /** AI 한 줄 총평 (카테고리 목록 위). 아직 없으면 생략 */
+  /** 총평 두 문장 (카테고리 목록 위, `composeOverallSummary`). 없으면 생략 */
   overall?: string;
   /** AI 이유 생성 상태 (막대는 데이터라 상태와 관계없이 보인다) */
   status: AiReportStatus;

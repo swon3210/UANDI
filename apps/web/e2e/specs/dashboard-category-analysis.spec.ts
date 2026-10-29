@@ -102,9 +102,10 @@ test.describe('대시보드 AI 요약', () => {
     await expectSummary(dashboard, '식비');
     await expect(dashboard.compareAiSummaryReason('식비')).toContainText('몰렸어요');
     await expect(dashboard.compareAiSummary).not.toContainText('큰 금액 한두 건');
-    // 카테고리 목록 위에 전체를 아우르는 한 줄 총평
-    await expect(dashboard.compareAiSummaryOverall).toContainText('이번 달 변화');
-    await expect(dashboard.compareAiSummaryOverall).not.toContainText('식비:');
+    // 총평 두 문장: ① 총 증감과 그 원인 카테고리 ② 늘어난·줄어든 카테고리
+    await expect(dashboard.compareAiSummaryOverall).toContainText('총 7만원 늘었어요');
+    await expect(dashboard.compareAiSummaryOverall).toContainText('식비(▲7만원)');
+    await expect(dashboard.compareAiSummaryOverall).toContainText('식비는 늘었어요');
 
     // 전체 리포트는 같은 분석을 다시 쓰므로 바로 보인다
     await dashboard.compareAiAnalysis.click();
@@ -126,6 +127,9 @@ test.describe('대시보드 AI 요약', () => {
     await selectCategories(dashboard, ['여행']);
     await expect(dashboard.compareAiSummaryItem('여행')).toContainText('▼ 4만원');
     await expectSummary(dashboard, '여행');
+    // 식비 ▲7만원 + 여행 ▼4만원 = 총 3만원 증가, 원인은 식비
+    await expect(dashboard.compareAiSummaryOverall).toContainText('총 3만원 늘었어요');
+    await expect(dashboard.compareAiSummaryOverall).toContainText('식비는 늘고 여행은 줄었어요');
   });
 });
 

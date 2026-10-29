@@ -1,6 +1,7 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import type { CategoryGroup } from '@/types';
+import { formatCurrencyMan } from '@/utils/currency';
 
 export const CATEGORY_ANALYSIS_PATH = '/inner/cashbook/analysis';
 
@@ -142,12 +143,65 @@ export function parseSummaryReasons(summary: string): Map<string, string> {
   return reasons;
 }
 
-/** 요약 섹션 맨 앞의 한 줄 총평 (카테고리 줄 `- …` 이전의 문장). 없으면 빈 문자열 */
-export function parseSummaryOverall(summary: string): string {
-  const lines: string[] = [];
-  for (const line of summary.split('\n')) {
-    if (/^\s*[-*]\s/.test(line)) break;
-    if (line.trim()) lines.push(line.trim());
+/** 받침이 있으면 `은`, 없으면 `는` (한글이 아니면 `는`) */
+function topicParticle(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return code >= 0 && code < 11172 && code % 28 !== 0 ? '은' : '는';
+}
+
+function formatMan(n: number): string {
+  return `${formatCurrencyMan(Math.abs(n))}원`;
+}
+
+/**
+ * AI 요약 총평 두 문장 (숫자·카테고리는 계산값 그대로라 AI가 지어내지 않는다).
+ * ① 총 증감과 그 증감을 만든 카테고리(같은 방향으로 가장 크게 움직인 최대 2개)
+ * ② 변화가 큰 카테고리 중 늘어난 것과 줄어든 것
+ *
+ * 예: `여행(▼56만원)·서비스 구독(▼51만원) 영향으로 2026년 8월보다 총 2만원 줄었어요.
+ *      신용이자·데이트는 늘고 여행·서비스 구독·특별은 줄었어요.`
+ */
+export function composeOverallSummary(args: {
+  /** 비교 대상 이름 (예: 평소, 2026년 9월) */
+  compareLabel: string;
+  currentTotal: number;
+  /** 비교 대상 합계. null이면 총 증감 문장 대신 안내 */
+  compareTotal: number | null;
+  rows: readonly { category: string; current: number; compare: number | null }[];
+}): string {
+  const { compareLabel, currentTotal, compareTotal, rows } = args;
+  const delta = (r: { current: number; compare: number | null }) => r.current - (r.compare ?? 0);
+
+  let first: string;
+  if (compareTotal === null) {
+    first = '비교할 지난 기록이 부족해 총 증감은 아직 알 수 없어요.';
+  } else {
+    const total = currentTotal - compareTotal;
+    if (total === 0) {
+      first = `${compareLabel} 대비 총액은 그대로예요.`;
+    } else {
+      const drivers = rows
+        .filter((r) => (total > 0 ? delta(r) > 0 : delta(r) < 0))
+        .sort((a, b) => Math.abs(delta(b)) - Math.abs(delta(a)))
+        .slice(0, 2)
+        .map((r) => `${r.category}(${delta(r) > 0 ? '▲' : '▼'}${formatMan(delta(r))})`);
+      const cause = drivers.length > 0 ? `${drivers.join('·')} 영향으로 ` : '';
+      first = `${cause}${compareLabel}보다 총 ${formatMan(total)} ${total > 0 ? '늘었어요' : '줄었어요'}.`;
+    }
   }
-  return lines.join(' ');
+
+  const top = pickTopChanges(rows);
+  const ups = top.filter((r) => delta(r) > 0).map((r) => r.category);
+  const downs = top.filter((r) => delta(r) < 0).map((r) => r.category);
+  const list = (names: string[]) => `${names.join('·')}${topicParticle(names[names.length - 1])}`;
+  const second =
+    ups.length > 0 && downs.length > 0
+      ? `${list(ups)} 늘고 ${list(downs)} 줄었어요.`
+      : ups.length > 0
+        ? `${list(ups)} 늘었어요.`
+        : downs.length > 0
+          ? `${list(downs)} 줄었어요.`
+          : '카테고리별로 큰 변화는 없었어요.';
+
+  return `${first} ${second}`;
 }

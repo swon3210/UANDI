@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { AiReportCard } from './AiReportCard';
 
 const REPORT = `## 📊 요약
-여행이 몰려 늘었지만 식비는 오히려 아꼈어요
+여행(▲333만원) 영향으로 평소보다 총 304만원 늘었어요. 여행·데이트는 늘고 식비는 줄었어요.
 - 여행: 제주 항공권·숙소가 몰렸어요
 - 식비: 여행지 외식이 여행비로 빠졌어요
 - 데이트: 이번 달 새로 생겼어요

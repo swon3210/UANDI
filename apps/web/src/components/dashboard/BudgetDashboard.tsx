@@ -31,9 +31,9 @@ import type { CategoryGroup } from '@/types';
 import {
   analysisScopeName,
   buildCategoryAnalysisHref,
+  composeOverallSummary,
   extractReportSummary,
   parseCategoryAnalysisParams,
-  parseSummaryOverall,
   parseSummaryReasons,
   pickTopChanges,
 } from '@/utils/category-analysis';
@@ -388,11 +388,11 @@ export function BudgetDashboard({ coupleId }: Props) {
   const summary = extractReportSummary(summaryReport.data ?? '');
   // 막대는 지금 비교 중인 데이터로 바로 그리고, AI 요약 섹션의 한 줄 이유를 카테고리별로 붙인다
   const summaryReasons = parseSummaryReasons(summary.text);
-  const summaryItems = pickTopChanges(
+  const summaryRows =
     comparedCategories.length > 0
       ? shownComparison.rows.filter((r) => comparedCategories.includes(r.category))
-      : shownComparison.rows
-  ).map((r) => ({
+      : shownComparison.rows;
+  const summaryItems = pickTopChanges(summaryRows).map((r) => ({
     ...r,
     color: colorOf(r.category),
     reason: summaryReasons.get(r.category),
@@ -557,7 +557,12 @@ export function BudgetDashboard({ coupleId }: Props) {
                 compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
                 group={group}
                 items={summaryItems}
-                overall={parseSummaryOverall(summary.text)}
+                overall={composeOverallSummary({
+                  compareLabel: isMedianCompare ? '평소' : getPeriodLabel(period, compareCursor),
+                  currentTotal: summaryRows.reduce((sum, r) => sum + r.current, 0),
+                  compareTotal: compareTotal ?? summaryRows.reduce((sum, r) => sum + r.compare, 0),
+                  rows: summaryRows,
+                })}
                 status={summaryParams ? summaryStatus : 'loading'}
                 errorMessage={summaryReport.error?.message}
                 onRetry={() => summaryReport.refetch()}
