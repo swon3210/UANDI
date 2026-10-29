@@ -69,19 +69,22 @@ async function expectReport(analysis: CategoryAnalysisPage) {
   await expect(analysis.report).toBeVisible({ timeout: 30000 });
 }
 
-/** 대시보드 AI 요약이 보일 때까지 기다린다 (첫 콜드 컴파일 실패 시 다시 시도 1회) */
-async function expectSummary(dashboard: DashboardPage) {
-  await expect(dashboard.compareAiSummary.or(dashboard.compareAiSummaryRetry).first()).toBeVisible({
+/** 대시보드 AI 요약에 AI 한 줄 이유가 붙을 때까지 기다린다 (첫 콜드 컴파일 실패 시 다시 시도 1회) */
+async function expectSummary(dashboard: DashboardPage, category: string) {
+  const reason = dashboard.compareAiSummaryReason(category);
+  await expect(reason.or(dashboard.compareAiSummaryRetry).first()).toBeVisible({
     timeout: 30000,
   });
-  if (!(await dashboard.compareAiSummary.isVisible())) {
+  if (!(await reason.isVisible())) {
     await dashboard.compareAiSummaryRetry.click();
   }
-  await expect(dashboard.compareAiSummary).toBeVisible({ timeout: 30000 });
+  await expect(reason).toBeVisible({ timeout: 30000 });
 }
 
 test.describe('대시보드 AI 요약', () => {
-  test('기간 비교 아래에 비교 중인 범위의 AI 요약이 자동으로 나온다', async ({ authedContext }) => {
+  test('기간 비교 아래에 변화가 큰 카테고리를 증감 막대와 AI 한 줄 이유로 보여준다', async ({
+    authedContext,
+  }) => {
     test.slow();
     const { page, uid, coupleId } = authedContext;
     await seedThreeCategories(coupleId, uid);
@@ -89,11 +92,15 @@ test.describe('대시보드 AI 요약', () => {
     const dashboard = await openVariableExpense(page);
     await selectCategories(dashboard, ['식비', '교통']);
 
-    // 요약 섹션만 보여준다 (다른 섹션·제목은 없음)
-    await expectSummary(dashboard);
-    await expect(dashboard.compareAiSummary).toContainText('식비');
-    await expect(dashboard.compareAiSummary).toContainText('교통');
-    await expect(dashboard.compareAiSummary).not.toContainText('요약');
+    // 변화가 큰 순: 식비(▲7만원) → 교통(변동 없음)
+    const items = dashboard.compareAiSummary.locator('[data-testid^="compare-ai-summary-item-"]');
+    await expect(items).toHaveCount(2, { timeout: 15000 });
+    await expect(items.first()).toContainText('식비');
+    await expect(dashboard.compareAiSummaryItem('식비')).toContainText('▲ 7만원');
+
+    // 카테고리마다 AI 한 줄 이유 (리포트의 다른 섹션 문장은 없음)
+    await expectSummary(dashboard, '식비');
+    await expect(dashboard.compareAiSummaryReason('식비')).toContainText('몰렸어요');
     await expect(dashboard.compareAiSummary).not.toContainText('큰 금액 한두 건');
 
     // 전체 리포트는 같은 분석을 다시 쓰므로 바로 보인다
@@ -110,11 +117,12 @@ test.describe('대시보드 AI 요약', () => {
 
     const dashboard = await openVariableExpense(page);
     await selectCategories(dashboard, ['식비']);
-    await expectSummary(dashboard);
-    await expect(dashboard.compareAiSummary).not.toContainText('여행');
+    await expectSummary(dashboard, '식비');
+    await expect(dashboard.compareAiSummaryItem('여행')).toHaveCount(0);
 
     await selectCategories(dashboard, ['여행']);
-    await expect(dashboard.compareAiSummary).toContainText('여행', { timeout: 30000 });
+    await expect(dashboard.compareAiSummaryItem('여행')).toContainText('▼ 4만원');
+    await expectSummary(dashboard, '여행');
   });
 });
 
@@ -238,8 +246,14 @@ test.describe('카테고리 AI 분석 페이지', () => {
     await dashboard.goto();
     await dashboard.periodTabMonthly.click();
     await dashboard.groupTabExpense.click();
-    await dashboard.compareAiAnalysis.click();
 
+    // 대시보드 요약도 변화가 큰 5개만
+    const items = dashboard.compareAiSummary.locator('[data-testid^="compare-ai-summary-item-"]');
+    await expect(items).toHaveCount(5, { timeout: 15000 });
+    await expect(items.first()).toContainText('월세');
+    await expect(dashboard.compareAiSummaryItem('소비')).toHaveCount(0);
+
+    await dashboard.compareAiAnalysis.click();
     const analysis = new CategoryAnalysisPage(page);
     await expect(analysis.breakdown).toBeVisible({ timeout: 30000 });
     await expect(analysis.breakdown).toContainText('6개 중 큰 변화 5개');

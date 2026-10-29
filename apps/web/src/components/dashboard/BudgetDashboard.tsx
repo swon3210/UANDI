@@ -33,6 +33,8 @@ import {
   buildCategoryAnalysisHref,
   extractReportSummary,
   parseCategoryAnalysisParams,
+  parseSummaryReasons,
+  pickTopChanges,
 } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
@@ -377,12 +379,15 @@ export function BudgetDashboard({ coupleId }: Props) {
     shownComparison.rows.length > 0;
   const summaryQuery = showSummary ? (analysisHref.split('?')[1] ?? '') : null;
   const debouncedSummaryQuery = useDebounce(summaryQuery, 1000);
+  // 조건이 1초 동안 그대로일 때만 요청 대상이 된다
+  const settledSummaryQuery =
+    summaryQuery !== null && debouncedSummaryQuery === summaryQuery ? summaryQuery : null;
   const summaryParams = useMemo(
     () =>
-      summaryQuery !== null && debouncedSummaryQuery === summaryQuery
-        ? parseCategoryAnalysisParams(new URLSearchParams(summaryQuery))
-        : null,
-    [summaryQuery, debouncedSummaryQuery]
+      settledSummaryQuery === null
+        ? null
+        : parseCategoryAnalysisParams(new URLSearchParams(settledSummaryQuery)),
+    [settledSummaryQuery]
   );
   const summaryScope = summaryParams ? analysisScopeName(summaryParams) : null;
   const { data: summaryData } = useCategoryAnalysisData(coupleId, summaryParams);
@@ -393,6 +398,17 @@ export function BudgetDashboard({ coupleId }: Props) {
     summaryScope?.scope ?? ''
   );
   const summary = extractReportSummary(summaryReport.data ?? '');
+  // 막대는 지금 비교 중인 데이터로 바로 그리고, AI 요약 섹션의 한 줄 이유를 카테고리별로 붙인다
+  const summaryReasons = parseSummaryReasons(summary.text);
+  const summaryItems = pickTopChanges(
+    comparedCategories.length > 0
+      ? shownComparison.rows.filter((r) => comparedCategories.includes(r.category))
+      : shownComparison.rows
+  ).map((r) => ({
+    ...r,
+    color: colorOf(r.category),
+    reason: summaryReasons.get(r.category),
+  }));
   const summaryStatus: AiReportStatus = summaryReport.isError
     ? 'error'
     : summaryReport.isPending
@@ -550,7 +566,9 @@ export function BudgetDashboard({ coupleId }: Props) {
                       ? comparedCategories[0]
                       : `선택한 카테고리 ${comparedCategories.length}개`
                 }
-                content={summary.text}
+                compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
+                group={group}
+                items={summaryItems}
                 status={summaryParams ? summaryStatus : 'loading'}
                 errorMessage={summaryReport.error?.message}
                 onRetry={() => summaryReport.refetch()}

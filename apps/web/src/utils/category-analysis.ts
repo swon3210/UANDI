@@ -112,3 +112,32 @@ export function extractReportSummary(markdown: string): { text: string; complete
     complete: at < sections.length - 1,
   };
 }
+
+/** 요약·큰 변화 목록에 보여줄 카테고리 수 */
+export const TOP_CHANGES_LIMIT = 5;
+
+/** 비교 대상 대비 변화(절댓값). 비교 금액이 없으면 이번 달 금액 자체를 변화로 본다 */
+export function changeOf(row: { current: number; compare: number | null }): number {
+  return Math.abs(row.current - (row.compare ?? 0));
+}
+
+/** 변화가 큰 순으로 최대 `limit`개 (대시보드 AI 요약·분석 페이지 큰 변화 목록·AI 프롬프트 공통) */
+export function pickTopChanges<T extends { current: number; compare: number | null }>(
+  rows: readonly T[],
+  limit = TOP_CHANGES_LIMIT
+): T[] {
+  return [...rows].sort((a, b) => changeOf(b) - changeOf(a)).slice(0, limit);
+}
+
+/**
+ * 요약 섹션의 `- 카테고리: 한 줄 이유` 줄들을 카테고리 → 이유로 읽는다.
+ * 강조(`**`)는 지우고, 형식에 맞지 않는 줄은 건너뛴다.
+ */
+export function parseSummaryReasons(summary: string): Map<string, string> {
+  const reasons = new Map<string, string>();
+  for (const line of summary.split('\n')) {
+    const match = line.replace(/\*\*/g, '').match(/^\s*[-*]\s*([^:：]+?)\s*[:：]\s*(.+?)\s*$/);
+    if (match) reasons.set(match[1], match[2]);
+  }
+  return reasons;
+}

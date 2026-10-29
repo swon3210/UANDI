@@ -1,16 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Loader2, RefreshCw, Sparkles } from 'lucide-react';
-import Markdown from 'react-markdown';
-import { Button } from '@uandi/ui';
-import { MARKDOWN_COMPONENTS, type AiReportStatus } from '@/components/cashbook/AiReportCard';
+import { ChevronRight, RefreshCw, Sparkles } from 'lucide-react';
+import { Button, Skeleton, cn } from '@uandi/ui';
+import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
+import type { CategoryGroup } from '@/types';
+import { formatCurrencyMan } from '@/utils/currency';
+
+export type CompareAiSummaryItem = {
+  category: string;
+  color: string;
+  current: number;
+  /** 비교 대상 금액. null이면 이번 달 금액 자체를 변화로 본다 */
+  compare: number | null;
+  /** AI 한 줄 이유. 아직 없으면 생략 */
+  reason?: string;
+};
 
 type Props = {
   /** 요약 대상 범위 (예: 선택한 카테고리 3개, 전체 변동 지출) */
   scopeTitle: string;
-  /** AI 리포트의 요약 섹션 본문 (마크다운, 스트리밍 중이면 받은 데까지) */
-  content: string;
+  /** 비교 대상 라벨 (예: 평소, 9월) */
+  compareLabel: string;
+  group: CategoryGroup;
+  /** 변화가 큰 순으로 정렬된 카테고리 (최대 5개) */
+  items: CompareAiSummaryItem[];
+  /** AI 이유 생성 상태 (막대는 데이터라 상태와 관계없이 보인다) */
   status: AiReportStatus;
   errorMessage?: string;
   onRetry: () => void;
@@ -18,32 +33,102 @@ type Props = {
   href: string;
 };
 
+// 증가가 좋은 그룹(수입)과 나쁜 그룹(지출)을 나눠 색을 정한다 (기간 비교와 같은 규칙)
+const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = { expense: false, income: true };
+
+function deltaOf(item: CompareAiSummaryItem): number {
+  return item.current - (item.compare ?? 0);
+}
+
 /**
- * 기간 비교 아래 AI 요약 카드: 비교 중인 범위 리포트의 요약 섹션만 보여주고,
- * 나머지는 "전체 리포트 보기"로 분석 페이지에서 본다 (같은 리포트를 캐시로 공유).
+ * 기간 비교 아래 AI 요약 카드: 변화가 큰 카테고리를 증감 막대로 보여주고,
+ * 각 줄 아래에 AI 리포트 요약 섹션의 한 줄 이유를 붙인다. 전체 리포트는 분석 페이지에서.
  */
 export function CompareAiSummary({
   scopeTitle,
-  content,
+  compareLabel,
+  group,
+  items,
   status,
   errorMessage,
   onRetry,
   href,
 }: Props) {
-  const isWaiting = status === 'loading' || (status === 'streaming' && content.length === 0);
+  const maxChange = Math.max(1, ...items.map((item) => Math.abs(deltaOf(item))));
+  const isWaiting = status === 'loading' || status === 'streaming';
 
   return (
     <section data-testid="compare-ai-summary-card" className="space-y-3">
-      <h3 className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-        <Sparkles size={14} className="shrink-0 text-primary" />
-        <span className="shrink-0 font-semibold text-foreground">AI 요약</span>
-        <span className="truncate">· {scopeTitle}</span>
-      </h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <Sparkles size={14} className="shrink-0 text-primary" />
+          <span className="shrink-0 font-semibold text-foreground">AI 요약</span>
+          <span className="truncate">· {scopeTitle}</span>
+        </h3>
+        <span className="shrink-0 text-[11px] text-muted-foreground">{compareLabel} 대비</span>
+      </div>
+
+      <ul data-testid="compare-ai-summary" className="space-y-3">
+        {items.map((item) => {
+          const delta = deltaOf(item);
+          const good = delta > 0 === INCREASE_IS_GOOD[group];
+          const tone = delta === 0 ? 'muted' : good ? 'good' : 'bad';
+          return (
+            <li
+              key={item.category}
+              data-testid={`compare-ai-summary-item-${item.category}`}
+              className="space-y-1"
+            >
+              <div className="flex items-center gap-2 text-sm">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                  aria-hidden
+                />
+                <span className="min-w-0 flex-1 truncate font-medium">{item.category}</span>
+                <span
+                  className={cn(
+                    'shrink-0 text-xs font-semibold tabular-nums',
+                    tone === 'good' && 'text-income',
+                    tone === 'bad' && 'text-expense',
+                    tone === 'muted' && 'text-muted-foreground'
+                  )}
+                >
+                  {delta === 0
+                    ? '변동 없음'
+                    : `${delta > 0 ? '▲' : '▼'} ${formatCurrencyMan(Math.abs(delta))}원`}
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
+                <div
+                  className={cn(
+                    'h-full rounded-full',
+                    tone === 'good' && 'bg-income',
+                    tone === 'bad' && 'bg-expense',
+                    tone === 'muted' && 'bg-muted-foreground/30'
+                  )}
+                  style={{ width: `${Math.max(2, (Math.abs(delta) / maxChange) * 100)}%` }}
+                />
+              </div>
+              {item.reason ? (
+                <p
+                  data-testid={`compare-ai-summary-reason-${item.category}`}
+                  className="text-xs text-muted-foreground"
+                >
+                  {item.reason}
+                </p>
+              ) : isWaiting ? (
+                <Skeleton className="h-3 w-2/3" />
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
 
       {status === 'error' ? (
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-destructive">
-            {errorMessage || '요약을 만들지 못했어요. 다시 시도해 주세요'}
+            {errorMessage || 'AI 요약을 만들지 못했어요. 다시 시도해 주세요'}
           </p>
           <Button
             variant="ghost"
@@ -56,22 +141,7 @@ export function CompareAiSummary({
             다시 시도
           </Button>
         </div>
-      ) : isWaiting ? (
-        <p
-          data-testid="compare-ai-summary-loading"
-          className="flex items-center gap-2 text-sm text-muted-foreground"
-        >
-          <Loader2 size={14} className="animate-spin" />
-          요약하는 중이에요...
-        </p>
-      ) : (
-        <div data-testid="compare-ai-summary" className="text-sm leading-relaxed">
-          <Markdown components={MARKDOWN_COMPONENTS}>{content}</Markdown>
-          {status === 'streaming' ? (
-            <span className="ml-0.5 inline-block h-3.5 w-1 animate-pulse bg-muted-foreground align-middle" />
-          ) : null}
-        </div>
-      )}
+      ) : null}
 
       <Button asChild variant="outline" size="sm" className="w-full gap-1">
         <Link href={href} data-testid="compare-ai-analysis">

@@ -18,9 +18,7 @@ import {
   useCategoryAnalysisReport,
 } from '@/hooks/useCategoryAnalysis';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import { userAtom } from '@/stores/auth.store';
-import type { CategoryGroup } from '@/types';
 import { analysisScopeName, parseCategoryAnalysisParams } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { getPeriodLabel } from '@/utils/date';

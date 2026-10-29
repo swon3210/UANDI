@@ -2,6 +2,7 @@
 
 import { cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
+import { pickTopChanges, TOP_CHANGES_LIMIT } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 
 export type CategoryAnalysisBreakdownRow = {
@@ -20,13 +21,6 @@ type Props = {
   /** 보여줄 최대 개수. 비교 대상 대비 변화(절댓값)가 큰 순으로 자른다 */
   limit?: number;
 };
-
-const DEFAULT_LIMIT = 5;
-
-/** 비교 금액이 없으면 이번 달 금액 자체를 변화로 본다 */
-function changeOf(row: CategoryAnalysisBreakdownRow): number {
-  return Math.abs(row.current - (row.compare ?? 0));
-}
 
 const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = { expense: false, income: true };
 
@@ -50,9 +44,9 @@ export function CategoryAnalysisBreakdown({
   rows,
   group,
   compareLabel,
-  limit = DEFAULT_LIMIT,
+  limit = TOP_CHANGES_LIMIT,
 }: Props) {
-  const shown = [...rows].sort((a, b) => changeOf(b) - changeOf(a)).slice(0, limit);
+  const shown = pickTopChanges(rows, limit);
   return (
     <section data-testid="category-analysis-breakdown" className="space-y-1">
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">

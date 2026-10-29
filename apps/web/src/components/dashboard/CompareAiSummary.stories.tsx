@@ -1,7 +1,37 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { CompareAiSummary } from './CompareAiSummary';
+import { CompareAiSummary, type CompareAiSummaryItem } from './CompareAiSummary';
 
-const SUMMARY = `제주 여행이 한 달에 몰리면서 **여행**이 이번 달 변화를 거의 다 만들었고, 대신 **식비**는 평소보다 줄었어요. 다음 여행은 미리 나눠 모아두면 한 달에 몰리지 않아요.`;
+const ITEMS: CompareAiSummaryItem[] = [
+  {
+    category: '여행',
+    color: '#5B8DEF',
+    current: 1_250_000,
+    compare: 0,
+    reason: '제주 항공권·숙소가 몰렸어요',
+  },
+  {
+    category: '식비',
+    color: '#F2994A',
+    current: 420_000,
+    compare: 320_000,
+    reason: '회식이 두 번 있었어요',
+  },
+  {
+    category: '소비',
+    color: '#EB5757',
+    current: 90_000,
+    compare: 100_000,
+    reason: '옷 구매를 미뤘어요',
+  },
+  {
+    category: '교통',
+    color: '#2D9CDB',
+    current: 60_000,
+    compare: 77_500,
+    reason: '택시를 덜 탔어요',
+  },
+  { category: '구독', color: '#9B51E0', current: 15_000, compare: 15_000, reason: '평소와 같아요' },
+];
 
 const meta: Meta<typeof CompareAiSummary> = {
   title: 'Dashboard/CompareAiSummary',
@@ -15,8 +45,10 @@ const meta: Meta<typeof CompareAiSummary> = {
     ),
   ],
   args: {
-    scopeTitle: '선택한 카테고리 3개',
-    content: SUMMARY,
+    scopeTitle: '전체 변동 지출',
+    compareLabel: '평소',
+    group: 'expense',
+    items: ITEMS,
     status: 'success',
     onRetry: () => {},
     href: '#',
@@ -26,28 +58,70 @@ export default meta;
 
 type Story = StoryObj<typeof CompareAiSummary>;
 
+/** 변화가 큰 5개: 증감 막대 + AI 한 줄 이유 */
 export const Success: Story = {};
 
-/** 카테고리를 고르지 않아 범위 전체를 요약 */
-export const WholeScope: Story = {
-  args: { scopeTitle: '전체 변동 지출' },
+/** AI 이유가 아직 없을 때 — 막대는 바로 보이고 이유 자리는 스켈레톤 */
+export const WaitingForReasons: Story = {
+  args: {
+    status: 'loading',
+    items: ITEMS.map(({ reason: _reason, ...item }) => item),
+  },
 };
 
-/** 요청 직후 첫 청크 전 (필터를 바꾼 뒤 1초 대기 중에도 이 상태) */
-export const Loading: Story = {
-  args: { content: '', status: 'loading' },
-};
-
-/** 요약 섹션이 들어오는 중 */
+/** 앞의 두 줄만 이유가 들어온 스트리밍 중 */
 export const Streaming: Story = {
-  args: { content: SUMMARY.slice(0, 40), status: 'streaming' },
+  args: {
+    status: 'streaming',
+    items: ITEMS.map((item, i) => (i < 2 ? item : { ...item, reason: undefined })),
+  },
 };
 
-/** 일일 한도 초과 등 실패 */
+/** 수입: 증가가 좋은 변화(초록) */
+export const Income: Story = {
+  args: {
+    scopeTitle: '전체 수입',
+    compareLabel: '9월',
+    group: 'income',
+    items: [
+      {
+        category: '상여',
+        color: '#27AE60',
+        current: 1_000_000,
+        compare: 0,
+        reason: '추석 상여가 들어왔어요',
+      },
+      {
+        category: '정기급여',
+        color: '#6FCF97',
+        current: 3_200_000,
+        compare: 3_300_000,
+        reason: '야근 수당이 줄었어요',
+      },
+    ],
+  },
+};
+
+/** 일일 한도 초과 등 실패 — 막대는 그대로, 이유 대신 안내 */
 export const Failed: Story = {
-  args: { content: '', status: 'error', errorMessage: '일일 사용 한도를 초과했습니다' },
+  args: {
+    status: 'error',
+    errorMessage: '일일 사용 한도를 초과했습니다',
+    items: ITEMS.map(({ reason: _reason, ...item }) => item),
+  },
 };
 
-export const LongScopeTitle: Story = {
-  args: { scopeTitle: '아주아주긴카테고리이름입니다정말로길어요' },
+export const LongNames: Story = {
+  args: {
+    scopeTitle: '아주아주긴카테고리이름입니다정말로길어요',
+    items: [
+      {
+        category: '아주아주긴카테고리이름입니다정말로',
+        color: '#9B9B9B',
+        current: 123_456_789,
+        compare: 98_765_432,
+        reason: '이유도 길면 줄바꿈되어 두 줄까지 자연스럽게 보여요',
+      },
+    ],
+  },
 };

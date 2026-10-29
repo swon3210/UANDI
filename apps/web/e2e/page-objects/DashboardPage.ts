@@ -68,6 +68,16 @@ export class DashboardPage {
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
 
+  /** AI 요약의 큰 변화 카테고리 행 */
+  compareAiSummaryItem(name: string): Locator {
+    return this.page.getByTestId(`compare-ai-summary-item-${name}`);
+  }
+
+  /** AI 요약 행의 AI 한 줄 이유 */
+  compareAiSummaryReason(name: string): Locator {
+    return this.page.getByTestId(`compare-ai-summary-reason-${name}`);
+  }
+
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
     return this.page.getByTestId(`compare-category-group-${name}`);
