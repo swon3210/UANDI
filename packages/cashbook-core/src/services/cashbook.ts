@@ -3,6 +3,7 @@ import {
   query,
   where,
   orderBy,
+  getDoc,
   getDocs,
   getCountFromServer,
   limit,
@@ -100,6 +101,43 @@ export async function addEntries(
     await batch.commit();
   }
   return entries.length;
+}
+
+/**
+ * addEntries와 같지만 생성된 문서 ID 배열을 돌려준다.
+ * 데스크탑 결산(settle-mcp)의 배치 되돌리기에 필요하다. web의 useAddEntries는 건수만 쓰므로 기존 함수는 그대로 둔다.
+ */
+export async function addEntriesReturningIds(
+  db: Firestore,
+  coupleId: string,
+  entries: Array<Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>>
+): Promise<string[]> {
+  if (entries.length === 0) return [];
+  const createdAt = Timestamp.now();
+  const ids: string[] = [];
+  for (let i = 0; i < entries.length; i += MAX_BATCH_WRITES) {
+    const batch = writeBatch(db);
+    for (const data of entries.slice(i, i + MAX_BATCH_WRITES)) {
+      const ref = doc(entriesCol(db, coupleId));
+      batch.set(ref, { ...data, amount: toWonAmount(data.amount), coupleId, createdAt });
+      ids.push(ref.id);
+    }
+    await batch.commit();
+  }
+  return ids;
+}
+
+/** 내역 1건 조회. 없으면 null */
+export async function getEntry(
+  db: Firestore,
+  coupleId: string,
+  entryId: string
+): Promise<CashbookEntry | null> {
+  const ref = doc(db, `couples/${coupleId}/cashbookEntries/${entryId}`);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const entry = { id: snap.id, ...snap.data() } as CashbookEntry;
+  return { ...entry, amount: toWonAmount(entry.amount) };
 }
 
 export async function updateEntry(
