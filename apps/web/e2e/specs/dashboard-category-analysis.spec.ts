@@ -126,6 +126,9 @@ test.describe('대시보드 AI 요약', () => {
 
     await selectCategories(dashboard, ['여행']);
     await expect(dashboard.compareAiSummaryItem('여행')).toContainText('▼ 4만원');
+    // 증감 막대는 가운데 기준선에서 늘면 오른쪽, 줄면 왼쪽으로 뻗는다
+    await expect(dashboard.compareAiSummaryBar('여행')).toHaveAttribute('data-direction', 'down');
+    await expect(dashboard.compareAiSummaryBar('식비')).toHaveAttribute('data-direction', 'up');
     await expectSummary(dashboard, '여행');
     // 식비 ▲7만원 + 여행 ▼4만원 = 총 3만원 증가, 원인은 식비
     await expect(dashboard.compareAiSummaryOverall).toContainText('총 3만원 늘었어요');

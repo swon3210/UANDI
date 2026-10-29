@@ -73,6 +73,11 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-ai-summary-item-${name}`);
   }
 
+  /** AI 요약 행의 증감 막대 (data-direction: up | down | none) */
+  compareAiSummaryBar(name: string): Locator {
+    return this.page.getByTestId(`compare-ai-summary-bar-${name}`);
+  }
+
   /** AI 요약 행의 AI 한 줄 이유 */
   compareAiSummaryReason(name: string): Locator {
     return this.page.getByTestId(`compare-ai-summary-reason-${name}`);

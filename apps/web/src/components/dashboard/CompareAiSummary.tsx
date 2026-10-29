@@ -43,7 +43,7 @@ function deltaOf(item: CompareAiSummaryItem): number {
 }
 
 /**
- * 기간 비교 아래 AI 요약 카드: AI 한 줄 총평 + 변화가 큰 카테고리 증감 막대,
+ * 기간 비교 아래 AI 요약 카드: 총평 두 문장 + 변화가 큰 카테고리의 증감 막대(가운데 기준 좌우),
  * 각 줄 아래에 AI 리포트 요약 섹션의 한 줄 이유를 붙인다. 전체 리포트는 분석 페이지에서.
  */
 export function CompareAiSummary({
@@ -113,16 +113,24 @@ export function CompareAiSummary({
                     : `${delta > 0 ? '▲' : '▼'} ${formatCurrencyMan(Math.abs(delta))}원`}
                 </span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
-                <div
-                  className={cn(
-                    'h-full rounded-full',
-                    tone === 'good' && 'bg-income',
-                    tone === 'bad' && 'bg-expense',
-                    tone === 'muted' && 'bg-muted-foreground/30'
-                  )}
-                  style={{ width: `${Math.max(2, (Math.abs(delta) / maxChange) * 100)}%` }}
-                />
+              {/* 가운데 기준선에서 늘면 오른쪽, 줄면 왼쪽. 가장 큰 변화가 절반 폭 */}
+              <div
+                data-testid={`compare-ai-summary-bar-${item.category}`}
+                data-direction={delta > 0 ? 'up' : delta < 0 ? 'down' : 'none'}
+                className="relative h-1.5 w-full rounded-full bg-muted"
+                aria-hidden
+              >
+                <span className="absolute inset-y-[-2px] left-1/2 w-px -translate-x-1/2 bg-muted-foreground/40" />
+                {delta !== 0 ? (
+                  <span
+                    className={cn(
+                      'absolute inset-y-0',
+                      delta > 0 ? 'left-1/2 rounded-r-full' : 'right-1/2 rounded-l-full',
+                      tone === 'good' ? 'bg-income' : 'bg-expense'
+                    )}
+                    style={{ width: `${Math.max(1, (Math.abs(delta) / maxChange) * 50)}%` }}
+                  />
+                ) : null}
               </div>
               {item.reason ? (
                 <p
