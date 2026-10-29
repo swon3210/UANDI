@@ -381,7 +381,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@fontsource/nanum-gothic-coding':
+      '@fontsource/ibm-plex-sans-kr':
         specifier: '5'
         version: 5.3.0
       '@hookform/resolvers':
@@ -2267,8 +2267,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fontsource/nanum-gothic-coding@5.3.0':
-    resolution: {integrity: sha512-1xUOE+ro+F1J5lYw+0WwMbhesK85JCjbAP3/rOGHB3DbZI2/s0dR4WHSuTcag1uJAfT8ozH9B50L88tMn4eFkw==}
+  '@fontsource/ibm-plex-sans-kr@5.3.0':
+    resolution: {integrity: sha512-Malq1TQAnpPHASG76fAthnCY0E41py2r7pZ5JEjgmGfA5tVGz7gwBfvrkhPvT3ZmyMobQrJakHhKZVuXQp7FjQ==}
 
   '@gar/promise-retry@1.0.2':
     resolution: {integrity: sha512-Lm/ZLhDZcBECta3TmCQSngiQykFdfw+QtI1/GYMsZd4l3nG+P8WLB16XuS7WaBGLQ+9E+cOcWQsth9cayuGt8g==}
@@ -12404,7 +12404,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fontsource/nanum-gothic-coding@5.3.0': {}
+  '@fontsource/ibm-plex-sans-kr@5.3.0': {}
 
   '@gar/promise-retry@1.0.2':
     dependencies:
@@ -16421,7 +16421,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.3(jiti@2.6.1)))(eslint@9.39.3(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.3(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -16452,7 +16452,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.3(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.3(jiti@2.6.1)))(eslint@9.39.3(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.3(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

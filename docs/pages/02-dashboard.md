@@ -227,7 +227,7 @@ query(
 ### AI 요약 카드 (`CompareAiSummary`)
 
 - 기간 비교 카드 **바로 아래** 별도 카드(`compare-ai-summary-card`). 월간 탭 + 지출/수입 탭 전용
-  - 카드 모양은 다른 카드와 같고, **고정폭 글꼴**(`font-ai` = 나눔고딕코딩, `@fontsource/nanum-gothic-coding`)로 AI 분석 영역임을 구분한다
+  - 카드 모양은 다른 카드와 같고, **전용 글꼴**(`font-ai` = IBM Plex Sans KR, `@fontsource/ibm-plex-sans-kr`)로 AI 분석 영역임을 구분한다 (참고한 Monotype Seol Sans와 같은 휴머니스트 계열의 무료 대체)
   - 글자는 굵게 쓰지 않는다: 총평·카테고리 이름은 보통, 증감·`AI 요약` 라벨만 medium
 - 지금 비교 중인 범위(고른 카테고리, 없으면 `전체 지출`/`전체 고정 지출` 같은 총액 범위)에서 비교 대상 대비 **변화가 큰 5개**(`pickTopChanges`)를 시각화한다 (`compare-ai-summary`)
   - 헤더: `✨ AI 요약 · {범위}` + 우측 `{평소|M월} 대비`

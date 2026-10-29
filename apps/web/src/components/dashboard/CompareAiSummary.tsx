@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-// AI 분석 영역은 고정폭 글꼴로 데이터 카드와 구분한다 (한글 고정폭: 나눔고딕코딩)
-import '@fontsource/nanum-gothic-coding/400.css';
+// AI 분석 영역은 본문(Pretendard)과 다른 휴머니스트 글꼴로 데이터 카드와 구분한다
+import '@fontsource/ibm-plex-sans-kr/400.css';
+import '@fontsource/ibm-plex-sans-kr/500.css';
 import { ChevronRight, RefreshCw, Sparkles } from 'lucide-react';
 import { Button, Skeleton, cn } from '@uandi/ui';
 import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
