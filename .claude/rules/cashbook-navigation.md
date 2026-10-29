@@ -23,7 +23,7 @@
 ├─ 내역 /history                        ← 헤더 "내역" 버튼
 │  └─ 현금흐름 /cashflow                 ← 내역의 "예상금액 조회하기"
 ├─ 점검 /review
-├─ 카테고리 AI 분석 /analysis            ← 기간 비교 카드의 "AI 분석" 버튼
+├─ 카테고리 AI 분석 /analysis            ← 기간 비교 아래 AI 요약 카드의 "전체 리포트 보기"
 └─ 가계부 설정 /settings                 ← 프로필 메뉴 → 설정
    ├─ 경제 목표 /plan/annual (+ wizard·items·bulk-edit)
    ├─ 카테고리 /categories → 미분류 /categories/orphans

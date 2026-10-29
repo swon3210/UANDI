@@ -67,3 +67,48 @@ export function parseCategoryAnalysisParams(
     compare: cmp === 'median' ? 'median' : (parseMonth(cmp) ?? cursor.subtract(1, 'month')),
   };
 }
+
+const GROUP_NAME: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
+const SUB_GROUP_PREFIX: Record<SubGroupFilter, string> = {
+  all: '',
+  fixed: '고정 ',
+  variable: '변동 ',
+};
+
+/**
+ * 분석 범위 이름. `title`은 화면 제목(카테고리 1개면 그 이름, 여러 개면 `선택한 카테고리 N개`),
+ * `scope`는 AI에 넘기는 이름(카테고리 이름들). 고른 게 없으면 둘 다 `전체 변동 지출` 같은 범위.
+ */
+export function analysisScopeName(params: CategoryAnalysisParams): {
+  title: string;
+  scope: string;
+} {
+  if (params.categories.length === 0) {
+    const all = `전체 ${SUB_GROUP_PREFIX[params.subGroup]}${GROUP_NAME[params.group]}`;
+    return { title: all, scope: all };
+  }
+  return {
+    title:
+      params.categories.length === 1
+        ? params.categories[0]
+        : `선택한 카테고리 ${params.categories.length}개`,
+    scope: params.categories.join('·'),
+  };
+}
+
+/**
+ * AI 리포트 마크다운에서 `## 📊 요약` 섹션 본문만 꺼낸다 (스트리밍 중이면 받은 데까지).
+ * 요약 제목을 못 찾으면 첫 섹션 본문을 쓴다. `complete`는 다음 섹션이 시작돼 요약이 다 들어왔는지.
+ */
+export function extractReportSummary(markdown: string): { text: string; complete: boolean } {
+  const sections = markdown.split(/^##\s+/m).slice(1);
+  const index = sections.findIndex((s) => s.split('\n', 1)[0].includes('요약'));
+  const at = index === -1 ? 0 : index;
+  const section = sections[at];
+  if (!section) return { text: '', complete: false };
+  const newline = section.indexOf('\n');
+  return {
+    text: newline === -1 ? '' : section.slice(newline + 1).trim(),
+    complete: at < sections.length - 1,
+  };
+}

@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts';
-import { BarChart3, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Button,
   ChartContainer,
@@ -35,8 +34,6 @@ type Props = {
   compareTotal?: number;
   /** 비교 대상을 쓸 수 없을 때(평소 표본 부족 등) 요약·차트 대신 보여줄 안내 */
   unavailableMessage?: string;
-  /** 지금 비교 중인 범위(선택 카테고리 또는 총액)의 AI 종합 분석 링크. 없으면 버튼을 숨긴다 */
-  analysisHref?: string;
   /** 비교 기간 선택 UI를 연다 */
   onCompareClick: () => void;
   /** 막대 차트에 표시할 카테고리 */
@@ -115,7 +112,6 @@ export function PeriodCompareChart({
   compareHint,
   compareTotal: compareTotalOverride,
   unavailableMessage,
-  analysisHref,
   onCompareClick,
   selectedCategories,
   totalRowLabel,
@@ -138,9 +134,6 @@ export function PeriodCompareChart({
   // 요약 합계·증감도 선택한 카테고리 기준으로 막대와 맞춘다
   const currentTotal = rows.reduce((sum, r) => sum + r.current, 0);
   const compareTotal = compareTotalOverride ?? rows.reduce((sum, r) => sum + r.compare, 0);
-  const analysisLabel = isTotalMode
-    ? `${totalRowLabel} AI 분석`
-    : `선택한 카테고리 ${rows.length}개 AI 분석`;
 
   const config: ChartConfig = {
     current: { label: currentLabel, color: CURRENT_COLOR[group] },
@@ -338,15 +331,6 @@ export function PeriodCompareChart({
               </BarChart>
             </ChartContainer>
           )}
-
-          {analysisHref && rows.length > 0 ? (
-            <Button asChild variant="outline" size="sm" className="w-full gap-1.5">
-              <Link href={analysisHref} data-testid="compare-ai-analysis">
-                <Sparkles size={14} />
-                {analysisLabel}
-              </Link>
-            </Button>
-          ) : null}
         </>
       )}
     </div>

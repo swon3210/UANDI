@@ -23,8 +23,8 @@ type Props = {
   title?: string;
 };
 
-// 마크다운 요소 스타일 (typography 플러그인 없이 최소한만)
-const MARKDOWN_COMPONENTS: ComponentProps<typeof Markdown>['components'] = {
+// 마크다운 요소 스타일 (typography 플러그인 없이 최소한만). 대시보드 AI 요약도 같이 쓴다
+export const MARKDOWN_COMPONENTS: ComponentProps<typeof Markdown>['components'] = {
   h2: ({ children }) => <h4 className="mb-1 mt-4 text-sm font-semibold first:mt-0">{children}</h4>,
   h3: ({ children }) => <h5 className="mb-1 mt-3 text-sm font-semibold first:mt-0">{children}</h5>,
   p: ({ children }) => <p className="mb-1.5 text-sm text-foreground/90">{children}</p>,

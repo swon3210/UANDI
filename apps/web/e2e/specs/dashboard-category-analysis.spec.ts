@@ -69,6 +69,55 @@ async function expectReport(analysis: CategoryAnalysisPage) {
   await expect(analysis.report).toBeVisible({ timeout: 30000 });
 }
 
+/** 대시보드 AI 요약이 보일 때까지 기다린다 (첫 콜드 컴파일 실패 시 다시 시도 1회) */
+async function expectSummary(dashboard: DashboardPage) {
+  await expect(dashboard.compareAiSummary.or(dashboard.compareAiSummaryRetry).first()).toBeVisible({
+    timeout: 30000,
+  });
+  if (!(await dashboard.compareAiSummary.isVisible())) {
+    await dashboard.compareAiSummaryRetry.click();
+  }
+  await expect(dashboard.compareAiSummary).toBeVisible({ timeout: 30000 });
+}
+
+test.describe('대시보드 AI 요약', () => {
+  test('기간 비교 아래에 비교 중인 범위의 AI 요약이 자동으로 나온다', async ({ authedContext }) => {
+    test.slow();
+    const { page, uid, coupleId } = authedContext;
+    await seedThreeCategories(coupleId, uid);
+
+    const dashboard = await openVariableExpense(page);
+    await selectCategories(dashboard, ['식비', '교통']);
+
+    // 요약 섹션만 보여준다 (다른 섹션·제목은 없음)
+    await expectSummary(dashboard);
+    await expect(dashboard.compareAiSummary).toContainText('식비');
+    await expect(dashboard.compareAiSummary).toContainText('교통');
+    await expect(dashboard.compareAiSummary).not.toContainText('요약');
+    await expect(dashboard.compareAiSummary).not.toContainText('큰 금액 한두 건');
+
+    // 전체 리포트는 같은 분석을 다시 쓰므로 바로 보인다
+    await dashboard.compareAiAnalysis.click();
+    const analysis = new CategoryAnalysisPage(page);
+    await expect(analysis.report).toBeVisible({ timeout: 30000 });
+    await expect(analysis.report).toContainText('큰 금액 한두 건');
+  });
+
+  test('카테고리를 바꾸면 그 범위로 요약을 다시 만든다', async ({ authedContext }) => {
+    test.slow();
+    const { page, uid, coupleId } = authedContext;
+    await seedThreeCategories(coupleId, uid);
+
+    const dashboard = await openVariableExpense(page);
+    await selectCategories(dashboard, ['식비']);
+    await expectSummary(dashboard);
+    await expect(dashboard.compareAiSummary).not.toContainText('여행');
+
+    await selectCategories(dashboard, ['여행']);
+    await expect(dashboard.compareAiSummary).toContainText('여행', { timeout: 30000 });
+  });
+});
+
 test.describe('카테고리 AI 분석 페이지', () => {
   test('기간 비교에서 고른 카테고리들을 하나의 종합 리포트로 분석한다', async ({
     authedContext,
@@ -240,6 +289,7 @@ test.describe('카테고리 AI 분석 페이지', () => {
     await dashboard.periodTabYearly.click();
     await expect(dashboard.trendChart).toBeVisible();
     await expect(dashboard.compareAiAnalysis).toHaveCount(0);
+    await expect(dashboard.compareAiSummary).toHaveCount(0);
   });
 
   test('분석 범위 정보 없이 들어오면 안내를 보여준다', async ({ authedPage }) => {

@@ -1,9 +1,11 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
+import { useDebounce } from '@uidotdev/usehooks';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
 import {
   Button,
@@ -20,11 +22,18 @@ import {
   type GroupFilter,
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
+import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
 import { MEDIAN_COMPARE, useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
 import type { CategoryGroup } from '@/types';
-import { buildCategoryAnalysisHref } from '@/utils/category-analysis';
+import {
+  analysisScopeName,
+  buildCategoryAnalysisHref,
+  extractReportSummary,
+  parseCategoryAnalysisParams,
+} from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import {
@@ -44,6 +53,7 @@ import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
+import { CompareAiSummary } from './CompareAiSummary';
 import { CompareTargetPicker } from './CompareTargetPicker';
 import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
 
@@ -357,6 +367,40 @@ export function BudgetDashboard({ coupleId }: Props) {
         })
       : undefined;
 
+  // AI 요약: 비교 중인 범위(분석 페이지와 같은 조건)를 1초 동안 그대로 두면 리포트를 만들고
+  // 요약 섹션만 보여준다. 같은 쿼리 키라 "전체 리포트 보기"로 가면 다시 요청하지 않는다.
+  const showSummary =
+    analysisHref !== undefined &&
+    !isLoading &&
+    hasEntries &&
+    !compareUnavailableMessage &&
+    shownComparison.rows.length > 0;
+  const summaryQuery = showSummary ? (analysisHref.split('?')[1] ?? '') : null;
+  const debouncedSummaryQuery = useDebounce(summaryQuery, 1000);
+  const summaryParams = useMemo(
+    () =>
+      summaryQuery !== null && debouncedSummaryQuery === summaryQuery
+        ? parseCategoryAnalysisParams(new URLSearchParams(summaryQuery))
+        : null,
+    [summaryQuery, debouncedSummaryQuery]
+  );
+  const summaryScope = summaryParams ? analysisScopeName(summaryParams) : null;
+  const { data: summaryData } = useCategoryAnalysisData(coupleId, summaryParams);
+  const summaryReport = useCategoryAnalysisReport(
+    coupleId,
+    summaryParams,
+    summaryData && summaryData.rows.length > 0 ? summaryData : null,
+    summaryScope?.scope ?? ''
+  );
+  const summary = extractReportSummary(summaryReport.data ?? '');
+  const summaryStatus: AiReportStatus = summaryReport.isError
+    ? 'error'
+    : summaryReport.isPending
+      ? 'loading'
+      : summary.complete || !summaryReport.isFetching
+        ? 'success'
+        : 'streaming';
+
   const handleOpenCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
       const closeAndUnmount = () => {
@@ -490,13 +534,30 @@ export function BudgetDashboard({ coupleId }: Props) {
               }
               compareTotal={compareTotal}
               unavailableMessage={compareUnavailableMessage}
-              analysisHref={analysisHref}
               onCompareClick={handleOpenComparePicker}
               selectedCategories={isGroupOverview ? [] : selectedCategories}
               totalRowLabel={compareTotalRowLabel}
               onSelectCategoriesClick={isGroupOverview ? undefined : handleOpenCategorySheet}
             />
           </div>
+          {showSummary ? (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <CompareAiSummary
+                scopeTitle={
+                  comparedCategories.length === 0
+                    ? (compareTotalRowLabel ?? '')
+                    : comparedCategories.length === 1
+                      ? comparedCategories[0]
+                      : `선택한 카테고리 ${comparedCategories.length}개`
+                }
+                content={summary.text}
+                status={summaryParams ? summaryStatus : 'loading'}
+                errorMessage={summaryReport.error?.message}
+                onRetry={() => summaryReport.refetch()}
+                href={analysisHref}
+              />
+            </div>
+          ) : null}
         </>
       )}
     </section>

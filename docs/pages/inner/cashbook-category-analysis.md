@@ -19,7 +19,7 @@
 
 ## 진입
 
-- 대시보드 `PeriodCompareChart` 아래 `AI 분석` 버튼(`compare-ai-analysis`, 월간 탭 전용) — `docs/pages/02-dashboard.md` 「기간 비교 차트」
+- 대시보드 기간 비교 아래 AI 요약 카드의 `전체 리포트 보기`(`compare-ai-analysis`, 월간 탭 전용) — `docs/pages/02-dashboard.md` 「AI 요약 카드」. 대시보드 요약과 같은 리포트(같은 쿼리 키)라 대시보드에서 이미 만들었으면 바로 보인다
 - URL: `/inner/cashbook/analysis?group={expense|income}[&sub=fixed|variable][&at=YYYY-MM-DD][&cat={이름}…][&cmp=median|YYYY-MM-DD]`
   - `group` 필수. 없거나 잘못되면 안내(`category-analysis-empty`, "분석할 카테고리를 찾을 수 없어요") + 뒤로 가기
   - `sub` = 대시보드 고정/변동 세부 필터 (생략 시 전체)

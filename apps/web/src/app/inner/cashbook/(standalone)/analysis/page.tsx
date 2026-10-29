@@ -21,36 +21,11 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import { userAtom } from '@/stores/auth.store';
 import type { CategoryGroup } from '@/types';
-import {
-  parseCategoryAnalysisParams,
-  type CategoryAnalysisParams,
-} from '@/utils/category-analysis';
+import { analysisScopeName, parseCategoryAnalysisParams } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
 import { getPeriodLabel } from '@/utils/date';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import { BackButton } from '@/components/shell/BackButton';
-
-const GROUP_NAME: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
-const SUB_GROUP_PREFIX: Record<SubGroupFilter, string> = {
-  all: '',
-  fixed: '고정 ',
-  variable: '변동 ',
-};
-
-/** 분석 범위 이름: 고른 카테고리가 있으면 그 이름들, 없으면 `전체 변동 지출` 같은 범위 */
-function scopeName(params: CategoryAnalysisParams): { title: string; scope: string } {
-  if (params.categories.length === 0) {
-    const all = `전체 ${SUB_GROUP_PREFIX[params.subGroup]}${GROUP_NAME[params.group]}`;
-    return { title: all, scope: all };
-  }
-  return {
-    title:
-      params.categories.length === 1
-        ? params.categories[0]
-        : `선택한 카테고리 ${params.categories.length}개`,
-    scope: params.categories.join('·'),
-  };
-}
 
 export default function CategoryAnalysisPage() {
   // 카테고리·기준 달을 URL 쿼리(useSearchParams)로 읽으므로 Suspense 경계가 필요하다
@@ -70,7 +45,7 @@ function CategoryAnalysisPageInner() {
   // 매 렌더 새 객체가 되면 아래 데이터 계산이 매번 다시 돌아 쿼리 키 문자열로 고정한다
   const query = searchParams.toString();
   const params = useMemo(() => parseCategoryAnalysisParams(new URLSearchParams(query)), [query]);
-  const names = params ? scopeName(params) : null;
+  const names = params ? analysisScopeName(params) : null;
   const { data, isLoading } = useCategoryAnalysisData(coupleId, params);
   const hasData = data !== null && data.rows.length > 0;
   const report = useCategoryAnalysisReport(

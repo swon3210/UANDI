@@ -145,7 +145,6 @@ export const MedianTarget: Story = {
     compareHint: '6개월 중위값',
     totalRowLabel: '전체 변동 지출',
     compareTotal: 1_650_000,
-    analysisHref: '#',
   },
   render: (args) => <WithSelection {...args} initialSelected={[]} />,
 };
@@ -158,15 +157,4 @@ export const MedianUnavailable: Story = {
     compareHint: '6개월 중위값',
     unavailableMessage: '지난달 기록이 2개월 이상 쌓이면 평소와 비교해 드려요',
   },
-};
-
-// 월간 탭: 고른 카테고리 묶음을 한 번에 AI 종합 분석하는 버튼
-export const WithAiAnalysis: Story = {
-  args: { comparison: expenseComparison, analysisHref: '#' },
-};
-
-// 고정/변동 탭에서 고른 게 없으면 버튼은 범위 전체(전체 고정 지출) 분석
-export const WithAiAnalysisTotal: Story = {
-  args: { comparison: expenseComparison, totalRowLabel: '전체 고정 지출', analysisHref: '#' },
-  render: (args) => <WithSelection {...args} initialSelected={[]} />,
 };
