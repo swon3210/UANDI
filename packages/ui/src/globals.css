@@ -141,6 +141,8 @@
 
   /* 폰트 */
   --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+  /* AI 분석 영역 전용 고정폭 글꼴 (웹폰트는 사용하는 컴포넌트가 불러온다) */
+  --font-ai: 'Nanum Gothic Coding', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* 반경 */
   --radius-sm: calc(var(--radius) - 4px); /*  8px — 태그, 뱃지 */

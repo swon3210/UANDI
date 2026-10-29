@@ -39,7 +39,7 @@ const meta: Meta<typeof CompareAiSummary> = {
   parameters: { layout: 'centered' },
   decorators: [
     (Story) => (
-      <div className="w-[360px] rounded-xl border border-primary/25 bg-primary/5 p-4">
+      <div className="w-[360px] rounded-xl border border-border bg-card p-4">
         <Story />
       </div>
     ),

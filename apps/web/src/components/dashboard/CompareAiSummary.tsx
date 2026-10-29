@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+// AI 분석 영역은 고정폭 글꼴로 데이터 카드와 구분한다 (한글 고정폭: 나눔고딕코딩)
+import '@fontsource/nanum-gothic-coding/400.css';
 import { ChevronRight, RefreshCw, Sparkles } from 'lucide-react';
 import { Button, Skeleton, cn } from '@uandi/ui';
 import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
@@ -68,7 +70,7 @@ export function CompareAiSummary({
   const isWaiting = status === 'loading' || status === 'streaming';
 
   return (
-    <section data-testid="compare-ai-summary-card" className="space-y-3">
+    <section data-testid="compare-ai-summary-card" className="space-y-3 font-ai">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
           <Sparkles size={14} className="shrink-0 text-primary" />
@@ -81,7 +83,7 @@ export function CompareAiSummary({
       {overall ? (
         <p
           data-testid="compare-ai-summary-overall"
-          className="rounded-lg bg-background/80 px-3 py-2 text-sm leading-relaxed"
+          className="rounded-lg bg-muted/50 px-3 py-2 text-sm leading-relaxed"
         >
           {overall}
         </p>

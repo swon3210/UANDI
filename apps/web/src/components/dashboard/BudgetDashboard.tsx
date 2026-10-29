@@ -545,8 +545,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             />
           </div>
           {showSummary ? (
-            // AI 분석 영역은 데이터 카드들과 구분되게 primary 색을 옅게 깐다
-            <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+            <div className="rounded-xl border border-border bg-card p-4">
               <CompareAiSummary
                 scopeTitle={
                   comparedCategories.length === 0
