@@ -99,6 +99,7 @@ export class DashboardPage {
   readonly compareAiAnalysis: Locator;
   readonly compareAiSummary: Locator;
   readonly compareAiSummaryRetry: Locator;
+  readonly compareAiSummaryOverall: Locator;
 
   // 제거된 영역 검증용
   readonly medianCompare: Locator;
@@ -160,6 +161,7 @@ export class DashboardPage {
     this.compareAiAnalysis = page.getByTestId('compare-ai-analysis');
     this.compareAiSummary = page.getByTestId('compare-ai-summary');
     this.compareAiSummaryRetry = page.getByTestId('compare-ai-summary-retry');
+    this.compareAiSummaryOverall = page.getByTestId('compare-ai-summary-overall');
 
     this.medianCompare = page.getByTestId('median-compare');
 

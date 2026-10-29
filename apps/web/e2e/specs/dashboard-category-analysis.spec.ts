@@ -102,6 +102,9 @@ test.describe('대시보드 AI 요약', () => {
     await expectSummary(dashboard, '식비');
     await expect(dashboard.compareAiSummaryReason('식비')).toContainText('몰렸어요');
     await expect(dashboard.compareAiSummary).not.toContainText('큰 금액 한두 건');
+    // 카테고리 목록 위에 전체를 아우르는 한 줄 총평
+    await expect(dashboard.compareAiSummaryOverall).toContainText('이번 달 변화');
+    await expect(dashboard.compareAiSummaryOverall).not.toContainText('식비:');
 
     // 전체 리포트는 같은 분석을 다시 쓰므로 바로 보인다
     await dashboard.compareAiAnalysis.click();

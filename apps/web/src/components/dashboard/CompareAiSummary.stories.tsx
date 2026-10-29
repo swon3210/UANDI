@@ -49,6 +49,7 @@ const meta: Meta<typeof CompareAiSummary> = {
     compareLabel: '평소',
     group: 'expense',
     items: ITEMS,
+    overall: '여행이 몰려 늘었지만 나머지는 평소보다 아꼈어요',
     status: 'success',
     onRetry: () => {},
     href: '#',
@@ -65,6 +66,7 @@ export const Success: Story = {};
 export const WaitingForReasons: Story = {
   args: {
     status: 'loading',
+    overall: undefined,
     items: ITEMS.map(({ reason: _reason, ...item }) => item),
   },
 };
@@ -106,6 +108,7 @@ export const Income: Story = {
 export const Failed: Story = {
   args: {
     status: 'error',
+    overall: undefined,
     errorMessage: '일일 사용 한도를 초과했습니다',
     items: ITEMS.map(({ reason: _reason, ...item }) => item),
   },

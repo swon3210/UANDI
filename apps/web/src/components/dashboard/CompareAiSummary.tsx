@@ -25,6 +25,8 @@ type Props = {
   group: CategoryGroup;
   /** 변화가 큰 순으로 정렬된 카테고리 (최대 5개) */
   items: CompareAiSummaryItem[];
+  /** AI 한 줄 총평 (카테고리 목록 위). 아직 없으면 생략 */
+  overall?: string;
   /** AI 이유 생성 상태 (막대는 데이터라 상태와 관계없이 보인다) */
   status: AiReportStatus;
   errorMessage?: string;
@@ -41,7 +43,7 @@ function deltaOf(item: CompareAiSummaryItem): number {
 }
 
 /**
- * 기간 비교 아래 AI 요약 카드: 변화가 큰 카테고리를 증감 막대로 보여주고,
+ * 기간 비교 아래 AI 요약 카드: AI 한 줄 총평 + 변화가 큰 카테고리 증감 막대,
  * 각 줄 아래에 AI 리포트 요약 섹션의 한 줄 이유를 붙인다. 전체 리포트는 분석 페이지에서.
  */
 export function CompareAiSummary({
@@ -49,6 +51,7 @@ export function CompareAiSummary({
   compareLabel,
   group,
   items,
+  overall,
   status,
   errorMessage,
   onRetry,
@@ -67,6 +70,17 @@ export function CompareAiSummary({
         </h3>
         <span className="shrink-0 text-[11px] text-muted-foreground">{compareLabel} 대비</span>
       </div>
+
+      {overall ? (
+        <p
+          data-testid="compare-ai-summary-overall"
+          className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
+        >
+          {overall}
+        </p>
+      ) : isWaiting ? (
+        <Skeleton className="h-9 w-full rounded-lg" />
+      ) : null}
 
       <ul data-testid="compare-ai-summary" className="space-y-3">
         {items.map((item) => {

@@ -33,6 +33,7 @@ import {
   buildCategoryAnalysisHref,
   extractReportSummary,
   parseCategoryAnalysisParams,
+  parseSummaryOverall,
   parseSummaryReasons,
   pickTopChanges,
 } from '@/utils/category-analysis';
@@ -556,6 +557,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                 compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
                 group={group}
                 items={summaryItems}
+                overall={parseSummaryOverall(summary.text)}
                 status={summaryParams ? summaryStatus : 'loading'}
                 errorMessage={summaryReport.error?.message}
                 onRetry={() => summaryReport.refetch()}

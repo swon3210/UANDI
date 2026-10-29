@@ -78,6 +78,7 @@
 │  └───────────────────┘  │
 │  ┌───────────────────┐  │
 │  │ ✨ AI 요약 · 전체 변동 지출  평소 대비│ ← 월간 탭 전용, 자동 생성
+│  │ [여행이 몰려 늘었지만 나머지는 아꼈어요]│ ← AI 한 줄 총평
 │  │ ● 여행         ▲ 125만원│  ← 변화가 큰 5개: 이름 + 증감
 │  │ ████████████████  │  │     증감 막대 (가장 큰 변화 = 100%)
 │  │ 제주 항공권·숙소가 몰렸어요│  │     AI 한 줄 이유
@@ -225,6 +226,7 @@ query(
 - 기간 비교 카드 **바로 아래** 별도 카드(`compare-ai-summary-card`). 월간 탭 + 지출/수입 탭 전용
 - 지금 비교 중인 범위(고른 카테고리, 없으면 `전체 지출`/`전체 고정 지출` 같은 총액 범위)에서 비교 대상 대비 **변화가 큰 5개**(`pickTopChanges`)를 시각화한다 (`compare-ai-summary`)
   - 헤더: `✨ AI 요약 · {범위}` + 우측 `{평소|M월} 대비`
+  - 한 줄 총평(`compare-ai-summary-overall`): 헤더와 목록 사이, 연한 배경 띠에 AI가 쓴 전체 결론 한 문장 (요약 섹션의 첫 줄, `parseSummaryOverall`). 받기 전엔 스켈레톤
   - 행(`compare-ai-summary-item-{이름}`): 색 점·이름·증감(`▲/▼ N만원`, 0이면 `변동 없음`) / 증감 막대(가장 큰 변화 대비 길이, 색은 기간 비교와 같은 좋은·나쁜 변화 규칙) / AI 한 줄 이유(`compare-ai-summary-reason-{이름}`)
   - 막대는 기간 비교 데이터로 바로 그린다. 이유는 AI 리포트 `## 📊 요약` 섹션의 `- 카테고리: 이유` 줄(`parseSummaryReasons`)을 카테고리별로 붙이고, 받기 전엔 스켈레톤
   - 하단 `전체 리포트 보기 ›`(`compare-ai-analysis`) → 분석 페이지 `/inner/cashbook/analysis?group=…[&sub=…][&at=…][&cat=…(반복)][&cmp=median|YYYY-MM-DD]`. 상세: `docs/pages/inner/cashbook-category-analysis.md`

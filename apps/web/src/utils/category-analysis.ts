@@ -141,3 +141,13 @@ export function parseSummaryReasons(summary: string): Map<string, string> {
   }
   return reasons;
 }
+
+/** 요약 섹션 맨 앞의 한 줄 총평 (카테고리 줄 `- …` 이전의 문장). 없으면 빈 문자열 */
+export function parseSummaryOverall(summary: string): string {
+  const lines: string[] = [];
+  for (const line of summary.split('\n')) {
+    if (/^\s*[-*]\s/.test(line)) break;
+    if (line.trim()) lines.push(line.trim());
+  }
+  return lines.join(' ');
+}
