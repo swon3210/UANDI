@@ -1,33 +1,38 @@
 'use client';
 
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import dayjs from 'dayjs';
 import { SearchX } from 'lucide-react';
-import { Button, EmptyState, Header, Skeleton } from '@uandi/ui';
+import { overlay } from 'overlay-kit';
+import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
+import { Button, EmptyState, Header, Sheet, Skeleton } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
 import { AiReportCard, type AiReportStatus } from '@/components/cashbook/AiReportCard';
+import { CategoryAnalysisBreakdown } from '@/components/cashbook/CategoryAnalysisBreakdown';
 import { CategoryAnalysisSummary } from '@/components/cashbook/CategoryAnalysisSummary';
 import { CategoryTrendChart } from '@/components/cashbook/CategoryTrendChart';
-import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
-import type { SubGroupFilter } from '@/hooks/useDashboardData';
+import { TrendCategoryFilter } from '@/components/cashbook/TrendCategoryFilter';
+import {
+  CompareCategorySheet,
+  makeCategoryOption,
+} from '@/components/dashboard/CompareCategorySheet';
+import {
+  compareTargetLabel,
+  useCategoryAnalysisData,
+  useCategoryAnalysisReport,
+} from '@/hooks/useCategoryAnalysis';
+import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { userAtom } from '@/stores/auth.store';
-import type { CategoryGroup, CashbookEntry } from '@/types';
-import { parseCategoryAnalysisParams } from '@/utils/category-analysis';
+import {
+  analysisScopeName,
+  buildCategoryAnalysisHref,
+  parseCategoryAnalysisParams,
+} from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
-import { formatDay, getPeriodLabel } from '@/utils/date';
-import { MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
+import { getPeriodLabel } from '@/utils/date';
+import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import { BackButton } from '@/components/shell/BackButton';
-
-const SCOPE_LABEL: Record<Exclude<SubGroupFilter, 'all'>, Record<CategoryGroup, string>> = {
-  fixed: { expense: '고정 지출', income: '고정 수입' },
-  variable: { expense: '변동 지출', income: '변동 수입' },
-};
-
-function entryDate(entry: CashbookEntry): Date {
-  return entry.date instanceof Date ? entry.date : entry.date.toDate();
-}
 
 export default function CategoryAnalysisPage() {
   // 카테고리·기준 달을 URL 쿼리(useSearchParams)로 읽으므로 Suspense 경계가 필요하다
@@ -44,19 +49,65 @@ function CategoryAnalysisPageInner() {
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
-  const params = parseCategoryAnalysisParams(searchParams);
+  // 매 렌더 새 객체가 되면 아래 데이터 계산이 매번 다시 돌아 쿼리 키 문자열로 고정한다
+  const query = searchParams.toString();
+  const params = useMemo(() => parseCategoryAnalysisParams(new URLSearchParams(query)), [query]);
+  const names = params ? analysisScopeName(params) : null;
   const { data, isLoading } = useCategoryAnalysisData(coupleId, params);
-  const report = useCategoryAnalysisReport(coupleId, params, data);
+  const hasData = data !== null && data.rows.length > 0;
+  const report = useCategoryAnalysisReport(
+    coupleId,
+    params,
+    hasData ? data : null,
+    names?.scope ?? ''
+  );
+
+  const { data: categories } = useCashbookCategories(coupleId);
+  const colorMap = useMemo(() => buildCategoryColorMap(categories), [categories]);
+  const colorOf = (name: string) => getCategoryColor(colorMap, params?.group ?? 'expense', name);
+
+  // 분석할 카테고리를 다시 고르면 URL만 바꿔(기록 추가 없이) 그 묶음으로 다시 분석한다
+  const handleOpenCategorySheet = () => {
+    if (!params || !data) return;
+    const toOption = makeCategoryOption(categories, params.group);
+    const options = data.scopeCategories.map((name) => toOption(name, colorOf(name)));
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeAndUnmount = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
+          <CompareCategorySheet
+            title="분석할 카테고리 선택"
+            options={options}
+            initialSelected={params.categories}
+            onApply={(names) =>
+              router.replace(buildCategoryAnalysisHref({ ...params, categories: names }), {
+                scroll: false,
+              })
+            }
+            onClose={closeAndUnmount}
+          />
+        </Sheet>
+      );
+    });
+  };
+
+  // 추이 차트 카테고리 필터. null = 묶음 전체
+  const [trendCategory, setTrendCategory] = useState<string | null>(null);
+  const selectedTrend = data?.trends.find((t) => t.category === trendCategory) ?? null;
+  const trendMedian = selectedTrend ? selectedTrend.median : (data?.median ?? null);
 
   // 스트리밍 중 매 청크마다 다시 렌더되므로 차트 데이터는 고정해 둔다
   const trendPoints = useMemo(
     () =>
-      (data?.points ?? []).map((p) => ({
+      (data?.points ?? []).map((p, i) => ({
         label: p.cursor.format('M월'),
-        amount: p.amount,
+        amount: selectedTrend ? selectedTrend.amounts[i] : p.amount,
         isCurrent: p.isCurrent,
       })),
-    [data]
+    [data, selectedTrend]
   );
 
   const reportStatus: AiReportStatus = report.isError
@@ -84,7 +135,7 @@ function CategoryAnalysisPageInner() {
             <EmptyState
               icon={<SearchX size={32} />}
               title="분석할 카테고리를 찾을 수 없어요"
-              description="대시보드의 '평소와 비교'에서 카테고리를 골라 들어와 주세요"
+              description="대시보드 기간 비교의 'AI 분석'으로 들어와 주세요"
               action={
                 <Button variant="outline" size="sm" onClick={() => router.back()}>
                   뒤로 가기
@@ -92,7 +143,7 @@ function CategoryAnalysisPageInner() {
               }
             />
           </div>
-        ) : isLoading || !data ? (
+        ) : isLoading || !data || !names ? (
           <>
             <Skeleton className="h-[140px] w-full rounded-xl" />
             <Skeleton className="h-[200px] w-full rounded-xl" />
@@ -102,58 +153,66 @@ function CategoryAnalysisPageInner() {
           <>
             <div className="rounded-xl border border-border bg-card p-4">
               <CategoryAnalysisSummary
-                category={params.category}
+                title={names.title}
+                categories={params.categories.map((name) => ({ name, color: colorOf(name) }))}
                 group={params.group}
                 monthLabel={getPeriodLabel('monthly', params.cursor)}
-                scopeLabel={
-                  params.subGroup === 'all' ? undefined : SCOPE_LABEL[params.subGroup][params.group]
-                }
                 currentAmount={data.currentAmount}
-                median={data.median}
-                sampleMonths={data.sampleMonths}
-                windowMonths={MEDIAN_WINDOW_MONTHS}
+                compareLabel={compareTargetLabel(params.compare)}
+                compareHint={
+                  params.compare === 'median'
+                    ? data.median !== null
+                      ? `최근 ${data.sampleMonths}개월 중위값`
+                      : undefined
+                    : params.compare.isSame(params.cursor.subtract(1, 'month'), 'month')
+                      ? '전월'
+                      : undefined
+                }
+                compareAmount={data.compareAmount}
+                unavailableMessage={MEDIAN_UNAVAILABLE_MESSAGE}
+                onSelectCategories={handleOpenCategorySheet}
               />
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-2 text-xs text-muted-foreground">
-                최근 {MEDIAN_WINDOW_MONTHS}개월 추이
-                {data.median !== null ? ` · 점선 = 평소 ${formatCurrency(data.median)}` : ''}
+            <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+              {data.trends.length > 1 ? (
+                <TrendCategoryFilter
+                  options={data.trends.map((t) => ({
+                    name: t.category,
+                    color: colorOf(t.category),
+                  }))}
+                  value={selectedTrend?.category ?? null}
+                  onChange={setTrendCategory}
+                />
+              ) : null}
+              <div
+                data-testid="category-analysis-trend-caption"
+                className="text-xs text-muted-foreground"
+              >
+                {selectedTrend?.category ?? '전체'} 최근 {MEDIAN_WINDOW_MONTHS}개월 추이
+                {trendMedian !== null ? ` · 점선 = 평소 ${formatCurrency(trendMedian)}` : ''}
               </div>
-              <CategoryTrendChart group={params.group} median={data.median} points={trendPoints} />
+              <CategoryTrendChart group={params.group} median={trendMedian} points={trendPoints} />
             </div>
 
-            <AiReportCard
-              content={report.data ?? ''}
-              status={reportStatus}
-              errorMessage={report.error?.message}
-              onRetry={() => report.refetch()}
-            />
-
-            <section className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-1 text-xs text-muted-foreground">
-                이번 달 내역 {data.entries.length}건
+            {data.rows.length > 1 ? (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <CategoryAnalysisBreakdown
+                  group={params.group}
+                  compareLabel={params.compare === 'median' ? '평소' : params.compare.format('M월')}
+                  rows={data.rows.map((r) => ({ ...r, color: colorOf(r.category) }))}
+                />
               </div>
-              {data.entries.length === 0 ? (
-                <p className="py-3 text-sm text-muted-foreground">이번 달엔 기록이 없어요</p>
-              ) : (
-                <ul data-testid="category-analysis-entries" className="divide-y divide-border">
-                  {data.entries.map((entry) => (
-                    <li key={entry.id} className="flex items-center gap-3 py-2 text-sm">
-                      <span className="w-12 shrink-0 text-xs text-muted-foreground">
-                        {formatDay(entryDate(entry))}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate">
-                        {entry.description || dayjs(entryDate(entry)).format('M월 D일 내역')}
-                      </span>
-                      <span className="shrink-0 font-semibold tabular-nums">
-                        {formatCurrency(entry.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            ) : null}
+
+            {hasData ? (
+              <AiReportCard
+                content={report.data ?? ''}
+                status={reportStatus}
+                errorMessage={report.error?.message}
+                onRetry={() => report.refetch()}
+              />
+            ) : null}
           </>
         )}
       </main>

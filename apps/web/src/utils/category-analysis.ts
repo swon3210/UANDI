@@ -1,49 +1,207 @@
 import dayjs, { type Dayjs } from 'dayjs';
 import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import type { CategoryGroup } from '@/types';
+import { formatCurrencyMan } from '@/utils/currency';
 
 export const CATEGORY_ANALYSIS_PATH = '/inner/cashbook/analysis';
 
+/** 비교 대상: 'median' = 평소(최근 달 중위값), Dayjs = 그 달 */
+export type CategoryAnalysisCompare = Dayjs | 'median';
+
 export type CategoryAnalysisParams = {
-  category: string;
   group: CategoryGroup;
   subGroup: SubGroupFilter;
+  /** 종합 분석할 카테고리. 빈 배열 = 그룹·세부 필터 범위 전체 */
+  categories: string[];
   /** 기준 달 (1일) */
   cursor: Dayjs;
+  /** 대시보드 기간 비교에서 고른 비교 대상 (기본: 전월) */
+  compare: CategoryAnalysisCompare;
 };
 
 const GROUPS: readonly CategoryGroup[] = ['expense', 'income'];
 const SUB_GROUPS: readonly SubGroupFilter[] = ['all', 'fixed', 'variable'];
+const DATE_FORMAT = 'YYYY-MM-DD';
 
-/** 대시보드 상태 → 카테고리 분석 페이지 링크. 이번 달·세부 필터 '전체'는 생략한다. */
+function parseMonth(value: string | null): Dayjs | null {
+  if (!value) return null;
+  const parsed = dayjs(value);
+  return parsed.isValid() && !parsed.isAfter(dayjs(), 'month') ? parsed.startOf('month') : null;
+}
+
+/** 대시보드 상태 → 분석 페이지 링크. 이번 달·세부 필터 '전체'·전월 비교·카테고리 전체는 생략한다. */
 export function buildCategoryAnalysisHref(params: CategoryAnalysisParams): string {
   const query = new URLSearchParams();
-  query.set('category', params.category);
   query.set('group', params.group);
   if (params.subGroup !== 'all') query.set('sub', params.subGroup);
   const month = params.cursor.startOf('month');
-  if (!month.isSame(dayjs(), 'month')) query.set('at', month.format('YYYY-MM-DD'));
+  if (!month.isSame(dayjs(), 'month')) query.set('at', month.format(DATE_FORMAT));
+  for (const name of params.categories) query.append('cat', name);
+  if (params.compare === 'median') query.set('cmp', 'median');
+  else if (!params.compare.isSame(month.subtract(1, 'month'), 'month'))
+    query.set('cmp', params.compare.startOf('month').format(DATE_FORMAT));
   return `${CATEGORY_ANALYSIS_PATH}?${query.toString()}`;
 }
 
-/** URL 쿼리 → 분석 파라미터. 카테고리·그룹이 없거나 잘못되면 null. 미래 달은 이번 달로. */
+/** URL 쿼리 → 분석 파라미터. 그룹이 없거나 잘못되면 null. 미래 달은 이번 달로. */
 export function parseCategoryAnalysisParams(
-  query: URLSearchParams | { get(name: string): string | null }
+  query: URLSearchParams | { get(name: string): string | null; getAll(name: string): string[] }
 ): CategoryAnalysisParams | null {
-  const category = query.get('category')?.trim();
   const group = query.get('group') as CategoryGroup | null;
-  if (!category || !group || !GROUPS.includes(group)) return null;
+  if (!group || !GROUPS.includes(group)) return null;
   const sub = query.get('sub') as SubGroupFilter | null;
-  const at = query.get('at');
-  const parsed = at ? dayjs(at) : null;
-  const cursor =
-    parsed && parsed.isValid() && !parsed.isAfter(dayjs(), 'month')
-      ? parsed.startOf('month')
-      : dayjs().startOf('month');
+  const cursor = parseMonth(query.get('at')) ?? dayjs().startOf('month');
+  const cmp = query.get('cmp');
+  const categories = [
+    ...new Set(
+      query
+        .getAll('cat')
+        .map((name) => name.trim())
+        .filter(Boolean)
+    ),
+  ];
   return {
-    category,
     group,
     subGroup: sub && SUB_GROUPS.includes(sub) ? sub : 'all',
+    categories,
     cursor,
+    compare: cmp === 'median' ? 'median' : (parseMonth(cmp) ?? cursor.subtract(1, 'month')),
   };
+}
+
+const GROUP_NAME: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
+const SUB_GROUP_PREFIX: Record<SubGroupFilter, string> = {
+  all: '',
+  fixed: '고정 ',
+  variable: '변동 ',
+};
+
+/**
+ * 분석 범위 이름. `title`은 화면 제목(카테고리 1개면 그 이름, 여러 개면 `선택한 카테고리 N개`),
+ * `scope`는 AI에 넘기는 이름(카테고리 이름들). 고른 게 없으면 둘 다 `전체 변동 지출` 같은 범위.
+ */
+export function analysisScopeName(params: CategoryAnalysisParams): {
+  title: string;
+  scope: string;
+} {
+  if (params.categories.length === 0) {
+    const all = `전체 ${SUB_GROUP_PREFIX[params.subGroup]}${GROUP_NAME[params.group]}`;
+    return { title: all, scope: all };
+  }
+  return {
+    title:
+      params.categories.length === 1
+        ? params.categories[0]
+        : `선택한 카테고리 ${params.categories.length}개`,
+    scope: params.categories.join('·'),
+  };
+}
+
+/**
+ * AI 리포트 마크다운에서 `## 📊 요약` 섹션 본문만 꺼낸다 (스트리밍 중이면 받은 데까지).
+ * 요약 제목을 못 찾으면 첫 섹션 본문을 쓴다. `complete`는 다음 섹션이 시작돼 요약이 다 들어왔는지.
+ */
+export function extractReportSummary(markdown: string): { text: string; complete: boolean } {
+  const sections = markdown.split(/^##\s+/m).slice(1);
+  const index = sections.findIndex((s) => s.split('\n', 1)[0].includes('요약'));
+  const at = index === -1 ? 0 : index;
+  const section = sections[at];
+  if (!section) return { text: '', complete: false };
+  const newline = section.indexOf('\n');
+  return {
+    text: newline === -1 ? '' : section.slice(newline + 1).trim(),
+    complete: at < sections.length - 1,
+  };
+}
+
+/** 요약·큰 변화 목록에 보여줄 카테고리 수 */
+export const TOP_CHANGES_LIMIT = 5;
+
+/** 비교 대상 대비 변화(절댓값). 비교 금액이 없으면 이번 달 금액 자체를 변화로 본다 */
+export function changeOf(row: { current: number; compare: number | null }): number {
+  return Math.abs(row.current - (row.compare ?? 0));
+}
+
+/** 변화가 큰 순으로 최대 `limit`개 (대시보드 AI 요약·분석 페이지 큰 변화 목록·AI 프롬프트 공통) */
+export function pickTopChanges<T extends { current: number; compare: number | null }>(
+  rows: readonly T[],
+  limit = TOP_CHANGES_LIMIT
+): T[] {
+  return [...rows].sort((a, b) => changeOf(b) - changeOf(a)).slice(0, limit);
+}
+
+/**
+ * 요약 섹션의 `- 카테고리: 한 줄 이유` 줄들을 카테고리 → 이유로 읽는다.
+ * 강조(`**`)는 지우고, 형식에 맞지 않는 줄은 건너뛴다.
+ */
+export function parseSummaryReasons(summary: string): Map<string, string> {
+  const reasons = new Map<string, string>();
+  for (const line of summary.split('\n')) {
+    const match = line.replace(/\*\*/g, '').match(/^\s*[-*]\s*([^:：]+?)\s*[:：]\s*(.+?)\s*$/);
+    if (match) reasons.set(match[1], match[2]);
+  }
+  return reasons;
+}
+
+/** 받침이 있으면 `은`, 없으면 `는` (한글이 아니면 `는`) */
+function topicParticle(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return code >= 0 && code < 11172 && code % 28 !== 0 ? '은' : '는';
+}
+
+function formatMan(n: number): string {
+  return `${formatCurrencyMan(Math.abs(n))}원`;
+}
+
+/**
+ * AI 요약 총평 두 문장 (숫자·카테고리는 계산값 그대로라 AI가 지어내지 않는다).
+ * ① 총 증감과 그 증감을 만든 카테고리(같은 방향으로 가장 크게 움직인 최대 2개)
+ * ② 변화가 큰 카테고리 중 늘어난 것과 줄어든 것
+ *
+ * 예: `여행(▼56만원)·서비스 구독(▼51만원) 영향으로 2026년 8월보다 총 2만원 줄었어요.
+ *      신용이자·데이트는 늘고 여행·서비스 구독·특별은 줄었어요.`
+ */
+export function composeOverallSummary(args: {
+  /** 비교 대상 이름 (예: 평소, 2026년 9월) */
+  compareLabel: string;
+  currentTotal: number;
+  /** 비교 대상 합계. null이면 총 증감 문장 대신 안내 */
+  compareTotal: number | null;
+  rows: readonly { category: string; current: number; compare: number | null }[];
+}): string {
+  const { compareLabel, currentTotal, compareTotal, rows } = args;
+  const delta = (r: { current: number; compare: number | null }) => r.current - (r.compare ?? 0);
+
+  let first: string;
+  if (compareTotal === null) {
+    first = '비교할 지난 기록이 부족해 총 증감은 아직 알 수 없어요.';
+  } else {
+    const total = currentTotal - compareTotal;
+    if (total === 0) {
+      first = `${compareLabel} 대비 총액은 그대로예요.`;
+    } else {
+      const drivers = rows
+        .filter((r) => (total > 0 ? delta(r) > 0 : delta(r) < 0))
+        .sort((a, b) => Math.abs(delta(b)) - Math.abs(delta(a)))
+        .slice(0, 2)
+        .map((r) => `${r.category}(${delta(r) > 0 ? '▲' : '▼'}${formatMan(delta(r))})`);
+      const cause = drivers.length > 0 ? `${drivers.join('·')} 영향으로 ` : '';
+      first = `${cause}${compareLabel}보다 총 ${formatMan(total)} ${total > 0 ? '늘었어요' : '줄었어요'}.`;
+    }
+  }
+
+  const top = pickTopChanges(rows);
+  const ups = top.filter((r) => delta(r) > 0).map((r) => r.category);
+  const downs = top.filter((r) => delta(r) < 0).map((r) => r.category);
+  const list = (names: string[]) => `${names.join('·')}${topicParticle(names[names.length - 1])}`;
+  const second =
+    ups.length > 0 && downs.length > 0
+      ? `${list(ups)} 늘고 ${list(downs)} 줄었어요.`
+      : ups.length > 0
+        ? `${list(ups)} 늘었어요.`
+        : downs.length > 0
+          ? `${list(downs)} 줄었어요.`
+          : '카테고리별로 큰 변화는 없었어요.';
+
+  return `${first} ${second}`;
 }

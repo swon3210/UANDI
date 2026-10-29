@@ -129,3 +129,32 @@ export const Empty: Story = {
 export const Loading: Story = {
   args: { comparison: expenseComparison, isLoading: true },
 };
+
+// 비교 대상을 평소(최근 6개월 중위값)로 고른 경우. 막대는 카테고리별 중위값,
+// 요약 합계는 묶음 합계의 중위값(compareTotal)이라 막대 합과 다를 수 있다.
+export const MedianTarget: Story = {
+  args: {
+    comparison: {
+      rows: [
+        { category: '여행', current: 3_533_000, compare: 200_000 },
+        { category: '식비', current: 1_100_000, compare: 1_500_000 },
+        { category: '데이트', current: 60_000, compare: 0 },
+      ],
+    },
+    compareLabel: '평소',
+    compareHint: '6개월 중위값',
+    totalRowLabel: '전체 변동 지출',
+    compareTotal: 1_650_000,
+  },
+  render: (args) => <WithSelection {...args} initialSelected={[]} />,
+};
+
+// 평소 표본(기록 있는 지난달)이 2개월 미만이면 요약·차트 대신 안내
+export const MedianUnavailable: Story = {
+  args: {
+    comparison: { rows: [] },
+    compareLabel: '평소',
+    compareHint: '6개월 중위값',
+    unavailableMessage: '지난달 기록이 2개월 이상 쌓이면 평소와 비교해 드려요',
+  },
+};

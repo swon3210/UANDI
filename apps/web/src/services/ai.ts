@@ -241,21 +241,26 @@ export async function analyzeSpending(
   for await (const text of readSseText(res)) onChunk(text);
 }
 
-// ── 카테고리 AI 분석 (대시보드 "평소와 비교" 드릴다운) ──
+// ── 카테고리 AI 종합 분석 (대시보드 기간 비교의 "AI 분석" 드릴다운) ──
 
 export type CategoryAnalysisParams = {
-  category: string;
   group: 'expense' | 'income';
+  /** 분석 범위 이름 (예: 식비·교통, 전체 변동 지출) */
+  scope: string;
   year: number;
   month: number; // 1~12
+  /** 비교 대상 (그 달 또는 평소). 평소 표본이 부족하면 amount null */
+  compare: { label: string; amount: number | null };
   current: {
     amount: number;
     count: number;
-    entries: { date: string; amount: number; description: string }[];
+    entries: { date: string; category: string; amount: number; description: string }[];
   };
-  /** 직전 달들, 오래된 순 */
+  /** 범위 안 카테고리별 이번 달·비교 대상 금액 */
+  categories: { category: string; current: number; compare: number | null; count: number }[];
+  /** 범위 묶음의 직전 달 합계, 오래된 순 */
   history: { year: number; month: number; amount: number; count: number }[];
-  /** 표본 부족이면 null */
+  /** 범위 묶음의 평소(중위값). 표본 부족이면 null */
   median: number | null;
 };
 

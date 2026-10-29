@@ -68,6 +68,21 @@ export class DashboardPage {
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
 
+  /** AI 요약의 큰 변화 카테고리 행 */
+  compareAiSummaryItem(name: string): Locator {
+    return this.page.getByTestId(`compare-ai-summary-item-${name}`);
+  }
+
+  /** AI 요약 행의 막대 (비교 대상 / 이번 달) */
+  compareAiSummaryBar(name: string, which: 'compare' | 'current'): Locator {
+    return this.page.getByTestId(`compare-ai-summary-bar-${which}-${name}`);
+  }
+
+  /** AI 요약 행의 AI 한 줄 이유 */
+  compareAiSummaryReason(name: string): Locator {
+    return this.page.getByTestId(`compare-ai-summary-reason-${name}`);
+  }
+
   /** 카테고리 선택 시트의 상위 카테고리 묶음(헤더 + 하위 목록) */
   compareCategoryGroup(name: string): Locator {
     return this.page.getByTestId(`compare-category-group-${name}`);
@@ -83,22 +98,16 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-category-option-${name}`);
   }
 
-  // 월 중위값 비교 카드
-  readonly medianCompare: Locator;
-  readonly medianCompareCaption: Locator;
-  readonly medianCompareSummary: Locator;
-  readonly medianCompareDelta: Locator;
-  readonly medianCompareDeltaEmoji: Locator;
-  readonly medianCompareHighlights: Locator;
-  readonly medianCompareNone: Locator;
-  readonly medianCompareEmpty: Locator;
-
-  /** 눈에 띄는 카테고리 행 */
-  medianHighlight(name: string): Locator {
-    return this.page.getByTestId(`median-highlight-${name}`);
-  }
+  // 기간 비교 — 평소(중위값) 비교 대상·AI 분석 진입
+  readonly compareTargetMedian: Locator;
+  readonly compareUnavailable: Locator;
+  readonly compareAiAnalysis: Locator;
+  readonly compareAiSummary: Locator;
+  readonly compareAiSummaryRetry: Locator;
+  readonly compareAiSummaryOverall: Locator;
 
   // 제거된 영역 검증용
+  readonly medianCompare: Locator;
   readonly recentPhotosSection: Locator;
   readonly monthlySummarySection: Locator;
 
@@ -152,14 +161,14 @@ export class DashboardPage {
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
 
+    this.compareTargetMedian = page.getByTestId('compare-target-median');
+    this.compareUnavailable = page.getByTestId('compare-unavailable');
+    this.compareAiAnalysis = page.getByTestId('compare-ai-analysis');
+    this.compareAiSummary = page.getByTestId('compare-ai-summary');
+    this.compareAiSummaryRetry = page.getByTestId('compare-ai-summary-retry');
+    this.compareAiSummaryOverall = page.getByTestId('compare-ai-summary-overall');
+
     this.medianCompare = page.getByTestId('median-compare');
-    this.medianCompareCaption = page.getByTestId('median-compare-caption');
-    this.medianCompareSummary = page.getByTestId('median-compare-summary');
-    this.medianCompareDelta = page.getByTestId('median-compare-delta');
-    this.medianCompareDeltaEmoji = page.getByTestId('median-compare-delta-emoji');
-    this.medianCompareHighlights = page.getByTestId('median-compare-highlights');
-    this.medianCompareNone = page.getByTestId('median-compare-none');
-    this.medianCompareEmpty = page.getByTestId('median-compare-empty');
 
     this.recentPhotosSection = page.getByTestId('recent-photos');
     this.monthlySummarySection = page.getByTestId('monthly-summary');

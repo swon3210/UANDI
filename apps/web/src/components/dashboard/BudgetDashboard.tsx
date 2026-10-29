@@ -1,9 +1,11 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
+import { useDebounce } from '@uidotdev/usehooks';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
 import {
   Button,
@@ -20,12 +22,23 @@ import {
   type GroupFilter,
   type SubGroupFilter,
 } from '@/hooks/useDashboardData';
+import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
-import { useDashboardFilters } from '@/hooks/useDashboardFilters';
+import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
+import { MEDIAN_COMPARE, useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
 import type { CategoryGroup } from '@/types';
-import { buildCategoryAnalysisHref } from '@/utils/category-analysis';
+import {
+  analysisScopeName,
+  buildCategoryAnalysisHref,
+  composeOverallSummary,
+  extractReportSummary,
+  parseCategoryAnalysisParams,
+  parseSummaryReasons,
+  pickTopChanges,
+} from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
+import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import {
   getPeriodLabel,
   getPeriodRange,
@@ -43,8 +56,13 @@ import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
 import { PeriodCompareChart } from './PeriodCompareChart';
-import { MedianCompareCard } from './MedianCompareCard';
-import { CompareCategorySheet, type CompareCategoryOption } from './CompareCategorySheet';
+import { CompareAiSummary } from './CompareAiSummary';
+import { CompareTargetPicker } from './CompareTargetPicker';
+import {
+  CompareCategorySheet,
+  makeCategoryOption,
+  type CompareCategoryOption,
+} from './CompareCategorySheet';
 
 type Props = {
   coupleId: string;
@@ -76,7 +94,7 @@ const PICKER_TITLE: Record<PeriodKind, string> = {
 };
 
 const COMPARE_PICKER_TITLE: Record<PeriodKind, string> = {
-  monthly: '비교할 월 선택',
+  monthly: '비교 대상 선택', // 평소 또는 특정 달
   yearly: '비교할 연도 선택',
 };
 
@@ -111,7 +129,11 @@ export function BudgetDashboard({ coupleId }: Props) {
     filters;
 
   const isDefaultCompare = compareSelection === null;
-  const compareCursor = compareSelection ?? shiftPeriod(period, cursor, -1);
+  // 평소(중위값) 비교는 월간 탭 전용. 연간 탭으로 바꾸면 비교 대상이 직전 기간으로 돌아간다.
+  const isMedianCompare = compareSelection === MEDIAN_COMPARE;
+  const compareCursor = dayjs.isDayjs(compareSelection)
+    ? compareSelection
+    : shiftPeriod(period, cursor, -1);
 
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
@@ -135,20 +157,24 @@ export function BudgetDashboard({ coupleId }: Props) {
     compareCursor,
   });
 
-  // 월간 탭의 지출/수입에서만 "평소"(직전 6개월 중위값)와 비교한다. 연간·전체 탭에선 조회하지 않는다.
-  const isMedianEnabled = period === 'monthly' && group !== 'all';
-  const { comparison: medianComparison, isLoading: isMedianLoading } = useMonthlyMedianComparison({
+  // 비교 대상을 "평소"(직전 6개월 중위값)로 골랐을 때만 지난 달들을 조회한다.
+  const {
+    comparison: medianComparison,
+    medianOf,
+    isLoading: isMedianLoading,
+  } = useMonthlyMedianComparison({
     coupleId,
     cursor,
     group,
     subGroup,
-    enabled: isMedianEnabled,
+    enabled: isMedianCompare && group !== 'all',
   });
 
   // 기간 단위/기준 기간이 바뀌면 비교 기간과 비교 대상 카테고리는 기본값으로 돌아간다.
   // (비교 기간만 바꿀 때는 고른 카테고리를 유지해 같은 카테고리를 여러 기간과 비교할 수 있게 한다)
+  // 평소는 기준 달을 따라 움직이는 비교 대상이라 기준 달을 옮겨도 유지한다.
   const RESET_SELECTION = {
-    compareSelection: null,
+    compareSelection: isMedianCompare ? MEDIAN_COMPARE : null,
     categorySelection: null,
     donutSelection: [],
   } satisfies Partial<typeof filters>;
@@ -162,6 +188,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       cursor: filters.altCursor ?? normalizeCursor(next, cursor),
       altCursor: cursor,
       ...RESET_SELECTION,
+      compareSelection: null,
     });
   };
   const handleGroupChange = (next: GroupFilter) => {
@@ -228,10 +255,15 @@ export function BudgetDashboard({ coupleId }: Props) {
               <SheetTitle>{COMPARE_PICKER_TITLE[period]}</SheetTitle>
             </SheetHeader>
             <div className="py-4">
-              <PeriodPicker
+              <CompareTargetPicker
                 kind={period}
-                value={compareCursor}
-                onSelect={(next) => {
+                value={isMedianCompare ? MEDIAN_COMPARE : compareCursor}
+                defaultCursor={shiftPeriod(period, cursor, -1)}
+                onSelectMedian={() => {
+                  updateFilters({ compareSelection: MEDIAN_COMPARE });
+                  closeAndUnmount();
+                }}
+                onSelectPeriod={(next) => {
                   const normalized = normalizeCursor(period, next);
                   // 직전 기간을 다시 고르면 기본값으로 되돌려 기간 이동 시에도 "직전 기간"을 따라가게 한다.
                   const isPrev = normalized.isSame(shiftPeriod(period, cursor, -1), 'day');
@@ -255,26 +287,11 @@ export function BudgetDashboard({ coupleId }: Props) {
   const colorMap = buildCategoryColorMap(categories);
   const colorOf = (name: string) =>
     categoryColors[name] ?? getCategoryColor(colorMap, group === 'all' ? 'expense' : group, name);
-  // 카테고리 선택 시트의 상위/하위 묶음용: 현재 그룹 카테고리 이름 → 상위 카테고리 이름
-  const groupCategories = (categories ?? []).filter((c) => c.group === group);
-  const categoryById = new Map(groupCategories.map((c) => [c.id, c]));
-  const parentOf = (name: string) => {
-    const parentId = groupCategories.find((c) => c.name === name)?.parentCategoryId;
-    return parentId ? categoryById.get(parentId) : undefined;
-  };
-  const iconOf = (name: string) => groupCategories.find((c) => c.name === name)?.icon;
-  const toOption = (name: string, color: string): CompareCategoryOption => {
-    const parent = parentOf(name);
-    return {
-      name,
-      color,
-      icon: iconOf(name),
-      parent: parent?.name ?? null,
-      parentIcon: parent?.icon,
-      parentColor: parent?.color,
-    };
-  };
-  const categoryOptions: CompareCategoryOption[] = comparison.rows.map((r) =>
+  // 카테고리 선택 시트 항목 (아이콘·상위/하위 묶음)
+  const toOption = makeCategoryOption(categories, group === 'all' ? 'expense' : group);
+  // 기간 비교 차트에 넣을 비교: 평소면 카테고리별 중위값, 아니면 비교 기간 금액
+  const shownComparison = isMedianCompare ? (medianComparison ?? { rows: [] }) : comparison;
+  const categoryOptions: CompareCategoryOption[] = shownComparison.rows.map((r) =>
     toOption(r.category, colorOf(r.category))
   );
   // 지출·수입은 고정/변동 합계를 기본으로 비교하므로 기본 선택이 없다
@@ -315,6 +332,78 @@ export function BudgetDashboard({ coupleId }: Props) {
       ? `전체 ${GROUP_NAME[group]}`
       : `전체 ${SUB_GROUP_PREFIX[subGroup]} ${GROUP_NAME[group]}`
     : undefined;
+  // 지금 비교 중인 카테고리 (비교 데이터에 있는 것만). 비어 있으면 총액 비교 → 범위 전체
+  const comparedCategories = isGroupOverview
+    ? []
+    : selectedCategories.filter((name) => shownComparison.rows.some((r) => r.category === name));
+
+  // 평소 합계는 묶음 합계의 중위값이라 막대(카테고리별 중위값)의 합과 따로 구한다
+  const compareTotal = isMedianCompare
+    ? medianOf(comparedCategories.length > 0 ? comparedCategories : null)
+    : undefined;
+  const compareUnavailableMessage =
+    isMedianCompare && !isMedianLoading && !medianComparison
+      ? MEDIAN_UNAVAILABLE_MESSAGE
+      : undefined;
+  // AI 종합 분석은 월간 탭 전용 (평소·월별 추이를 근거로 쓴다)
+  const analysisHref =
+    period === 'monthly' && supportsSubGroup(group)
+      ? buildCategoryAnalysisHref({
+          group,
+          subGroup,
+          cursor,
+          categories: comparedCategories,
+          compare: isMedianCompare ? 'median' : compareCursor,
+        })
+      : undefined;
+
+  // AI 요약: 비교 중인 범위(분석 페이지와 같은 조건)를 1초 동안 그대로 두면 리포트를 만들고
+  // 요약 섹션만 보여준다. 같은 쿼리 키라 "전체 리포트 보기"로 가면 다시 요청하지 않는다.
+  const showSummary =
+    analysisHref !== undefined &&
+    !isLoading &&
+    hasEntries &&
+    !compareUnavailableMessage &&
+    shownComparison.rows.length > 0;
+  const summaryQuery = showSummary ? (analysisHref.split('?')[1] ?? '') : null;
+  const debouncedSummaryQuery = useDebounce(summaryQuery, 1000);
+  // 조건이 1초 동안 그대로일 때만 요청 대상이 된다
+  const settledSummaryQuery =
+    summaryQuery !== null && debouncedSummaryQuery === summaryQuery ? summaryQuery : null;
+  const summaryParams = useMemo(
+    () =>
+      settledSummaryQuery === null
+        ? null
+        : parseCategoryAnalysisParams(new URLSearchParams(settledSummaryQuery)),
+    [settledSummaryQuery]
+  );
+  const summaryScope = summaryParams ? analysisScopeName(summaryParams) : null;
+  const { data: summaryData } = useCategoryAnalysisData(coupleId, summaryParams);
+  const summaryReport = useCategoryAnalysisReport(
+    coupleId,
+    summaryParams,
+    summaryData && summaryData.rows.length > 0 ? summaryData : null,
+    summaryScope?.scope ?? ''
+  );
+  const summary = extractReportSummary(summaryReport.data ?? '');
+  // 막대는 지금 비교 중인 데이터로 바로 그리고, AI 요약 섹션의 한 줄 이유를 카테고리별로 붙인다
+  const summaryReasons = parseSummaryReasons(summary.text);
+  const summaryRows =
+    comparedCategories.length > 0
+      ? shownComparison.rows.filter((r) => comparedCategories.includes(r.category))
+      : shownComparison.rows;
+  const summaryItems = pickTopChanges(summaryRows).map((r) => ({
+    ...r,
+    color: colorOf(r.category),
+    reason: summaryReasons.get(r.category),
+  }));
+  const summaryStatus: AiReportStatus = summaryReport.isError
+    ? 'error'
+    : summaryReport.isPending
+      ? 'loading'
+      : summary.complete || !summaryReport.isFetching
+        ? 'success'
+        : 'streaming';
 
   const handleOpenCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
@@ -435,27 +524,50 @@ export function BudgetDashboard({ coupleId }: Props) {
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <PeriodCompareChart
-              comparison={comparison}
-              isLoading={isCompareLoading}
+              comparison={shownComparison}
+              isLoading={isMedianCompare ? isMedianLoading : isCompareLoading}
               group={group}
               currentLabel={label}
-              compareLabel={getPeriodLabel(period, compareCursor)}
-              compareHint={isDefaultCompare ? PREV_PERIOD_HINT[period] : undefined}
+              compareLabel={isMedianCompare ? '평소' : getPeriodLabel(period, compareCursor)}
+              compareHint={
+                isMedianCompare
+                  ? `${MEDIAN_WINDOW_MONTHS}개월 중위값`
+                  : isDefaultCompare
+                    ? PREV_PERIOD_HINT[period]
+                    : undefined
+              }
+              compareTotal={compareTotal}
+              unavailableMessage={compareUnavailableMessage}
               onCompareClick={handleOpenComparePicker}
               selectedCategories={isGroupOverview ? [] : selectedCategories}
               totalRowLabel={compareTotalRowLabel}
               onSelectCategoriesClick={isGroupOverview ? undefined : handleOpenCategorySheet}
             />
           </div>
-          {isMedianEnabled ? (
+          {showSummary ? (
             <div className="rounded-xl border border-border bg-card p-4">
-              <MedianCompareCard
-                comparison={medianComparison}
-                isLoading={isMedianLoading}
-                group={group}
-                hrefOf={(category) =>
-                  buildCategoryAnalysisHref({ category, group, subGroup, cursor })
+              <CompareAiSummary
+                scopeTitle={
+                  comparedCategories.length === 0
+                    ? (compareTotalRowLabel ?? '')
+                    : comparedCategories.length === 1
+                      ? comparedCategories[0]
+                      : `선택한 카테고리 ${comparedCategories.length}개`
                 }
+                compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
+                currentLabel={cursor.format('M월')}
+                group={group}
+                items={summaryItems}
+                overall={composeOverallSummary({
+                  compareLabel: isMedianCompare ? '평소' : getPeriodLabel(period, compareCursor),
+                  currentTotal: summaryRows.reduce((sum, r) => sum + r.current, 0),
+                  compareTotal: compareTotal ?? summaryRows.reduce((sum, r) => sum + r.compare, 0),
+                  rows: summaryRows,
+                })}
+                status={summaryParams ? summaryStatus : 'loading'}
+                errorMessage={summaryReport.error?.message}
+                onRetry={() => summaryReport.refetch()}
+                href={analysisHref}
               />
             </div>
           ) : null}
