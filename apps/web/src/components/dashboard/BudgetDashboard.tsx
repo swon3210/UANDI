@@ -555,6 +555,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                       : `선택한 카테고리 ${comparedCategories.length}개`
                 }
                 compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
+                currentLabel={cursor.format('M월')}
                 group={group}
                 items={summaryItems}
                 overall={composeOverallSummary({

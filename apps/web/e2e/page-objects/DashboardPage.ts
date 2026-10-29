@@ -73,9 +73,9 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-ai-summary-item-${name}`);
   }
 
-  /** AI 요약 행의 증감 막대 (data-direction: up | down | none) */
-  compareAiSummaryBar(name: string): Locator {
-    return this.page.getByTestId(`compare-ai-summary-bar-${name}`);
+  /** AI 요약 행의 막대 (비교 대상 / 이번 달) */
+  compareAiSummaryBar(name: string, which: 'compare' | 'current'): Locator {
+    return this.page.getByTestId(`compare-ai-summary-bar-${which}-${name}`);
   }
 
   /** AI 요약 행의 AI 한 줄 이유 */

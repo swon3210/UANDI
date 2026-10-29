@@ -47,6 +47,7 @@ const meta: Meta<typeof CompareAiSummary> = {
   args: {
     scopeTitle: '전체 변동 지출',
     compareLabel: '평소',
+    currentLabel: '10월',
     group: 'expense',
     items: ITEMS,
     overall:
