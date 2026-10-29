@@ -158,9 +158,12 @@ export function CompareAiSummary({
               {item.reason ? (
                 <p
                   data-testid={`compare-ai-summary-reason-${item.category}`}
-                  className="text-xs text-muted-foreground"
+                  className="text-[13px] font-medium text-foreground"
                 >
-                  {item.reason}
+                  {/* AI가 짚은 이유가 핵심이라 형광펜처럼 아래쪽에 노란 띠를 깐다 */}
+                  <span className="box-decoration-clone bg-[linear-gradient(transparent_55%,hsl(var(--warning)/0.35)_55%)] px-0.5">
+                    {item.reason}
+                  </span>
                 </p>
               ) : isWaiting ? (
                 <Skeleton className="h-3 w-2/3" />
