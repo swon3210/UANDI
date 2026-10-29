@@ -38,6 +38,15 @@ export type CategoryAnalysisRow = {
   count: number;
 };
 
+/** 추이 차트 카테고리 필터용: 한 카테고리의 월 금액과 평소 */
+export type CategoryTrend = {
+  category: string;
+  /** `points`와 같은 순서(오래된 달 → 기준 달)의 월 금액 */
+  amounts: number[];
+  /** 그 카테고리의 평소(중위값). 표본 부족이면 null */
+  median: number | null;
+};
+
 export type CategoryAnalysisData = {
   /** 분석 범위의 카테고리별 금액 (이번 달 → 비교 대상 금액 내림차순) */
   rows: CategoryAnalysisRow[];
@@ -51,6 +60,8 @@ export type CategoryAnalysisData = {
   sampleMonths: number;
   /** 분석 범위 묶음의 월 합계, 오래된 달 → 기준 달 순 */
   points: CategoryMonthPoint[];
+  /** `rows`와 같은 순서의 카테고리별 추이 */
+  trends: CategoryTrend[];
 };
 
 /** AI 요청 바디 상한 (내역은 금액 큰 순, 카테고리는 이번 달 금액 순으로 자른다) */
@@ -152,6 +163,15 @@ export function useCategoryAnalysisData(
         isCurrent: i === 0,
       }))
       .reverse();
+    const trends = rows.map(({ category }) => ({
+      category,
+      amounts: filtered
+        .map((entries) =>
+          entries.reduce((sum, e) => (e.category === category ? sum + e.amount : sum), 0)
+        )
+        .reverse(),
+      median: samples ? selectionMedian(samples, [category]) : null,
+    }));
 
     return {
       rows,
@@ -161,6 +181,7 @@ export function useCategoryAnalysisData(
       median,
       sampleMonths: samples?.length ?? 0,
       points,
+      trends,
     };
   }, [params, isLoading, months, cursors, compareMonth, compareQuery.data, categoriesQuery.data]);
 

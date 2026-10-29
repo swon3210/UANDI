@@ -12,6 +12,7 @@ export class CategoryAnalysisPage {
   readonly compareLabel: Locator;
   readonly delta: Locator;
   readonly chart: Locator;
+  readonly trendCaption: Locator;
   readonly breakdown: Locator;
   readonly report: Locator;
   readonly loading: Locator;
@@ -31,6 +32,7 @@ export class CategoryAnalysisPage {
     this.compareLabel = page.getByTestId('category-analysis-compare-label');
     this.delta = page.getByTestId('category-analysis-delta');
     this.chart = page.getByTestId('category-analysis-chart');
+    this.trendCaption = page.getByTestId('category-analysis-trend-caption');
     this.breakdown = page.getByTestId('category-analysis-breakdown');
     this.report = page.getByTestId('category-analysis-report');
     this.loading = page.getByTestId('category-analysis-loading');
@@ -43,6 +45,11 @@ export class CategoryAnalysisPage {
   /** 분석 대상 카테고리 칩 */
   chip(name: string): Locator {
     return this.page.getByTestId(`category-analysis-chip-${name}`);
+  }
+
+  /** 추이 차트 카테고리 필터 칩 ('전체' = 묶음 전체) */
+  trendFilter(name: string): Locator {
+    return this.page.getByTestId(`category-analysis-trend-filter-${name}`);
   }
 
   /** 카테고리별 이번 달 vs 비교 대상 행 */

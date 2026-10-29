@@ -104,16 +104,26 @@ test.describe('카테고리 AI 분석 페이지', () => {
     await expect(analysis.row('교통')).toContainText('20,000');
     await expect(analysis.row('여행')).toHaveCount(0);
 
-    // 이번 달 내역은 선택한 카테고리만
-    await expect(analysis.entries).toContainText('회식');
-    await expect(analysis.entries).toContainText('버스');
-    await expect(analysis.entries).not.toContainText('기차');
+    // 이번 달 내역 목록은 보여주지 않는다 (너무 길어서 — AI가 눈에 띄는 내역만 짚는다)
+    await expect(analysis.entries).toHaveCount(0);
+
+    // 추이는 묶음 전체가 기본, 카테고리를 고르면 그 카테고리 추이와 평소 점선
+    await expect(analysis.trendCaption).toContainText('전체');
+    await expect(analysis.trendCaption).toContainText('50,000원');
+    await analysis.trendFilter('식비').click();
+    await expect(analysis.trendCaption).toContainText('식비');
+    await expect(analysis.trendCaption).toContainText('30,000원');
+    await analysis.trendFilter('전체').click();
+    await expect(analysis.trendCaption).toContainText('50,000원');
 
     // AI 리포트는 카테고리마다가 아니라 하나만, 선택한 카테고리를 모두 다룬다
     await expectReport(analysis);
     await expect(analysis.report).toHaveCount(1);
+    await expect(analysis.report).toContainText('요약');
     await expect(analysis.report).toContainText('식비');
     await expect(analysis.report).toContainText('교통');
+    // 요약은 그래프에 이미 보이는 합계를 되풀이하지 않는다
+    await expect(analysis.report).not.toContainText('120,000원');
     await expect(analysis.retry).toBeVisible();
 
     // 뒤로 가면 대시보드로 돌아오고 선택도 유지된다
@@ -154,6 +164,45 @@ test.describe('카테고리 AI 분석 페이지', () => {
     await expect(analysis.row('식비')).toBeVisible();
     await expect(analysis.row('여행')).toBeVisible();
     await expect(analysis.row('월세')).toHaveCount(0);
+  });
+
+  test('카테고리별로는 변화가 큰 5개만 보여준다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const names = ['월세', '보험', '식비', '교통', '여행', '소비'];
+    await seedMonth(
+      coupleId,
+      uid,
+      1,
+      names.map((name) => [name, 10000])
+    );
+    // 변화량: 월세 +100k > 보험 +80k > 식비 +60k > 교통 +40k > 여행 +20k > 소비 +5k
+    const increases = [100000, 80000, 60000, 40000, 20000, 5000];
+    await seedMonth(
+      coupleId,
+      uid,
+      0,
+      names.map((name, i) => [name, 10000 + increases[i]])
+    );
+
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+    await dashboard.periodTabMonthly.click();
+    await dashboard.groupTabExpense.click();
+    await dashboard.compareAiAnalysis.click();
+
+    const analysis = new CategoryAnalysisPage(page);
+    await expect(analysis.breakdown).toBeVisible({ timeout: 30000 });
+    await expect(analysis.breakdown).toContainText('6개 중 큰 변화 5개');
+    await expect(analysis.breakdown.locator('[data-testid^="category-analysis-row-"]')).toHaveCount(
+      5
+    );
+    await expect(
+      analysis.breakdown.locator('[data-testid^="category-analysis-row-"]').first()
+    ).toContainText('월세');
+    await expect(analysis.row('소비')).toHaveCount(0);
+    // 추이 필터에는 범위의 카테고리가 모두 있다
+    await expect(analysis.trendFilter('소비')).toBeVisible();
   });
 
   test('지난 달을 보고 있었다면 그 달 기준으로 분석한다', async ({ authedContext }) => {

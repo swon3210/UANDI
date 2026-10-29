@@ -1,9 +1,8 @@
 'use client';
 
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import dayjs from 'dayjs';
 import { SearchX } from 'lucide-react';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
 import { Button, EmptyState, Header, Skeleton } from '@uandi/ui';
@@ -12,6 +11,7 @@ import { AiReportCard, type AiReportStatus } from '@/components/cashbook/AiRepor
 import { CategoryAnalysisBreakdown } from '@/components/cashbook/CategoryAnalysisBreakdown';
 import { CategoryAnalysisSummary } from '@/components/cashbook/CategoryAnalysisSummary';
 import { CategoryTrendChart } from '@/components/cashbook/CategoryTrendChart';
+import { TrendCategoryFilter } from '@/components/cashbook/TrendCategoryFilter';
 import {
   compareTargetLabel,
   useCategoryAnalysisData,
@@ -20,13 +20,13 @@ import {
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import type { SubGroupFilter } from '@/hooks/useDashboardData';
 import { userAtom } from '@/stores/auth.store';
-import type { CategoryGroup, CashbookEntry } from '@/types';
+import type { CategoryGroup } from '@/types';
 import {
   parseCategoryAnalysisParams,
   type CategoryAnalysisParams,
 } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
-import { formatDay, getPeriodLabel } from '@/utils/date';
+import { getPeriodLabel } from '@/utils/date';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import { BackButton } from '@/components/shell/BackButton';
 
@@ -50,10 +50,6 @@ function scopeName(params: CategoryAnalysisParams): { title: string; scope: stri
         : `선택한 카테고리 ${params.categories.length}개`,
     scope: params.categories.join('·'),
   };
-}
-
-function entryDate(entry: CashbookEntry): Date {
-  return entry.date instanceof Date ? entry.date : entry.date.toDate();
 }
 
 export default function CategoryAnalysisPage() {
@@ -88,15 +84,20 @@ function CategoryAnalysisPageInner() {
   const colorMap = useMemo(() => buildCategoryColorMap(categories), [categories]);
   const colorOf = (name: string) => getCategoryColor(colorMap, params?.group ?? 'expense', name);
 
+  // 추이 차트 카테고리 필터. null = 묶음 전체
+  const [trendCategory, setTrendCategory] = useState<string | null>(null);
+  const selectedTrend = data?.trends.find((t) => t.category === trendCategory) ?? null;
+  const trendMedian = selectedTrend ? selectedTrend.median : (data?.median ?? null);
+
   // 스트리밍 중 매 청크마다 다시 렌더되므로 차트 데이터는 고정해 둔다
   const trendPoints = useMemo(
     () =>
-      (data?.points ?? []).map((p) => ({
+      (data?.points ?? []).map((p, i) => ({
         label: p.cursor.format('M월'),
-        amount: p.amount,
+        amount: selectedTrend ? selectedTrend.amounts[i] : p.amount,
         isCurrent: p.isCurrent,
       })),
-    [data]
+    [data, selectedTrend]
   );
 
   const reportStatus: AiReportStatus = report.isError
@@ -162,12 +163,25 @@ function CategoryAnalysisPageInner() {
               />
             </div>
 
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-2 text-xs text-muted-foreground">
-                최근 {MEDIAN_WINDOW_MONTHS}개월 추이
-                {data.median !== null ? ` · 점선 = 평소 ${formatCurrency(data.median)}` : ''}
+            <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+              {data.trends.length > 1 ? (
+                <TrendCategoryFilter
+                  options={data.trends.map((t) => ({
+                    name: t.category,
+                    color: colorOf(t.category),
+                  }))}
+                  value={selectedTrend?.category ?? null}
+                  onChange={setTrendCategory}
+                />
+              ) : null}
+              <div
+                data-testid="category-analysis-trend-caption"
+                className="text-xs text-muted-foreground"
+              >
+                {selectedTrend?.category ?? '전체'} 최근 {MEDIAN_WINDOW_MONTHS}개월 추이
+                {trendMedian !== null ? ` · 점선 = 평소 ${formatCurrency(trendMedian)}` : ''}
               </div>
-              <CategoryTrendChart group={params.group} median={data.median} points={trendPoints} />
+              <CategoryTrendChart group={params.group} median={trendMedian} points={trendPoints} />
             </div>
 
             {data.rows.length > 1 ? (
@@ -188,37 +202,6 @@ function CategoryAnalysisPageInner() {
                 onRetry={() => report.refetch()}
               />
             ) : null}
-
-            <section className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-1 text-xs text-muted-foreground">
-                이번 달 내역 {data.entries.length}건
-              </div>
-              {data.entries.length === 0 ? (
-                <p className="py-3 text-sm text-muted-foreground">이번 달엔 기록이 없어요</p>
-              ) : (
-                <ul data-testid="category-analysis-entries" className="divide-y divide-border">
-                  {data.entries.map((entry) => (
-                    <li key={entry.id} className="flex items-center gap-3 py-2 text-sm">
-                      <span className="w-12 shrink-0 text-xs text-muted-foreground">
-                        {formatDay(entryDate(entry))}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate">
-                        {entry.description || dayjs(entryDate(entry)).format('M월 D일 내역')}
-                      </span>
-                      {/* 여러 카테고리를 함께 보므로 어느 카테고리 내역인지 표시 */}
-                      {params.categories.length !== 1 ? (
-                        <span className="shrink-0 text-[11px] text-muted-foreground">
-                          {entry.category}
-                        </span>
-                      ) : null}
-                      <span className="shrink-0 font-semibold tabular-nums">
-                        {formatCurrency(entry.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
           </>
         )}
       </main>

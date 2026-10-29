@@ -68,3 +68,18 @@ export const LongName: Story = {
     ],
   },
 };
+
+/** 카테고리가 5개를 넘으면 변화가 큰 5개만 (헤더에 전체 개수 표시) */
+export const TopFiveOfMany: Story = {
+  args: {
+    rows: [
+      { category: '월세', color: '#9B51E0', current: 700_000, compare: 700_000 },
+      { category: '여행', color: '#5B8DEF', current: 3_533_000, compare: 200_000 },
+      { category: '식비', color: '#F2994A', current: 1_100_000, compare: 1_500_000 },
+      { category: '보험', color: '#27AE60', current: 150_000, compare: 150_000 },
+      { category: '데이트', color: '#EB5757', current: 60_000, compare: 0 },
+      { category: '교통', color: '#2D9CDB', current: 120_000, compare: 90_000 },
+      { category: '소비', color: '#F2C94C', current: 300_000, compare: 450_000 },
+    ],
+  },
+};

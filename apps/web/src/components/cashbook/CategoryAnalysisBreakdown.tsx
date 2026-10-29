@@ -17,7 +17,16 @@ type Props = {
   group: CategoryGroup;
   /** 비교 대상 라벨 (예: 평소, 9월) */
   compareLabel: string;
+  /** 보여줄 최대 개수. 비교 대상 대비 변화(절댓값)가 큰 순으로 자른다 */
+  limit?: number;
 };
+
+const DEFAULT_LIMIT = 5;
+
+/** 비교 금액이 없으면 이번 달 금액 자체를 변화로 본다 */
+function changeOf(row: CategoryAnalysisBreakdownRow): number {
+  return Math.abs(row.current - (row.compare ?? 0));
+}
 
 const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = { expense: false, income: true };
 
@@ -33,16 +42,29 @@ function DeltaCell({ row, group }: { row: CategoryAnalysisBreakdownRow; group: C
   );
 }
 
-/** 분석 범위 안 카테고리별 이번 달 vs 비교 대상 (한 줄씩, 증감 색은 기간 비교와 같은 규칙) */
-export function CategoryAnalysisBreakdown({ rows, group, compareLabel }: Props) {
+/**
+ * 분석 범위에서 비교 대상 대비 변화가 큰 카테고리만 한 줄씩 (기본 5개).
+ * 증감 색은 기간 비교와 같은 규칙.
+ */
+export function CategoryAnalysisBreakdown({
+  rows,
+  group,
+  compareLabel,
+  limit = DEFAULT_LIMIT,
+}: Props) {
+  const shown = [...rows].sort((a, b) => changeOf(b) - changeOf(a)).slice(0, limit);
   return (
     <section data-testid="category-analysis-breakdown" className="space-y-1">
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>카테고리별 · {rows.length}개</span>
+        <span>
+          {rows.length > shown.length
+            ? `${rows.length}개 중 큰 변화 ${shown.length}개`
+            : `카테고리별 변화 · ${shown.length}개`}
+        </span>
         <span>{compareLabel} → 이번 달</span>
       </div>
       <ul className="divide-y divide-border">
-        {rows.map((row) => (
+        {shown.map((row) => (
           <li
             key={row.category}
             data-testid={`category-analysis-row-${row.category}`}
