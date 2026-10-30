@@ -85,12 +85,14 @@ const DATE_PARAM_RE = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * 딥링크 파라미터를 초기 필터 상태로 변환한다. 파라미터가 없으면 기본 상태(이번 달·무필터)를 그대로 쓴다.
  * - 월간 내역 카테고리 행: ?category=&year=&month=
+ * - 대시보드 비교 막대: ?category=(반복)&year=&month= 또는 ?start=&end= (+ ?type=)
  * - 대시보드 내역 보기: ?year=&month= 또는 ?start=&end= (+ ?type=)
  */
 function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState {
   const base = createDefaultFilterState();
-  const category = params.get('category');
-  if (category) base.selectedCategoryNames = [category];
+  // 대시보드 비교 막대는 여러 카테고리(예: 전체 변동 지출)를 반복 키로 넘긴다
+  const categories = params.getAll('category').filter(Boolean);
+  if (categories.length > 0) base.selectedCategoryNames = [...new Set(categories)];
 
   const yearRaw = params.get('year');
   const monthRaw = params.get('month');

@@ -55,6 +55,7 @@ const meta: Meta<typeof CompareAiSummary> = {
     status: 'success',
     onRetry: () => {},
     href: '#',
+    barHrefOf: () => '#',
   },
 };
 export default meta;

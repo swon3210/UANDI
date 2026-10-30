@@ -73,6 +73,11 @@ export class DashboardPage {
     return this.page.getByTestId(`compare-ai-summary-item-${name}`);
   }
 
+  /** 기간 비교 차트의 막대 (행마다 이번 달 → 비교 대상 순서) */
+  compareBar(index: number): Locator {
+    return this.trendChart.locator('.recharts-bar-rectangle').nth(index);
+  }
+
   /** AI 요약 행의 막대 (비교 대상 / 이번 달) */
   compareAiSummaryBar(name: string, which: 'compare' | 'current'): Locator {
     return this.page.getByTestId(`compare-ai-summary-bar-${which}-${name}`);

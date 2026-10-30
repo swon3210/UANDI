@@ -38,6 +38,8 @@ type Props = {
   onRetry: () => void;
   /** 전체 리포트(분석 페이지) 링크 */
   href: string;
+  /** 막대를 누르면 이동할 내역 링크 (그 카테고리·기간 필터). 없으면 막대는 읽기 전용 */
+  barHrefOf?: (category: string, which: 'current' | 'compare') => string | null;
 };
 
 // 이번 달 막대는 그룹 색, 비교 대상은 회색 (기간 비교 차트와 같은 규칙)
@@ -65,6 +67,7 @@ export function CompareAiSummary({
   errorMessage,
   onRetry,
   href,
+  barHrefOf,
 }: Props) {
   // 모든 카테고리가 같은 축을 쓰도록 가장 큰 금액을 100%로
   const maxAmount = Math.max(1, ...items.flatMap((item) => [item.current, item.compare ?? 0]));
@@ -129,31 +132,51 @@ export function CompareAiSummary({
                     ['compare', compareLabel, item.compare ?? 0, 'bg-muted-foreground/35'],
                     ['current', currentLabel, item.current, CURRENT_BAR[group]],
                   ] as const
-                ).map(([which, label, amount, color]) => (
-                  <div
-                    key={which}
-                    data-testid={`compare-ai-summary-bar-${which}-${item.category}`}
-                    className="flex items-center gap-2 text-[11px] text-muted-foreground"
-                  >
-                    <span className="w-8 shrink-0 truncate">{label}</span>
-                    <span className="h-2 min-w-0 flex-1">
+                ).map(([which, label, amount, color]) => {
+                  const barHref = barHrefOf?.(item.category, which) ?? null;
+                  const body = (
+                    <>
+                      <span className="w-8 shrink-0 truncate">{label}</span>
+                      <span className="h-2 min-w-0 flex-1">
+                        <span
+                          className={cn('block h-full rounded-r-full', color)}
+                          style={{
+                            width: amount > 0 ? `${Math.max(1, (amount / maxAmount) * 100)}%` : 0,
+                          }}
+                        />
+                      </span>
                       <span
-                        className={cn('block h-full rounded-r-full', color)}
-                        style={{
-                          width: amount > 0 ? `${Math.max(1, (amount / maxAmount) * 100)}%` : 0,
-                        }}
-                      />
-                    </span>
-                    <span
+                        className={cn(
+                          'w-14 shrink-0 text-right tabular-nums',
+                          which === 'current' && 'text-foreground'
+                        )}
+                      >
+                        {formatCurrencyMan(amount)}원
+                      </span>
+                    </>
+                  );
+                  const rowClass = 'flex items-center gap-2 text-[11px] text-muted-foreground';
+                  const testId = `compare-ai-summary-bar-${which}-${item.category}`;
+                  // 누르면 그 기간·카테고리 필터가 걸린 내역으로
+                  return barHref ? (
+                    <Link
+                      key={which}
+                      href={barHref}
+                      data-testid={testId}
+                      aria-label={`${item.category} ${label} 내역 보기`}
                       className={cn(
-                        'w-14 shrink-0 text-right tabular-nums',
-                        which === 'current' && 'text-foreground'
+                        rowClass,
+                        '-mx-1 rounded px-1 transition-colors hover:bg-accent/40'
                       )}
                     >
-                      {formatCurrencyMan(amount)}원
-                    </span>
-                  </div>
-                ))}
+                      {body}
+                    </Link>
+                  ) : (
+                    <div key={which} data-testid={testId} className={rowClass}>
+                      {body}
+                    </div>
+                  );
+                })}
               </div>
               {item.reason ? (
                 <p

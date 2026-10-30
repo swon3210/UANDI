@@ -30,6 +30,7 @@ const meta: Meta<typeof PeriodCompareChart> = {
     onCompareClick: () => {},
     selectedCategories: [],
     onSelectCategoriesClick: () => {},
+    onBarClick: () => {},
   },
   render: (args) => <WithSelection {...args} />,
 };

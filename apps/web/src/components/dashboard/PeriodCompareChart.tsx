@@ -34,6 +34,8 @@ type Props = {
   compareTotal?: number;
   /** 비교 대상을 쓸 수 없을 때(평소 표본 부족 등) 요약·차트 대신 보여줄 안내 */
   unavailableMessage?: string;
+  /** 막대를 누르면 호출 (행 이름 = 카테고리 또는 총액 막대 이름, 이번 달/비교 대상). 없으면 클릭 불가 */
+  onBarClick?: (row: string, which: 'current' | 'compare') => void;
   /** 비교 기간 선택 UI를 연다 */
   onCompareClick: () => void;
   /** 막대 차트에 표시할 카테고리 */
@@ -112,6 +114,7 @@ export function PeriodCompareChart({
   compareHint,
   compareTotal: compareTotalOverride,
   unavailableMessage,
+  onBarClick,
   onCompareClick,
   selectedCategories,
   totalRowLabel,
@@ -141,6 +144,14 @@ export function PeriodCompareChart({
   };
 
   const chartHeight = rows.length * ROW_HEIGHT + 16;
+  // recharts는 막대 데이터에 원래 행(payload)을 담아 넘긴다
+  const barClickHandler = (which: 'current' | 'compare') =>
+    onBarClick
+      ? (data: { payload?: { category?: string } }) => {
+          const row = data.payload?.category;
+          if (row) onBarClick(row, which);
+        }
+      : undefined;
   const longestLabel = Math.min(
     Math.max(0, ...rows.map((r) => r.category.length)),
     MAX_LABEL_CHARS
@@ -303,6 +314,8 @@ export function PeriodCompareChart({
                   fill="var(--color-current)"
                   radius={[0, 4, 4, 0]}
                   barSize={14}
+                  onClick={barClickHandler('current')}
+                  className={onBarClick ? 'cursor-pointer' : undefined}
                 >
                   <LabelList
                     dataKey="current"
@@ -318,6 +331,8 @@ export function PeriodCompareChart({
                   fill="var(--color-compare)"
                   radius={[0, 4, 4, 0]}
                   barSize={14}
+                  onClick={barClickHandler('compare')}
+                  className={onBarClick ? 'cursor-pointer' : undefined}
                 >
                   <LabelList
                     dataKey="compare"

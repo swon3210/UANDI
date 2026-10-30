@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -38,6 +39,7 @@ import {
   pickTopChanges,
 } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
+import { buildHistoryHref, type HistoryLinkPeriod } from '@/utils/history-link';
 import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import {
   getPeriodLabel,
@@ -105,24 +107,17 @@ const PREV_PERIOD_HINT: Record<PeriodKind, string> = {
 };
 
 /**
- * 대시보드의 기간·그룹 상태를 내역 페이지 딥링크로 변환한다.
- * 월간은 월 스테퍼를 쓸 수 있도록 year/month로, 연간은 start/end(커스텀 기간)로 넘긴다.
+ * 대시보드 기간 → 내역 페이지 기간.
+ * 월간은 월 스테퍼를 쓸 수 있도록 한 달로, 연간은 그 해 전체(커스텀 기간)로 넘긴다.
  */
-function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGroup): string {
-  const params = new URLSearchParams();
-  if (period === 'monthly') {
-    params.set('year', String(cursor.year()));
-    params.set('month', String(cursor.month())); // 0-based
-  } else {
-    const { start, end } = getPeriodRange(period, cursor);
-    params.set('start', dayjs(start).format('YYYY-MM-DD'));
-    params.set('end', dayjs(end).format('YYYY-MM-DD'));
-  }
-  params.set('type', group);
-  return `/inner/cashbook/history?${params.toString()}`;
+function historyPeriodOf(period: PeriodKind, cursor: Dayjs): HistoryLinkPeriod {
+  if (period === 'monthly') return { kind: 'month', cursor };
+  const { start, end } = getPeriodRange(period, cursor);
+  return { kind: 'range', start: dayjs(start), end: dayjs(end) };
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
+  const router = useRouter();
   // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
   const [filters, updateFilters] = useDashboardFilters();
   const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
@@ -405,6 +400,30 @@ export function BudgetDashboard({ coupleId }: Props) {
         ? 'success'
         : 'streaming';
 
+  // 비교 막대 → 그 기간·범위 필터가 걸린 내역. 평소는 중위값을 낸 직전 6개월 전체 기간으로
+  const compareHistoryPeriod: HistoryLinkPeriod = isMedianCompare
+    ? {
+        kind: 'range',
+        start: cursor.subtract(MEDIAN_WINDOW_MONTHS, 'month').startOf('month'),
+        end: cursor.subtract(1, 'month').endOf('month'),
+      }
+    : historyPeriodOf(period, compareCursor);
+  const compareHistoryHref = (row: string, which: 'current' | 'compare') => {
+    if (!supportsSubGroup(group)) return null;
+    // 총액 막대(전체 지출·전체 변동 지출)는 범위 전체: '전체'면 타입만, 고정/변동이면 그 카테고리들
+    const isTotalRow = row === compareTotalRowLabel;
+    const categories = !isTotalRow
+      ? [row]
+      : isGroupOverview
+        ? []
+        : shownComparison.rows.map((r) => r.category);
+    return buildHistoryHref({
+      period: which === 'current' ? historyPeriodOf(period, cursor) : compareHistoryPeriod,
+      type: group,
+      categories,
+    });
+  };
+
   const handleOpenCategorySheet = () => {
     overlay.open(({ isOpen, close, unmount }) => {
       const closeAndUnmount = () => {
@@ -456,7 +475,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       {/* 전체 탭은 수입 대비 지출 게이지만 보여준다 (합계 카드·기간 비교 없음) */}
       {group !== 'all' ? (
         <Link
-          href={buildHistoryHref(period, cursor, group)}
+          href={buildHistoryHref({ period: historyPeriodOf(period, cursor), type: group })}
           data-testid="dashboard-total"
           className="block rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40"
         >
@@ -538,6 +557,10 @@ export function BudgetDashboard({ coupleId }: Props) {
               }
               compareTotal={compareTotal}
               unavailableMessage={compareUnavailableMessage}
+              onBarClick={(row, which) => {
+                const href = compareHistoryHref(row, which);
+                if (href) router.push(href);
+              }}
               onCompareClick={handleOpenComparePicker}
               selectedCategories={isGroupOverview ? [] : selectedCategories}
               totalRowLabel={compareTotalRowLabel}
@@ -568,6 +591,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                 errorMessage={summaryReport.error?.message}
                 onRetry={() => summaryReport.refetch()}
                 href={analysisHref}
+                barHrefOf={compareHistoryHref}
               />
             </div>
           ) : null}

@@ -138,6 +138,79 @@ test.describe('대시보드 AI 요약', () => {
   });
 });
 
+test.describe('비교 막대 → 내역 페이지', () => {
+  test('달 경계(1일 0시·말일 23시)의 내역도 그 달 금액에 빠짐없이 들어간다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    const prev = dayjs().subtract(1, 'month');
+    // 전월: 1일 00:05 · 15일 · 말일 23:55 → 30만원 + 10만원 + 20만원 = 60만원
+    const rows: Array<[string, number]> = [
+      [prev.startOf('month').add(5, 'minute').toISOString(), 300000],
+      [prev.date(15).hour(12).toISOString(), 100000],
+      [prev.endOf('month').subtract(5, 'minute').toISOString(), 200000],
+      [dayjs().startOf('month').add(1, 'hour').toISOString(), 50000],
+    ];
+    for (const [date, amount] of rows) {
+      await seedCashbookEntry(coupleId, uid, { type: 'expense', amount, category: '보험', date });
+    }
+
+    const dashboard = new DashboardPage(page);
+    await dashboard.goto();
+    await dashboard.periodTabMonthly.click();
+    await dashboard.groupTabExpense.click();
+    await expect(dashboard.compareSummary).toContainText('600,000', { timeout: 15000 });
+    await expect(dashboard.compareSummary).toContainText('50,000');
+    await expect(dashboard.compareAiSummaryBar('보험', 'compare')).toContainText('60만원');
+  });
+
+  test('AI 요약의 막대를 누르면 그 달·카테고리 필터가 걸린 내역으로 이동한다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedThreeCategories(coupleId, uid);
+
+    const dashboard = await openVariableExpense(page);
+    await selectCategories(dashboard, ['식비', '교통']);
+    await dashboard.compareAiSummaryBar('식비', 'current').click();
+
+    await expect(page).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+    await expect(page.getByTestId('cashbook-period-label')).toHaveText(`${dayjs().month() + 1}월`);
+    // 지출 타입 + 카테고리(식비) 필터
+    await expect(page.getByTestId('cashbook-filter-count')).toHaveText('2');
+    await expect(page.getByText('회식')).toBeVisible();
+    await expect(page.getByText('버스')).toHaveCount(0);
+
+    // 비교 대상(전월) 막대는 전월 내역으로
+    await page.goBack();
+    await dashboard.compareAiSummaryBar('식비', 'compare').click();
+    await expect(page).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+    const prev = dayjs().subtract(1, 'month');
+    await expect(page.getByTestId('cashbook-period-label')).toHaveText(`${prev.month() + 1}월`);
+    await expect(page.getByTestId('cashbook-filter-count')).toHaveText('2');
+  });
+
+  test('기간 비교 차트의 막대를 누르면 그 기간·범위 필터가 걸린 내역으로 이동한다', async ({
+    authedContext,
+  }) => {
+    const { page, uid, coupleId } = authedContext;
+    await seedThreeCategories(coupleId, uid);
+    await seedMonth(coupleId, uid, 0, [['월세', 700000, '10월 월세']]);
+
+    // 변동 지출 총액 막대(이번 달) → 이번 달 + 지출 + 변동 카테고리들
+    const dashboard = await openVariableExpense(page);
+    await expect(dashboard.trendChart).toBeVisible({ timeout: 15000 });
+    await dashboard.compareBar(0).click();
+
+    await expect(page).toHaveURL(/\/inner\/cashbook\/history/, { timeout: 30000 });
+    await expect(page.getByTestId('cashbook-period-label')).toHaveText(`${dayjs().month() + 1}월`);
+    await expect(page.getByTestId('cashbook-filter-count')).toHaveText('2');
+    await expect(page.getByText('회식')).toBeVisible();
+    await expect(page.getByText('10월 월세')).toHaveCount(0);
+  });
+});
+
 test.describe('카테고리 AI 분석 페이지', () => {
   test('기간 비교에서 고른 카테고리들을 하나의 종합 리포트로 분석한다', async ({
     authedContext,
