@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { seedCashbookEntry } from '../helpers/emulator';
+import { OnboardingPage } from '../page-objects/OnboardingPage';
 
 /**
  * 말랑 가계부 온보딩 투어 — "첫 행동 안내" 3장.
@@ -49,6 +50,25 @@ test.describe('말랑 가계부 온보딩 투어', () => {
       await authedPage.getByTestId('tour-first-entry').click();
       await expect(overlay).toBeHidden();
       await expect(authedPage.getByTestId('quick-add-sheet')).toBeVisible();
+    });
+
+    test('짝꿍이 아직 없으면(먼저 시작하기) 1장이 초대 안내 문구로 바뀐다', async ({
+      noCoupleAuthedPage,
+    }) => {
+      // 기본 픽스처는 짝꿍이 있는 커플이라, 온보딩의 "먼저 시작하기"로 혼자인 커플을 만든다.
+      const page = noCoupleAuthedPage;
+      const onboarding = new OnboardingPage(page);
+      await onboarding.createCoupleButton.click();
+      await expect(onboarding.inviteCodeDisplay).toBeVisible();
+      await onboarding.startAloneButton.click();
+      await page.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
+      await page.getByTestId('import-skip').click();
+      await page.waitForURL(/\/inner\/cashbook$/);
+
+      const overlay = page.getByTestId(OVERLAY);
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+      await expect(overlay).toContainText('짝꿍을 초대하면 같은 가계부를 함께 봐요');
+      await expect(overlay).not.toContainText('님과 같은 가계부');
     });
 
     test('둘러볼게요로 닫으면 재방문 시 자동 노출되지 않는다', async ({ authedPage }) => {

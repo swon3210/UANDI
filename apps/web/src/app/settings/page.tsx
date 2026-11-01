@@ -3,39 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronRight, User as UserIcon } from 'lucide-react';
-import { overlay } from 'overlay-kit';
-import { Header, Button, Avatar, AvatarImage, AvatarFallback, Separator } from '@uandi/ui';
+import { Header, Button, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useDeleteAccount } from '@/hooks/useDeleteAccount';
-import { AccountDeleteConfirmDialog } from '@/components/settings/AccountDeleteConfirmDialog';
 
+/** 설정 첫 화면. 회원탈퇴는 프로필 편집 페이지 맨 아래로 옮겼다(docs/04-auth-flow.md). */
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const deleteAccountMutation = useDeleteAccount();
 
   if (!user) return null;
-
-  const handleDeleteAccount = async () => {
-    const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
-      <AccountDeleteConfirmDialog
-        isOpen={isOpen}
-        isPending={deleteAccountMutation.isPending}
-        onConfirm={() => {
-          close(true);
-          setTimeout(unmount, 300);
-        }}
-        onCancel={() => {
-          close(false);
-          setTimeout(unmount, 300);
-        }}
-      />
-    ));
-
-    if (confirmed) {
-      deleteAccountMutation.mutate({ uid: user.uid, coupleId: user.coupleId });
-    }
-  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -89,20 +65,6 @@ export default function SettingsPage() {
             AI 설정
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
-        </div>
-
-        <Separator />
-
-        {/* 회원탈퇴 */}
-        <div>
-          <Button
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={handleDeleteAccount}
-            data-testid="delete-account-button"
-          >
-            회원탈퇴
-          </Button>
         </div>
       </main>
     </div>

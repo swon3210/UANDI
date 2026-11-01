@@ -11,9 +11,22 @@ type RegularAvgInputProps = {
   /** 현재 평균값 (baseMonthlyAmount) */
   value: number;
   onChange: (next: number) => void;
+  /** 헤더 캡션. 빠른 모드의 변동 항목 등 "정기 항목 · 1단계"가 아닐 때 바꾼다 */
+  caption?: string;
+  /** 입력 아래 안내(예: 수입은 "두 사람 수입을 합쳐 적어요") */
+  hint?: string;
+  /** 연간 합계 카드의 보조 문구. 빠른 모드(그리드 없음)에서는 비운다 */
+  annualNote?: string | null;
 };
 
-export function RegularAvgInput({ category, value, onChange }: RegularAvgInputProps) {
+export function RegularAvgInput({
+  category,
+  value,
+  onChange,
+  caption = '정기 항목 · 1단계',
+  hint,
+  annualNote = '다음 단계에서 12개월 그리드로 특정 달을 조정할 수 있어요.',
+}: RegularAvgInputProps) {
   const [draft, setDraft] = useState<string | null>(null);
   const display = draft !== null ? draft : formatNumber(value);
 
@@ -21,7 +34,7 @@ export function RegularAvgInput({ category, value, onChange }: RegularAvgInputPr
 
   return (
     <div className="space-y-5" data-testid="regular-avg-input">
-      <CategoryHeader category={category} caption="정기 항목 · 1단계" />
+      <CategoryHeader category={category} caption={caption} />
 
       <section className="rounded-2xl border border-stone-200 bg-white p-5">
         <label className="block">
@@ -51,6 +64,14 @@ export function RegularAvgInput({ category, value, onChange }: RegularAvgInputPr
             </div>
           )}
         </label>
+        {hint ? (
+          <p
+            className="mt-3 text-[12px] leading-relaxed text-stone-500"
+            data-testid="regular-avg-hint"
+          >
+            {hint}
+          </p>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
@@ -63,9 +84,7 @@ export function RegularAvgInput({ category, value, onChange }: RegularAvgInputPr
             {formatCurrencyMan(annual)}원
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-coral-600/80">
-          다음 단계에서 12개월 그리드로 특정 달을 조정할 수 있어요.
-        </p>
+        {annualNote ? <p className="mt-1 text-[11px] text-coral-600/80">{annualNote}</p> : null}
       </section>
     </div>
   );

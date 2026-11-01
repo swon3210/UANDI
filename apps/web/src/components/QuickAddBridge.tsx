@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
+import { PencilLine, Sparkles } from 'lucide-react';
+import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { useAddEntry, useAddEntries, useResolveCategoryHints } from '@/hooks/useCashbook';
@@ -111,6 +111,20 @@ function QuickAddSheetContent({
             ));
           }}
         />
+        {/* 화살표 아이콘만으로는 수동 폼 경로를 못 찾는다(2026-11 걷기) → 텍스트 버튼을 따로 둔다 */}
+        <div className="mt-2 flex justify-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground"
+            onClick={openManualForm}
+            data-testid="quick-add-manual"
+          >
+            <PencilLine size={14} aria-hidden />
+            금액·카테고리 직접 입력
+          </Button>
+        </div>
       </div>
     </SheetContent>
   );

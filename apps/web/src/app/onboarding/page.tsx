@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Loader2, ChevronLeft, Home, Mail } from 'lucide-react';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import {
   Button,
@@ -138,11 +139,11 @@ export default function OnboardingPage() {
     router.replace('/inner/cashbook/import?onboarding=1');
   };
 
-  if (
-    authStatus === 'loading' ||
-    authStatus === 'unauthenticated' ||
-    authStatus === 'authenticated_with_couple'
-  ) {
+  // 커플이 생긴 직후(가져오기 화면으로 넘어가는 중)에는 문구 없는 스피너 대신 마스코트 + 안내
+  if (authStatus === 'authenticated_with_couple') {
+    return <MascotLoader fullScreen caption="가계부를 준비하고 있어요" />;
+  }
+  if (authStatus === 'loading' || authStatus === 'unauthenticated') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="animate-spin text-muted-foreground" size={32} />

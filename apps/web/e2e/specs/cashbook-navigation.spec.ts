@@ -1,6 +1,11 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import { listAnnualPlans, seedAnnualPlan, seedDefaultCategories } from '../helpers/emulator';
+import {
+  listAnnualPlans,
+  seedAnnualPlan,
+  seedAnnualPlanRevision,
+  seedDefaultCategories,
+} from '../helpers/emulator';
 
 /**
  * 가계부 상단 분류 탭(대시보드/내역/현금흐름/목표) 제거 후의 진입 경로.
@@ -121,9 +126,23 @@ test.describe('올해 예산 권유 카드', () => {
     await expect(card).toHaveCount(0);
   });
 
-  test('올해 목표가 이미 있으면 카드가 없다', async ({ authedContext }) => {
+  test('플랜은 있는데 위저드를 끝내지 않았으면 이어서 세우기 카드가 보인다', async ({
+    authedContext,
+  }) => {
     const { page, uid, coupleId } = authedContext;
     await seedAnnualPlan(coupleId, new Date().getFullYear(), uid);
+    await page.goto('/inner/cashbook');
+    await expect(page.getByTestId('dashboard-header')).toBeVisible();
+    const card = page.getByTestId('annual-plan-prompt');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('예산 이어서 세우기');
+    await expect(page.getByTestId('annual-plan-prompt-resume')).toBeVisible();
+  });
+
+  test('올해 목표를 완성했으면(리비전 있음) 카드가 없다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const planId = await seedAnnualPlan(coupleId, new Date().getFullYear(), uid);
+    await seedAnnualPlanRevision(coupleId, planId, uid);
     await page.goto('/inner/cashbook');
     await expect(page.getByTestId('dashboard-header')).toBeVisible();
     await page.waitForTimeout(1000);

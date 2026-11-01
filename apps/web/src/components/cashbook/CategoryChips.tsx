@@ -68,6 +68,17 @@ export function CategoryChips({
 
   const parentById = new Map(categories.map((c) => [c.id, c]));
   const parents = categories.filter((c) => c.parentCategoryId === null);
+  // 같은 그룹에 이름이 같은 부모가 둘 이상(공통 식비·각자 식비)이면 칩에 subGroup 라벨을 붙여 구분한다.
+  const duplicateNames = new Set(
+    parents
+      .filter((c) => c.group === group)
+      .map((c) => c.name)
+      .filter((name, i, arr) => arr.indexOf(name) !== i)
+  );
+  const parentChipLabel = (parent: CashbookCategory) =>
+    duplicateNames.has(parent.name)
+      ? `${parent.name} (${SUB_GROUP_SHORT_LABELS[parent.subGroup]})`
+      : parent.name;
   const childrenByParent = new Map<string, CashbookCategory[]>();
   for (const c of categories) {
     if (c.parentCategoryId) {
@@ -210,7 +221,7 @@ export function CategoryChips({
                         }}
                       >
                         <CategoryIcon name={parent.icon} size={16} />
-                        {parent.name}
+                        {parentChipLabel(parent)}
                         {hasChildren && (
                           <ChevronRight
                             size={13}

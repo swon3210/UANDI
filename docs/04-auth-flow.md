@@ -156,3 +156,8 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 - 생성 시 `createdByName`(생성자 표시 이름)을 함께 저장한다. 합류 전 상대는 `users/*`를 읽을 수 없으므로, 코드 입력 화면의 "OO님의 초대예요" 미리보기는 이 값을 쓴다.
 - 현재 유효한 코드는 `couples/{coupleId}.inviteCode`에도 기록한다. 대시보드 초대 카드가 코드를 다시 보여줄 때 이 값을 읽고, 만료·소진됐으면 `ensureActiveInviteCode`가 새 코드를 발급한다.
 - 초대 링크는 `/invite/{code}`. 링크로 진입하면 코드를 저장해 두고 로그인 뒤 코드 입력 화면을 자동으로 연다.
+
+## 회원탈퇴 위치
+
+- 회원탈퇴 버튼(`delete-account-button`)은 **프로필 편집 페이지(`/settings/profile`) 맨 아래**에 둔다. 설정 첫 화면(`/settings`)에는 두지 않는다(2026-11 걷기: 첫 주 사용자가 설정에 들어가자마자 빨간 "회원탈퇴"를 보는 건 어색하다).
+- 확인 다이얼로그(`delete-account-dialog`)·탈퇴 후 랜딩 리다이렉트·커플 데이터 보존 규칙은 그대로다.

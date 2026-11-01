@@ -53,6 +53,19 @@ export async function createAnnualPlan(
   return planId;
 }
 
+/** 미완 위저드의 마지막 단계를 플랜 문서에 기록한다(이어서 하기). 완료 시 null로 지운다. */
+export async function updateAnnualPlanWizardProgress(
+  coupleId: string,
+  planId: string,
+  progress: { wizardLastStep: string | null; wizardMode: 'quick' | 'full' | null }
+): Promise<void> {
+  await updateDoc(doc(plansCol(coupleId), planId), {
+    wizardLastStep: progress.wizardLastStep,
+    wizardMode: progress.wizardMode,
+    updatedAt: Timestamp.now(),
+  });
+}
+
 /**
  * 손대지 않은 플랜(모든 항목 금액 0, 리비전 없음)이면 항목과 플랜을 지우고 true.
  * 위저드 인트로에서 바로 나갔을 때 0원짜리 빈 플랜이 남지 않게 한다.

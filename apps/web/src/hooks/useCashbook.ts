@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
@@ -300,26 +301,46 @@ export function useGroupedEntries(
   }, [entries, sort]);
 }
 
+const HISTORY_PATH = '/inner/cashbook/history';
+
+/**
+ * 추가 완료 토스트. 내역 화면이 아닌 곳(대시보드 등)에서 적었으면 "내역 보기" 액션을 붙여
+ * 방금 적은 내역이 어디 갔는지 바로 찾아가게 한다(2026-11 첫 주 걷기).
+ */
+function toastEntriesAdded(message: string, goToHistory: () => void) {
+  const onHistory =
+    typeof window !== 'undefined' && window.location.pathname.startsWith(HISTORY_PATH);
+  toast.success(
+    message,
+    onHistory ? undefined : { action: { label: '내역 보기', onClick: goToHistory } }
+  );
+}
+
 export function useAddEntry(coupleId: string | null) {
   const qc = useQueryClient();
+  const router = useRouter();
   return useMutation({
     mutationFn: (
       data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
     ) => addEntry(coupleId!, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
+      toastEntriesAdded('내역을 추가했어요', () => router.push(HISTORY_PATH));
+    },
     onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
   });
 }
 
 export function useAddEntries(coupleId: string | null) {
   const qc = useQueryClient();
+  const router = useRouter();
   return useMutation({
     mutationFn: (
       entries: Array<Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>>
     ) => addEntries(coupleId!, entries),
     onSuccess: (count) => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
-      toast.success(`${count}건 추가됐어요`);
+      toastEntriesAdded(`${count}건 추가됐어요`, () => router.push(HISTORY_PATH));
     },
     onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
   });

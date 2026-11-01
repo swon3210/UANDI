@@ -42,6 +42,24 @@ export const Mid: Story = {
   },
 };
 
+/** 카테고리 단계 — "이 항목은 건너뛰기" 텍스트 버튼이 푸터 위에 붙는다 */
+export const WithSkip: Story = {
+  args: {
+    title: '정기급여',
+    subtitle: '수입 · 1 / 2 · 평균',
+    progress: 0.2,
+    onPrev: () => {},
+    onNext: () => {},
+    onExit: () => {},
+    onSkip: () => {},
+    children: (
+      <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500">
+        본문 영역
+      </div>
+    ),
+  },
+};
+
 export const NextDisabled: Story = {
   args: {
     title: '검증',

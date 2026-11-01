@@ -13,8 +13,10 @@ import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hoo
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
 import { BackButton } from '@/components/shell/BackButton';
+import { AnnualPlanPromptCard } from '@/components/dashboard/AnnualPlanPromptCard';
 
-const WIZARD_INTRO = '/inner/cashbook/plan/annual/wizard?step=intro';
+const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
+const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
 
 export default function AnnualPlanPage() {
   const router = useRouter();
@@ -30,6 +32,14 @@ export default function AnnualPlanPage() {
 
   const isLoading = planPending || catPending || (!!plan && itemsPending);
   const canBulkEdit = (revisions?.length ?? 0) >= 1;
+  // 위저드를 끝내지 않은 플랜(리비전 0개) — "예상 연간 잉여"만 덩그러니 보이지 않게 이어서 하기 배너
+  const isIncomplete = !!plan && revisions !== undefined && revisions.length === 0;
+  const progress = items
+    ? {
+        done: items.filter((it) => it.monthlyAmounts.some((v) => v > 0)).length,
+        total: items.length,
+      }
+    : undefined;
 
   // plan/items 미존재 또는 monthlyAmounts 누락 시 위저드로 redirect
   useEffect(() => {
@@ -99,7 +109,16 @@ export default function AnnualPlanPage() {
         }
       />
 
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-20">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-4 px-4 pt-4 pb-20">
+        {isIncomplete && plan ? (
+          <AnnualPlanPromptCard
+            year={year}
+            variant="resume"
+            progress={progress}
+            href={`${WIZARD_PATH}${plan.wizardLastStep ?? '?step=intro'}`}
+            data-testid="annual-plan-resume"
+          />
+        ) : null}
         {items && <GoalsMainView items={items} onSelectCategory={goToCategory} />}
       </main>
     </div>

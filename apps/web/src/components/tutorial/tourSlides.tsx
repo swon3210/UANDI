@@ -89,13 +89,17 @@ const LaterPreview: FC = () => (
   <MascotPreview src={mascotSuccess} widthClassName="w-[150px] sm:w-[160px]" />
 );
 
-const partnerLabel = (ctx: TourContext) => ctx.partnerName?.trim() || '짝꿍';
-
 const WELCOME_SLIDE: TourSlide = {
   id: 'welcome',
   title: '둘이 함께 쓰는 가계부예요',
-  description: (ctx) =>
-    `${partnerLabel(ctx)}님과 같은 가계부를 봐요.\n둘 중 누가 적어도 바로 함께 보여요.`,
+  // 짝꿍이 아직 없으면(먼저 시작한 사람) 초대 안내로 바꾼다 — "짝꿍님과 같은 가계부"는 아직 해당이 없다.
+  description: (ctx) => {
+    const name = ctx.partnerName?.trim();
+    const first = name
+      ? `${name}님과 같은 가계부를 봐요.`
+      : '짝꿍을 초대하면 같은 가계부를 함께 봐요.';
+    return `${first}\n둘 중 누가 적어도 바로 함께 보여요.`;
+  },
   Preview: WelcomePreview,
 };
 

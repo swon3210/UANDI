@@ -408,7 +408,9 @@ test.describe('대시보드', () => {
       await expect(dashboard.meterStatus).toContainText('더 썼어요');
     });
 
-    test('수입이 없으면 수입이 없다고 알린다', async ({ authedContext }) => {
+    test('수입이 없으면 경고 대신 중립 문구와 수입 적기 버튼을 보여준다', async ({
+      authedContext,
+    }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       await seedCashbookEntry(coupleId, uid, {
@@ -422,7 +424,45 @@ test.describe('대시보드', () => {
       await dashboard.goto();
 
       await expect(dashboard.meterPercent).toHaveText('—');
-      await expect(dashboard.meterStatus).toContainText('수입이 없어요');
+      await expect(dashboard.meterStatus).toContainText('아직 수입을 안 적었어요');
+      await expect(dashboard.meterStatus).not.toContainText('🚨');
+      await dashboard.meterAddIncome.click();
+      await expect(page.getByTestId('quick-add-sheet')).toBeVisible();
+    });
+
+    test('전체 탭에 최근 내역 3건과 전체 보기 링크가 보인다', async ({ authedContext }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      // 모두 이번 달 안에(월초가 테스트 날짜여도 기간 밖으로 나가지 않게), 날짜 내림차순이 되도록 시드
+      const monthStart = dayjs().startOf('month');
+      const seeds = [
+        { category: '식비', amount: 9000, description: '김치찌개', date: dayjs() },
+        { category: '교통', amount: 3000, description: '버스', date: monthStart.add(3, 'hour') },
+        { category: '여행', amount: 120000, description: '숙소', date: monthStart.add(2, 'hour') },
+        { category: '소비', amount: 20000, description: '책', date: monthStart.add(1, 'hour') },
+      ];
+      for (const s of seeds) {
+        await seedCashbookEntry(coupleId, uid, {
+          type: 'expense',
+          amount: s.amount,
+          category: s.category,
+          description: s.description,
+          date: s.date.toISOString(),
+        });
+      }
+
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+
+      await expect(dashboard.recentEntries).toBeVisible();
+      const cards = dashboard.recentEntries.locator('[data-testid^="entry-card-"]');
+      await expect(cards).toHaveCount(3);
+      await expect(cards.nth(0)).toContainText('김치찌개');
+      await expect(cards.nth(2)).toContainText('숙소');
+      await expect(dashboard.recentEntries).not.toContainText('책');
+
+      await dashboard.recentEntriesAll.click();
+      await page.waitForURL(/\/inner\/cashbook\/history/);
     });
 
     test('지출 탭으로 전환 시 카테고리 도넛에 지출 카테고리만 표시된다', async ({

@@ -1,6 +1,7 @@
 'use client';
 
-import { cn } from '@uandi/ui';
+import { Plus } from 'lucide-react';
+import { Button, cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 
 type Props = {
@@ -8,13 +9,19 @@ type Props = {
   income: number;
   /** 기간 지출 합계 */
   expense: number;
+  /**
+   * 수입이 없을 때 상태 줄의 "수입 적기" 버튼. 전달하면 버튼을 보여준다.
+   * (대시보드는 `uandi:quick-add` 이벤트로 빠른 추가 시트를 연다.)
+   */
+  onAddIncome?: () => void;
 };
 
 /**
  * 전체 탭: 수입(트랙 = 100%) 중 얼마를 지출로 채웠는지, 넘기지는 않았는지 보여주는 게이지.
  * 수입을 넘기면 막대를 가득 채우고 초과 금액을 알린다.
+ * 수입이 아직 없을 땐(첫 주에 지출 한 건만 적은 사람) 경고 대신 중립 문구와 "수입 적기"를 보여준다.
  */
-export function IncomeExpenseMeter({ income, expense }: Props) {
+export function IncomeExpenseMeter({ income, expense, onAddIncome }: Props) {
   const hasIncome = income > 0;
   const ratio = hasIncome ? expense / income : expense > 0 ? Infinity : 0;
   const isOver = ratio > 1;
@@ -72,11 +79,26 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
 
       <div
         data-testid="meter-status"
-        className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
+        className="flex min-h-10 items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
       >
         {!hasIncome ? (
           expense > 0 ? (
-            <span className="text-expense">🚨 이 기간엔 수입이 없어요</span>
+            <>
+              <span className="text-muted-foreground">아직 수입을 안 적었어요</span>
+              {onAddIncome ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                  onClick={onAddIncome}
+                  data-testid="meter-add-income"
+                >
+                  <Plus size={12} aria-hidden />
+                  수입 적기
+                </Button>
+              ) : null}
+            </>
           ) : (
             <span className="text-muted-foreground">이 기간엔 수입·지출 내역이 없어요</span>
           )

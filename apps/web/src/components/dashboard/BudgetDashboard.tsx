@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -55,6 +56,7 @@ import { SubGroupTabs } from './SubGroupTabs';
 import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
+import { RecentEntriesCard } from './RecentEntriesCard';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareAiSummary } from './CompareAiSummary';
 import { CompareTargetPicker } from './CompareTargetPicker';
@@ -123,6 +125,7 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGrou
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
+  const router = useRouter();
   // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
   const [filters, updateFilters] = useDashboardFilters();
   const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
@@ -145,6 +148,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     byFixedVariable,
     total,
     hasEntries,
+    recentEntries,
     comparison,
     isLoading,
     isCompareLoading,
@@ -495,9 +499,21 @@ export function BudgetDashboard({ coupleId }: Props) {
           />
         </div>
       ) : group === 'all' ? (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
-        </div>
+        <>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <IncomeExpenseMeter
+              income={typeTotals.income}
+              expense={typeTotals.expense}
+              onAddIncome={() => window.dispatchEvent(new Event('uandi:quick-add'))}
+            />
+          </div>
+          <RecentEntriesCard
+            entries={recentEntries}
+            categories={categories}
+            historyHref="/inner/cashbook/history"
+            onSelect={() => router.push('/inner/cashbook/history')}
+          />
+        </>
       ) : (
         <>
           <div className="rounded-xl border border-border bg-card p-4">

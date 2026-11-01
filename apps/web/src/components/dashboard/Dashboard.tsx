@@ -11,13 +11,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { useCashbookEntryAutoOpen } from '@/hooks/useCashbookEntryAutoOpen';
 import { useHasAnyEntries } from '@/hooks/useHasAnyEntries';
-import { useAnnualPlan } from '@/hooks/useAnnualPlan';
+import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
 import { useSsrSafeLocalStorage } from '@/hooks/useSsrSafeLocalStorage';
 import { AnnualPlanPromptCard } from './AnnualPlanPromptCard';
 import { BudgetDashboard } from './BudgetDashboard';
 import { CoupleStatusSection } from './CoupleStatusSection';
 
-const WIZARD_INTRO = '/inner/cashbook/plan/annual/wizard?step=intro';
+const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
+const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
 /** 예산 권유 카드를 닫은 뒤 다시 보이기까지의 기간 */
 const PLAN_PROMPT_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -29,6 +30,8 @@ export function Dashboard() {
   const { data: hasEntries } = useHasAnyEntries(coupleId ?? null);
   const year = dayjs().year();
   const { data: plan, isPending: planPending } = useAnnualPlan(coupleId ?? null, year);
+  const { data: planItems } = useAnnualPlanItems(coupleId ?? null, plan?.id ?? null);
+  const { data: revisions } = useAnnualPlanRevisions(coupleId ?? null, plan?.id ?? null);
   // 값 = 카드가 다시 보여야 하는 시각(ms). 마운트 시각과 비교한다.
   const [promptDismissedAt, setPromptDismissedAt] = useSsrSafeLocalStorage<number | null>(
     `moa:annual-plan-card-dismissed:${year}`,
@@ -45,10 +48,18 @@ export function Dashboard() {
 
   if (!coupleId) return null;
 
-  // 올해 예산이 없으면 권유 카드(닫으면 30일 뒤 다시). 위저드로 자동 이동하지 않는다.
+  // 올해 예산이 없으면 "세우기", 위저드를 끝내지 않았으면(리비전 0개) "이어서 세우기" 카드.
+  // 닫으면 30일 뒤 다시. 위저드로 자동 이동하지 않는다.
   // 닫은 시각은 "다시 보일 시각"으로 저장해 두어 렌더 중엔 비교만 한다(렌더 중 Date.now() 호출 회피).
   const promptSnoozed = promptDismissedAt !== null && promptDismissedAt > renderedAtMs;
-  const showPlanPrompt = !planPending && !plan && !promptSnoozed;
+  const planIncomplete = !!plan && revisions !== undefined && revisions.length === 0;
+  const showPlanPrompt = !planPending && (!plan || planIncomplete) && !promptSnoozed;
+  const planProgress = planItems
+    ? {
+        done: planItems.filter((it) => it.monthlyAmounts.some((v) => v > 0)).length,
+        total: planItems.length,
+      }
+    : undefined;
 
   return (
     <>
@@ -69,7 +80,9 @@ export function Dashboard() {
         {showPlanPrompt ? (
           <AnnualPlanPromptCard
             year={year}
-            href={WIZARD_INTRO}
+            variant={plan ? 'resume' : 'start'}
+            progress={planProgress}
+            href={plan ? `${WIZARD_PATH}${plan.wizardLastStep ?? '?step=intro'}` : WIZARD_INTRO}
             onDismiss={() => setPromptDismissedAt(Date.now() + PLAN_PROMPT_SNOOZE_MS)}
           />
         ) : null}

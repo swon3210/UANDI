@@ -20,4 +20,9 @@ export class SettingsPage {
   async goto() {
     await this.page.goto('/settings');
   }
+
+  /** 회원탈퇴 버튼이 있는 프로필 편집 페이지 */
+  async gotoProfile() {
+    await this.page.goto('/settings/profile');
+  }
 }

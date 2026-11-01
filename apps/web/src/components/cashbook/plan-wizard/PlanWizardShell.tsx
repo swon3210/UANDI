@@ -11,6 +11,8 @@ type PlanWizardShellProps = {
   onPrev?: () => void;
   onNext?: () => void;
   onExit?: () => void;
+  /** 카테고리 단계에서 "이 항목은 건너뛰기"(0원으로 두고 다음 항목). 전달하면 푸터에 텍스트 버튼이 보인다. */
+  onSkip?: () => void;
   prevDisabled?: boolean;
   nextDisabled?: boolean;
   nextLabel?: string;
@@ -27,6 +29,7 @@ export function PlanWizardShell({
   onPrev,
   onNext,
   onExit,
+  onSkip,
   prevDisabled,
   nextDisabled,
   nextLabel = '다음',
@@ -83,33 +86,51 @@ export function PlanWizardShell({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-32">{children}</main>
+      <main className={cn('mx-auto w-full max-w-md flex-1 px-4 pt-5', onSkip ? 'pb-40' : 'pb-32')}>
+        {children}
+      </main>
 
       {!hideFooter && (
         <footer
           className="fixed inset-x-0 bottom-0 z-10 border-t border-stone-200 bg-white/95 backdrop-blur"
           data-testid="wizard-footer"
         >
-          <div className="mx-auto flex w-full max-w-md items-center gap-2 px-4 pt-3 pb-[calc(0.75rem+var(--safe-bottom))]">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onPrev}
-              disabled={prevDisabled || !onPrev}
-              className="min-w-[88px]"
-              data-testid="wizard-prev"
-            >
-              {prevLabel}
-            </Button>
-            <Button
-              type="button"
-              onClick={onNext}
-              disabled={nextDisabled || !onNext}
-              className="flex-1"
-              data-testid="wizard-next"
-            >
-              {nextLabel}
-            </Button>
+          <div className="mx-auto w-full max-w-md px-4 pt-2 pb-[calc(0.75rem+var(--safe-bottom))]">
+            {onSkip ? (
+              <div className="mb-1 flex justify-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onSkip}
+                  className="h-8 text-stone-500"
+                  data-testid="wizard-skip"
+                >
+                  이 항목은 건너뛰기
+                </Button>
+              </div>
+            ) : null}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onPrev}
+                disabled={prevDisabled || !onPrev}
+                className="min-w-[88px]"
+                data-testid="wizard-prev"
+              >
+                {prevLabel}
+              </Button>
+              <Button
+                type="button"
+                onClick={onNext}
+                disabled={nextDisabled || !onNext}
+                className="flex-1"
+                data-testid="wizard-next"
+              >
+                {nextLabel}
+              </Button>
+            </div>
           </div>
         </footer>
       )}

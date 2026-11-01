@@ -84,6 +84,9 @@ export type AnnualPlan = {
   createdBy: string;
   updatedAt: Timestamp;
   createdAt: Timestamp;
+  /** 미완 위저드의 마지막 단계 쿼리(예: `?step=income&catIdx=1&phase=avg&mode=quick`). 완료 시 null */
+  wizardLastStep?: string | null;
+  wizardMode?: 'quick' | 'full' | null;
 };
 
 export type AnnualPlanItem = {

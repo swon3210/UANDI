@@ -4,6 +4,7 @@ import { buildCategoryColorMap, distinctColors, getCategoryColor } from '@uandi/
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { getPeriodRange, type PeriodKind } from '@/utils/date';
+import { RECENT_ENTRIES_LIMIT } from '@/components/dashboard/RecentEntriesCard';
 import type { CashbookEntry, CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 
 /** 'all'(전체)은 지출·수입 총량 비교 전용 탭이다. */
@@ -55,6 +56,8 @@ export type DashboardData = {
   byFixedVariable: CategorySlice[];
   total: number;
   hasEntries: boolean;
+  /** 전체 탭 최근 내역 카드용 — 기간 안 내역 날짜 내림차순 최대 3건 */
+  recentEntries: CashbookEntry[];
   comparison: PeriodComparison;
   isLoading: boolean;
   /** 비교 기간 데이터 로딩 중 (현재 기간과 별도로 비교 기간만 바꿀 수 있어 분리) */
@@ -263,6 +266,10 @@ export function useDashboardData(args: {
       byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup),
       total,
       hasEntries: filtered.length > 0,
+      // 전체 탭 최근 내역 카드용. 그룹 필터와 무관하게 기간 안 내역을 날짜 내림차순으로.
+      recentEntries: [...(entriesQuery.data ?? [])]
+        .sort((a, b) => b.date.toMillis() - a.date.toMillis())
+        .slice(0, RECENT_ENTRIES_LIMIT),
       comparison: {
         rows: buildComparisonRows(filtered, compareFiltered),
       },

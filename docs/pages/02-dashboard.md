@@ -132,9 +132,12 @@ query(
   - 콕 찌르기 버튼은 기존대로 짝꿍이 있을 때만 노출한다.
 
 - **올해 예산 권유 카드 (`AnnualPlanPromptCard`)** — 커플 카드 아래, 기간 선택 위
-  - 올해 연간 플랜이 없을 때만 보인다(`useAnnualPlan(year)` → null). 위저드로 **자동 이동하지 않는다**(2026-11 걷기에서 첫 주 유저에게 과했다고 판단).
-  - 내용: "올해 예산 세우기 · 약 5분" + 설명 한 줄 + [시작하기](`data-testid="annual-plan-prompt-start"` → `/inner/cashbook/plan/annual/wizard?step=intro`) + 닫기(`annual-plan-prompt-dismiss`).
-  - 닫으면 `localStorage['moa:annual-plan-card-dismissed:{year}']`에 **다시 보일 시각**(닫은 시각 + 30일)을 기록하고 그때까지 숨긴다. 플랜이 생기면 영구히 사라진다. 그 사이엔 가계부 설정 → 경제 목표로 들어갈 수 있다.
+  - 위저드로 **자동 이동하지 않는다**(2026-11 걷기에서 첫 주 유저에게 과했다고 판단). 두 가지 모습이 있다.
+  - `variant="start"` — 올해 연간 플랜이 없을 때(`useAnnualPlan(year)` → null).
+    "올해 예산 세우기 · 약 5분" + 설명 한 줄 + [시작하기](`data-testid="annual-plan-prompt-start"` → `/inner/cashbook/plan/annual/wizard?step=intro`).
+  - `variant="resume"` — 플랜은 있는데 **위저드를 끝내지 않았을 때**(리비전 0개). 위저드를 중간에 나가면 플랜이 남아 카드가 사라지는 걸 막는다.
+    "예산 이어서 세우기" + "{n}개 항목을 적었어요. 이어서 적으면 완성돼요"(n = 금액이 있는 항목 수) + [이어서 하기](`annual-plan-prompt-resume` → `plan.wizardLastStep`이 있으면 그 단계, 없으면 인트로).
+  - 닫기(`annual-plan-prompt-dismiss`)는 두 모습 모두 같다: `localStorage['moa:annual-plan-card-dismissed:{year}']`에 **다시 보일 시각**(닫은 시각 + 30일)을 기록하고 그때까지 숨긴다. 위저드를 완료(리비전 생성)하면 영구히 사라진다. 그 사이엔 가계부 설정 → 경제 목표로 들어갈 수 있다.
   - `data-testid="annual-plan-prompt"`
 - **내역 진입 — 합계 KPI 카드 재사용**
   - 별도 진입 UI를 추가하지 않고, 기존 합계 KPI 카드(`dashboard-total`)를 `next/link`로 감싸 클릭 시 `/inner/cashbook/history`로 이동
@@ -179,7 +182,11 @@ query(
 - `전체` 탭은 **수입 대비 지출 게이지(`IncomeExpenseMeter`)만** 보여준다 (`typeTotals`)
   - 트랙 = 수입(100%), 채움 = 지출. 우측 상단에 `지출/수입` 비율(`meter-percent`), 아래 수입·지출 금액 박스
   - 상태 줄(`meter-status`): 수입 이하면 `😎 남은 금액 N원`, 넘기면 막대를 가득 채우고 `🚨 수입보다 N원 더 썼어요`
-  - 수입이 0이면 비율 `—`, 지출이 있으면 `🚨 이 기간엔 수입이 없어요`
+  - 수입이 0이면 비율 `—`. 지출만 있으면 경고가 아니라 중립 문구 `아직 수입을 안 적었어요`와 [수입 적기](`meter-add-income`, `uandi:quick-add` 이벤트로 빠른 추가 시트를 연다). 첫 주에 지출 한 건만 적은 사람이 꾸중으로 읽지 않게 한다(2026-11 걷기).
+  - 전체 탭의 게이지 카드 아래에 **최근 내역 카드(`RecentEntriesCard`)** — 방금 적은 내역이 대시보드에서 바로 보이게 한다.
+    - 현재 기간의 내역을 날짜 내림차순으로 최대 3건(`EntryCard`, 날짜 표시). 내역이 없으면 카드도 없다.
+    - 제목 "최근 내역" + [전체 보기](`recent-entries-all` → `/inner/cashbook/history`). 행을 누르면 내역 화면으로 간다.
+    - `data-testid="recent-entries"`
   - 합계 KPI 카드·고정/변동 세부 탭·기간 비교 차트는 숨김 (수입·지출 카테고리가 섞이면 의미가 없기 때문)
   - 카테고리별 분석은 지출/수입 탭에서
 

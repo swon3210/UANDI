@@ -395,6 +395,51 @@ export async function seedAnnualPlan(
   return planId;
 }
 
+/** 위저드 완료 표시 — 리비전 1개. 대시보드 권유 카드는 리비전이 있으면 사라진다. */
+export async function seedAnnualPlanRevision(
+  coupleId: string,
+  planId: string,
+  createdBy: string
+): Promise<string> {
+  const revId = `rev-test-${Date.now()}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/revisions/${revId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: revId },
+          planId: { stringValue: planId },
+          coupleId: { stringValue: coupleId },
+          source: { stringValue: 'wizard_initial' },
+          createdBy: { stringValue: createdBy },
+          before: { mapValue: { fields: {} } },
+          after: { mapValue: { fields: {} } },
+          totals: {
+            mapValue: {
+              fields: {
+                before: {
+                  mapValue: {
+                    fields: { income: { integerValue: '0' }, expense: { integerValue: '0' } },
+                  },
+                },
+                after: {
+                  mapValue: {
+                    fields: { income: { integerValue: '0' }, expense: { integerValue: '0' } },
+                  },
+                },
+              },
+            },
+          },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+  return revId;
+}
+
 export async function seedAnnualPlanItem(
   coupleId: string,
   planId: string,
