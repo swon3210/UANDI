@@ -6,6 +6,7 @@ import { Button } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import { NudgeButton } from '@/components/cashbook/NudgeButton';
 import { useAuth } from '@/hooks/useAuth';
+import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { useCashbookEntryAutoOpen } from '@/hooks/useCashbookEntryAutoOpen';
 import { BudgetDashboard } from './BudgetDashboard';
 import { CoupleStatusSection } from './CoupleStatusSection';
@@ -13,9 +14,11 @@ import { CoupleStatusSection } from './CoupleStatusSection';
 export function Dashboard() {
   const { user } = useAuth();
   const coupleId = user?.coupleId;
+  const { data: members } = useCoupleMembers(coupleId ?? null);
+  const partnerName = members?.find((m) => m.uid !== user?.uid)?.displayName?.trim() || null;
 
-  // 첫 진입 시 온보딩 투어 1회, 이후 그 해 목표가 없으면 목표 설정 화면 1회 자동 노출
-  useCashbookEntryAutoOpen(coupleId ?? null);
+  // 첫 진입 시 온보딩 투어 1회(화면이 그려진 뒤), 이후 그 해 목표가 없으면 목표 설정 화면 1회 자동 노출
+  useCashbookEntryAutoOpen(coupleId ?? null, partnerName);
 
   if (!coupleId) return null;
 
