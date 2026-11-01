@@ -131,11 +131,11 @@ query(
     (`coupleMembers` 쿼리 무효화)
   - 콕 찌르기 버튼은 기존대로 짝꿍이 있을 때만 노출한다.
 
-- **예산 설정 진입 카드 (`DashboardEntryList`)**
-  - 홈 상단에 전폭 가로 카드로 표시 (아이콘 + 레이블 + 설명 + `ChevronRight`)
-  - `예산 설정` → `/inner/cashbook/plan/annual` (연간 예산 계획)
-  - 항목별 `data-testid="dashboard-entry-{id}"` (예산: `dashboard-entry-budget`)
-  - `entries: DashboardEntry[]`를 props로 받는 프레젠테이션 컴포넌트 — 라우트/아이콘/레이블은 `Dashboard`가 주입
+- **올해 예산 권유 카드 (`AnnualPlanPromptCard`)** — 커플 카드 아래, 기간 선택 위
+  - 올해 연간 플랜이 없을 때만 보인다(`useAnnualPlan(year)` → null). 위저드로 **자동 이동하지 않는다**(2026-11 걷기에서 첫 주 유저에게 과했다고 판단).
+  - 내용: "올해 예산 세우기 · 약 5분" + 설명 한 줄 + [시작하기](`data-testid="annual-plan-prompt-start"` → `/inner/cashbook/plan/annual/wizard?step=intro`) + 닫기(`annual-plan-prompt-dismiss`).
+  - 닫으면 `localStorage['moa:annual-plan-card-dismissed:{year}']`에 **다시 보일 시각**(닫은 시각 + 30일)을 기록하고 그때까지 숨긴다. 플랜이 생기면 영구히 사라진다. 그 사이엔 가계부 설정 → 경제 목표로 들어갈 수 있다.
+  - `data-testid="annual-plan-prompt"`
 - **내역 진입 — 합계 KPI 카드 재사용**
   - 별도 진입 UI를 추가하지 않고, 기존 합계 KPI 카드(`dashboard-total`)를 `next/link`로 감싸 클릭 시 `/inner/cashbook/history`로 이동
   - 카드 우상단에 `내역 보기 ›` 보조 라벨 표시, `data-testid="dashboard-total"` 유지

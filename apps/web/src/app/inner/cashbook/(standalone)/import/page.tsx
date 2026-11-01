@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useRef, useState } from 'react';
+import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
@@ -52,6 +53,21 @@ const FALLBACK_CATEGORY = {
 };
 
 const DASHBOARD = '/inner/cashbook';
+
+/** 저장한 내역이 가장 많은 달의 대시보드 경로. 이번 달이면 쿼리 없이. */
+function dashboardPathForEntries(entries: ConfirmedEntry[]): string {
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    const key = dayjs(e.date.toDate()).format('YYYY-MM');
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  let best: string | null = null;
+  for (const [key, count] of counts) {
+    if (best === null || count > (counts.get(best) ?? 0)) best = key;
+  }
+  if (!best || best === dayjs().format('YYYY-MM')) return DASHBOARD;
+  return `${DASHBOARD}?at=${best}-01`;
+}
 
 function ImportPageContent() {
   const router = useRouter();
@@ -186,10 +202,10 @@ function ImportPageContent() {
       for (const data of toCreate) await addCategory(coupleId, data);
       await queryClient.invalidateQueries({ queryKey: ['cashbookCategories', coupleId] });
 
-      // (3) 내역 일괄 저장 (성공 토스트는 훅이 띄운다)
+      // (3) 내역 일괄 저장 (성공 토스트는 훅이 띄운다) → 내역이 가장 많은 달로
       await addEntriesMutation.mutateAsync(confirmed);
       closePreview();
-      goDashboard();
+      router.replace(dashboardPathForEntries(confirmed));
     } catch {
       toast.error('저장에 실패했어요. 다시 시도해 주세요');
     } finally {

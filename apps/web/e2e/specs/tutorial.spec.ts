@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
+import { seedCashbookEntry } from '../helpers/emulator';
 
 /**
  * 말랑 가계부 온보딩 투어 — "첫 행동 안내" 3장.
@@ -63,6 +64,25 @@ test.describe('말랑 가계부 온보딩 투어', () => {
       // 자동 노출 지연(1.5초)보다 길게 기다려도 다시 뜨지 않는다
       await authedPage.waitForTimeout(2500);
       await expect(overlay).toHaveCount(0);
+    });
+
+    test('내역이 이미 있으면 2장이 "내역이 들어왔어요"로 바뀌고 내역 보기로 내역 화면에 간다', async ({
+      authedContext,
+    }) => {
+      const { page, uid, coupleId } = authedContext;
+      await seedCashbookEntry(coupleId, uid, { type: 'expense', amount: 9000, category: '식비' });
+      await page.goto('/inner/cashbook');
+
+      const overlay = page.getByTestId(OVERLAY);
+      await expect(overlay).toBeVisible({ timeout: 15000 });
+      await page.getByTestId('tour-next').click();
+      await expect(overlay).toContainText('내역이 들어왔어요');
+      await expect(overlay).not.toContainText('첫 내역을 적어 볼까요');
+      await page.getByTestId('tour-next').click();
+      await expect(page.getByTestId('tour-first-entry')).toHaveCount(0);
+      await page.getByTestId('tour-view-entries').click();
+      await expect(overlay).toBeHidden();
+      await page.waitForURL(/\/inner\/cashbook\/history/);
     });
 
     test('건너뛰기로 즉시 닫을 수 있다', async ({ authedPage }) => {

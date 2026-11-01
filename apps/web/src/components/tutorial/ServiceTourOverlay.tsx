@@ -9,20 +9,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@uandi/ui';
-import { TOUR_SLIDES, type TourContext } from './tourSlides';
+import { tourSlidesFor, type TourContext } from './tourSlides';
 
 type ServiceTourOverlayProps = {
   /** 둘러볼게요·건너뛰기로 닫을 때 호출 (overlay close + unmount) */
   onClose: () => void;
   /** 마지막 장 "첫 내역 적기" — 닫은 뒤 빠른 추가 시트를 여는 건 소비 측(openServiceTour) 몫 */
   onFirstEntry: () => void;
+  /** 내역이 이미 있을 때 마지막 장 "내역 보기" — 닫은 뒤 내역 화면으로 */
+  onViewEntries?: () => void;
   /** 설명 문구에 쓰는 맥락(짝꿍 이름) */
   context?: TourContext;
   /** Storybook 등에서 특정 슬라이드부터 보여주기 위한 초기 스텝 */
   defaultStep?: number;
 };
 
-const DEFAULT_CONTEXT: TourContext = { partnerName: null };
+const DEFAULT_CONTEXT: TourContext = { partnerName: null, hasEntries: false };
 
 /**
  * 온보딩 투어 — "첫 행동 안내" 3장 (docs/pages/01-onboarding.md 「온보딩 투어」).
@@ -33,10 +35,11 @@ const DEFAULT_CONTEXT: TourContext = { partnerName: null };
 export function ServiceTourOverlay({
   onClose,
   onFirstEntry,
+  onViewEntries,
   context = DEFAULT_CONTEXT,
   defaultStep = 0,
 }: ServiceTourOverlayProps) {
-  const slides = TOUR_SLIDES;
+  const slides = tourSlidesFor(context);
   const total = slides.length;
   const [step, setStep] = useState(defaultStep);
 
@@ -89,9 +92,20 @@ export function ServiceTourOverlay({
 
       {isLast ? (
         <div className="flex flex-col gap-2">
-          <Button type="button" size="lg" onClick={onFirstEntry} data-testid="tour-first-entry">
-            첫 내역 적기
-          </Button>
+          {context.hasEntries ? (
+            <Button
+              type="button"
+              size="lg"
+              onClick={onViewEntries ?? onClose}
+              data-testid="tour-view-entries"
+            >
+              내역 보기
+            </Button>
+          ) : (
+            <Button type="button" size="lg" onClick={onFirstEntry} data-testid="tour-first-entry">
+              첫 내역 적기
+            </Button>
+          )}
           <Button type="button" variant="ghost" onClick={onClose} data-testid="tour-start">
             둘러볼게요
           </Button>

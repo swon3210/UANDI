@@ -13,7 +13,15 @@ const QUICK_ADD_EVENT = 'uandi:quick-add';
  * 프로필 메뉴 "튜토리얼 다시 보기"가 모두 이 함수를 호출해 로직을 공유한다.
  * 마지막 장 "첫 내역 적기"는 투어를 닫은 뒤 빠른 추가 시트를 연다.
  */
-export function openServiceTour(context: TourContext = { partnerName: null }) {
+export type OpenServiceTourOptions = TourContext & {
+  /** 내역이 있을 때 마지막 장 "내역 보기" — 투어를 닫은 뒤 호출(라우팅은 호출 측) */
+  onViewEntries?: () => void;
+};
+
+export function openServiceTour(
+  options: OpenServiceTourOptions = { partnerName: null, hasEntries: false }
+) {
+  const { onViewEntries, ...context } = options;
   overlay.open(({ isOpen, close, unmount }) => {
     const dismiss = () => {
       close();
@@ -28,6 +36,10 @@ export function openServiceTour(context: TourContext = { partnerName: null }) {
             dismiss();
             // 다이얼로그가 닫힌 뒤 시트가 열리도록 한 틱 미룬다
             setTimeout(() => window.dispatchEvent(new Event(QUICK_ADD_EVENT)), 350);
+          }}
+          onViewEntries={() => {
+            dismiss();
+            onViewEntries?.();
           }}
         />
       </Dialog>

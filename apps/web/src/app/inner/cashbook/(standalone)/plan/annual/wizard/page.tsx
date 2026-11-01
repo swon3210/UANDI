@@ -19,7 +19,11 @@ import {
   useBulkUpdatePlanItems,
 } from '@/hooks/useAnnualPlan';
 import { usePlanWizard, type WizardStep } from '@/hooks/usePlanWizard';
-import { totalsFromItems, ensurePlanItems } from '@/services/annual-plan';
+import {
+  totalsFromItems,
+  ensurePlanItems,
+  deleteAnnualPlanIfUntouched,
+} from '@/services/annual-plan';
 import { REGULAR_SUBGROUPS, WIZARD_GROUP_LABEL } from '@/constants/plan-wizard';
 import { PlanWizardShell } from '@/components/cashbook/plan-wizard/PlanWizardShell';
 import { PlanWizardIntro } from '@/components/cashbook/plan-wizard/PlanWizardIntro';
@@ -135,6 +139,18 @@ function WizardPageInner() {
 
   const handleExit = async () => {
     await commitCurrentDraftIfDirty();
+    // 아무것도 입력하지 않았으면(인트로에서 바로 나감 등) 빈 플랜을 남기지 않고 대시보드로
+    if (plan) {
+      const deleted = await deleteAnnualPlanIfUntouched(coupleId!, plan.id);
+      if (deleted) {
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ['annualPlan', coupleId] }),
+          qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId] }),
+        ]);
+        router.replace('/inner/cashbook');
+        return;
+      }
+    }
     router.push('/inner/cashbook/plan/annual');
   };
 

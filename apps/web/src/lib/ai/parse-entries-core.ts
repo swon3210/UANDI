@@ -399,9 +399,12 @@ export function buildMockParseResponse(
     subGroup: 'variable_common',
     icon: 'paw_print',
   };
+  // 테스트용 결정적 신호: 줄에 '지난달'이 있으면 지난달 1일 날짜(가져오기 도착 달 검증)
+  const lastMonthFirst = dayjs().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
   const entries = Array.from({ length: count }, (_, i) => {
-    const base = { ...MOCK_TEMPLATES[i % MOCK_TEMPLATES.length], date: dates[i % dates.length] };
     const segment = segments[i];
+    const date = segment?.includes('지난달') ? lastMonthFirst : dates[i % dates.length];
+    const base = { ...MOCK_TEMPLATES[i % MOCK_TEMPLATES.length], date };
     if (allowNewCategories && segment && segment.includes(MOCK_SUGGESTION.name)) {
       return {
         ...base,

@@ -123,6 +123,24 @@ test.describe('지난 내역 가져오기', () => {
     await expect(card).toContainText('이름을 입력해 주세요');
   });
 
+  test('지난달 날짜 내역을 저장하면 대시보드가 그 달로 열린다', async ({ authedContext }) => {
+    const { page } = authedContext;
+    await page.goto('/inner/cashbook/import');
+    // 목: 줄에 '지난달'이 있으면 지난달 1일 날짜로 돌려준다
+    await parseText(page, '지난달 월세 800000원\n지난달 공과금 50000원');
+    await page.getByTestId('import-next').click();
+    await page.getByTestId('ai-bulk-confirm').click();
+
+    const prev = new Date();
+    prev.setDate(1);
+    prev.setMonth(prev.getMonth() - 1);
+    const ym = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+    await page.waitForURL(new RegExp(`/inner/cashbook\\?at=${ym}-01$`));
+    await expect(page.getByTestId('dashboard-header')).toBeVisible();
+    await expect(page.getByText(`${prev.getFullYear()}년 ${prev.getMonth() + 1}월`)).toBeVisible();
+    await expect(page.getByTestId('dashboard-empty')).toHaveCount(0);
+  });
+
   test('빈 대시보드의 "지난달 내역 불러오기"로 들어오고 뒤로가기로 돌아온다', async ({
     authedPage,
   }) => {

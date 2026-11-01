@@ -27,7 +27,7 @@ const meta: Meta<typeof ServiceTourOverlay> = {
   args: {
     onClose: () => {},
     onFirstEntry: () => {},
-    context: { partnerName: '세진' },
+    context: { partnerName: '세진', hasEntries: false },
   },
 };
 
@@ -41,7 +41,7 @@ export const Welcome: Story = {
 
 export const WelcomeWithoutPartnerName: Story = {
   name: '1. 짝꿍 이름 없음 (폴백)',
-  args: { defaultStep: 0, context: { partnerName: null } },
+  args: { defaultStep: 0, context: { partnerName: null, hasEntries: false } },
 };
 
 export const FirstEntry: Story = {
@@ -52,4 +52,14 @@ export const FirstEntry: Story = {
 export const Later: Story = {
   name: '3. 예산과 예측은 차차 같이 (첫 내역 적기 / 둘러볼게요)',
   args: { defaultStep: 2 },
+};
+
+export const EntriesReady: Story = {
+  name: '2′. 내역이 이미 있을 때 (가져오기 직후)',
+  args: { defaultStep: 1, context: { partnerName: '세진', hasEntries: true } },
+};
+
+export const LaterWithEntries: Story = {
+  name: '3. 내역 있을 때 마지막 장 (내역 보기 / 둘러볼게요)',
+  args: { defaultStep: 2, context: { partnerName: '세진', hasEntries: true } },
 };

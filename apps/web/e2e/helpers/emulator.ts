@@ -1222,3 +1222,8 @@ export async function getUserCoupleId(uid: string): Promise<string | null> {
   const v = restValue(doc.fields?.coupleId);
   return typeof v === 'string' ? v : null;
 }
+
+export async function listAnnualPlans(coupleId: string): Promise<{ id: string; year: number }[]> {
+  const docs = await listCoupleSubcollection(coupleId, 'annualPlans');
+  return docs.map((d) => ({ id: String(d.id), year: Number(d.year) }));
+}

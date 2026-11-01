@@ -40,9 +40,8 @@ async function maybeSeedTourSeen(context: BrowserContext, seed: boolean) {
 }
 
 /**
- * 올해 경제 목표 자동 진입(목표 미설정 시 대시보드 → 위저드 연 1회 이동) 플래그를 미리 심는다.
- * 목표 없이 대시보드를 쓰는 테스트가 위저드로 튕기지 않게 막는다.
- * 자동 진입 자체를 검증하는 spec은 test.use({ seedAnnualPlanPrompted: false })로 해제한다.
+ * (구) 올해 경제 목표 자동 진입 플래그. 자동 진입은 2026-11에 폐지돼(대시보드 권유 카드로 대체)
+ * 앱은 더 이상 이 키를 읽지 않는다. 옵션은 기존 spec 호환을 위해 남겨 둔다.
  */
 async function maybeSeedAnnualPlanPrompted(context: BrowserContext, seed: boolean) {
   if (!seed) return;
