@@ -119,6 +119,16 @@ query(
 
 ### 진입점
 
+- **커플 카드 (`CoupleStatusSection` → `CoupleStatusCard`)** — 홈 최상단
+  - 짝꿍 연결됨: 접속 상태 + 서로의 한마디 (기존)
+  - **짝꿍 미연결(memberUids 1명)**: `state="invite"` 카드를 보여준다 (`data-testid="couple-status-invite"`).
+    "짝꿍과 함께 시작해요 / 짝꿍 초대하기" → 바텀 시트(`data-testid="invite-sheet"`)에 `InviteCodePanel`
+    (코드·복사·링크 공유). 코드는 `ensureActiveInviteCode`로 가져온다(만료·소진 시 자동 재발급).
+  - 미연결 상태에서는 `couples/{coupleId}`를 실시간 구독한다. 짝꿍이 합류하면 **새로고침 없이**
+    연결 카드로 바뀌고, 시트가 열려 있었다면 닫히며 토스트 "OO님이 합류했어요"를 띄운다.
+    (`coupleMembers` 쿼리 무효화)
+  - 콕 찌르기 버튼은 기존대로 짝꿍이 있을 때만 노출한다.
+
 - **예산 설정 진입 카드 (`DashboardEntryList`)**
   - 홈 상단에 전폭 가로 카드로 표시 (아이콘 + 레이블 + 설명 + `ChevronRight`)
   - `예산 설정` → `/inner/cashbook/plan/annual` (연간 예산 계획)

@@ -219,3 +219,13 @@ export {
   ChartStyle,
 } from './components/chart';
 export type { ChartConfig } from './components/chart';
+
+// ── 온보딩 (docs/pages/01-onboarding.md) ──
+export { OnboardingChoiceCard } from './custom/onboarding/OnboardingChoiceCard';
+export type { OnboardingChoiceCardProps } from './custom/onboarding/OnboardingChoiceCard';
+export { InviteCodePanel } from './custom/onboarding/InviteCodePanel';
+export type { InviteCodePanelProps } from './custom/onboarding/InviteCodePanel';
+export { InviteCodeHint } from './custom/onboarding/InviteCodeHint';
+export type { InviteCodeHintProps, InviteCodeHintStatus } from './custom/onboarding/InviteCodeHint';
+export { CoupleConnectedState } from './custom/onboarding/CoupleConnectedState';
+export type { CoupleConnectedStateProps } from './custom/onboarding/CoupleConnectedState';

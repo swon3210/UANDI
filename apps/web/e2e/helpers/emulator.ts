@@ -58,6 +58,8 @@ type SeedCoupleOptions = {
   inviteCode?: string;
   expiresInMs?: number; // 기본: 48h, 음수 = 이미 만료
   secondMemberUid?: string;
+  /** inviteCodes/{code}.createdByName — 코드 입력 화면의 "OO님의 초대예요" 힌트에 쓰인다 */
+  createdByName?: string;
 };
 
 export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
@@ -66,6 +68,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     inviteCode = 'TEST99',
     expiresInMs = 48 * 60 * 60 * 1000,
     secondMemberUid,
+    createdByName,
   } = options;
   const coupleId = `couple-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
@@ -82,6 +85,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
         fields: {
           id: { stringValue: coupleId },
           memberUids: { arrayValue: { values: memberValues } },
+          inviteCode: { stringValue: inviteCode },
           createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
@@ -99,6 +103,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
           code: { stringValue: inviteCode },
           coupleId: { stringValue: coupleId },
           createdBy: { stringValue: uid },
+          ...(createdByName ? { createdByName: { stringValue: createdByName } } : {}),
           expiresAt: { timestampValue: expiresAt },
           consumedBy: secondMemberUid ? { stringValue: secondMemberUid } : { nullValue: null },
           createdAt: { timestampValue: new Date().toISOString() },
@@ -107,6 +112,48 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     }
   );
 
+  return coupleId;
+}
+
+/**
+ * 두 번째 유저가 초대 코드로 합류하는 상황을 에뮬레이터 REST(owner)로 재현한다.
+ * (브라우저 쪽 유저는 상대 users 문서를 쓸 수 없고, page.evaluate에선 firebase 모듈을 못 불러온다)
+ * inviteCodes.consumedBy → couples.memberUids 추가 → users/{uid2}.coupleId 순서로 갱신하고 coupleId를 돌려준다.
+ */
+export async function simulatePartnerJoin(
+  code: string,
+  uid2: string,
+  email2: string,
+  displayName2: string
+): Promise<string> {
+  const base = `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+  const headers = { 'Content-Type': 'application/json', Authorization: 'Bearer owner' };
+
+  const codeRes = await fetch(`${base}/inviteCodes/${code}`, { headers });
+  const codeDoc = (await codeRes.json()) as { fields: { coupleId: { stringValue: string } } };
+  const coupleId = codeDoc.fields.coupleId.stringValue;
+
+  await fetch(`${base}/inviteCodes/${code}?updateMask.fieldPaths=consumedBy`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ fields: { consumedBy: { stringValue: uid2 } } }),
+  });
+
+  const coupleRes = await fetch(`${base}/couples/${coupleId}`, { headers });
+  const coupleDoc = (await coupleRes.json()) as {
+    fields: { memberUids: { arrayValue: { values: { stringValue: string }[] } } };
+  };
+  const members = coupleDoc.fields.memberUids.arrayValue.values.map((v) => v.stringValue);
+  if (!members.includes(uid2)) members.push(uid2);
+  await fetch(`${base}/couples/${coupleId}?updateMask.fieldPaths=memberUids`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({
+      fields: { memberUids: { arrayValue: { values: members.map((m) => ({ stringValue: m })) } } },
+    }),
+  });
+
+  await seedUserDocument(uid2, email2, coupleId, { displayName: displayName2 });
   return coupleId;
 }
 

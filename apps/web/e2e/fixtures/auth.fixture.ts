@@ -88,13 +88,15 @@ export const test = base.extend<Fixtures & TourFixtureOptions>({
   seedTourSeen: [true, { option: true }],
   seedAnnualPlanPrompted: [true, { option: true }],
 
-  noCoupleAuthedPage: async ({ page, context }, use) => {
+  noCoupleAuthedPage: async ({ page, context, seedTourSeen }, use) => {
     await clearEmulatorData();
     // 이전 테스트에서 남은 쿠키 제거 (미들웨어가 잘못 리다이렉트하지 않도록)
     await context.clearCookies();
     const uid = await createTestUser(EMAIL_1, PASSWORD);
-    await seedUserDocument(uid, EMAIL_1, null);
+    await seedUserDocument(uid, EMAIL_1, null, { displayName: '세진' });
 
+    // "먼저 시작하기"로 대시보드에 들어가는 온보딩 테스트가 투어 오버레이에 가려지지 않도록
+    await maybeSeedTourSeen(context, seedTourSeen);
     await page.goto('/');
     await signInOnPage(page, EMAIL_1, PASSWORD);
     await page.waitForURL('**/onboarding');

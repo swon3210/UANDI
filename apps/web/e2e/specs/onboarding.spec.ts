@@ -1,14 +1,23 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { OnboardingPage } from '../page-objects/OnboardingPage';
-import { createTestUser, seedUserDocument, seedCouple } from '../helpers/emulator';
+import {
+  createTestUser,
+  seedUserDocument,
+  seedCouple,
+  simulatePartnerJoin,
+} from '../helpers/emulator';
 
 test.describe('온보딩', () => {
   test.describe('선택 화면', () => {
-    test('선택 화면에 두 가지 선택지가 표시된다', async ({ noCoupleAuthedPage }) => {
+    test('두 선택 카드와 각 설명이 표시된다', async ({ noCoupleAuthedPage }) => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await expect(onboarding.createCoupleButton).toBeVisible();
+      await expect(onboarding.createCoupleButton).toContainText('처음 시작해요');
+      await expect(onboarding.createCoupleButton).toContainText('짝꿍을 초대해요');
       await expect(onboarding.joinCoupleButton).toBeVisible();
+      await expect(onboarding.joinCoupleButton).toContainText('초대 코드를 받았어요');
+      await expect(onboarding.joinCoupleButton).toContainText('6자리 코드로 합류해요');
     });
   });
 
@@ -17,11 +26,10 @@ test.describe('온보딩', () => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await onboarding.createCoupleButton.click();
       await expect(onboarding.inviteCodeDisplay).toBeVisible();
-      const code = await onboarding.inviteCodeDisplay.textContent();
-      expect(code?.replace(/\s/g, '')).toMatch(/^[A-Z0-9]{6}$/);
+      expect(await onboarding.readInviteCode()).toMatch(/^[A-Z0-9]{6}$/);
     });
 
-    test('복사하기 버튼이 초대 코드를 클립보드에 복사한다', async ({ noCoupleAuthedPage }) => {
+    test('코드 복사 버튼이 초대 코드를 클립보드에 복사한다', async ({ noCoupleAuthedPage }) => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await onboarding.createCoupleButton.click();
       await noCoupleAuthedPage.context().grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -30,37 +38,53 @@ test.describe('온보딩', () => {
       expect(clipText).toMatch(/^[A-Z0-9]{6}$/);
     });
 
-    test('상대방이 합류하면 자동으로 대시보드로 이동한다', async ({ noCoupleAuthedPage }) => {
+    test('링크 공유는 공유 API가 없으면 초대 링크를 클립보드에 복사한다', async ({
+      noCoupleAuthedPage,
+    }) => {
+      const onboarding = new OnboardingPage(noCoupleAuthedPage);
+      await onboarding.createCoupleButton.click();
+      await expect(onboarding.inviteCodeDisplay).toBeVisible();
+      const code = await onboarding.readInviteCode();
+
+      await noCoupleAuthedPage.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+      // 데스크톱 크로미움엔 navigator.share가 없다. 혹시 있어도 폴백 경로를 검증하도록 제거한다.
+      await noCoupleAuthedPage.evaluate(() => {
+        Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+      });
+      await onboarding.shareLinkButton.click();
+      const clipText = await noCoupleAuthedPage.evaluate(() => navigator.clipboard.readText());
+      expect(clipText).toBe(`${new URL(noCoupleAuthedPage.url()).origin}/invite/${code}`);
+    });
+
+    test('먼저 시작하기를 누르면 새로고침 없이 대시보드로 이동하고 초대 카드가 보인다', async ({
+      noCoupleAuthedPage,
+    }) => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await onboarding.createCoupleButton.click();
       await expect(onboarding.inviteCodeDisplay).toBeVisible();
 
-      // inviteCode 읽기
-      const code = (await onboarding.inviteCodeDisplay.textContent())?.replace(/\s/g, '') ?? '';
+      await onboarding.startAloneButton.click();
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
+      await expect(noCoupleAuthedPage.getByTestId('dashboard-header')).toBeVisible();
+      await expect(noCoupleAuthedPage.getByTestId('couple-status-invite')).toBeVisible();
+    });
 
-      // 두 번째 유저 생성 후 코드로 합류 (직접 Firestore 업데이트로 시뮬레이션)
+    test('상대방이 합류하면 연결 완료 화면이 뜨고 시작하기로 대시보드에 간다', async ({
+      noCoupleAuthedPage,
+    }) => {
+      const onboarding = new OnboardingPage(noCoupleAuthedPage);
+      await onboarding.createCoupleButton.click();
+      await expect(onboarding.inviteCodeDisplay).toBeVisible();
+      const code = await onboarding.readInviteCode();
+
       const uid2 = await createTestUser('partner@test.com', 'testpassword123');
-      await seedUserDocument(uid2, 'partner@test.com', null);
+      await seedUserDocument(uid2, 'partner@test.com', null, { displayName: '진성' });
+      await simulatePartnerJoin(code, uid2, 'partner@test.com', '진성');
 
-      // 두 번째 유저가 코드를 입력해 합류하는 상황을 시뮬레이션
-      // inviteCodes/{code} → coupleId 조회 후 memberUids에 uid2 추가 → 리스너가 감지 → 대시보드 이동
-      await noCoupleAuthedPage.evaluate(
-        async ({ code, uid2 }) => {
-          const { getDoc, updateDoc, doc, arrayUnion } = await import('firebase/firestore');
-          const { getDb } = await import('@/lib/firebase/config');
-          const codeSnap = await getDoc(doc(getDb(), 'inviteCodes', code));
-          if (codeSnap.exists()) {
-            const { coupleId } = codeSnap.data() as { coupleId: string };
-            await updateDoc(doc(getDb(), 'inviteCodes', code), { consumedBy: uid2 });
-            await updateDoc(doc(getDb(), 'couples', coupleId), {
-              memberUids: arrayUnion(uid2),
-            });
-          }
-        },
-        { code, uid2 }
-      );
-
-      await noCoupleAuthedPage.waitForURL('/');
+      await expect(onboarding.connectedState).toBeVisible({ timeout: 15000 });
+      await expect(onboarding.connectedState).toContainText('진성님과 연결됐어요');
+      await onboarding.connectedStartButton.click();
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
     });
 
     test('뒤로 버튼을 누르면 선택 화면으로 돌아간다', async ({ noCoupleAuthedPage }) => {
@@ -77,18 +101,39 @@ test.describe('온보딩', () => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await onboarding.joinCoupleButton.click();
       await expect(onboarding.connectButton).toBeDisabled();
+      await expect(onboarding.inviteHint).toBeHidden();
     });
 
-    test('유효한 코드 입력 후 커플 연결 → 대시보드로 이동한다', async ({ noCoupleAuthedPage }) => {
+    test('6자리를 입력하면 초대한 사람 이름 힌트가 표시된다', async ({ noCoupleAuthedPage }) => {
+      const uid2 = await createTestUser('inviter@test.com', 'testpassword123');
+      await seedUserDocument(uid2, 'inviter@test.com', null, { displayName: '진성' });
+      await seedCouple({ uid: uid2, inviteCode: 'HINT01', createdByName: '진성' });
+
+      const onboarding = new OnboardingPage(noCoupleAuthedPage);
+      await onboarding.joinCoupleButton.click();
+      await onboarding.fillOtp('HINT01');
+      await expect(onboarding.inviteHint).toContainText('진성님의 초대예요');
+      await expect(onboarding.connectButton).toBeEnabled();
+    });
+
+    test('유효한 코드 입력 후 연결 완료 화면 → 시작하기 → 대시보드로 이동한다', async ({
+      noCoupleAuthedPage,
+    }) => {
       const uid2 = await createTestUser('partner2@test.com', 'testpassword123');
-      await seedUserDocument(uid2, 'partner2@test.com', null);
-      await seedCouple({ uid: uid2, inviteCode: 'VALID1' });
+      await seedUserDocument(uid2, 'partner2@test.com', null, { displayName: '진성' });
+      const coupleId = await seedCouple({ uid: uid2, inviteCode: 'VALID1', createdByName: '진성' });
+      await seedUserDocument(uid2, 'partner2@test.com', coupleId, { displayName: '진성' });
 
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
       await onboarding.joinCoupleButton.click();
       await onboarding.fillOtp('VALID1');
       await onboarding.connectButton.click();
-      await noCoupleAuthedPage.waitForURL('/');
+
+      await expect(onboarding.connectedState).toBeVisible({ timeout: 15000 });
+      await expect(onboarding.connectedState).toContainText('진성님과 연결됐어요');
+      await onboarding.connectedStartButton.click();
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
+      await expect(noCoupleAuthedPage.getByTestId('couple-status-card')).toBeVisible();
     });
 
     test('존재하지 않는 코드 → 에러 메시지 표시', async ({ noCoupleAuthedPage }) => {

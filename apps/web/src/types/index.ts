@@ -28,6 +28,8 @@ export type User = {
 export type Couple = {
   id: string;
   memberUids: string[]; // 생성 시 1명, 커플 연결 완료 후 2명
+  /** 현재 유효한 초대 코드(inviteCodes/{code}). 만료·재발급 시 갱신. 구버전 문서엔 없다 */
+  inviteCode?: string;
   createdAt: Timestamp;
 };
 
@@ -40,6 +42,8 @@ export type InviteCode = {
   code: string;
   coupleId: string;
   createdBy: string;
+  /** 생성자 표시 이름(비정규화). 합류 전 상대는 users/*를 읽을 수 없어 여기서 보여준다 */
+  createdByName?: string;
   expiresAt: Timestamp;
   consumedBy: string | null;
   createdAt: Timestamp;

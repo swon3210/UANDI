@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import { Button, Logo } from '@uandi/ui';
+import { Button } from '@uandi/ui';
 import { signInWithApple, signInWithGoogle } from '@/lib/firebase/auth';
+import { PENDING_INVITE_CODE_KEY, normalizeInviteCode } from '@/lib/invite-code';
+import { useSsrSafeLocalStorage } from '@/hooks/useSsrSafeLocalStorage';
+import { LandingHero } from '@/components/landing/LandingHero';
 
 const ERROR_MESSAGES: Record<string, string> = {
   'auth/popup-blocked': '팝업이 차단되었어요. 브라우저 설정에서 팝업을 허용해 주세요.',
@@ -25,6 +28,9 @@ function AppleIcon() {
 export function LandingPage() {
   const [loadingProvider, setLoadingProvider] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // 초대 링크(/invite/{code})로 들어온 경우 — 로그인 전엔 배너로만 알리고, 코드는 온보딩이 이어받는다
+  const [pendingRaw] = useSsrSafeLocalStorage<string | null>(PENDING_INVITE_CODE_KEY, null);
+  const pendingInviteCode = normalizeInviteCode(pendingRaw);
 
   // signInWithPopup은 팝업 닫힘을 감지 못해 Promise가 pending으로 남을 수 있음
   // window focus 시 로딩 상태를 리셋해 UX 보완
@@ -56,18 +62,8 @@ export function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col items-center px-4">
       <div className="flex flex-1 flex-col items-center justify-center">
-        <Logo variant="icon" className="h-16 w-16" />
-        <p className="mt-6 text-center text-xl font-semibold leading-snug text-foreground">
-          둘이서 만드는
-          <br />
-          우리만의 일상
-        </p>
-        <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
-          함께 모으는 <span className="font-semibold text-foreground">우리집</span>,
-          <br />
-          각자 운영하는 <span className="font-semibold text-foreground">재테크</span>까지.
-        </p>
-        <div className="mt-10 w-full max-w-sm">
+        <LandingHero pendingInviteCode={pendingInviteCode} />
+        <div className="mt-8 w-full max-w-sm">
           <Button
             data-testid="google-login-btn"
             className="w-full"
