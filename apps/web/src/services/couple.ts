@@ -13,6 +13,7 @@ import type { Unsubscribe } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
 import type { Couple, InviteCode } from '@/types';
 import { updateUserDocument } from './user';
+import { initDefaultCategories } from './cashbook-categories';
 
 /** 초대 코드 유효 기간 — 생성 후 48시간 */
 export const INVITE_CODE_TTL_MS = 48 * 60 * 60 * 1000;
@@ -76,6 +77,9 @@ export async function createCouple(
     memberUids: [uid],
     createdAt: serverTimestamp(),
   });
+
+  // 신규 커플이 카테고리 0개로 시작하지 않도록 기본 카테고리(3축 분류)를 먼저 깔아 둔다
+  await initDefaultCategories(coupleId);
 
   const inviteCode = await issueInviteCode(coupleId, uid, displayName);
 

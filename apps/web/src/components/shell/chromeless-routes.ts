@@ -3,6 +3,7 @@
 // 자체 하단 CTA와 겹치므로 숨긴다.
 // (standalone)에 편집 플로우 페이지를 추가/삭제하면 이 목록도 함께 갱신할 것.
 const CHROMELESS_PREFIXES = [
+  '/inner/cashbook/import',
   '/inner/cashbook/categories',
   '/inner/cashbook/settings',
   '/inner/cashbook/plan/annual/wizard',

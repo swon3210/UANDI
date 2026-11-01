@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import dayjs, { type Dayjs } from 'dayjs';
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronRight, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { useDebounce } from '@uidotdev/usehooks';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
@@ -484,6 +484,14 @@ export function BudgetDashboard({ coupleId }: Props) {
             icon={<BookOpen size={32} />}
             title="이 기간엔 내역이 없어요"
             description="다른 기간을 선택하거나 가계부에 내역을 추가해보세요"
+            action={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/inner/cashbook/import" data-testid="dashboard-import-link">
+                  <Upload size={14} aria-hidden />
+                  지난달 내역 불러오기
+                </Link>
+              </Button>
+            }
           />
         </div>
       ) : group === 'all' ? (

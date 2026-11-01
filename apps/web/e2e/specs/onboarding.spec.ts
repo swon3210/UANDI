@@ -56,7 +56,7 @@ test.describe('온보딩', () => {
       expect(clipText).toBe(`${new URL(noCoupleAuthedPage.url()).origin}/invite/${code}`);
     });
 
-    test('먼저 시작하기를 누르면 새로고침 없이 대시보드로 이동하고 초대 카드가 보인다', async ({
+    test('먼저 시작하기를 누르면 새로고침 없이 지난 내역 가져오기로 가고, 건너뛰면 초대 카드가 있는 대시보드가 보인다', async ({
       noCoupleAuthedPage,
     }) => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
@@ -64,12 +64,14 @@ test.describe('온보딩', () => {
       await expect(onboarding.inviteCodeDisplay).toBeVisible();
 
       await onboarding.startAloneButton.click();
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
+      await noCoupleAuthedPage.getByTestId('import-skip').click();
       await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
       await expect(noCoupleAuthedPage.getByTestId('dashboard-header')).toBeVisible();
       await expect(noCoupleAuthedPage.getByTestId('couple-status-invite')).toBeVisible();
     });
 
-    test('상대방이 합류하면 연결 완료 화면이 뜨고 시작하기로 대시보드에 간다', async ({
+    test('상대방이 합류하면 연결 완료 화면이 뜨고 시작하기로 지난 내역 가져오기에 간다', async ({
       noCoupleAuthedPage,
     }) => {
       const onboarding = new OnboardingPage(noCoupleAuthedPage);
@@ -84,7 +86,7 @@ test.describe('온보딩', () => {
       await expect(onboarding.connectedState).toBeVisible({ timeout: 15000 });
       await expect(onboarding.connectedState).toContainText('진성님과 연결됐어요');
       await onboarding.connectedStartButton.click();
-      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
     });
 
     test('뒤로 버튼을 누르면 선택 화면으로 돌아간다', async ({ noCoupleAuthedPage }) => {
@@ -116,7 +118,7 @@ test.describe('온보딩', () => {
       await expect(onboarding.connectButton).toBeEnabled();
     });
 
-    test('유효한 코드 입력 후 연결 완료 화면 → 시작하기 → 대시보드로 이동한다', async ({
+    test('유효한 코드 입력 후 연결 완료 화면 → 시작하기 → 가져오기 건너뛰기 → 대시보드로 이동한다', async ({
       noCoupleAuthedPage,
     }) => {
       const uid2 = await createTestUser('partner2@test.com', 'testpassword123');
@@ -132,6 +134,8 @@ test.describe('온보딩', () => {
       await expect(onboarding.connectedState).toBeVisible({ timeout: 15000 });
       await expect(onboarding.connectedState).toContainText('진성님과 연결됐어요');
       await onboarding.connectedStartButton.click();
+      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
+      await noCoupleAuthedPage.getByTestId('import-skip').click();
       await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
       await expect(noCoupleAuthedPage.getByTestId('couple-status-card')).toBeVisible();
     });

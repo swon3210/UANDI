@@ -127,8 +127,22 @@ Request:
     description: string;  // 과거 내역 설명 (40자 이내)
     category: string;     // 그 설명에 가장 많이 쓰인 카테고리
   }[];
+  allowNewCategories?: boolean; // true면 목록에 맞는 게 없을 때 새 카테고리를 제안해도 된다 (지난 내역 가져오기 전용)
 }
 ```
+
+**allowNewCategories (지난 내역 가져오기, `pages/inner/cashbook-import.md`)**
+
+- 기본(false)은 "category는 반드시 제공된 목록에서 선택". true면 **목록에 분명히 맞는 게 없을 때만** 간결한 새
+  카테고리 이름(2~6자)을 category에 쓰고, 응답 최상위 `suggestedCategories[]`에 그 카테고리의 메타를 한 번씩 넣는다.
+- 제안 메타: `{ name, group: 'income'|'expense', subGroup, icon }`. `subGroup`은 수입이면
+  `regular_income|irregular_income`, 지출이면 `fixed_expense|variable_common|variable_personal`.
+  `icon`은 서버가 넘긴 아이콘 키 목록(`CATEGORY_ICON_KEYS`, 40개) 중 하나. 모르는 키는 서버가 `tag`로 바꾼다.
+- 상한 10개. 목록에 이미 있는 이름(대소문자·공백 무시)과 같은 제안은 서버가 버린다.
+- 이미지 여러 장을 병렬로 파싱하므로 제안은 호출별로 모아 **이름 기준으로 합친다**.
+- 목(`USE_AI_MOCK`): `allowNewCategories`가 true이고 텍스트에 `반려동물`이 있으면
+  `{ name: '반려동물', group: 'expense', subGroup: 'variable_common', icon: 'paw_print' }`를 제안하고,
+  해당 줄의 entry category를 `반려동물`로 돌려준다(E2E 결정성).
 
 **categoryHints 생성 규칙 (클라이언트, `useCategoryHints`)**
 
@@ -164,12 +178,13 @@ Response:
   entries: {
     type: CashbookEntryType; // 'income' | 'expense'
     amount: number;
-    category: string; // categories 목록에서 가장 적합한 것 선택
+    category: string; // categories 목록에서 가장 적합한 것 선택 (allowNewCategories면 제안 이름일 수 있음)
     description: string;
     date: string; // ISO 8601 (YYYY-MM-DD)
     confidence: number; // 0~1 (파싱 신뢰도)
   }
   []; // 1~100개
+  suggestedCategories?: { name: string; group: 'income' | 'expense'; subGroup: string; icon: string }[]; // allowNewCategories일 때만
 }
 ```
 

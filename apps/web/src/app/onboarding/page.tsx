@@ -65,11 +65,13 @@ export default function OnboardingPage() {
   const previewSeqRef = useRef(0);
   // 초대 링크 코드는 한 번만 자동 적용
   const pendingAppliedRef = useRef(false);
+  // enterApp이 목적지(지난 내역 가져오기)로 보내는 중이면 라우트 보호가 '/'로 가로채지 않게 한다
+  const leavingRef = useRef(false);
 
   // 라우트 보호
   useEffect(() => {
     if (authStatus === 'unauthenticated') router.replace('/');
-    if (authStatus === 'authenticated_with_couple') router.replace('/');
+    if (authStatus === 'authenticated_with_couple' && !leavingRef.current) router.replace('/');
   }, [authStatus, router]);
 
   /** 6자리가 채워지면 초대한 사람 미리보기를 조회한다 (입력 핸들러에서 직접 호출) */
@@ -124,12 +126,16 @@ export default function OnboardingPage() {
     };
   }, [step, coupleId, user]);
 
-  /** 대시보드로 진입 — 쿠키와 userAtom을 커플 연결 상태로 맞춘다 (새로고침 불필요) */
+  /**
+   * 앱으로 진입 — 쿠키와 userAtom을 커플 연결 상태로 맞추고(새로고침 불필요)
+   * 지난 내역 가져오기(건너뛰기 가능)로 보낸다. docs/pages/inner/cashbook-import.md
+   */
   const enterApp = (targetCoupleId: string) => {
     if (!user) return;
+    leavingRef.current = true;
     setAuthCookie('with_couple');
     setUser({ ...user, coupleId: targetCoupleId });
-    router.replace('/');
+    router.replace('/inner/cashbook/import?onboarding=1');
   };
 
   if (

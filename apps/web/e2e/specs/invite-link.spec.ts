@@ -94,6 +94,8 @@ test.describe('대시보드 초대 카드 (짝꿍 미연결)', () => {
     await expect(onboarding.inviteCodeDisplay).toBeVisible();
     const code = await onboarding.readInviteCode();
     await onboarding.startAloneButton.click();
+    await page.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
+    await page.getByTestId('import-skip').click();
     await page.waitForURL(/\/inner\/cashbook$/);
 
     // 초대 카드 → 코드 시트

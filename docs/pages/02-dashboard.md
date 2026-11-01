@@ -119,6 +119,8 @@ query(
 
 ### 진입점
 
+- **빈 상태 CTA** — 선택 기간에 내역이 하나도 없으면(`dashboard-empty`) "지난달 내역 불러오기"
+  버튼(`data-testid="dashboard-import-link"`) → `/inner/cashbook/import` (`pages/inner/cashbook-import.md`).
 - **커플 카드 (`CoupleStatusSection` → `CoupleStatusCard`)** — 홈 최상단
   - 짝꿍 연결됨: 접속 상태 + 서로의 한마디 (기존)
   - **짝꿍 미연결(memberUids 1명)**: `state="invite"` 카드를 보여준다 (`data-testid="couple-status-invite"`).

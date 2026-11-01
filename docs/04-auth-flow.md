@@ -38,6 +38,7 @@
   │                                   ├─ [새 커플 만들기]
   │                                   │   └─ couples/{coupleId} 생성
   │                                   │       ├─ memberUids: [uid]
+  │                                   │       ├─ 기본 카테고리 초기화 (cashbookCategories, DEFAULT_CATEGORIES)
   │                                   │       └─ inviteCode 생성 (6자리)
   │                                   │           └─ user.coupleId 업데이트
   │                                   │               └─ 초대 코드 화면 표시
@@ -102,6 +103,7 @@ getUserDocument(uid: string): Promise<User | null>
 
 ```ts
 createCouple(uid: string, displayName: string): Promise<{ coupleId: string; inviteCode: string }>
+  // couples 문서 → 기본 카테고리 초기화(initDefaultCategories) → 초대 코드 발급 → user.coupleId
 joinCoupleByInviteCode(uid: string, code: string): Promise<{ coupleId: string }>  // 실패 시 throw
 previewInviteCode(code: string): Promise<{ inviterName: string | null } | null>  // 합류 전 미리보기(null = 없음/만료/만석)
 ensureActiveInviteCode(coupleId: string, uid: string, displayName: string): Promise<string>
