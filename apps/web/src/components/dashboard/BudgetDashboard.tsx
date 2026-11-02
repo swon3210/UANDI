@@ -25,6 +25,7 @@ import {
 } from '@/hooks/useDashboardData';
 import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCoupleMemberMap } from '@/hooks/useCoupleMembers';
 import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
 import { MEDIAN_COMPARE, useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
@@ -140,6 +141,8 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
+  // 최근 내역 카드의 작성자 아바타용(커플 카드와 같은 쿼리를 공유한다)
+  const memberMap = useCoupleMemberMap(coupleId);
 
   const {
     byCategory,
@@ -511,6 +514,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             entries={recentEntries}
             categories={categories}
             historyHref="/inner/cashbook/history"
+            authors={memberMap}
             onSelect={() => router.push('/inner/cashbook/history')}
           />
         </>

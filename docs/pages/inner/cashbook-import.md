@@ -23,7 +23,7 @@
 
 | 진입                               | 경로                                  | 비고                         |
 | ---------------------------------- | ------------------------------------- | ---------------------------- |
-| 온보딩 연결 완료 "시작하기"        | `/inner/cashbook/import?onboarding=1` | 건너뛰기 → `/inner/cashbook` |
+| 온보딩 연결 완료 "시작하기"        | `/inner/cashbook/import?onboarding=1` | 공간을 **만든 사람만**. 코드로 합류한 사람은 대시보드로 바로 간다(`01-onboarding.md`). 건너뛰기 → `/inner/cashbook` |
 | 온보딩 코드 화면 "먼저 시작하기"   | `/inner/cashbook/import?onboarding=1` | 동일                         |
 | 빈 대시보드 "지난달 내역 불러오기" | `/inner/cashbook/import`              | 뒤로가기(←) → 대시보드       |
 

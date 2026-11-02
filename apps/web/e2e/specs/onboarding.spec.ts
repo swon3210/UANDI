@@ -118,7 +118,7 @@ test.describe('온보딩', () => {
       await expect(onboarding.connectButton).toBeEnabled();
     });
 
-    test('유효한 코드 입력 후 연결 완료 화면 → 시작하기 → 가져오기 건너뛰기 → 대시보드로 이동한다', async ({
+    test('유효한 코드 입력 후 연결 완료 화면 → 시작하기 → 대시보드로 바로 이동한다(가져오기 생략)', async ({
       noCoupleAuthedPage,
     }) => {
       const uid2 = await createTestUser('partner2@test.com', 'testpassword123');
@@ -134,8 +134,7 @@ test.describe('온보딩', () => {
       await expect(onboarding.connectedState).toBeVisible({ timeout: 15000 });
       await expect(onboarding.connectedState).toContainText('진성님과 연결됐어요');
       await onboarding.connectedStartButton.click();
-      await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook\/import\?onboarding=1$/);
-      await noCoupleAuthedPage.getByTestId('import-skip').click();
+      // 합류한 사람은 가져오기를 거치지 않는다(같은 통장 내역을 둘이 올리면 중복되기 쉽다)
       await noCoupleAuthedPage.waitForURL(/\/inner\/cashbook$/);
       await expect(noCoupleAuthedPage.getByTestId('couple-status-card')).toBeVisible();
     });

@@ -42,6 +42,7 @@ function QuickAddSheetContent({
   const addManyMutation = useAddEntries(coupleId);
 
   // 빈 입력으로 제출하면 직접 입력 폼을 연다(history 페이지와 동일한 UX).
+  // 저장하면 폼과 함께 빠른 추가 시트도 닫는다(남겨 두면 한 번 더 닫아야 했다 — 2026-11 걷기 6구간).
   const openManualForm = () => {
     overlay.open(({ isOpen, close, unmount }) => (
       <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
@@ -49,7 +50,10 @@ function QuickAddSheetContent({
           categories={categories ?? []}
           coupleId={coupleId}
           createdBy={uid}
-          onSubmit={(data) => addMutation.mutate(data)}
+          onSubmit={(data) => {
+            addMutation.mutate(data);
+            onClose();
+          }}
           onClose={() => {
             close();
             setTimeout(unmount, 300);

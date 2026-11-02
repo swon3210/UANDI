@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { CashbookCategory, CashbookEntry } from '@/types';
 import { EntryCard } from '@/components/cashbook/EntryCard';
+import type { EntryAuthor } from '@/components/cashbook/AuthorAvatar';
 
 export const RECENT_ENTRIES_LIMIT = 3;
 
@@ -13,6 +14,8 @@ type RecentEntriesCardProps = {
   categories?: CashbookCategory[];
   /** "전체 보기"와 행 클릭이 가는 곳(내역 화면) */
   historyHref: string;
+  /** uid → 작성자. 전달되면 행마다 작성자 아바타를 붙인다(누가 적었는지 — 6구간 걷기). */
+  authors?: ReadonlyMap<string, EntryAuthor>;
   onSelect?: (entry: CashbookEntry) => void;
   className?: string;
 };
@@ -26,6 +29,7 @@ export function RecentEntriesCard({
   entries,
   categories = [],
   historyHref,
+  authors,
   onSelect,
   className,
 }: RecentEntriesCardProps) {
@@ -62,6 +66,7 @@ export function RecentEntriesCard({
             key={entry.id}
             entry={entry}
             category={categoryOf(entry)}
+            author={authors?.get(entry.createdBy)}
             showDate
             onClick={(e) => onSelect?.(e)}
           />

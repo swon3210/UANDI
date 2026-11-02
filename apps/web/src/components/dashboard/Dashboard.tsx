@@ -16,6 +16,7 @@ import { useSsrSafeLocalStorage } from '@/hooks/useSsrSafeLocalStorage';
 import { AnnualPlanPromptCard } from './AnnualPlanPromptCard';
 import { BudgetDashboard } from './BudgetDashboard';
 import { CoupleStatusSection } from './CoupleStatusSection';
+import { NudgeReceivedSection } from './NudgeReceivedSection';
 
 const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
 const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
@@ -77,6 +78,7 @@ export function Dashboard() {
       />
       <main className="w-full max-w-md mx-auto px-4 pb-20 pt-4 space-y-4">
         <CoupleStatusSection />
+        <NudgeReceivedSection />
         {showPlanPrompt ? (
           <AnnualPlanPromptCard
             year={year}

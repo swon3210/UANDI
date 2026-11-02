@@ -29,6 +29,24 @@ test.describe('빠른 추가 시트', () => {
     await expect(page.getByTestId('entry-form-sheet')).toBeVisible();
   });
 
+  test('직접 입력 폼에서 저장하면 폼과 빠른 추가 시트가 함께 닫힌다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await openQuickAddOnDashboard(page);
+    await page.getByTestId('quick-add-manual').click();
+
+    const form = page.getByTestId('entry-form-sheet');
+    await expect(form).toBeVisible();
+    await form.getByLabel('금액').fill('9000');
+    await form.getByTestId('category-chip-식비').click();
+    await form.getByRole('button', { name: '저장' }).click();
+
+    await expect(page.getByText('내역을 추가했어요')).toBeVisible();
+    await expect(form).toHaveCount(0);
+    // 6구간 걷기: 저장 뒤 빠른 추가 시트가 남아 한 번 더 닫아야 했다
+    await expect(page.getByTestId('quick-add-sheet')).toHaveCount(0);
+  });
+
   test('AI 파싱 결과를 추가하면 토스트의 "내역 보기"로 내역 화면에 간다', async ({
     authedContext,
   }) => {

@@ -52,6 +52,12 @@ const categories: CashbookCategory[] = [
   },
 ];
 
+/** 작성자 아바타용 — 커플 두 사람(프로필 사진 없음 → 이니셜 폴백) */
+const authors = new Map([
+  ['u1', { displayName: '진성', photoURL: null }],
+  ['u2', { displayName: '세진', photoURL: null }],
+]);
+
 const meta: Meta<typeof RecentEntriesCard> = {
   title: 'Dashboard/RecentEntriesCard',
   component: RecentEntriesCard,
@@ -59,6 +65,7 @@ const meta: Meta<typeof RecentEntriesCard> = {
   args: {
     categories,
     historyHref: '/inner/cashbook/history',
+    authors,
   },
   decorators: [
     (Story) => (
@@ -87,6 +94,7 @@ export const ThreeOfMany: Story = {
       makeEntry({ id: 'e1', description: '김치찌개', date: day('2026-11-01T12:00:00') }),
       makeEntry({
         id: 'e3',
+        createdBy: 'u2',
         type: 'income',
         category: '정기급여',
         description: '11월 월급',
@@ -108,6 +116,15 @@ export const LongDescription: Story = {
         amount: 186000,
       }),
     ],
+  },
+};
+
+/** 작성자 정보가 아직 없으면(멤버 로딩 전) 아바타 없이 그린다 */
+export const WithoutAuthors: Story = {
+  name: '작성자 정보 없음',
+  args: {
+    authors: undefined,
+    entries: [makeEntry({ id: 'e1', description: '김치찌개' })],
   },
 };
 

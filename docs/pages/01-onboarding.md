@@ -113,14 +113,18 @@
 │   채워갈 수 있어요        │
 │                         │
 │   ┌───────────────────┐ │
-│   │     시작하기       │ │  ← data-testid="connected-start" → /inner/cashbook/import?onboarding=1
+│   │     시작하기       │ │  ← data-testid="connected-start" → 만든 사람: 가져오기, 합류한 사람: 대시보드
 │   └───────────────────┘ │
 └─────────────────────────┘
 ```
 
 - `CoupleConnectedState`(`@uandi/ui`) 프레젠테이션 컴포넌트. 양쪽(만든 사람·합류한 사람) 모두 이 화면을 거친다.
 - 상대 이름은 `users/{partnerUid}`를 읽어 채운다. 합류 직후엔 상대 문서의 `coupleId` 반영이 한 박자 늦을 수 있어 **최대 3회(500ms 간격) 재시도**하고, 그래도 못 읽으면 "짝꿍"으로 표시한다.
-- 시작하기: `setAuthCookie('with_couple')` + `userAtom` 갱신 후 지난 내역 가져오기(`/inner/cashbook/import?onboarding=1`)로 이동. 건너뛰면 대시보드.
+- 시작하기: `setAuthCookie('with_couple')` + `userAtom` 갱신 후 이동. 목적지는 **누가 공간을 만들었는지**에 따라 다르다.
+  - 공간을 만든 사람(코드를 보여 준 쪽): 지난 내역 가져오기(`/inner/cashbook/import?onboarding=1`). 건너뛰면 대시보드.
+  - 코드로 합류한 사람: **대시보드(`/inner/cashbook`)로 바로**. 같은 통장·카드 내역을 둘이 올리면 중복이 되기 쉬워
+    가져오기는 한 사람만 거치게 한다(2026-11 걷기 6구간). 필요하면 빈 대시보드의 "지난달 내역 불러오기"로 들어갈 수 있고,
+    미리보기 시트의 금액·날짜 중복 감지가 보조한다.
 
 ---
 
@@ -196,7 +200,7 @@ type OnboardingStep =
 
 1. 6자리 입력 완료 시 `previewInviteCode` 호출 → 힌트 표시, "연결하기" 활성화
 2. `joinCoupleByInviteCode(uid, code)` 호출
-3. 성공 → `connected` 단계 (상대 = `inviteCode.createdBy`)
+3. 성공 → `connected` 단계 (상대 = `inviteCode.createdBy`). 시작하기는 대시보드로(가져오기 생략)
 4. 실패 → 에러 유형별 메시지 표시
 
 **초대 링크 `/invite/[code]`**
@@ -238,7 +242,7 @@ shadcn의 `input-otp` 컴포넌트를 사용한다 (`InputOTP`, `InputOTPGroup`,
 | 공간 만들기 → 링크 공유(공유 API 없음) | 클립보드에 `/invite/{code}` 링크가 복사된다                                     |
 | 공간 만들기 → 상대 합류                | 연결 완료 화면에 상대 이름이 보이고, 시작하기로 지난 내역 가져오기에 간다       |
 | 코드 입력 6자리                        | 초대한 사람 이름 힌트가 표시된다                                                |
-| 유효한 코드 → 연결하기                 | 연결 완료 화면 → 시작하기 → 지난 내역 가져오기                                  |
+| 유효한 코드 → 연결하기                 | 연결 완료 화면 → 시작하기 → 대시보드(가져오기 생략, 커플 카드가 보인다)         |
 | `/invite/{code}` → 로그인              | 코드가 채워진 입력 화면이 바로 열리고 힌트가 보인다                             |
 | 에러 4종                               | 기존과 동일                                                                     |
 

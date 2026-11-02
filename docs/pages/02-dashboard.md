@@ -115,6 +115,20 @@ query(
 - 카테고리 메타(아이콘/색상)는 `couples/${coupleId}/cashbookCategories` 1회 조회
 - 쿼리 키: `['cashbookEntries', coupleId, 'range', start.toISOString(), end.toISOString()]`
 
+### 짝꿍 내역 실시간 반영 (`CashbookLiveSync`)
+
+둘이 같이 쓰는 가계부라는 약속("둘 중 누가 적어도 바로 함께 보여요")을 지키기 위해, 기간 내역 쿼리 자체를
+실시간으로 바꾸지 않고 **최신 내역 1건만 구독**한다(비용 최소). 2026-11 걷기 6구간에서 짝꿍이 적은 수입이
+같은 화면에 머문 쪽에는 보이지 않던 문제의 해결.
+
+- `couples/{coupleId}/cashbookEntries` 를 `orderBy('createdAt', 'desc') limit(1)` 로 `onSnapshot` 구독.
+  providers에 전역으로 마운트(`CashbookLiveSync`, 로그인·커플 연결 시에만).
+- 첫 스냅샷은 무시한다. 이후 최신 문서 id가 바뀌었고 `createdBy`가 내가 아니면(짝꿍이 적음):
+  - `['cashbookEntries', coupleId]`·`['hasAnyEntries', coupleId]` 쿼리 무효화 → 대시보드·내역 화면이 그 자리에서 다시 읽는다.
+  - 토스트 "{짝꿍}님이 내역을 적었어요"(내역 화면이 아니면 [내역 보기] 액션). `data-testid`는 없고 문구로 확인한다.
+- 내 쓰기(`hasPendingWrites`)와 내가 적은 내역은 무시한다(뮤테이션이 이미 무효화한다).
+- 수정·삭제는 잡지 않는다(최신 1건 기준). 포커스·재마운트 재조회는 그대로 보조한다.
+
 > 공간 간 이동은 좌측 사이드바(`AppSidebar`)로 통합되어 있다. 다만 우리집 홈에서 자주 쓰는 영역은 사이드바와 별개로 다음 진입점을 둔다.
 
 ### 진입점
@@ -130,6 +144,13 @@ query(
     연결 카드로 바뀌고, 시트가 열려 있었다면 닫히며 토스트 "OO님이 합류했어요"를 띄운다.
     (`coupleMembers` 쿼리 무효화)
   - 콕 찌르기 버튼은 기존대로 짝꿍이 있을 때만 노출한다.
+- **받은 콕 찌르기 카드 (`NudgeReceivedCard`)** — 커플 카드 바로 아래. 짝꿍이 보낸 `pending` 콕 찌르기가
+  있을 때만 보인다(`data-testid="nudge-received"`). 푸시가 없는 웹·미배포 환경에서도 요청을 앱 안에서 알 수 있게 한다.
+  - "{짝꿍}님이 콕 찔렀어요 🐹" + 요청 문구(빈 문구면 "가계부 입력을 부탁했어요").
+  - [내역 적기](`nudge-received-add`): 상태를 `seen`으로 바꾸고 `uandi:quick-add`로 빠른 추가 시트를 연다.
+  - [나중에](`nudge-received-dismiss`): 상태를 `dismissed`로.
+  - 실시간: `nudges where toUid == 나 and status == 'pending' orderBy createdAt desc limit 1`을 `onSnapshot`으로 구독해
+    짝꿍이 보내는 순간 새로고침 없이 나타난다. 상세는 `pages/inner/cashbook-nudge.md`.
 
 - **올해 예산 권유 카드 (`AnnualPlanPromptCard`)** — 커플 카드 아래, 기간 선택 위
   - 위저드로 **자동 이동하지 않는다**(2026-11 걷기에서 첫 주 유저에게 과했다고 판단). 두 가지 모습이 있다.
@@ -185,6 +206,7 @@ query(
   - 수입이 0이면 비율 `—`. 지출만 있으면 경고가 아니라 중립 문구 `아직 수입을 안 적었어요`와 [수입 적기](`meter-add-income`, `uandi:quick-add` 이벤트로 빠른 추가 시트를 연다). 첫 주에 지출 한 건만 적은 사람이 꾸중으로 읽지 않게 한다(2026-11 걷기).
   - 전체 탭의 게이지 카드 아래에 **최근 내역 카드(`RecentEntriesCard`)** — 방금 적은 내역이 대시보드에서 바로 보이게 한다.
     - 현재 기간의 내역을 날짜 내림차순으로 최대 3건(`EntryCard`, 날짜 표시). 내역이 없으면 카드도 없다.
+    - 행마다 **작성자 아바타**(`AuthorAvatar`, `entry-author-avatar`)를 붙여 누가 적었는지 보인다(내역 화면과 동일, `useCoupleMemberMap`).
     - 제목 "최근 내역" + [전체 보기](`recent-entries-all` → `/inner/cashbook/history`). 행을 누르면 내역 화면으로 간다.
     - `data-testid="recent-entries"`
   - 합계 KPI 카드·고정/변동 세부 탭·기간 비교 차트는 숨김 (수입·지출 카테고리가 섞이면 의미가 없기 때문)

@@ -1150,6 +1150,8 @@ test.describe('대시보드', () => {
       await dashboard.subGroupTab('변동 지출').click();
       await dashboard.compareCategoryButton.click();
 
+      // 목록이 그려진 뒤에 읽는다(allInnerTexts는 자동 대기가 없다)
+      await expect(dashboard.compareCategoryOption('교통')).toBeVisible();
       // 금액순(생활비 50,000 > 교통 10,000)이 아니라 가나다 순
       const rows = await page
         .getByTestId('compare-category-list')

@@ -118,6 +118,7 @@ export default function OnboardingPage() {
       const partner = partnerUid ? await getUserDocumentWithRetry(partnerUid) : null;
       if (cancelled) return;
       setPartnerName(partner?.displayName?.trim() || PARTNER_FALLBACK_NAME);
+      setConnectedAs('creator');
       setStep('connected');
     });
 
@@ -128,16 +129,21 @@ export default function OnboardingPage() {
   }, [step, coupleId, user]);
 
   /**
-   * 앱으로 진입 — 쿠키와 userAtom을 커플 연결 상태로 맞추고(새로고침 불필요)
-   * 지난 내역 가져오기(건너뛰기 가능)로 보낸다. docs/pages/inner/cashbook-import.md
+   * 앱으로 진입 — 쿠키와 userAtom을 커플 연결 상태로 맞추고(새로고침 불필요) 이동한다.
+   * 공간을 만든 사람은 지난 내역 가져오기(건너뛰기 가능)로, 코드로 합류한 사람은 대시보드로 바로.
+   * 같은 통장·카드 내역을 둘이 올리면 중복되기 쉬워 가져오기는 한 사람만 거친다(docs/pages/01-onboarding.md).
    */
-  const enterApp = (targetCoupleId: string) => {
+  const enterApp = (targetCoupleId: string, destination: 'import' | 'dashboard') => {
     if (!user) return;
     leavingRef.current = true;
     setAuthCookie('with_couple');
     setUser({ ...user, coupleId: targetCoupleId });
-    router.replace('/inner/cashbook/import?onboarding=1');
+    router.replace(
+      destination === 'import' ? '/inner/cashbook/import?onboarding=1' : '/inner/cashbook'
+    );
   };
+  // 연결 완료 화면에 어떻게 도달했는지 — 코드를 보여 준 쪽(만든 사람)인지, 코드를 넣은 쪽(합류자)인지
+  const [connectedAs, setConnectedAs] = useState<'creator' | 'joiner'>('creator');
 
   // 커플이 생긴 직후(가져오기 화면으로 넘어가는 중)에는 문구 없는 스피너 대신 마스코트 + 안내
   if (authStatus === 'authenticated_with_couple') {
@@ -223,7 +229,7 @@ export default function OnboardingPage() {
             copied={copied}
             onCopy={handleCopy}
             onShare={() => shareInviteLink(inviteCode, copyToClipboard)}
-            onStart={() => enterApp(coupleId)}
+            onStart={() => enterApp(coupleId, 'import')}
             className="w-full"
           />
         </div>
@@ -239,7 +245,7 @@ export default function OnboardingPage() {
           partnerName={partnerName}
           myMascotSrc={coralMascot.src}
           partnerMascotSrc={sageMascot.src}
-          onStart={() => enterApp(coupleId)}
+          onStart={() => enterApp(coupleId, connectedAs === 'joiner' ? 'dashboard' : 'import')}
         />
       </main>
     );
@@ -255,6 +261,7 @@ export default function OnboardingPage() {
       setCoupleId(result.coupleId);
       const partner = await getUserDocumentWithRetry(result.partnerUid);
       setPartnerName(partner?.displayName?.trim() || PARTNER_FALLBACK_NAME);
+      setConnectedAs('joiner');
       setStep('connected');
     } catch (err) {
       const code = err instanceof Error ? err.message : 'UNKNOWN';
