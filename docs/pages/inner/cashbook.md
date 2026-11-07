@@ -301,3 +301,9 @@ formatCurrency(amount: number): string
 - 디자인 원칙 (Bottom Sheet, 금액 색상): `02-design-system.md`
 - 카테고리 체계 및 관리: `04a-cashbook-categories.md`
 - 연간 예산 계획: `04b-cashbook-annual-plan.md`
+
+## 제거된 기능: 점검(월 결산) — 2026-11-07
+
+- `/inner/cashbook/review`(월 결산: 영수증·스크린샷 첨부, 일괄 AI 분석, 결산 리포트 이미지 저장)와 `/review/entries`를 제거했다. 진입점은 #295 이후 이미 없었다.
+- 함께 제거: `Settlement*` 컴포넌트, `useSettlement`, `services/cashbook-settlement`, `lib/export/report`, `MonthSelector`, `/api/ai/sync-attachments`, 결산 첨부 업로드 헬퍼.
+- **데이터는 남아 있다**: Firestore `couples/{id}/cashbookSettlements/*` 문서와 Storage `couples/{id}/cashbookSettlements/**` 이미지, 보안 규칙은 그대로다. 정리하려면 별도 작업으로 지운다.

@@ -29,42 +29,6 @@ export type ParsedEntry = {
   isTransfer?: boolean;
 };
 
-export type SettlementImageKind = 'account' | 'card';
-
-/** 일괄 분석 — 첨부 이미지 1장당 결과 */
-export type AttachmentSyncResult = {
-  attachmentId: string;
-  kind: SettlementImageKind;
-  detectedMonths: string[];
-  imageKindMismatch: boolean;
-  entries: ParsedEntry[];
-};
-
-/**
- * 결산 첨부 이미지 전체를 한 번에 분석한다.
- * 서버가 이미지 URL을 OpenAI vision에 직접 전달하므로 base64 재인코딩이 필요 없다.
- */
-export async function syncAttachments(
-  attachments: { id: string; url: string; kind: SettlementImageKind }[],
-  categories: string[],
-  categoryHints?: CategoryHint[]
-): Promise<AttachmentSyncResult[]> {
-  const headers = await getAuthHeaders();
-  const res = await fetch('/api/ai/sync-attachments', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ attachments, categories, categoryHints }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error ?? '이미지 분석에 실패했습니다');
-  }
-
-  const { results } = (await res.json()) as { results: AttachmentSyncResult[] };
-  return results;
-}
-
 export type ParseEntriesOptions = {
   /** 첨부 이미지 분류. 'account'면 카드대금 일괄출금 제외, 'card'면 카드 내역 검증. */
   imageKind?: 'account' | 'card';

@@ -175,7 +175,7 @@ export const parsedEntrySchema = z.object({
 
 export type ParsedEntry = z.infer<typeof parsedEntrySchema>;
 
-/** parse-entries / sync-attachments 라우트가 클라이언트에 돌려주는 파싱 결과. */
+/** parse-entries 라우트가 클라이언트에 돌려주는 파싱 결과. */
 export type ParseResponse = {
   entries: ParsedEntry[];
   // imageKind='card'로 첨부했지만 카드 내역이 아니라고 판단되면 true.
@@ -426,77 +426,4 @@ export function buildMockParseResponse(
     imageKindMismatch: imageKind === 'card' && (text ?? '').includes('mismatch'),
     suggestedCategories: allowNewCategories ? suggested : undefined,
   };
-}
-
-/**
- * sync-attachments 라우트용 결정적 mock (이미지 1장당 결과).
- * - account: 이번 달 일반 1건 + 이번 달 송금 1건 + 전월 일반 1건 → 다월·송금 그룹 검증
- * - card: 이번 달 일반 2건
- */
-export function buildMockAttachmentEntries(imageKind: ImageKind): ParsedEntry[] {
-  const today = dayjs().startOf('day');
-  const thisMonth = today.format('YYYY-MM-DD');
-  const prevMonth = today.subtract(1, 'month').format('YYYY-MM-DD');
-
-  if (imageKind === 'account') {
-    return [
-      {
-        type: 'expense',
-        amount: 12000,
-        category: '식비',
-        description: '스타벅스',
-        date: thisMonth,
-        confidence: 0.95,
-        isTransfer: false,
-      },
-      {
-        type: 'expense',
-        amount: 50000,
-        category: '기타',
-        description: '홍길동 이체',
-        date: thisMonth,
-        confidence: 0.8,
-        isTransfer: true,
-      },
-      {
-        type: 'expense',
-        amount: 30000,
-        category: '식비',
-        description: '지난달 마트',
-        date: prevMonth,
-        confidence: 0.9,
-        isTransfer: false,
-      },
-    ];
-  }
-  return [
-    {
-      type: 'expense',
-      amount: 18000,
-      category: '식비',
-      description: '김밥천국',
-      date: thisMonth,
-      confidence: 0.95,
-      isTransfer: false,
-    },
-    {
-      type: 'expense',
-      amount: 9900,
-      category: '쇼핑',
-      description: '다이소',
-      date: thisMonth,
-      confidence: 0.92,
-      isTransfer: false,
-    },
-  ];
-}
-
-/** entry 배열에서 YYYY-MM 고유값 정렬 배열을 만든다. */
-export function detectedMonthsOf(entries: { date: string }[]): string[] {
-  const set = new Set<string>();
-  for (const e of entries) {
-    const m = e.date.slice(0, 7);
-    if (/^\d{4}-\d{2}$/.test(m)) set.add(m);
-  }
-  return [...set].sort();
 }
