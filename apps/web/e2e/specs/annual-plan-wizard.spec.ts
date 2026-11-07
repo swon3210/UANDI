@@ -113,4 +113,60 @@ test.describe('예산 위저드', () => {
     await page.waitForURL(/\/plan\/annual\/wizard/);
     await expect(page).toHaveURL(/step=income&catIdx=1&phase=avg&mode=quick/);
   });
+
+  test('대시보드 권유 카드로 연 위저드에서 나오면 경제 목표에 "홈으로" 버튼이 보이고 대시보드로 간다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/inner/cashbook');
+    await page.getByTestId('annual-plan-prompt-start').click();
+    await expect(page.getByTestId('wizard-intro')).toBeVisible();
+    await expect(page).toHaveURL(/from=onboarding/);
+
+    // 단계를 지나도 진입 표식이 따라다닌다
+    await page.getByTestId('wizard-next').click();
+    await page.getByTestId('regular-avg-input-field').fill('3000000');
+    await page.getByTestId('wizard-next').click();
+    await expect(page).toHaveURL(/catIdx=1&phase=avg&mode=quick.*from=onboarding/);
+    await page.getByRole('button', { name: '위저드 종료' }).click();
+    await page.waitForURL(/\/inner\/cashbook\/plan\/annual\?from=onboarding$/);
+
+    // 걷기 재검증(2026-11-07): ←는 지나온 위저드 단계로 돌아가 대시보드에 닿을 길이 없었다
+    const home = page.getByTestId('annual-plan-home');
+    await expect(home).toBeVisible();
+    await home.click();
+    await page.waitForURL(/\/inner\/cashbook$/);
+    await expect(page.getByTestId('dashboard-header')).toBeVisible();
+  });
+
+  test('이어서 하기 단계에는 진입 표식이 저장되지 않는다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/inner/cashbook');
+    await page.getByTestId('annual-plan-prompt-start').click();
+    await page.getByTestId('wizard-next').click();
+    await page.getByTestId('regular-avg-input-field').fill('3000000');
+    await page.getByTestId('wizard-next').click();
+    await page.getByRole('button', { name: '위저드 종료' }).click();
+    await page.waitForURL(/\/plan\/annual\?from=onboarding$/);
+
+    // 경제 목표 페이지의 이어서 하기 링크에는 from이 붙지 않는다(설정 경로와 같은 저장값)
+    const resumeLink = page.getByTestId('annual-plan-resume').getByRole('link');
+    await expect(resumeLink).toHaveAttribute('href', /catIdx=1&phase=avg&mode=quick$/);
+  });
+
+  test('설정에서 들어온 경제 목표에는 "홈으로" 버튼이 없다', async ({ authedContext }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await gotoIntro(page);
+    await page.getByTestId('wizard-next').click();
+    await page.getByTestId('regular-avg-input-field').fill('3000000');
+    await page.getByTestId('wizard-next').click();
+    await page.getByRole('button', { name: '위저드 종료' }).click();
+    await page.waitForURL(/\/inner\/cashbook\/plan\/annual$/);
+
+    await expect(page.getByTestId('annual-plan-header')).toBeVisible();
+    await expect(page.getByTestId('annual-plan-home')).toHaveCount(0);
+  });
 });

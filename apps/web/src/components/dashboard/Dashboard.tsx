@@ -13,6 +13,7 @@ import { useCashbookEntryAutoOpen } from '@/hooks/useCashbookEntryAutoOpen';
 import { useHasAnyEntries } from '@/hooks/useHasAnyEntries';
 import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
 import { useSsrSafeLocalStorage } from '@/hooks/useSsrSafeLocalStorage';
+import { WIZARD_ENTRY_ONBOARDING, withWizardEntry } from '@/lib/plan-wizard-entry';
 import { AnnualPlanPromptCard } from './AnnualPlanPromptCard';
 import { BudgetDashboard } from './BudgetDashboard';
 import { CoupleStatusSection } from './CoupleStatusSection';
@@ -84,7 +85,10 @@ export function Dashboard() {
             year={year}
             variant={plan ? 'resume' : 'start'}
             progress={planProgress}
-            href={plan ? `${WIZARD_PATH}${plan.wizardLastStep ?? '?step=intro'}` : WIZARD_INTRO}
+            href={withWizardEntry(
+              plan ? `${WIZARD_PATH}${plan.wizardLastStep ?? '?step=intro'}` : WIZARD_INTRO,
+              WIZARD_ENTRY_ONBOARDING
+            )}
             onDismiss={() => setPromptDismissedAt(Date.now() + PLAN_PROMPT_SNOOZE_MS)}
           />
         ) : null}

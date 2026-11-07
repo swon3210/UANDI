@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { Pencil, RotateCcw } from 'lucide-react';
@@ -13,13 +13,25 @@ import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hoo
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
 import { BackButton } from '@/components/shell/BackButton';
+import { HomeButton } from '@/components/shell/HomeButton';
+import { WIZARD_ENTRY_PARAM, parseWizardEntry } from '@/lib/plan-wizard-entry';
 import { AnnualPlanPromptCard } from '@/components/dashboard/AnnualPlanPromptCard';
 
 const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
 const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
 
 export default function AnnualPlanPage() {
+  return (
+    <Suspense fallback={<MascotLoader fullScreen />}>
+      <AnnualPlanContent />
+    </Suspense>
+  );
+}
+
+function AnnualPlanContent() {
   const router = useRouter();
+  // 대시보드 권유 카드 → 위저드를 거쳐 왔으면 ←가 위저드 단계로 돌아가므로 "홈으로"를 함께 둔다
+  const fromOnboarding = parseWizardEntry(useSearchParams().get(WIZARD_ENTRY_PARAM)) !== null;
 
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
@@ -85,6 +97,7 @@ export default function AnnualPlanPage() {
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
         rightSlot={
           <div className="flex items-center gap-1">
+            {fromOnboarding && <HomeButton data-testid="annual-plan-home" />}
             {canBulkEdit && (
               <button
                 type="button"

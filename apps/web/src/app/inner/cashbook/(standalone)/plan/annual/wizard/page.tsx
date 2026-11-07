@@ -25,6 +25,7 @@ import {
   deleteAnnualPlanIfUntouched,
   updateAnnualPlanWizardProgress,
 } from '@/services/annual-plan';
+import { WIZARD_ENTRY_PARAM, parseWizardEntry, withWizardEntry } from '@/lib/plan-wizard-entry';
 import {
   DEFAULT_WIZARD_MODE,
   REGULAR_SUBGROUPS,
@@ -49,6 +50,7 @@ type Draft = {
 };
 
 const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
+const PLAN_PATH = '/inner/cashbook/plan/annual';
 
 export default function AnnualPlanWizardPage() {
   return (
@@ -65,6 +67,8 @@ function WizardPageInner() {
   const catIdxParam = searchParams.get('catIdx');
   const phaseParam = searchParams.get('phase');
   const modeParam = searchParams.get('mode');
+  // 대시보드 권유 카드에서 열렸으면 모든 단계·도착 페이지에 표식을 넘긴다(경제 목표의 "홈으로")
+  const entry = parseWizardEntry(searchParams.get(WIZARD_ENTRY_PARAM));
   // 인트로 밖의 단계에서 mode가 없으면 full(이전 URL 호환). 인트로에서는 아래 introMode가 결정한다.
   const mode: WizardMode = isWizardMode(modeParam) ? modeParam : 'full';
 
@@ -123,8 +127,8 @@ function WizardPageInner() {
 
   // step 누락 시 intro 로 정규화
   useEffect(() => {
-    if (!stepParam) router.replace(`${WIZARD_PATH}?step=intro`);
-  }, [stepParam, router]);
+    if (!stepParam) router.replace(withWizardEntry(`${WIZARD_PATH}?step=intro`, entry));
+  }, [stepParam, router, entry]);
 
   const selectedIntroMode: WizardMode =
     introMode ?? (isWizardMode(plan?.wizardMode) ? plan.wizardMode : DEFAULT_WIZARD_MODE);
@@ -143,7 +147,7 @@ function WizardPageInner() {
   const navigateTo = (step: WizardStep, w: UsePlanWizardResult = wizard) => {
     const query = w.urlFor(step);
     if (step.kind !== 'intro') persistProgress(query, w.mode);
-    router.push(`${WIZARD_PATH}${query}`);
+    router.push(withWizardEntry(`${WIZARD_PATH}${query}`, entry));
   };
 
   const commitCurrentDraftIfDirty = async () => {
@@ -203,7 +207,7 @@ function WizardPageInner() {
       }
     }
     await invalidatePlan();
-    router.push('/inner/cashbook/plan/annual');
+    router.push(withWizardEntry(PLAN_PATH, entry));
   };
 
   const handleFinish = async () => {
@@ -245,7 +249,7 @@ function WizardPageInner() {
     }).catch(() => {});
     await invalidatePlan();
     toast.success(isInitial ? '예산 계획을 완성했어요!' : '예산을 다시 세웠어요');
-    router.replace('/inner/cashbook/plan/annual');
+    router.replace(withWizardEntry(PLAN_PATH, entry));
   };
 
   const handleNext = async () => {

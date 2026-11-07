@@ -7,6 +7,8 @@
 
 1. **사이드바 토글(☰)은 대시보드에만** 둔다. 하위 페이지 헤더의 좌측은 항상 뒤로가기(←)다.
    - `PageHeader`를 쓰면 `leftSlot={<BackButton ... />}`를 반드시 넘긴다(생략 시 ☰가 붙는다).
+   - 예외: 기록이 여러 단계 쌓이는 흐름(예산 위저드)을 지나 도착한 페이지는 ←가 대시보드에 닿지 않는다.
+     이때만 URL 표식(`?from=onboarding`)으로 헤더 우측에 `@/components/shell/HomeButton`("홈으로")을 함께 둔다.
 2. 뒤로가기는 직접 구현하지 말고 **`@/components/shell/BackButton`** 을 쓴다.
    - 앱 안에서 이동해 왔으면 `router.back()`(대시보드 기간·필터 쿼리 복원),
      딥링크·새로고침 직후처럼 앱 내 기록이 없으면 `fallbackHref`(부모 경로)로 replace 한다.
