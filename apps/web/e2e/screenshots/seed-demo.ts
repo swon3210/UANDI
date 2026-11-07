@@ -8,6 +8,11 @@ import {
   seedPrediction,
   seedAssetAllocation,
   seedCommunityPost,
+  seedCouplePresence,
+  seedAnnualPlan,
+  seedAnnualPlanItem,
+  seedAnnualPlanRevision,
+  listCategories,
 } from '../helpers/emulator';
 
 const DAY = 86_400_000;
@@ -15,24 +20,37 @@ const now = Date.now();
 const daysAgo = (n: number) => new Date(now - n * DAY).toISOString();
 const daysAhead = (n: number) => new Date(now + n * DAY).toISOString();
 
+/**
+ * 스토어 이미지는 "지난달" 화면을 찍는다(이번 달은 날짜에 따라 비어 보일 수 있다).
+ * monthsAgo=1이 지난달. 날짜는 그 달의 day일 정오(로컬)로 만든다.
+ */
+function dateIn(monthsAgo: number, day: number): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - monthsAgo);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  d.setHours(12, 0, 0, 0);
+  return d.toISOString();
+}
+
 type Entry = {
   type: 'income' | 'expense';
   amount: number;
   category: string;
   description: string;
-  ageDays: number;
+  day: number;
   by: 1 | 2;
 };
 
-// 최근 ~80일에 걸친 거래 — 3개월 추세 + 카테고리 분포가 보이도록 구성
-const ENTRIES: Entry[] = [
-  // 수입
+/** 매달 반복되는 고정 수입·지출 */
+const FIXED: Entry[] = [
   {
     type: 'income',
     amount: 3_200_000,
     category: '정기급여',
     description: '지수 급여',
-    ageDays: 5,
+    day: 25,
     by: 1,
   },
   {
@@ -40,130 +58,100 @@ const ENTRIES: Entry[] = [
     amount: 2_800_000,
     category: '정기급여',
     description: '현우 급여',
-    ageDays: 5,
+    day: 25,
     by: 2,
   },
-  {
-    type: 'income',
-    amount: 3_200_000,
-    category: '정기급여',
-    description: '지수 급여',
-    ageDays: 35,
-    by: 1,
-  },
-  {
-    type: 'income',
-    amount: 2_800_000,
-    category: '정기급여',
-    description: '현우 급여',
-    ageDays: 35,
-    by: 2,
-  },
-  {
-    type: 'income',
-    amount: 3_200_000,
-    category: '정기급여',
-    description: '지수 급여',
-    ageDays: 65,
-    by: 1,
-  },
-  {
-    type: 'income',
-    amount: 300_000,
-    category: '부업',
-    description: '블로그 수익',
-    ageDays: 18,
-    by: 1,
-  },
-  // 고정 지출
-  {
-    type: 'expense',
-    amount: 850_000,
-    category: '월세',
-    description: '6월 월세',
-    ageDays: 10,
-    by: 1,
-  },
-  {
-    type: 'expense',
-    amount: 850_000,
-    category: '월세',
-    description: '5월 월세',
-    ageDays: 40,
-    by: 1,
-  },
-  {
-    type: 'expense',
-    amount: 850_000,
-    category: '월세',
-    description: '4월 월세',
-    ageDays: 70,
-    by: 1,
-  },
-  {
-    type: 'expense',
-    amount: 180_000,
-    category: '보험',
-    description: '실비보험',
-    ageDays: 8,
-    by: 2,
-  },
-  {
-    type: 'expense',
-    amount: 180_000,
-    category: '보험',
-    description: '실비보험',
-    ageDays: 38,
-    by: 2,
-  },
-  // 변동 지출
-  { type: 'expense', amount: 42_000, category: '식비', description: '장보기', ageDays: 2, by: 1 },
-  { type: 'expense', amount: 23_500, category: '식비', description: '점심', ageDays: 4, by: 2 },
-  {
-    type: 'expense',
-    amount: 51_000,
-    category: '식비',
-    description: '주말 외식',
-    ageDays: 7,
-    by: 1,
-  },
-  { type: 'expense', amount: 38_000, category: '식비', description: '배달', ageDays: 15, by: 2 },
-  { type: 'expense', amount: 47_000, category: '식비', description: '장보기', ageDays: 45, by: 1 },
+  { type: 'expense', amount: 850_000, category: '월세', description: '월세', day: 1, by: 1 },
+  { type: 'expense', amount: 180_000, category: '보험', description: '실비보험', day: 10, by: 2 },
+];
+
+/** 지난달 생활 지출 — 대시보드의 카테고리 분포·최근 내역이 자연스럽게 보이도록 촘촘하게 */
+const LAST_MONTH: Entry[] = [
   {
     type: 'expense',
     amount: 55_000,
     category: '교통',
-    description: '교통비 충전',
-    ageDays: 3,
-    by: 1,
-  },
-  {
-    type: 'expense',
-    amount: 60_000,
-    category: '교통',
-    description: '교통비 충전',
-    ageDays: 33,
+    description: '교통카드 충전',
+    day: 2,
     by: 2,
   },
-  // 여행·소비
   {
     type: 'expense',
-    amount: 480_000,
-    category: '여행',
-    description: '제주 항공권',
-    ageDays: 20,
+    amount: 68_000,
+    category: '식비',
+    description: '이마트 장보기',
+    day: 3,
     by: 1,
   },
-  { type: 'expense', amount: 89_000, category: '소비', description: '데이트', ageDays: 6, by: 2 },
+  { type: 'expense', amount: 9_000, category: '식비', description: '점심 김치찌개', day: 5, by: 2 },
+  { type: 'expense', amount: 24_000, category: '식비', description: '배달 치킨', day: 8, by: 1 },
+  { type: 'expense', amount: 32_000, category: '소비', description: '영화 데이트', day: 9, by: 2 },
+  { type: 'expense', amount: 51_000, category: '식비', description: '주말 외식', day: 12, by: 1 },
+  { type: 'expense', amount: 15_000, category: '교통', description: '퇴근길 택시', day: 14, by: 2 },
+  {
+    type: 'expense',
+    amount: 240_000,
+    category: '여행',
+    description: '제주 항공권',
+    day: 16,
+    by: 1,
+  },
+  {
+    type: 'expense',
+    amount: 47_000,
+    category: '식비',
+    description: '코스트코 장보기',
+    day: 17,
+    by: 2,
+  },
+  { type: 'income', amount: 300_000, category: '부업', description: '블로그 수익', day: 18, by: 1 },
+  { type: 'expense', amount: 12_500, category: '식비', description: '카페', day: 19, by: 1 },
   {
     type: 'expense',
     amount: 120_000,
     category: '소비',
-    description: '생일 선물',
-    ageDays: 22,
-    by: 1,
+    description: '부모님 생신 선물',
+    day: 21,
+    by: 2,
   },
+  { type: 'expense', amount: 43_000, category: '식비', description: '저녁 외식', day: 23, by: 2 },
+  { type: 'expense', amount: 39_000, category: '식비', description: '마트 장보기', day: 27, by: 1 },
 ];
+
+/** 그 전 두 달 — 기간 비교 추세용으로 조금만 */
+const EARLIER: Entry[] = [
+  {
+    type: 'expense',
+    amount: 60_000,
+    category: '교통',
+    description: '교통카드 충전',
+    day: 2,
+    by: 2,
+  },
+  { type: 'expense', amount: 82_000, category: '식비', description: '장보기', day: 6, by: 1 },
+  { type: 'expense', amount: 64_000, category: '식비', description: '외식', day: 15, by: 2 },
+  { type: 'expense', amount: 89_000, category: '소비', description: '데이트', day: 20, by: 1 },
+  { type: 'expense', amount: 53_000, category: '식비', description: '배달', day: 26, by: 2 },
+];
+
+const ENTRIES: Array<Entry & { monthsAgo: number }> = [
+  ...[1, 2, 3].flatMap((m) => FIXED.map((e) => ({ ...e, monthsAgo: m }))),
+  ...LAST_MONTH.map((e) => ({ ...e, monthsAgo: 1 })),
+  ...[2, 3].flatMap((m) => EARLIER.map((e) => ({ ...e, monthsAgo: m }))),
+];
+
+/** 올해 예산(경제 목표 화면) — 카테고리 이름 → 월별 금액 */
+const PLAN: Record<string, number[]> = {
+  정기급여: Array(12).fill(6_000_000),
+  상여: [0, 0, 0, 0, 0, 0, 0, 0, 2_000_000, 0, 0, 0],
+  부업: Array(12).fill(300_000),
+  월세: Array(12).fill(850_000),
+  보험: Array(12).fill(180_000),
+  식비: Array(12).fill(600_000),
+  교통: Array(12).fill(120_000),
+  여행: [0, 0, 0, 0, 0, 0, 1_500_000, 0, 0, 0, 0, 0],
+  소비: Array(12).fill(300_000),
+};
 
 export async function seedDemoData(coupleId: string, uid1: string, uid2: string): Promise<void> {
   await seedDefaultCategories(coupleId);
@@ -174,9 +162,42 @@ export async function seedDemoData(coupleId: string, uid1: string, uid2: string)
       amount: e.amount,
       category: e.category,
       description: e.description,
-      date: daysAgo(e.ageDays),
+      date: dateIn(e.monthsAgo, e.day),
     });
   }
+
+  // 커플 카드: 둘 다 접속 중 + 한마디
+  const nowIso = new Date().toISOString();
+  await seedCouplePresence(coupleId, {
+    [uid1]: {
+      lastSeenIso: nowIso,
+      message: '이번 달 외식 조금만 줄여보자 💪',
+      messageUpdatedAtIso: nowIso,
+    },
+    [uid2]: {
+      lastSeenIso: nowIso,
+      message: '주말에 장 같이 보러 가자',
+      messageUpdatedAtIso: nowIso,
+    },
+  });
+
+  // 올해 예산 + 위저드 완료(리비전) → 대시보드 권유 카드 대신 경제 목표가 채워진다
+  const year = new Date().getFullYear();
+  const planId = await seedAnnualPlan(coupleId, year, uid1);
+  const categories = await listCategories(coupleId);
+  for (const c of categories) {
+    const amounts = PLAN[c.name] ?? Array(12).fill(0);
+    await seedAnnualPlanItem(coupleId, planId, {
+      categoryId: c.id,
+      group: c.group as 'income' | 'expense',
+      subGroup: c.subGroup,
+      monthlyAmounts: amounts,
+      inputMode:
+        c.subGroup === 'regular_income' || c.subGroup === 'fixed_expense' ? 'regular' : 'irregular',
+      baseMonthlyAmount: amounts.every((v) => v === amounts[0]) ? amounts[0] : null,
+    });
+  }
+  await seedAnnualPlanRevision(coupleId, planId, uid1);
 
   // 현금흐름 캘린더: 보유 현금 + 급여일 + 다가오는 예측들
   await seedCashflowSettings(coupleId, {
