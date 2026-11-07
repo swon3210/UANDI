@@ -67,7 +67,6 @@ export class DashboardPage {
   readonly meterIncome: Locator;
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
-  readonly meterAddIncome: Locator;
   readonly recentEntries: Locator;
   readonly recentEntriesAll: Locator;
 
@@ -163,7 +162,6 @@ export class DashboardPage {
     this.meterIncome = page.getByTestId('meter-income');
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
-    this.meterAddIncome = page.getByTestId('meter-add-income');
     this.recentEntries = page.getByTestId('recent-entries');
     this.recentEntriesAll = page.getByTestId('recent-entries-all');
 

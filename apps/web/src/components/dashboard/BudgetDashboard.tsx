@@ -504,11 +504,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       ) : group === 'all' ? (
         <>
           <div className="rounded-xl border border-border bg-card p-4">
-            <IncomeExpenseMeter
-              income={typeTotals.income}
-              expense={typeTotals.expense}
-              onAddIncome={() => window.dispatchEvent(new Event('uandi:quick-add'))}
-            />
+            <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
           </div>
           <RecentEntriesCard
             entries={recentEntries}

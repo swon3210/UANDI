@@ -408,7 +408,7 @@ test.describe('대시보드', () => {
       await expect(dashboard.meterStatus).toContainText('더 썼어요');
     });
 
-    test('수입이 없으면 경고 대신 중립 문구와 수입 적기 버튼을 보여준다', async ({
+    test('수입 없이 지출만 있으면 상태 줄 없이 수입 0원·지출 금액만 보여준다', async ({
       authedContext,
     }) => {
       const { page, uid, coupleId } = authedContext;
@@ -424,10 +424,11 @@ test.describe('대시보드', () => {
       await dashboard.goto();
 
       await expect(dashboard.meterPercent).toHaveText('—');
-      await expect(dashboard.meterStatus).toContainText('아직 수입을 안 적었어요');
-      await expect(dashboard.meterStatus).not.toContainText('🚨');
-      await dashboard.meterAddIncome.click();
-      await expect(page.getByTestId('quick-add-sheet')).toBeVisible();
+      await expect(page.getByTestId('meter-income')).toHaveText('0원');
+      await expect(page.getByTestId('meter-expense')).toHaveText('50,000원');
+      // 월급날 전이면 수입이 없는 게 당연하다 — "아직 수입을 안 적었어요"·🚨 모두 띄우지 않는다
+      await expect(dashboard.meterStatus).toHaveCount(0);
+      await expect(page.getByText('아직 수입을 안 적었어요')).toHaveCount(0);
     });
 
     test('전체 탭에 최근 내역 3건과 전체 보기 링크가 보인다', async ({ authedContext }) => {

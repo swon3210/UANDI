@@ -29,13 +29,8 @@ export const OverIncome: Story = {
   args: { income: 2_500_000, expense: 3_380_000 },
 };
 
-/** 첫 주: 지출만 있을 때 — 경고 대신 중립 문구 + 수입 적기 */
+/** 지출만 있을 때(월급날 전 등) — 상태 줄 없이 수입 0원·지출 금액만 */
 export const NoIncome: Story = {
-  args: { income: 0, expense: 420_000, onAddIncome: () => {} },
-};
-
-/** 수입 적기 콜백이 없으면 문구만 */
-export const NoIncomeWithoutAction: Story = {
   args: { income: 0, expense: 420_000 },
 };
 
