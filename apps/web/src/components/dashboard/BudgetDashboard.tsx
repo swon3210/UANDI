@@ -2,8 +2,9 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dayjs, { type Dayjs } from 'dayjs';
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronRight, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { useDebounce } from '@uidotdev/usehooks';
 import { buildCategoryColorMap, getCategoryColor } from '@uandi/cashbook-core';
@@ -24,6 +25,7 @@ import {
 } from '@/hooks/useDashboardData';
 import type { AiReportStatus } from '@/components/cashbook/AiReportCard';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
+import { useCoupleMemberMap } from '@/hooks/useCoupleMembers';
 import { useCategoryAnalysisData, useCategoryAnalysisReport } from '@/hooks/useCategoryAnalysis';
 import { MEDIAN_COMPARE, useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
@@ -55,6 +57,7 @@ import { SubGroupTabs } from './SubGroupTabs';
 import { CategoryDonutChart } from './CategoryDonutChart';
 import { CategoryBreakdown } from './CategoryBreakdown';
 import { IncomeExpenseMeter } from './IncomeExpenseMeter';
+import { RecentEntriesCard } from './RecentEntriesCard';
 import { PeriodCompareChart } from './PeriodCompareChart';
 import { CompareAiSummary } from './CompareAiSummary';
 import { CompareTargetPicker } from './CompareTargetPicker';
@@ -123,6 +126,7 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGrou
 }
 
 export function BudgetDashboard({ coupleId }: Props) {
+  const router = useRouter();
   // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
   const [filters, updateFilters] = useDashboardFilters();
   const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
@@ -137,6 +141,8 @@ export function BudgetDashboard({ coupleId }: Props) {
 
   // useDashboardData와 같은 쿼리 키라 추가 요청 없이 캐시를 공유한다.
   const { data: categories } = useCashbookCategories(coupleId);
+  // 최근 내역 카드의 작성자 아바타용(커플 카드와 같은 쿼리를 공유한다)
+  const memberMap = useCoupleMemberMap(coupleId);
 
   const {
     byCategory,
@@ -145,6 +151,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     byFixedVariable,
     total,
     hasEntries,
+    recentEntries,
     comparison,
     isLoading,
     isCompareLoading,
@@ -484,12 +491,29 @@ export function BudgetDashboard({ coupleId }: Props) {
             icon={<BookOpen size={32} />}
             title="이 기간엔 내역이 없어요"
             description="다른 기간을 선택하거나 가계부에 내역을 추가해보세요"
+            action={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/inner/cashbook/import" data-testid="dashboard-import-link">
+                  <Upload size={14} aria-hidden />
+                  지난달 내역 불러오기
+                </Link>
+              </Button>
+            }
           />
         </div>
       ) : group === 'all' ? (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
-        </div>
+        <>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <IncomeExpenseMeter income={typeTotals.income} expense={typeTotals.expense} />
+          </div>
+          <RecentEntriesCard
+            entries={recentEntries}
+            categories={categories}
+            historyHref="/inner/cashbook/history"
+            authors={memberMap}
+            onSelect={() => router.push('/inner/cashbook/history')}
+          />
+        </>
       ) : (
         <>
           <div className="rounded-xl border border-border bg-card p-4">

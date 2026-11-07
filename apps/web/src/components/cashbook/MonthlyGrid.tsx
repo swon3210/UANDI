@@ -82,6 +82,7 @@ function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthC
       <input
         type="text"
         inputMode="numeric"
+        aria-label={MONTH_LABELS[month - 1]}
         disabled={disabled}
         value={display}
         data-testid={testId}

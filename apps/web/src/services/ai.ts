@@ -1,6 +1,7 @@
 import { getAuth } from '@/lib/firebase/config';
 import type { CashbookEntryType } from '@/types';
 import type { CategoryHint } from '@/utils/category-hints';
+import type { SuggestedCategory } from '@/lib/ai/parse-entries-core';
 import type { LlmPrediction } from '@/utils/cashflow';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -28,42 +29,6 @@ export type ParsedEntry = {
   isTransfer?: boolean;
 };
 
-export type SettlementImageKind = 'account' | 'card';
-
-/** 일괄 분석 — 첨부 이미지 1장당 결과 */
-export type AttachmentSyncResult = {
-  attachmentId: string;
-  kind: SettlementImageKind;
-  detectedMonths: string[];
-  imageKindMismatch: boolean;
-  entries: ParsedEntry[];
-};
-
-/**
- * 결산 첨부 이미지 전체를 한 번에 분석한다.
- * 서버가 이미지 URL을 OpenAI vision에 직접 전달하므로 base64 재인코딩이 필요 없다.
- */
-export async function syncAttachments(
-  attachments: { id: string; url: string; kind: SettlementImageKind }[],
-  categories: string[],
-  categoryHints?: CategoryHint[]
-): Promise<AttachmentSyncResult[]> {
-  const headers = await getAuthHeaders();
-  const res = await fetch('/api/ai/sync-attachments', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ attachments, categories, categoryHints }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error ?? '이미지 분석에 실패했습니다');
-  }
-
-  const { results } = (await res.json()) as { results: AttachmentSyncResult[] };
-  return results;
-}
-
 export type ParseEntriesOptions = {
   /** 첨부 이미지 분류. 'account'면 카드대금 일괄출금 제외, 'card'면 카드 내역 검증. */
   imageKind?: 'account' | 'card';
@@ -73,6 +38,16 @@ export type ParseEntriesOptions = {
   categoryHints?: CategoryHint[];
   /** 이용내역서 PDF. 클라이언트가 페이지별로 렌더링한 이미지 data URL 묶음. */
   pdfs?: ParsedPdfAttachment[];
+  /** true면 목록에 맞는 게 없을 때 새 카테고리를 제안받는다(지난 내역 가져오기). */
+  allowNewCategories?: boolean;
+};
+
+export type { SuggestedCategory };
+
+export type ParseEntriesResult = {
+  entries: ParsedEntry[];
+  /** allowNewCategories일 때만. 서버가 정리한(중복·기존 이름 제거) 제안 목록 */
+  suggestedCategories: SuggestedCategory[];
 };
 
 export type ParsedPdfAttachment = {
@@ -81,12 +56,13 @@ export type ParsedPdfAttachment = {
   pages: string[];
 };
 
-export async function parseEntriesFromText(
+/** 파싱 요청 1회. entries와 (옵션) 새 카테고리 제안을 함께 돌려준다. */
+export async function parseEntriesWithSuggestions(
   text: string,
   categories: string[],
   images?: string[],
   options?: ParseEntriesOptions
-): Promise<ParsedEntry[]> {
+): Promise<ParseEntriesResult> {
   const headers = await getAuthHeaders();
   const res = await fetch('/api/ai/parse-entries', {
     method: 'POST',
@@ -98,6 +74,7 @@ export async function parseEntriesFromText(
       imageKind: options?.imageKind,
       categoryHints: options?.categoryHints,
       pdfs: options?.pdfs,
+      allowNewCategories: options?.allowNewCategories,
     }),
   });
 
@@ -106,11 +83,22 @@ export async function parseEntriesFromText(
     throw new Error(error.error ?? 'AI 파싱에 실패했습니다');
   }
 
-  const { entries, imageKindMismatch } = (await res.json()) as {
+  const { entries, imageKindMismatch, suggestedCategories } = (await res.json()) as {
     entries: ParsedEntry[];
     imageKindMismatch?: boolean;
+    suggestedCategories?: SuggestedCategory[];
   };
   if (imageKindMismatch) options?.onImageKindMismatch?.();
+  return { entries, suggestedCategories: suggestedCategories ?? [] };
+}
+
+export async function parseEntriesFromText(
+  text: string,
+  categories: string[],
+  images?: string[],
+  options?: ParseEntriesOptions
+): Promise<ParsedEntry[]> {
+  const { entries } = await parseEntriesWithSuggestions(text, categories, images, options);
   return entries;
 }
 

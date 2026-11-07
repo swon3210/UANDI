@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { Pencil, RotateCcw } from 'lucide-react';
@@ -13,11 +13,25 @@ import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hoo
 import { GoalsMainView } from '@/components/cashbook/GoalsMainView';
 import { type GoalCategoryKey } from '@/constants/goal-categories';
 import { BackButton } from '@/components/shell/BackButton';
+import { HomeButton } from '@/components/shell/HomeButton';
+import { WIZARD_ENTRY_PARAM, parseWizardEntry } from '@/lib/plan-wizard-entry';
+import { AnnualPlanPromptCard } from '@/components/dashboard/AnnualPlanPromptCard';
 
-const WIZARD_INTRO = '/inner/cashbook/plan/annual/wizard?step=intro';
+const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
+const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
 
 export default function AnnualPlanPage() {
+  return (
+    <Suspense fallback={<MascotLoader fullScreen />}>
+      <AnnualPlanContent />
+    </Suspense>
+  );
+}
+
+function AnnualPlanContent() {
   const router = useRouter();
+  // 대시보드 권유 카드 → 위저드를 거쳐 왔으면 ←가 위저드 단계로 돌아가므로 "홈으로"를 함께 둔다
+  const fromOnboarding = parseWizardEntry(useSearchParams().get(WIZARD_ENTRY_PARAM)) !== null;
 
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
@@ -30,6 +44,14 @@ export default function AnnualPlanPage() {
 
   const isLoading = planPending || catPending || (!!plan && itemsPending);
   const canBulkEdit = (revisions?.length ?? 0) >= 1;
+  // 위저드를 끝내지 않은 플랜(리비전 0개) — "예상 연간 잉여"만 덩그러니 보이지 않게 이어서 하기 배너
+  const isIncomplete = !!plan && revisions !== undefined && revisions.length === 0;
+  const progress = items
+    ? {
+        done: items.filter((it) => it.monthlyAmounts.some((v) => v > 0)).length,
+        total: items.length,
+      }
+    : undefined;
 
   // plan/items 미존재 또는 monthlyAmounts 누락 시 위저드로 redirect
   useEffect(() => {
@@ -75,6 +97,7 @@ export default function AnnualPlanPage() {
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
         rightSlot={
           <div className="flex items-center gap-1">
+            {fromOnboarding && <HomeButton data-testid="annual-plan-home" />}
             {canBulkEdit && (
               <button
                 type="button"
@@ -99,7 +122,16 @@ export default function AnnualPlanPage() {
         }
       />
 
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-20">
+      <main className="mx-auto w-full max-w-md flex-1 space-y-4 px-4 pt-4 pb-20">
+        {isIncomplete && plan ? (
+          <AnnualPlanPromptCard
+            year={year}
+            variant="resume"
+            progress={progress}
+            href={`${WIZARD_PATH}${plan.wizardLastStep ?? '?step=intro'}`}
+            data-testid="annual-plan-resume"
+          />
+        ) : null}
         {items && <GoalsMainView items={items} onSelectCategory={goToCategory} />}
       </main>
     </div>

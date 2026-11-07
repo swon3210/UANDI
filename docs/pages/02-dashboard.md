@@ -115,15 +115,51 @@ query(
 - 카테고리 메타(아이콘/색상)는 `couples/${coupleId}/cashbookCategories` 1회 조회
 - 쿼리 키: `['cashbookEntries', coupleId, 'range', start.toISOString(), end.toISOString()]`
 
+### 짝꿍 내역 실시간 반영 (`CashbookLiveSync`)
+
+둘이 같이 쓰는 가계부라는 약속("둘 중 누가 적어도 바로 함께 보여요")을 지키기 위해, 기간 내역 쿼리 자체를
+실시간으로 바꾸지 않고 **최신 내역 1건만 구독**한다(비용 최소). 2026-11 걷기 6구간에서 짝꿍이 적은 수입이
+같은 화면에 머문 쪽에는 보이지 않던 문제의 해결.
+
+- `couples/{coupleId}/cashbookEntries` 를 `orderBy('createdAt', 'desc') limit(1)` 로 `onSnapshot` 구독.
+  providers에 전역으로 마운트(`CashbookLiveSync`, 로그인·커플 연결 시에만).
+- 첫 스냅샷은 무시한다. 이후 최신 문서 id가 바뀌었고 `createdBy`가 내가 아니면(짝꿍이 적음):
+  - `['cashbookEntries', coupleId]`·`['hasAnyEntries', coupleId]` 쿼리 무효화 → 대시보드·내역 화면이 그 자리에서 다시 읽는다.
+  - 토스트 "{짝꿍}님이 내역을 적었어요"(내역 화면이 아니면 [내역 보기] 액션). `data-testid`는 없고 문구로 확인한다.
+- 내 쓰기(`hasPendingWrites`)와 내가 적은 내역은 무시한다(뮤테이션이 이미 무효화한다).
+- 수정·삭제는 잡지 않는다(최신 1건 기준). 포커스·재마운트 재조회는 그대로 보조한다.
+
 > 공간 간 이동은 좌측 사이드바(`AppSidebar`)로 통합되어 있다. 다만 우리집 홈에서 자주 쓰는 영역은 사이드바와 별개로 다음 진입점을 둔다.
 
 ### 진입점
 
-- **예산 설정 진입 카드 (`DashboardEntryList`)**
-  - 홈 상단에 전폭 가로 카드로 표시 (아이콘 + 레이블 + 설명 + `ChevronRight`)
-  - `예산 설정` → `/inner/cashbook/plan/annual` (연간 예산 계획)
-  - 항목별 `data-testid="dashboard-entry-{id}"` (예산: `dashboard-entry-budget`)
-  - `entries: DashboardEntry[]`를 props로 받는 프레젠테이션 컴포넌트 — 라우트/아이콘/레이블은 `Dashboard`가 주입
+- **빈 상태 CTA** — 선택 기간에 내역이 하나도 없으면(`dashboard-empty`) "지난달 내역 불러오기"
+  버튼(`data-testid="dashboard-import-link"`) → `/inner/cashbook/import` (`pages/inner/cashbook-import.md`).
+- **커플 카드 (`CoupleStatusSection` → `CoupleStatusCard`)** — 홈 최상단
+  - 짝꿍 연결됨: 접속 상태 + 서로의 한마디 (기존)
+  - **짝꿍 미연결(memberUids 1명)**: `state="invite"` 카드를 보여준다 (`data-testid="couple-status-invite"`).
+    "짝꿍과 함께 시작해요 / 짝꿍 초대하기" → 바텀 시트(`data-testid="invite-sheet"`)에 `InviteCodePanel`
+    (코드·복사·링크 공유). 코드는 `ensureActiveInviteCode`로 가져온다(만료·소진 시 자동 재발급).
+  - 미연결 상태에서는 `couples/{coupleId}`를 실시간 구독한다. 짝꿍이 합류하면 **새로고침 없이**
+    연결 카드로 바뀌고, 시트가 열려 있었다면 닫히며 토스트 "OO님이 합류했어요"를 띄운다.
+    (`coupleMembers` 쿼리 무효화)
+  - 콕 찌르기 버튼은 기존대로 짝꿍이 있을 때만 노출한다.
+- **받은 콕 찌르기 카드 (`NudgeReceivedCard`)** — 커플 카드 바로 아래. 짝꿍이 보낸 `pending` 콕 찌르기가
+  있을 때만 보인다(`data-testid="nudge-received"`). 푸시가 없는 웹·미배포 환경에서도 요청을 앱 안에서 알 수 있게 한다.
+  - "{짝꿍}님이 콕 찔렀어요 🐹" + 요청 문구(빈 문구면 "가계부 입력을 부탁했어요").
+  - [내역 적기](`nudge-received-add`): 상태를 `seen`으로 바꾸고 `uandi:quick-add`로 빠른 추가 시트를 연다.
+  - [나중에](`nudge-received-dismiss`): 상태를 `dismissed`로.
+  - 실시간: `nudges where toUid == 나 and status == 'pending' orderBy createdAt desc limit 1`을 `onSnapshot`으로 구독해
+    짝꿍이 보내는 순간 새로고침 없이 나타난다. 상세는 `pages/inner/cashbook-nudge.md`.
+
+- **올해 예산 권유 카드 (`AnnualPlanPromptCard`)** — 커플 카드 아래, 기간 선택 위
+  - 위저드로 **자동 이동하지 않는다**(2026-11 걷기에서 첫 주 유저에게 과했다고 판단). 두 가지 모습이 있다.
+  - `variant="start"` — 올해 연간 플랜이 없을 때(`useAnnualPlan(year)` → null).
+    "올해 예산 세우기 · 약 5분" + 설명 한 줄 + [시작하기](`data-testid="annual-plan-prompt-start"` → `/inner/cashbook/plan/annual/wizard?step=intro`).
+  - `variant="resume"` — 플랜은 있는데 **위저드를 끝내지 않았을 때**(리비전 0개). 위저드를 중간에 나가면 플랜이 남아 카드가 사라지는 걸 막는다.
+    "예산 이어서 세우기" + "{n}개 항목을 적었어요. 이어서 적으면 완성돼요"(n = 금액이 있는 항목 수) + [이어서 하기](`annual-plan-prompt-resume` → `plan.wizardLastStep`이 있으면 그 단계, 없으면 인트로).
+  - 닫기(`annual-plan-prompt-dismiss`)는 두 모습 모두 같다: `localStorage['moa:annual-plan-card-dismissed:{year}']`에 **다시 보일 시각**(닫은 시각 + 30일)을 기록하고 그때까지 숨긴다. 위저드를 완료(리비전 생성)하면 영구히 사라진다. 그 사이엔 가계부 설정 → 경제 목표로 들어갈 수 있다.
+  - `data-testid="annual-plan-prompt"`
 - **내역 진입 — 합계 KPI 카드 재사용**
   - 별도 진입 UI를 추가하지 않고, 기존 합계 KPI 카드(`dashboard-total`)를 `next/link`로 감싸 클릭 시 `/inner/cashbook/history`로 이동
   - 카드 우상단에 `내역 보기 ›` 보조 라벨 표시, `data-testid="dashboard-total"` 유지
@@ -167,7 +203,12 @@ query(
 - `전체` 탭은 **수입 대비 지출 게이지(`IncomeExpenseMeter`)만** 보여준다 (`typeTotals`)
   - 트랙 = 수입(100%), 채움 = 지출. 우측 상단에 `지출/수입` 비율(`meter-percent`), 아래 수입·지출 금액 박스
   - 상태 줄(`meter-status`): 수입 이하면 `😎 남은 금액 N원`, 넘기면 막대를 가득 채우고 `🚨 수입보다 N원 더 썼어요`
-  - 수입이 0이면 비율 `—`, 지출이 있으면 `🚨 이 기간엔 수입이 없어요`
+  - 수입이 0이면 비율 `—`. 지출만 있으면 **상태 줄을 숨긴다**(수입 0원·지출 금액 박스만). 월급날 전에는 수입이 없는 게 당연한데 `아직 수입을 안 적었어요`가 빠뜨린 것처럼 읽혔다. 월급날(정기 수입 발생일)은 선택 설정이라 대부분 비어 있어 분기 근거로 쓰지 않는다(2026-11-07).
+  - 전체 탭의 게이지 카드 아래에 **최근 내역 카드(`RecentEntriesCard`)** — 방금 적은 내역이 대시보드에서 바로 보이게 한다.
+    - 현재 기간의 내역을 날짜 내림차순으로 최대 3건(`EntryCard`, 날짜 표시). 내역이 없으면 카드도 없다.
+    - 행마다 **작성자 아바타**(`AuthorAvatar`, `entry-author-avatar`)를 붙여 누가 적었는지 보인다(내역 화면과 동일, `useCoupleMemberMap`).
+    - 제목 "최근 내역" + [전체 보기](`recent-entries-all` → `/inner/cashbook/history`). 행을 누르면 내역 화면으로 간다.
+    - `data-testid="recent-entries"`
   - 합계 KPI 카드·고정/변동 세부 탭·기간 비교 차트는 숨김 (수입·지출 카테고리가 섞이면 의미가 없기 때문)
   - 카테고리별 분석은 지출/수입 탭에서
 

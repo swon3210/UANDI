@@ -1,17 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { Loader2, ChevronLeft, Copy, Check } from 'lucide-react';
+import { Loader2, ChevronLeft, Home, Mail } from 'lucide-react';
+import { MascotLoader } from '@/components/MascotLoader';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
-import { Button, InputOTP, InputOTPGroup, InputOTPSlot, Logo } from '@uandi/ui';
+import {
+  Button,
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  Logo,
+  OnboardingChoiceCard,
+  InviteCodePanel,
+  InviteCodeHint,
+  CoupleConnectedState,
+} from '@uandi/ui';
+import type { InviteCodeHintStatus } from '@uandi/ui';
+import coralMascot from '@uandi/ui/assets/mascot-couple-coral.png';
+import sageMascot from '@uandi/ui/assets/mascot-couple-sage.png';
 import { userAtom, authStatusAtom } from '@/stores/auth.store';
 import { setAuthCookie } from '@/lib/auth-cookie';
-import { createCouple, joinCoupleByInviteCode, subscribeToCouple } from '@/services/couple';
-import { getUserDocument } from '@/services/user';
+import { consumePendingInviteCode } from '@/lib/invite-code';
+import { shareInviteLink } from '@/lib/share-invite';
+import {
+  createCouple,
+  joinCoupleByInviteCode,
+  previewInviteCode,
+  subscribeToCouple,
+} from '@/services/couple';
+import { getUserDocumentWithRetry } from '@/services/user';
 
-type Step = 'select' | 'create_pending' | 'join';
+type Step = 'select' | 'create_pending' | 'join' | 'connected';
 
 const JOIN_ERROR_MESSAGES: Record<string, string> = {
   INVITE_CODE_NOT_FOUND: '존재하지 않는 초대 코드예요',
@@ -19,6 +40,8 @@ const JOIN_ERROR_MESSAGES: Record<string, string> = {
   COUPLE_ALREADY_FULL: '이미 연결된 커플이에요',
   CANNOT_JOIN_OWN_COUPLE: '내가 만든 코드예요. 상대방에게 공유해 주세요',
 };
+
+const PARTNER_FALLBACK_NAME = '짝꿍';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -32,36 +55,101 @@ export default function OnboardingPage() {
   const [coupleId, setCoupleId] = useState('');
   const [otpValue, setOtpValue] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [hint, setHint] = useState<{ status: InviteCodeHintStatus; inviterName: string | null }>({
+    status: 'idle',
+    inviterName: null,
+  });
+  const [partnerName, setPartnerName] = useState(PARTNER_FALLBACK_NAME);
   const [, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
+  // 미리보기 요청 순서 보장 — 느린 응답이 최신 입력을 덮어쓰지 않게
+  const previewSeqRef = useRef(0);
+  // 초대 링크 코드는 한 번만 자동 적용
+  const pendingAppliedRef = useRef(false);
+  // enterApp이 목적지(지난 내역 가져오기)로 보내는 중이면 라우트 보호가 '/'로 가로채지 않게 한다
+  const leavingRef = useRef(false);
 
   // 라우트 보호
   useEffect(() => {
     if (authStatus === 'unauthenticated') router.replace('/');
-    if (authStatus === 'authenticated_with_couple') router.replace('/');
+    if (authStatus === 'authenticated_with_couple' && !leavingRef.current) router.replace('/');
   }, [authStatus, router]);
 
-  // 상대방이 합류하면 대시보드로 이동
-  useEffect(() => {
-    if (step !== 'create_pending' || !coupleId) return;
+  /** 6자리가 채워지면 초대한 사람 미리보기를 조회한다 (입력 핸들러에서 직접 호출) */
+  const runPreview = async (code: string) => {
+    if (!user) return;
+    const seq = ++previewSeqRef.current;
+    setHint({ status: 'loading', inviterName: null });
+    try {
+      const preview = await previewInviteCode(code, user.uid);
+      if (seq !== previewSeqRef.current) return;
+      setHint(
+        preview
+          ? { status: 'found', inviterName: preview.inviterName }
+          : { status: 'unavailable', inviterName: null }
+      );
+    } catch {
+      if (seq === previewSeqRef.current) setHint({ status: 'unavailable', inviterName: null });
+    }
+  };
 
+  // 초대 링크(/invite/{code})로 들어온 경우 — 저장된 코드(외부 시스템)를 한 번 읽어 입력 화면을 바로 연다
+  useEffect(() => {
+    if (authStatus !== 'authenticated_no_couple' || pendingAppliedRef.current) return;
+    pendingAppliedRef.current = true;
+    const code = consumePendingInviteCode();
+    if (!code) return;
+    setStep('join');
+    setOtpValue(code);
+    void runPreview(code);
+    // runPreview는 user만 참조하며 user는 authStatus와 함께 확정된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authStatus]);
+
+  // 상대방이 합류하면(Firestore 리스너) 연결 완료 화면으로
+  useEffect(() => {
+    if (step !== 'create_pending' || !coupleId || !user) return;
+
+    let cancelled = false;
     const unsubscribe = subscribeToCouple(coupleId, async (couple) => {
-      if (couple.memberUids.length === 2 && user) {
-        const updated = await getUserDocument(user.uid);
-        if (updated) setUser(updated);
-        setAuthCookie('with_couple');
-        router.replace('/');
-      }
+      if (couple.memberUids.length < 2) return;
+      unsubscribe();
+      const partnerUid = couple.memberUids.find((uid) => uid !== user.uid);
+      const partner = partnerUid ? await getUserDocumentWithRetry(partnerUid) : null;
+      if (cancelled) return;
+      setPartnerName(partner?.displayName?.trim() || PARTNER_FALLBACK_NAME);
+      setConnectedAs('creator');
+      setStep('connected');
     });
 
-    return () => unsubscribe();
-  }, [step, coupleId, user, setUser, router]);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [step, coupleId, user]);
 
-  if (
-    authStatus === 'loading' ||
-    authStatus === 'unauthenticated' ||
-    authStatus === 'authenticated_with_couple'
-  ) {
+  /**
+   * 앱으로 진입 — 쿠키와 userAtom을 커플 연결 상태로 맞추고(새로고침 불필요) 이동한다.
+   * 공간을 만든 사람은 지난 내역 가져오기(건너뛰기 가능)로, 코드로 합류한 사람은 대시보드로 바로.
+   * 같은 통장·카드 내역을 둘이 올리면 중복되기 쉬워 가져오기는 한 사람만 거친다(docs/pages/01-onboarding.md).
+   */
+  const enterApp = (targetCoupleId: string, destination: 'import' | 'dashboard') => {
+    if (!user) return;
+    leavingRef.current = true;
+    setAuthCookie('with_couple');
+    setUser({ ...user, coupleId: targetCoupleId });
+    router.replace(
+      destination === 'import' ? '/inner/cashbook/import?onboarding=1' : '/inner/cashbook'
+    );
+  };
+  // 연결 완료 화면에 어떻게 도달했는지 — 코드를 보여 준 쪽(만든 사람)인지, 코드를 넣은 쪽(합류자)인지
+  const [connectedAs, setConnectedAs] = useState<'creator' | 'joiner'>('creator');
+
+  // 커플이 생긴 직후(가져오기 화면으로 넘어가는 중)에는 문구 없는 스피너 대신 마스코트 + 안내
+  if (authStatus === 'authenticated_with_couple') {
+    return <MascotLoader fullScreen caption="가계부를 준비하고 있어요" />;
+  }
+  if (authStatus === 'loading' || authStatus === 'unauthenticated') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="animate-spin text-muted-foreground" size={32} />
@@ -76,13 +164,17 @@ export default function OnboardingPage() {
         <Logo variant="full" className="mb-2 h-10 w-auto" aria-label="말랑 가계부" />
         <p className="mb-10 text-muted-foreground">함께 모아가는 즐거움</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
-          <Button
-            className="w-full"
+          <OnboardingChoiceCard
+            icon={<Home size={22} />}
+            title="처음 시작해요"
+            description="새 공간을 만들고 짝꿍을 초대해요"
+            ariaLabel="새 커플 공간 만들기"
+            testId="choice-create"
             onClick={async () => {
-              if (!user) return;
+              if (!user || isLoading) return;
               setIsLoading(true);
               try {
-                const result = await createCouple(user.uid);
+                const result = await createCouple(user.uid, user.displayName);
                 setInviteCode(result.inviteCode);
                 setCoupleId(result.coupleId);
                 setStep('create_pending');
@@ -90,14 +182,22 @@ export default function OnboardingPage() {
                 setIsLoading(false);
               }
             }}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}새 커플 공간 만들기
-          </Button>
-          <Button variant="outline" className="w-full" onClick={() => setStep('join')}>
-            초대 코드 입력하기
-          </Button>
+          />
+          <OnboardingChoiceCard
+            icon={<Mail size={22} />}
+            title="초대 코드를 받았어요"
+            description="짝꿍이 보낸 6자리 코드로 합류해요"
+            ariaLabel="초대 코드 입력하기"
+            testId="choice-join"
+            onClick={() => setStep('join')}
+          />
         </div>
+        {isLoading ? (
+          <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="animate-spin" size={14} />
+            공간을 만드는 중…
+          </p>
+        ) : null}
       </main>
     );
   }
@@ -120,26 +220,33 @@ export default function OnboardingPage() {
           뒤로
         </button>
         <div className="flex flex-1 flex-col items-center justify-center">
-          <h2 className="mb-8 text-xl font-semibold">초대 코드</h2>
-          <p
-            data-testid="invite-code"
-            className="mb-4 rounded-xl border border-border bg-secondary px-8 py-4 text-3xl font-bold tracking-[0.3em] text-foreground"
-          >
-            {inviteCode}
+          <h2 className="mb-2 text-xl font-semibold">짝꿍을 초대해요</h2>
+          <p className="mb-8 text-center text-sm text-muted-foreground">
+            코드나 링크를 짝꿍에게 보내 주세요
           </p>
-          <Button variant="outline" size="sm" className="mb-6 gap-1" onClick={handleCopy}>
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? '복사됨' : '복사하기'}
-          </Button>
-          <p className="mb-1 text-center text-sm text-muted-foreground">
-            상대방에게 이 코드를 공유해 주세요.
-          </p>
-          <p className="text-center text-xs text-muted-foreground">코드는 48시간 후 만료됩니다</p>
-          <div className="mt-10 flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="animate-spin" size={14} />
-            상대방이 입력하면 자동으로 연결됩니다
-          </div>
+          <InviteCodePanel
+            code={inviteCode}
+            copied={copied}
+            onCopy={handleCopy}
+            onShare={() => shareInviteLink(inviteCode, copyToClipboard)}
+            onStart={() => enterApp(coupleId, 'import')}
+            className="w-full"
+          />
         </div>
+      </main>
+    );
+  }
+
+  // ── 단계 3: 연결 완료 ─────────────────────────────────────────
+  if (step === 'connected') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-4">
+        <CoupleConnectedState
+          partnerName={partnerName}
+          myMascotSrc={coralMascot.src}
+          partnerMascotSrc={sageMascot.src}
+          onStart={() => enterApp(coupleId, connectedAs === 'joiner' ? 'dashboard' : 'import')}
+        />
       </main>
     );
   }
@@ -150,11 +257,12 @@ export default function OnboardingPage() {
     setIsLoading(true);
     setJoinError('');
     try {
-      await joinCoupleByInviteCode(user.uid, otpValue);
-      const updated = await getUserDocument(user.uid);
-      if (updated) setUser(updated);
-      setAuthCookie('with_couple');
-      router.replace('/');
+      const result = await joinCoupleByInviteCode(user.uid, otpValue);
+      setCoupleId(result.coupleId);
+      const partner = await getUserDocumentWithRetry(result.partnerUid);
+      setPartnerName(partner?.displayName?.trim() || PARTNER_FALLBACK_NAME);
+      setConnectedAs('joiner');
+      setStep('connected');
     } catch (err) {
       const code = err instanceof Error ? err.message : 'UNKNOWN';
       setJoinError(JOIN_ERROR_MESSAGES[code] ?? '오류가 발생했어요. 다시 시도해 주세요');
@@ -168,9 +276,11 @@ export default function OnboardingPage() {
       <button
         className="mb-8 flex items-center gap-1 text-sm text-muted-foreground"
         onClick={() => {
+          previewSeqRef.current += 1;
           setStep('select');
           setOtpValue('');
           setJoinError('');
+          setHint({ status: 'idle', inviterName: null });
         }}
       >
         <ChevronLeft size={16} />
@@ -182,8 +292,15 @@ export default function OnboardingPage() {
           maxLength={6}
           value={otpValue}
           onChange={(val) => {
-            setOtpValue(val.toUpperCase());
+            const next = val.toUpperCase();
+            setOtpValue(next);
             setJoinError('');
+            if (next.length === 6) {
+              void runPreview(next);
+            } else {
+              previewSeqRef.current += 1;
+              setHint({ status: 'idle', inviterName: null });
+            }
           }}
         >
           <InputOTPGroup>
@@ -195,8 +312,9 @@ export default function OnboardingPage() {
             <InputOTPSlot index={5} />
           </InputOTPGroup>
         </InputOTP>
+        <InviteCodeHint status={hint.status} inviterName={hint.inviterName} className="mt-3" />
         {joinError && (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p role="alert" data-testid="join-error" className="mt-3 text-sm text-destructive">
             {joinError}
           </p>
         )}

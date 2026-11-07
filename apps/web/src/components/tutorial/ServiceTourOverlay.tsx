@@ -9,24 +9,37 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@uandi/ui';
-import { TOUR_SLIDES } from './tourSlides';
+import { tourSlidesFor, type TourContext } from './tourSlides';
 
 type ServiceTourOverlayProps = {
-  /** 시작하기·건너뛰기로 닫을 때 호출 (overlay close + unmount) */
+  /** 둘러볼게요·건너뛰기로 닫을 때 호출 (overlay close + unmount) */
   onClose: () => void;
+  /** 마지막 장 "첫 내역 적기" — 닫은 뒤 빠른 추가 시트를 여는 건 소비 측(openServiceTour) 몫 */
+  onFirstEntry: () => void;
+  /** 내역이 이미 있을 때 마지막 장 "내역 보기" — 닫은 뒤 내역 화면으로 */
+  onViewEntries?: () => void;
+  /** 설명 문구에 쓰는 맥락(짝꿍 이름) */
+  context?: TourContext;
   /** Storybook 등에서 특정 슬라이드부터 보여주기 위한 초기 스텝 */
   defaultStep?: number;
 };
 
+const DEFAULT_CONTEXT: TourContext = { partnerName: null, hasEntries: false };
+
 /**
- * 말랑 가계부 서비스 전반(가계부·갤러리·재테크·커뮤니티)을 7장으로 안내하는 풀스크린 온보딩 투어.
- * (환영·마무리는 마스코트 일러스트, 그 사이는 가계부 핵심 기능 + 그 외 기능 소개)
+ * 온보딩 투어 — "첫 행동 안내" 3장 (docs/pages/01-onboarding.md 「온보딩 투어」).
  * 모바일은 전체 화면, 데스크톱(≥sm)은 가운데 카드 + 딤 배경으로 표시한다.
  * 스텝 이동/파생값은 모두 렌더·이벤트 핸들러에서 직접 계산한다(useEffect 미사용).
  * overlay-kit `<Dialog>` 래핑은 openServiceTour 헬퍼가 담당한다.
  */
-export function ServiceTourOverlay({ onClose, defaultStep = 0 }: ServiceTourOverlayProps) {
-  const slides = TOUR_SLIDES;
+export function ServiceTourOverlay({
+  onClose,
+  onFirstEntry,
+  onViewEntries,
+  context = DEFAULT_CONTEXT,
+  defaultStep = 0,
+}: ServiceTourOverlayProps) {
+  const slides = tourSlidesFor(context);
   const total = slides.length;
   const [step, setStep] = useState(defaultStep);
 
@@ -66,8 +79,8 @@ export function ServiceTourOverlay({ onClose, defaultStep = 0 }: ServiceTourOver
         </div>
         <Progress value={progressValue} className="h-1.5" />
         <DialogTitle className="pt-1 text-xl">{current.title}</DialogTitle>
-        <DialogDescription className="whitespace-pre-line text-sm">
-          {current.description}
+        <DialogDescription className="whitespace-pre-line text-sm leading-relaxed">
+          {current.description(context)}
         </DialogDescription>
       </DialogHeader>
 
@@ -77,27 +90,43 @@ export function ServiceTourOverlay({ onClose, defaultStep = 0 }: ServiceTourOver
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={goPrev}
-          disabled={isFirst}
-          data-testid="tour-prev"
-        >
-          이전
-        </Button>
-        <div className="flex-1" />
-        {isLast ? (
-          <Button type="button" onClick={onClose} data-testid="tour-start">
-            시작하기
+      {isLast ? (
+        <div className="flex flex-col gap-2">
+          {context.hasEntries ? (
+            <Button
+              type="button"
+              size="lg"
+              onClick={onViewEntries ?? onClose}
+              data-testid="tour-view-entries"
+            >
+              내역 보기
+            </Button>
+          ) : (
+            <Button type="button" size="lg" onClick={onFirstEntry} data-testid="tour-first-entry">
+              첫 내역 적기
+            </Button>
+          )}
+          <Button type="button" variant="ghost" onClick={onClose} data-testid="tour-start">
+            둘러볼게요
           </Button>
-        ) : (
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={goPrev}
+            disabled={isFirst}
+            data-testid="tour-prev"
+          >
+            이전
+          </Button>
+          <div className="flex-1" />
           <Button type="button" onClick={goNext} data-testid="tour-next">
             다음
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </DialogContent>
   );
 }

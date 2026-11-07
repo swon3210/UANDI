@@ -9,7 +9,7 @@ import { CashbookPage } from '../page-objects/CashbookPage';
 
 test.describe('가계부', () => {
   test.describe('메인 화면', () => {
-    test('월별 요약 카드에 수입/지출/잔액이 표시된다', async ({ authedContext }) => {
+    test('월별 요약 카드에 수입/지출/수입−지출이 표시된다', async ({ authedContext }) => {
       const { page, uid, coupleId } = authedContext;
       await seedDefaultCategories(coupleId);
       await seedCashbookEntry(coupleId, uid, {
@@ -30,6 +30,7 @@ test.describe('가계부', () => {
       await expect(summary).toBeVisible();
       await expect(summary.getByText('+3,000,000원')).toBeVisible();
       await expect(summary.getByText('-50,000원')).toBeVisible();
+      await expect(summary.getByText('수입 − 지출')).toBeVisible();
       await expect(summary.getByText('2,950,000원')).toBeVisible();
     });
 

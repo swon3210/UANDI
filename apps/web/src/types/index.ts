@@ -28,6 +28,8 @@ export type User = {
 export type Couple = {
   id: string;
   memberUids: string[]; // 생성 시 1명, 커플 연결 완료 후 2명
+  /** 현재 유효한 초대 코드(inviteCodes/{code}). 만료·재발급 시 갱신. 구버전 문서엔 없다 */
+  inviteCode?: string;
   createdAt: Timestamp;
 };
 
@@ -40,6 +42,8 @@ export type InviteCode = {
   code: string;
   coupleId: string;
   createdBy: string;
+  /** 생성자 표시 이름(비정규화). 합류 전 상대는 users/*를 읽을 수 없어 여기서 보여준다 */
+  createdByName?: string;
   expiresAt: Timestamp;
   consumedBy: string | null;
   createdAt: Timestamp;
@@ -80,6 +84,9 @@ export type AnnualPlan = {
   createdBy: string;
   updatedAt: Timestamp;
   createdAt: Timestamp;
+  /** 미완 위저드의 마지막 단계 쿼리(예: `?step=income&catIdx=1&phase=avg&mode=quick`). 완료 시 null */
+  wizardLastStep?: string | null;
+  wizardMode?: 'quick' | 'full' | null;
 };
 
 export type AnnualPlanItem = {
@@ -134,57 +141,6 @@ export type MonthlyBudgetItem = {
   subGroup: import('@uandi/cashbook-core').CategorySubGroup;
   budgetAmount: number;
   ownerUid: string | null;
-};
-
-// ── 월 결산 (저장 경로: couples/{coupleId}/cashbookSettlements/{YYYY-MM}) ──
-// 월별 단일 문서. 결정적 ID(월 키)로 전체 스캔 없이 조회한다.
-// - draft: 라이브 내역으로 작업 중. attachments(영수증·스크린샷)는 완료 전까지 유지.
-// - completed: report 스냅샷이 박제되고 attachments는 비워진다.
-//   "다시 결산하기"로 draft로 되돌려 재작성하면 report를 덮어쓴다.
-
-export type SettlementStatus = 'draft' | 'completed';
-
-// 첨부 이미지 분류 (계좌 내역 / 카드 내역)
-export type SettlementImageKind = 'account' | 'card';
-
-// 결산 작업 중 첨부한 영수증·스크린샷 (완료 시 Storage에서 삭제)
-export type SettlementAttachment = {
-  id: string;
-  storagePath: string; // couples/{coupleId}/cashbookSettlements/{YYYY-MM}/{id}.{ext}
-  url: string; // downloadURL
-  name: string; // 원본 파일명
-  kind?: SettlementImageKind; // 첨부 분류 (구버전 데이터엔 없을 수 있어 optional — 없으면 계좌로 취급)
-  // 일괄 분석 후 채워지는, 이 이미지가 담고 있는 거래의 월 집합 (YYYY-MM, 정렬됨).
-  // 한 장에 6·7월이 섞여 있으면 ['2026-06','2026-07']. 갤러리 정렬·월 칩 표시에 사용.
-  detectedMonths?: string[];
-  createdAt: Timestamp;
-};
-
-// 결산 완료 시 박제되는 보고서 스냅샷 (차트 데이터 사전 계산 — 재조회 시 내역 쿼리 불필요)
-export type SettlementReportSnapshot = {
-  totals: { income: number; expense: number };
-  spending: number; // 지출 분석 기준값 (= expense)
-  budgetCeiling: number; // 완료 시점 지출 예산 합
-  spentPct: number | null;
-  barData: { category: string; budget: number; actual: number }[]; // 예산 대비 실적
-  pieData: { name: string; value: number }[]; // 수입/지출 슬라이스
-  dailyData: { day: number; cumulative: number | null }[]; // 일별 누적 (지출)
-  aiAnalysis: string; // 캡처한 AI 분석 마크다운 ('' 가능)
-  entryCount: number;
-  completedAt: Timestamp;
-};
-
-export type CashbookSettlement = {
-  id: string; // 'YYYY-MM' (== month key, month는 1-indexed)
-  coupleId: string;
-  year: number;
-  month: number; // 1~12 (id와 일치)
-  status: SettlementStatus;
-  attachments: SettlementAttachment[]; // draft에만 존재, 완료 시 []
-  report: SettlementReportSnapshot | null; // 완료 시에만 채워짐
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  completedAt: Timestamp | null;
 };
 
 // FCM 푸시 토큰 (다중 디바이스 지원)

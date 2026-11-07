@@ -23,8 +23,10 @@ async function signInOnPage(page: Page, email: string) {
 
 // Firestore REST API로 users 문서 존재 여부 확인
 async function userDocExists(uid: string): Promise<boolean> {
+  // 규칙(users/* 읽기는 본인·커플 멤버만)을 우회하려면 에뮬레이터 owner 토큰이 필요하다
   const res = await fetch(
-    `http://localhost:8080/v1/projects/uandi-test/databases/(default)/documents/users/${uid}`
+    `http://localhost:8080/v1/projects/uandi-test/databases/(default)/documents/users/${uid}`,
+    { headers: { Authorization: 'Bearer owner' } }
   );
   return res.status === 200;
 }
@@ -40,7 +42,20 @@ test.describe('랜딩 & 로그인', () => {
     await expect(landing.loginButton).toHaveText('구글로 시작하기');
   });
 
-  test('Apple로 계속하기 버튼이 표시된다 (App Store 심사 가이드라인 4.8 대응)', async ({ page }) => {
+  test('랜딩에 마스코트와 가계부 소개 문구, 기능 3줄이 표시된다', async ({ page }) => {
+    await clearEmulatorData();
+    const landing = new LandingPage(page);
+    await landing.goto();
+    await expect(landing.hero).toBeVisible();
+    await expect(landing.hero.getByRole('img')).toBeVisible();
+    await expect(landing.hero).toContainText('가계부');
+    await expect(landing.features.getByRole('listitem')).toHaveCount(3);
+    await expect(landing.inviteBanner).toBeHidden();
+  });
+
+  test('Apple로 계속하기 버튼이 표시된다 (App Store 심사 가이드라인 4.8 대응)', async ({
+    page,
+  }) => {
     await clearEmulatorData();
     const landing = new LandingPage(page);
     await landing.goto();
@@ -113,8 +128,8 @@ test.describe('랜딩 & 로그인', () => {
     await signInOnPage(page, email);
     await page.waitForURL('**/onboarding', { timeout: 10000 });
 
-    const exists = await userDocExists(uid);
-    expect(exists).toBe(true);
+    // AuthInit의 users 문서 생성은 리다이렉트와 경합하므로 잠시 폴링한다
+    await expect.poll(() => userDocExists(uid), { timeout: 10000 }).toBe(true);
   });
 
   test('기존 유저(커플 미연결) 로그인 시 /onboarding으로 이동한다', async ({ page }) => {
@@ -128,9 +143,11 @@ test.describe('랜딩 & 로그인', () => {
     await page.waitForURL('**/onboarding', { timeout: 10000 });
   });
 
-  test('기존 유저(커플 연결 완료) 로그인 시 /(대시보드)에 유지된다', async ({ authedPage }) => {
+  test('기존 유저(커플 연결 완료) 로그인 시 대시보드(/inner/cashbook)로 이동한다', async ({
+    authedPage,
+  }) => {
     const landing = new LandingPage(authedPage);
-    await expect(authedPage).toHaveURL('/');
+    await expect(authedPage).toHaveURL(/\/inner\/cashbook$/);
     await expect(landing.loginButton).not.toBeVisible();
   });
 

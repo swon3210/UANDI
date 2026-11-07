@@ -18,12 +18,27 @@ import {
   useValidateAnnualPlan,
   useBulkUpdatePlanItems,
 } from '@/hooks/useAnnualPlan';
-import { usePlanWizard, type WizardStep } from '@/hooks/usePlanWizard';
-import { totalsFromItems, ensurePlanItems } from '@/services/annual-plan';
-import { REGULAR_SUBGROUPS, WIZARD_GROUP_LABEL } from '@/constants/plan-wizard';
+import { usePlanWizard, type UsePlanWizardResult, type WizardStep } from '@/hooks/usePlanWizard';
+import {
+  totalsFromItems,
+  ensurePlanItems,
+  deleteAnnualPlanIfUntouched,
+  updateAnnualPlanWizardProgress,
+} from '@/services/annual-plan';
+import { WIZARD_ENTRY_PARAM, parseWizardEntry, withWizardEntry } from '@/lib/plan-wizard-entry';
+import {
+  DEFAULT_WIZARD_MODE,
+  REGULAR_SUBGROUPS,
+  WIZARD_GROUP_LABEL,
+  isWizardMode,
+  type WizardMode,
+} from '@/constants/plan-wizard';
 import { PlanWizardShell } from '@/components/cashbook/plan-wizard/PlanWizardShell';
 import { PlanWizardIntro } from '@/components/cashbook/plan-wizard/PlanWizardIntro';
-import { PlanWizardCategoryStep } from '@/components/cashbook/plan-wizard/PlanWizardCategoryStep';
+import {
+  PlanWizardCategoryStep,
+  avgValueOf,
+} from '@/components/cashbook/plan-wizard/PlanWizardCategoryStep';
 import { PlanWizardValidate } from '@/components/cashbook/plan-wizard/PlanWizardValidate';
 import { PlanWizardSummary } from '@/components/cashbook/plan-wizard/PlanWizardSummary';
 import type { AnnualPlanItem } from '@/types';
@@ -35,6 +50,7 @@ type Draft = {
 };
 
 const WIZARD_PATH = '/inner/cashbook/plan/annual/wizard';
+const PLAN_PATH = '/inner/cashbook/plan/annual';
 
 export default function AnnualPlanWizardPage() {
   return (
@@ -50,11 +66,17 @@ function WizardPageInner() {
   const stepParam = searchParams.get('step');
   const catIdxParam = searchParams.get('catIdx');
   const phaseParam = searchParams.get('phase');
+  const modeParam = searchParams.get('mode');
+  // 대시보드 권유 카드에서 열렸으면 모든 단계·도착 페이지에 표식을 넘긴다(경제 목표의 "홈으로")
+  const entry = parseWizardEntry(searchParams.get(WIZARD_ENTRY_PARAM));
+  // 인트로 밖의 단계에서 mode가 없으면 full(이전 URL 호환). 인트로에서는 아래 introMode가 결정한다.
+  const mode: WizardMode = isWizardMode(modeParam) ? modeParam : 'full';
 
   const params = {
     step: stepParam,
     catIdx: catIdxParam ? Number(catIdxParam) : 0,
     phase: phaseParam,
+    mode,
   };
 
   const user = useAtomValue(userAtom);
@@ -73,6 +95,8 @@ function WizardPageInner() {
   const qc = useQueryClient();
 
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  // 인트로에서 고르는 모드. 이어서 하기로 돌아온 플랜이면 그때 고른 모드를 기본으로.
+  const [introMode, setIntroMode] = useState<WizardMode | null>(null);
 
   // 1) plan 자동 생성
   const planCreatedRef = useRef(false);
@@ -96,15 +120,34 @@ function WizardPageInner() {
 
   const itemsWithDrafts = applyDrafts(items, drafts);
   const wizard = usePlanWizard(itemsWithDrafts, categories, params);
+  // 인트로의 모드 선택용 — 두 모드의 단계 목록과 항목 수
+  const quickWizard = usePlanWizard(itemsWithDrafts, categories, { step: 'intro', mode: 'quick' });
+  const fullWizard = usePlanWizard(itemsWithDrafts, categories, { step: 'intro', mode: 'full' });
   const validation = useValidateAnnualPlan(itemsWithDrafts);
 
   // step 누락 시 intro 로 정규화
   useEffect(() => {
-    if (!stepParam) router.replace(`${WIZARD_PATH}?step=intro`);
-  }, [stepParam, router]);
+    if (!stepParam) router.replace(withWizardEntry(`${WIZARD_PATH}?step=intro`, entry));
+  }, [stepParam, router, entry]);
 
-  const navigateTo = (step: WizardStep) => {
-    router.push(`${WIZARD_PATH}${wizard.urlFor(step)}`);
+  const selectedIntroMode: WizardMode =
+    introMode ?? (isWizardMode(plan?.wizardMode) ? plan.wizardMode : DEFAULT_WIZARD_MODE);
+
+  const invalidatePlan = () => qc.invalidateQueries({ queryKey: ['annualPlan', coupleId] });
+
+  /** 미완 위저드의 마지막 단계를 플랜에 기록한다(이어서 하기). 실패해도 진행은 막지 않는다. */
+  const persistProgress = (query: string | null, nextMode: WizardMode | null) => {
+    if (!plan || !coupleId) return;
+    updateAnnualPlanWizardProgress(coupleId, plan.id, {
+      wizardLastStep: query,
+      wizardMode: nextMode,
+    }).catch(() => {});
+  };
+
+  const navigateTo = (step: WizardStep, w: UsePlanWizardResult = wizard) => {
+    const query = w.urlFor(step);
+    if (step.kind !== 'intro') persistProgress(query, w.mode);
+    router.push(withWizardEntry(`${WIZARD_PATH}${query}`, entry));
   };
 
   const commitCurrentDraftIfDirty = async () => {
@@ -127,15 +170,44 @@ function WizardPageInner() {
     });
   };
 
+  /** 정기 항목의 평균이 0원이면 그리드 단계는 건너뛴다(full 모드). */
+  const isZeroGridStep = (step: WizardStep | null | undefined): step is WizardStep =>
+    !!step && step.kind === 'category' && step.phase === 'grid' && avgValueOf(step.item) === 0;
+
   const handlePrev = async () => {
     if (!wizard.prev) return;
     await commitCurrentDraftIfDirty();
-    navigateTo(wizard.prev);
+    const idx = wizard.currentStepIndex;
+    const prev = wizard.prev;
+    const beforePrev = wizard.steps[idx - 2];
+    if (
+      isZeroGridStep(prev) &&
+      beforePrev?.kind === 'category' &&
+      prev.kind === 'category' &&
+      beforePrev.item.id === prev.item.id
+    ) {
+      navigateTo(beforePrev);
+      return;
+    }
+    navigateTo(prev);
   };
 
   const handleExit = async () => {
     await commitCurrentDraftIfDirty();
-    router.push('/inner/cashbook/plan/annual');
+    // 아무것도 입력하지 않았으면(인트로에서 바로 나감 등) 빈 플랜을 남기지 않고 대시보드로
+    if (plan) {
+      const deleted = await deleteAnnualPlanIfUntouched(coupleId!, plan.id);
+      if (deleted) {
+        await Promise.all([
+          invalidatePlan(),
+          qc.invalidateQueries({ queryKey: ['annualPlanItems', coupleId] }),
+        ]);
+        router.replace('/inner/cashbook');
+        return;
+      }
+    }
+    await invalidatePlan();
+    router.push(withWizardEntry(PLAN_PATH, entry));
   };
 
   const handleFinish = async () => {
@@ -170,29 +242,83 @@ function WizardPageInner() {
         totals: { before: totalsBefore, after: totalsAfter },
       },
     });
+    // 완료 — 이어서 하기 표식을 지운다
+    await updateAnnualPlanWizardProgress(coupleId!, plan.id, {
+      wizardLastStep: null,
+      wizardMode: null,
+    }).catch(() => {});
+    await invalidatePlan();
     toast.success(isInitial ? '예산 계획을 완성했어요!' : '예산을 다시 세웠어요');
-    router.replace('/inner/cashbook/plan/annual');
+    router.replace(withWizardEntry(PLAN_PATH, entry));
   };
 
   const handleNext = async () => {
+    if (wizard.current.kind === 'intro') {
+      // 고른 모드의 첫 단계로. 모드는 URL 쿼리로 따라다닌다.
+      const w = selectedIntroMode === 'quick' ? quickWizard : fullWizard;
+      const first = w.steps[1];
+      if (first) navigateTo(first, w);
+      return;
+    }
     if (wizard.current.kind === 'validate' && !validation.ok) return;
     if (wizard.current.kind === 'summary') {
       await handleFinish();
       return;
     }
     await commitCurrentDraftIfDirty();
-    if (wizard.next) navigateTo(wizard.next);
+    const idx = wizard.currentStepIndex;
+    const next = wizard.next;
+    if (!next) return;
+    // 평균 0원 → 같은 항목의 그리드 단계는 건너뛴다
+    if (
+      wizard.current.kind === 'category' &&
+      wizard.current.phase === 'avg' &&
+      isZeroGridStep(next) &&
+      next.kind === 'category' &&
+      next.item.id === wizard.current.item.id
+    ) {
+      const afterGrid = wizard.steps[idx + 2];
+      if (afterGrid) navigateTo(afterGrid);
+      return;
+    }
+    navigateTo(next);
+  };
+
+  /** 이 항목은 건너뛰기 — 0원으로 저장하고 다음 항목의 첫 화면으로 */
+  const handleSkip = async () => {
+    if (wizard.current.kind !== 'category') return;
+    const item = wizard.current.item;
+    const isRegular = REGULAR_SUBGROUPS.has(item.subGroup);
+    await updateMutation.mutateAsync({
+      itemId: item.id,
+      data: {
+        monthlyAmounts: Array(12).fill(0),
+        inputMode: isRegular ? 'regular' : 'irregular',
+        baseMonthlyAmount: isRegular ? 0 : null,
+      },
+    });
+    setDrafts((prev) => {
+      const next = { ...prev };
+      delete next[item.id];
+      return next;
+    });
+    const nextStep = wizard.steps
+      .slice(wizard.currentStepIndex + 1)
+      .find((s) => s.kind !== 'category' || s.item.id !== item.id);
+    if (nextStep) navigateTo(nextStep);
   };
 
   const handleChangeAvg = (value: number) => {
     if (wizard.current.kind !== 'category') return;
     const item = wizard.current.item;
+    const isRegular = REGULAR_SUBGROUPS.has(item.subGroup);
     setDrafts((prev) => ({
       ...prev,
       [item.id]: {
         monthlyAmounts: Array(12).fill(value),
-        baseMonthlyAmount: value,
-        inputMode: 'regular',
+        // 빠른 모드의 변동 항목은 평균으로 12개월을 채우되 비정기 입력으로 남긴다
+        baseMonthlyAmount: isRegular ? value : null,
+        inputMode: isRegular ? 'regular' : 'irregular',
       },
     }));
   };
@@ -223,17 +349,23 @@ function WizardPageInner() {
 
   if (isLoading) return <MascotLoader fullScreen />;
 
-  const counts = {
-    income: wizard.itemsByGroup.income.length,
-    expense: wizard.itemsByGroup.expense.length,
-  };
-
   const rendered = renderStep({
     current: wizard.current,
     wizard,
     validation,
     year,
-    counts,
+    counts: {
+      quick: {
+        income: quickWizard.itemsByGroup.income.length,
+        expense: quickWizard.itemsByGroup.expense.length,
+      },
+      full: {
+        income: fullWizard.itemsByGroup.income.length,
+        expense: fullWizard.itemsByGroup.expense.length,
+      },
+    },
+    introMode: selectedIntroMode,
+    onIntroModeChange: setIntroMode,
     items: itemsWithDrafts ?? [],
     onChangeAvg: handleChangeAvg,
     onChangeMonthly: handleChangeMonthly,
@@ -248,6 +380,7 @@ function WizardPageInner() {
       onPrev={wizard.prev ? handlePrev : undefined}
       onNext={handleNext}
       onExit={handleExit}
+      onSkip={wizard.current.kind === 'category' ? handleSkip : undefined}
       prevDisabled={!wizard.prev}
       nextDisabled={rendered.nextDisabled}
       nextLabel={rendered.nextLabel}
@@ -277,10 +410,12 @@ function applyDrafts(
 
 type RenderStepArgs = {
   current: WizardStep;
-  wizard: ReturnType<typeof usePlanWizard>;
+  wizard: UsePlanWizardResult;
   validation: ReturnType<typeof useValidateAnnualPlan>;
   year: number;
-  counts: { income: number; expense: number };
+  counts: Record<WizardMode, { income: number; expense: number }>;
+  introMode: WizardMode;
+  onIntroModeChange: (mode: WizardMode) => void;
   items: AnnualPlanItem[];
   onChangeAvg: (value: number) => void;
   onChangeMonthly: (values: number[]) => void;
@@ -293,6 +428,8 @@ function renderStep({
   validation,
   year,
   counts,
+  introMode,
+  onIntroModeChange,
   items,
   onChangeAvg,
   onChangeMonthly,
@@ -311,7 +448,12 @@ function renderStep({
       nextLabel: '시작하기',
       nextDisabled: false,
       body: (
-        <PlanWizardIntro year={year} incomeCount={counts.income} expenseCount={counts.expense} />
+        <PlanWizardIntro
+          year={year}
+          counts={counts}
+          mode={introMode}
+          onModeChange={onIntroModeChange}
+        />
       ),
     };
   }
@@ -319,11 +461,12 @@ function renderStep({
   if (current.kind === 'category') {
     const groupLabel = WIZARD_GROUP_LABEL[current.group];
     const total = wizard.itemsByGroup[current.group].length;
-    const phaseLabel = REGULAR_SUBGROUPS.has(current.item.subGroup)
-      ? current.phase === 'avg'
+    const phaseLabel =
+      current.phase === 'avg'
         ? '평균'
-        : '월별 조정'
-      : '월별 입력';
+        : REGULAR_SUBGROUPS.has(current.item.subGroup)
+          ? '월별 조정'
+          : '월별 입력';
     return {
       title: current.category.name,
       subtitle: `${groupLabel} · ${current.catIdx + 1} / ${total} · ${phaseLabel}`,
@@ -334,6 +477,7 @@ function renderStep({
           category={current.category}
           item={current.item}
           phase={current.phase}
+          mode={wizard.mode}
           onChangeAvg={onChangeAvg}
           onChangeMonthly={onChangeMonthly}
         />

@@ -85,6 +85,7 @@ recordRequest?: {
 - 서버(Cloud Function): 발송 시점에 동일 (from→to) 넛지가 쿨다운 이내에 이미 있었는지 재확인하여 중복 push를 방지(레이스 방지 이중 가드).
 - 쿨다운 상수(`NUDGE_COOLDOWN_MS = 30분`)는 `apps/web/src/services/nudge.ts`와 `functions/src/notifications/nudgeAlert.ts`에 동일값으로 둔다.
 - 쿼리에 복합 인덱스 필요: `nudges (fromUid ASC, toUid ASC, createdAt DESC)` (`firestore.indexes.json`).
+- 수신 카드 쿼리용 인덱스: `nudges (toUid ASC, status ASC, createdAt DESC)`.
 
 ---
 
@@ -126,6 +127,13 @@ recordRequest?: {
 - **백그라운드/종료**: FCM 푸시 → 탭 → `data.click_action` 경로로 **가계부 입력(빠른 추가) 화면 직행**.
   - 모바일은 기존 `use-fcm-registration.ts` + `app-webview.tsx`가 `click_action`을 그대로 처리(무수정).
 - **포그라운드**: 기존 `foreground-toast.ts` 재사용. nudge는 파트너 발신이므로 경고 스타일 토스트 + [보기] 액션.
+- **앱 안 카드 (`NudgeReceivedCard`, 대시보드)**: 푸시가 오지 않는 환경(웹·푸시 미허용·함수 미배포)에서도
+  요청을 알 수 있게, 대시보드 커플 카드 아래에 받은 `pending` 요청을 카드로 보여준다(2026-11 걷기 6구간).
+  - 조회: `where('toUid', '==', 나) where('status', '==', 'pending') orderBy('createdAt', 'desc') limit(1)`
+    을 `onSnapshot`으로 구독 → 짝꿍이 보내는 순간 나타난다. 복합 인덱스 `nudges (toUid ASC, status ASC, createdAt DESC)`.
+  - [내역 적기] → `status: 'seen'`, `respondedAt: now` 로 갱신하고 빠른 추가 시트(`uandi:quick-add`)를 연다.
+  - [나중에] → `status: 'dismissed'`, `respondedAt: now`.
+  - 상태가 `pending`이 아니면 카드는 사라진다(실시간 구독이 비워 준다).
 
 ---
 
@@ -174,7 +182,9 @@ couples/{coupleId}/nudges/{nudgeId}
 
 ### 클라이언트 (apps/web)
 - `src/types/index.ts` — `Nudge` 타입 + `NotificationSettings.recordRequest`
-- `src/services/nudge.ts` — `sendNudge()`, `getPendingNudgeForPartner()`
+- `src/services/nudge.ts` — `sendNudge()`, `getPendingNudgeForPartner()`, `subscribeToReceivedNudge()`, `respondToNudge()`
+- `src/hooks/useReceivedNudge.ts` — 받은 pending 요청 실시간 구독 + 응답(seen/dismissed) 뮤테이션
+- `src/components/dashboard/NudgeReceivedCard.tsx` (+ 스토리) — 받은 요청 카드
 - `src/services/notification-settings.ts` — `recordRequest` 필드 반영
 - `src/hooks/useSendNudge.ts` — mutation + pending 조회
 - `src/components/cashbook/NudgeButton.tsx` / `NudgeSheet.tsx`

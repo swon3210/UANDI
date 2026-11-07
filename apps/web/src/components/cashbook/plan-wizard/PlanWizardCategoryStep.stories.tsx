@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 import { PlanWizardCategoryStep } from './PlanWizardCategoryStep';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
 import type { WizardPhase } from '@/hooks/usePlanWizard';
+import type { WizardMode } from '@/constants/plan-wizard';
 
 const meta: Meta<typeof PlanWizardCategoryStep> = {
   title: 'Cashbook/PlanWizard/CategoryStep',
@@ -46,21 +47,26 @@ function Demo({
   category,
   initialItem,
   phase,
+  mode,
 }: {
   category: CashbookCategory;
   initialItem: AnnualPlanItem;
   phase: WizardPhase;
+  mode?: WizardMode;
 }) {
   const [item, setItem] = useState(initialItem);
+  const isRegular =
+    initialItem.subGroup === 'regular_income' || initialItem.subGroup === 'fixed_expense';
   return (
     <PlanWizardCategoryStep
       category={category}
       item={item}
       phase={phase}
+      mode={mode}
       onChangeAvg={(v) =>
         setItem((prev) => ({
           ...prev,
-          baseMonthlyAmount: v,
+          baseMonthlyAmount: isRegular ? v : null,
           monthlyAmounts: Array(12).fill(v),
           annualAmount: v * 12,
         }))
@@ -127,4 +133,16 @@ export const RegularGridPhase: Story = {
 
 export const Irregular: Story = {
   render: () => <Demo category={irregularCategory} initialItem={baseIrregularItem} phase="grid" />,
+};
+
+/** 빠른 모드 — 변동 공통 항목도 평균 1화면으로(안내·연간 합계 문구가 바뀐다) */
+export const QuickVariableAvg: Story = {
+  render: () => (
+    <Demo category={irregularCategory} initialItem={baseIrregularItem} phase="avg" mode="quick" />
+  ),
+};
+
+/** 수입 정기 항목 — 두 사람 합산 안내 */
+export const RegularIncomeWithHint: Story = {
+  render: () => <Demo category={regularCategory} initialItem={baseRegularItem} phase="avg" />,
 };

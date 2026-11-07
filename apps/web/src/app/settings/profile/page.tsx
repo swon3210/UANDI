@@ -25,6 +25,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUpdateProfile } from '@/hooks/useUpdateProfile';
 import { uploadProfilePhoto, deleteProfilePhoto } from '@/lib/firebase/storage';
 import { ProfileAvatarCropper } from '@/components/settings/ProfileAvatarCropper';
+import { useDeleteAccount } from '@/hooks/useDeleteAccount';
+import { AccountDeleteConfirmDialog } from '@/components/settings/AccountDeleteConfirmDialog';
 
 const NAME_MAX = 20;
 
@@ -64,7 +66,47 @@ export default function ProfileEditPage() {
       <main className="flex flex-1 flex-col">
         {/* user가 확정된 뒤 마운트해 폼 기본값을 시드(useEffect 없이). */}
         <ProfileEditor key={user.uid} user={user} />
+        <DeleteAccountSection user={user} />
       </main>
+    </div>
+  );
+}
+
+/** 회원탈퇴 — 설정 첫 화면이 아니라 프로필 편집 맨 아래에 둔다(첫 주 사용자에게 먼저 보이지 않게). */
+function DeleteAccountSection({ user }: { user: User }) {
+  const deleteAccountMutation = useDeleteAccount();
+
+  const handleDeleteAccount = async () => {
+    const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
+      <AccountDeleteConfirmDialog
+        isOpen={isOpen}
+        isPending={deleteAccountMutation.isPending}
+        onConfirm={() => {
+          close(true);
+          setTimeout(unmount, 300);
+        }}
+        onCancel={() => {
+          close(false);
+          setTimeout(unmount, 300);
+        }}
+      />
+    ));
+    if (confirmed) {
+      deleteAccountMutation.mutate({ uid: user.uid, coupleId: user.coupleId });
+    }
+  };
+
+  return (
+    <div className="mx-auto mt-10 w-full max-w-md border-t border-border px-4 pt-4 pb-10">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-destructive"
+        onClick={handleDeleteAccount}
+        data-testid="delete-account-button"
+      >
+        회원탈퇴
+      </Button>
     </div>
   );
 }

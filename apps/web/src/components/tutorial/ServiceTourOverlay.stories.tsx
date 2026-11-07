@@ -11,7 +11,9 @@ const meta: Meta<typeof ServiceTourOverlay> = {
     docs: {
       description: {
         component:
-          '말랑 가계부 온보딩 투어. 1장에서 가계부 상단 탭(대시보드·내역·현금흐름·목표)을 안내하고, 가계부 핵심 기능(내역·목표·현금흐름·점검)을 기능별로 풍부하게 보여준 뒤, 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장으로 묶는다. 모바일은 전체 화면, 데스크톱은 가운데 카드. 로그인 후 대시보드 첫 진입 시 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
+          '온보딩 투어 — "첫 행동 안내" 3장. 1) 둘이 함께 쓰는 가계부 2) 첫 내역 적기(+ 버튼 모형 + 입력 예시) 3) 예산·예측은 차차. ' +
+          '스크린샷을 쓰지 않아 UI가 바뀌어도 어긋나지 않는다. 마지막 장은 "첫 내역 적기"(빠른 추가 시트)와 "둘러볼게요"로 끝난다. ' +
+          '커플 연결 후 대시보드가 한 번 그려진 뒤 1회 자동 노출되고, 프로필 메뉴에서 다시 볼 수 있다.',
       },
     },
   },
@@ -22,42 +24,42 @@ const meta: Meta<typeof ServiceTourOverlay> = {
       </Dialog>
     ),
   ],
+  args: {
+    onClose: () => {},
+    onFirstEntry: () => {},
+    context: { partnerName: '세진', hasEntries: false },
+  },
 };
 
 export default meta;
 type Story = StoryObj<typeof ServiceTourOverlay>;
 
 export const Welcome: Story = {
-  name: '1. 가계부 소개 + 상단 탭 안내',
-  args: { defaultStep: 0, onClose: () => {} },
+  name: '1. 둘이 함께 쓰는 가계부예요',
+  args: { defaultStep: 0 },
 };
 
-export const CashbookRecord: Story = {
-  name: '2. 가계부 — 내역 기록 + 요약',
-  args: { defaultStep: 1, onClose: () => {} },
+export const WelcomeWithoutPartnerName: Story = {
+  name: '1. 짝꿍 이름 없음 (폴백)',
+  args: { defaultStep: 0, context: { partnerName: null, hasEntries: false } },
 };
 
-export const CashbookBudget: Story = {
-  name: '3. 가계부 — 목표 세우기',
-  args: { defaultStep: 2, onClose: () => {} },
+export const FirstEntry: Story = {
+  name: '2. 첫 내역을 적어 볼까요?',
+  args: { defaultStep: 1 },
 };
 
-export const CashbookCashflow: Story = {
-  name: '4. 가계부 — 현금흐름 예측',
-  args: { defaultStep: 3, onClose: () => {} },
+export const Later: Story = {
+  name: '3. 예산과 예측은 차차 같이 (첫 내역 적기 / 둘러볼게요)',
+  args: { defaultStep: 2 },
 };
 
-export const CashbookSettlement: Story = {
-  name: '5. 가계부 — 점검하기',
-  args: { defaultStep: 4, onClose: () => {} },
+export const EntriesReady: Story = {
+  name: '2′. 내역이 이미 있을 때 (가져오기 직후)',
+  args: { defaultStep: 1, context: { partnerName: '세진', hasEntries: true } },
 };
 
-export const MoreFeatures: Story = {
-  name: '6. 그 외 기능 — 베타',
-  args: { defaultStep: 5, onClose: () => {} },
-};
-
-export const Ready: Story = {
-  name: '7. 마무리 — 성공 마스코트 (시작하기)',
-  args: { defaultStep: 6, onClose: () => {} },
+export const LaterWithEntries: Story = {
+  name: '3. 내역 있을 때 마지막 장 (내역 보기 / 둘러볼게요)',
+  args: { defaultStep: 2, context: { partnerName: '세진', hasEntries: true } },
 };

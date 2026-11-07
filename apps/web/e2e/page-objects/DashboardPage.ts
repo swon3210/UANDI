@@ -67,6 +67,8 @@ export class DashboardPage {
   readonly meterIncome: Locator;
   readonly meterExpense: Locator;
   readonly meterStatus: Locator;
+  readonly recentEntries: Locator;
+  readonly recentEntriesAll: Locator;
 
   /** AI 요약의 큰 변화 카테고리 행 */
   compareAiSummaryItem(name: string): Locator {
@@ -160,6 +162,8 @@ export class DashboardPage {
     this.meterIncome = page.getByTestId('meter-income');
     this.meterExpense = page.getByTestId('meter-expense');
     this.meterStatus = page.getByTestId('meter-status');
+    this.recentEntries = page.getByTestId('recent-entries');
+    this.recentEntriesAll = page.getByTestId('recent-entries-all');
 
     this.compareTargetMedian = page.getByTestId('compare-target-median');
     this.compareUnavailable = page.getByTestId('compare-unavailable');

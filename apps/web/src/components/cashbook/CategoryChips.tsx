@@ -68,6 +68,17 @@ export function CategoryChips({
 
   const parentById = new Map(categories.map((c) => [c.id, c]));
   const parents = categories.filter((c) => c.parentCategoryId === null);
+  // 같은 그룹에 이름이 같은 부모가 둘 이상(공통 식비·각자 식비)이면 칩에 subGroup 라벨을 붙여 구분한다.
+  const duplicateNames = new Set(
+    parents
+      .filter((c) => c.group === group)
+      .map((c) => c.name)
+      .filter((name, i, arr) => arr.indexOf(name) !== i)
+  );
+  const parentChipLabel = (parent: CashbookCategory) =>
+    duplicateNames.has(parent.name)
+      ? `${parent.name} (${SUB_GROUP_SHORT_LABELS[parent.subGroup]})`
+      : parent.name;
   const childrenByParent = new Map<string, CashbookCategory[]>();
   for (const c of categories) {
     if (c.parentCategoryId) {
@@ -77,18 +88,31 @@ export function CategoryChips({
     }
   }
 
-  const selectedCat = value ? findCategoryByName(categories, value, group) : undefined;
+  // 폼 값은 이름 문자열뿐이라 동명 카테고리(공통 식비·각자 식비)를 구분하지 못한다.
+  // 마지막으로 누른 칩의 id를 기억해, 값과 이름이 같으면 그 칩을 선택으로 본다.
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const picked = pickedId ? parentById.get(pickedId) : undefined;
+  const selectedCat = !value
+    ? undefined
+    : picked && picked.name === value && picked.group === group
+      ? picked
+      : findCategoryByName(categories, value, group);
   const selectedParent = selectedCat?.parentCategoryId
     ? parentById.get(selectedCat.parentCategoryId)
     : undefined;
   const presetNames = new Set(categories.map((c) => c.name));
   const hasOrphanValue = value !== '' && !presetNames.has(value);
 
-  const recommended = recommendCategories(categories, memo).filter((c) => c.name !== value);
+  const recommended = recommendCategories(categories, memo).filter((c) => c.id !== selectedCat?.id);
 
   const [search, setSearch] = useState('');
   // 자식이 선택된 채로 열리면(수정 등) 해당 부모의 소분류 화면에서 시작한다.
   const [drilledParentId, setDrilledParentId] = useState<string | null>(selectedParent?.id ?? null);
+
+  const pick = (cat: CashbookCategory) => {
+    setPickedId(cat.id);
+    onChange(cat.name);
+  };
 
   const showSearch = categories.length >= SHOW_SEARCH_THRESHOLD;
   const query = search.trim().toLowerCase();
@@ -119,9 +143,10 @@ export function CategoryChips({
       key={cat.id}
       type="button"
       data-testid={`category-chip-${cat.name}`}
-      className={chipClass(value === cat.name)}
+      aria-pressed={selectedCat?.id === cat.id}
+      className={chipClass(selectedCat?.id === cat.id)}
       onClick={() => {
-        onChange(cat.name);
+        pick(cat);
         setSearch('');
         setDrilledParentId(cat.parentCategoryId ?? null);
       }}
@@ -197,20 +222,21 @@ export function CategoryChips({
                 <div className="flex flex-wrap gap-1.5">
                   {subParents.map((parent) => {
                     const hasChildren = (childrenByParent.get(parent.id)?.length ?? 0) > 0;
-                    const isSelected = value === parent.name && !selectedParent;
+                    const isSelected = selectedCat?.id === parent.id;
                     return (
                       <button
                         key={parent.id}
                         type="button"
                         data-testid={`category-chip-${parent.name}`}
+                        aria-pressed={isSelected}
                         className={chipClass(isSelected)}
                         onClick={() => {
                           if (hasChildren) setDrilledParentId(parent.id);
-                          else onChange(parent.name);
+                          else pick(parent);
                         }}
                       >
                         <CategoryIcon name={parent.icon} size={16} />
-                        {parent.name}
+                        {parentChipLabel(parent)}
                         {hasChildren && (
                           <ChevronRight
                             size={13}
@@ -286,7 +312,7 @@ export function CategoryChips({
                 data-testid={`recommended-chip-${cat.name}`}
                 className="flex items-center gap-1.5 rounded-full border border-dashed border-primary/60 bg-accent px-2.5 py-1 text-xs text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
                 onClick={() => {
-                  onChange(cat.name);
+                  pick(cat);
                   setSearch('');
                   setDrilledParentId(cat.parentCategoryId ?? null);
                 }}

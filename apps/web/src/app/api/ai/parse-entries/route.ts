@@ -13,6 +13,7 @@ import {
   buildSystemPrompt,
   categoryHintsSchema,
   buildMockParseResponse,
+  sanitizeSuggestedCategories,
   type ParsedEntry,
 } from '@/lib/ai/parse-entries-core';
 
@@ -42,6 +43,8 @@ const requestSchema = z
     imageKind: z.enum(['account', 'card']).optional(),
     // 과거 내역 기반 "설명 → 카테고리" 힌트(클라이언트가 마지막 내역 기준 3개월에서 추출).
     categoryHints: categoryHintsSchema.optional(),
+    // true면 목록에 맞는 게 없을 때 새 카테고리를 제안해도 된다(지난 내역 가져오기 전용).
+    allowNewCategories: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -75,12 +78,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '일일 사용 한도를 초과했습니다' }, { status: 429 });
   }
 
-  const { text, categories, images, pdfs, imageKind, categoryHints } = parsed.data;
+  const { text, categories, images, pdfs, imageKind, categoryHints, allowNewCategories } =
+    parsed.data;
   const hasImages = (images?.length ?? 0) > 0 || (pdfs?.length ?? 0) > 0;
 
   if (process.env.USE_AI_MOCK === 'true') {
     return NextResponse.json(
-      buildMockParseResponse(text, (images?.length ?? 0) + (pdfs?.length ?? 0), imageKind)
+      buildMockParseResponse(
+        text,
+        (images?.length ?? 0) + (pdfs?.length ?? 0),
+        imageKind,
+        allowNewCategories
+      )
     );
   }
 
@@ -100,6 +109,7 @@ export async function POST(req: NextRequest) {
     todayYear: todayDayjs.year(),
     customRulesSection,
     categoryHints,
+    allowNewCategories,
   });
 
   try {
@@ -126,8 +136,15 @@ export async function POST(req: NextRequest) {
 
     const entries: ParsedEntry[] = results.flatMap((r) => r.entries);
     const imageKindMismatch = results.some((r) => r.imageKindMismatch);
+    // 호출별 제안을 이름 기준으로 합치고 정리한다(기존 카테고리와 겹치면 버림)
+    const suggestedCategories = allowNewCategories
+      ? sanitizeSuggestedCategories(
+          results.flatMap((r) => r.suggestedCategories),
+          categories
+        )
+      : undefined;
 
-    return NextResponse.json({ entries, imageKindMismatch });
+    return NextResponse.json({ entries, imageKindMismatch, suggestedCategories });
   } catch (error) {
     console.error('[parse-entries] AI 호출 실패:', error);
     return NextResponse.json(

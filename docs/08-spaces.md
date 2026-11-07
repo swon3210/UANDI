@@ -38,12 +38,12 @@ UANDI는 두 개의 공간으로 나뉜다. 새 페이지·기능·도메인 모
 
 ## 2. 데이터 소유 모델
 
-| 측면          | 우리집                                     | 재테크                                                            |
-| ------------- | ------------------------------------------ | --------------------------------------------------------------- |
-| 저장 위치     | `couples/{coupleId}/<영역>`                | `couples/{coupleId}/sideHustles/{uid}/<영역>`                   |
-| 읽기 권한     | 커플 두 멤버                               | 본인만 (원본 거래/포지션)                                       |
-| 쓰기 권한     | 커플 두 멤버                               | 본인만                                                          |
-| 파트너 가시성 | 동등 — 모든 데이터 그대로 공유             | 합산·요약만 — `couples/{coupleId}/meta/outerSummary` 경유       |
+| 측면          | 우리집                         | 재테크                                                    |
+| ------------- | ------------------------------ | --------------------------------------------------------- |
+| 저장 위치     | `couples/{coupleId}/<영역>`    | `couples/{coupleId}/sideHustles/{uid}/<영역>`             |
+| 읽기 권한     | 커플 두 멤버                   | 본인만 (원본 거래/포지션)                                 |
+| 쓰기 권한     | 커플 두 멤버                   | 본인만                                                    |
+| 파트너 가시성 | 동등 — 모든 데이터 그대로 공유 | 합산·요약만 — `couples/{coupleId}/meta/outerSummary` 경유 |
 
 ### 위치 컨벤션
 
@@ -137,15 +137,15 @@ couples/{coupleId}/
 
 ### 사이드바 항목 구성
 
-| 섹션     | 항목   | 진입 경로          | active 매칭        | 톤     |
-| -------- | ------ | ------------------ | ------------------ | ------ |
-| 우리집   | 가계부 | `/inner/cashbook`  | `/inner/cashbook`  | coral  |
-| 우리집   | 갤러리 | `/inner/photos`    | `/inner/photos`    | coral  |
-| 재테크   | 홈     | `/outer`           | `/outer`           | indigo |
-| 재테크   | 환테크 | `/outer/forex`     | `/outer/forex`     | indigo |
-| 재테크   | 투자   | `/outer/investment`| `/outer/investment`| indigo |
-| 재테크   | 적금   | `/outer/savings`   | `/outer/savings`   | indigo |
-| 커뮤니티 | 피드   | `/community`       | `/community`       | violet |
+| 섹션     | 항목   | 진입 경로           | active 매칭         | 톤     |
+| -------- | ------ | ------------------- | ------------------- | ------ |
+| 우리집   | 가계부 | `/inner/cashbook`   | `/inner/cashbook`   | coral  |
+| 우리집   | 갤러리 | `/inner/photos`     | `/inner/photos`     | coral  |
+| 재테크   | 홈     | `/outer`            | `/outer`            | indigo |
+| 재테크   | 환테크 | `/outer/forex`      | `/outer/forex`      | indigo |
+| 재테크   | 투자   | `/outer/investment` | `/outer/investment` | indigo |
+| 재테크   | 적금   | `/outer/savings`    | `/outer/savings`    | indigo |
+| 커뮤니티 | 피드   | `/community`        | `/community`        | violet |
 
 - **가계부 루트(`/inner/cashbook`)는 대시보드(예산 요약)** 를 렌더한다. `/inner`로 진입하면 `/inner/cashbook`으로 리다이렉트하고, 로그인 후 랜딩도 `/inner/cashbook`이다.
 - 설정·프로필·로그아웃은 **헤더 우측 프로필 아바타 메뉴**에 둔다(사이드바와 분리).

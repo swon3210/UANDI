@@ -242,7 +242,7 @@
 type AnnualPlan = {
   id: string;
   coupleId: string;
-  year: number;                      // 예: 2026
+  year: number; // 예: 2026
   createdBy: string;
   updatedAt: Timestamp;
   createdAt: Timestamp;
@@ -250,35 +250,83 @@ type AnnualPlan = {
 
 type AnnualPlanItem = {
   id: string;
-  planId: string;                    // AnnualPlan.id 참조
+  planId: string; // AnnualPlan.id 참조
   coupleId: string;
-  categoryId: string;                // CashbookCategory.id 참조
-  group: CategoryGroup;              // 'income' | 'expense'
+  categoryId: string; // CashbookCategory.id 참조
+  group: CategoryGroup; // 'income' | 'expense'
   subGroup: CategorySubGroup;
-  annualAmount: number;              // 연간 총 예산
-  monthlyAmount: number | null;      // 월별 금액 (고정 지출 등)
-  targetMonths: number[] | null;     // 지출 시기 [1, 9] (비월별 지출)
-  ownerUid: string | null;           // null = 공통, userId = 각자
+  annualAmount: number; // 연간 총 예산
+  monthlyAmount: number | null; // 월별 금액 (고정 지출 등)
+  targetMonths: number[] | null; // 지출 시기 [1, 9] (비월별 지출)
+  ownerUid: string | null; // null = 공통, userId = 각자
   updatedAt: Timestamp;
 };
 
 type InvestmentPlan = {
   id: string;
-  planId: string;                    // AnnualPlan.id 참조
+  planId: string; // AnnualPlan.id 참조
   coupleId: string;
-  targetReturnRate: number;          // 목표 수익률 (%, 예: 3)
-  totalAvailable: number;            // 재테크 가능 금액 (자동 계산)
-  targetAmount: number;              // 목표 금액 (자동 계산)
+  targetReturnRate: number; // 목표 수익률 (%, 예: 3)
+  totalAvailable: number; // 재테크 가능 금액 (자동 계산)
+  targetAmount: number; // 목표 금액 (자동 계산)
   updatedAt: Timestamp;
 };
 ```
 
 **Firestore 경로**:
+
 - `couples/{coupleId}/annualPlans/{planId}`
 - `couples/{coupleId}/annualPlans/{planId}/items/{itemId}`
 - `couples/{coupleId}/annualPlans/{planId}/investmentPlan` (단일 문서)
 
 ---
+
+## 예산 위저드 (/inner/cashbook/plan/annual/wizard)
+
+대시보드 권유 카드·경제 목표 페이지의 "처음부터 다시 세우기"에서 들어온다. 인트로 → 카테고리 단계 → 검증 → 요약 순서는 기존과 같고, 2026-11 첫 주 걷기에서 "26개 카테고리 × 평균+그리드 = 40단계"가 과하다고 판단해 아래를 더했다.
+
+### 두 가지 모드 (`?mode=quick|full`)
+
+| 모드           | 포함 항목                                              | 단계                                                                                                                                     | 용도                                            |
+| -------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `quick` (기본) | `regular_income` · `fixed_expense` · `variable_common` | 항목마다 **월 평균 1화면**(그리드 없음). 변동 공통 항목도 평균으로 12개월을 채운다(`inputMode: 'irregular'`, `baseMonthlyAmount: null`). | 권유 카드의 "약 5분". 기본 카테고리 기준 14단계 |
+| `full`         | 모든 항목                                              | 정기 항목은 평균 → 12개월 그리드 2화면, 비정기·변동은 그리드 1화면                                                                       | 세밀하게 세울 때                                |
+
+- 인트로에 모드 선택 카드 두 장(`wizard-mode-quick` / `wizard-mode-full`, 기본 quick). 진행 흐름 목록과 "총 N개 카테고리"는 고른 모드 기준으로 바뀐다.
+- 모드는 URL 쿼리로 모든 단계에 따라다닌다(`usePlanWizard`가 `mode`로 단계 목록을 만든다). 빠른 모드로 완료해도 나머지 항목은 0원으로 남고, 경제 목표 → 예산 항목 설정에서 언제든 채울 수 있다.
+
+### 단계 안의 보조 동작
+
+- **평균 0원이면 그리드 생략**(full): 정기 항목 평균 단계에서 0원인 채 다음을 누르면 그리드 단계를 건너뛰고 다음 항목으로 간다. 이전으로 돌아올 때도 0원 항목의 그리드는 건너뛴다.
+- **이 항목은 건너뛰기**(`wizard-skip`, 카테고리 단계 푸터의 텍스트 버튼): 항목을 0원으로 저장하고 다음 항목의 첫 화면으로 간다.
+- **합산 안내**(`regular-avg-hint`): 수입 정기 항목의 평균 입력 아래에 "두 사람 수입을 합쳐 적어요". 공동 가계부라는 점을 첫 입력에서 알려 준다.
+- 그리드 12칸 입력에는 `aria-label="{n}월"`을 붙인다.
+
+### 중간에 나갔을 때 (이어서 하기)
+
+- 플랜 문서에 `wizardLastStep`(마지막으로 머문 단계의 쿼리 문자열, 예: `?step=income&catIdx=1&phase=avg&mode=quick`)과 `wizardMode`를 기록한다. 카테고리·검증·요약 단계로 이동할 때마다 갱신하고, 완료(리비전 생성) 시 `null`로 지운다.
+- **완료 여부 = 리비전 1개 이상.** 리비전이 없는 플랜은 "미완"이다.
+- 미완이면
+  - 대시보드 권유 카드가 `variant="resume"`("예산 이어서 세우기", 02-dashboard 참고)로 바뀌고 [이어서 하기]는 `wizardLastStep`으로 간다.
+  - 경제 목표 페이지 상단에도 같은 카드(`annual-plan-resume`, 닫기 없음)를 보여 "예상 연간 잉여"만 덩그러니 보이지 않게 한다.
+- X(`wizard-exit`)로 나갈 때 손대지 않은 플랜(모든 항목 0원·리비전 없음)이면 항목과 플랜을 지우고 대시보드로, 아니면 경제 목표 페이지로 간다(`deleteAnnualPlanIfUntouched`).
+
+### 대시보드에서 연 위저드의 출구 (`?from=onboarding`)
+
+- 위저드는 단계마다 기록을 쌓는다(push). 그래서 완료·종료 후 경제 목표 페이지의 ←는 지나온 위저드 단계로 돌아가고, 대시보드에서 들어온 사람은 대시보드로 돌아갈 길이 없었다(2026-11-07 재검증).
+- 대시보드 권유 카드(시작·이어서 하기)의 링크에 `from=onboarding`을 붙인다. 위저드는 이 표식을 모든 단계 URL과 완료·종료 후의 경제 목표 URL에 그대로 넘긴다(`lib/plan-wizard-entry`).
+- 경제 목표 페이지는 표식이 있을 때만 헤더 우측에 **"홈으로"**(`annual-plan-home`, `HomeButton`, 대시보드로 replace)를 둔다. 설정에서 들어오면 표식이 없어 기존처럼 ←만 있다.
+- 이어서 하기용 `wizardLastStep`에는 표식을 저장하지 않는다. 진입 경로마다 링크를 만들 때 붙인다.
+
+### 데이터 모델 보강
+
+```ts
+type AnnualPlan = {
+  // ...기존
+  wizardLastStep?: string | null; // 미완 위저드의 마지막 단계 쿼리. 완료 시 null
+  wizardMode?: 'quick' | 'full' | null;
+};
+```
 
 ## 계획 → 월별 연동
 
@@ -288,7 +336,7 @@ type InvestmentPlan = {
 - **지출 시기가 지정된 항목**: 해당 월에만 배정 (균등 분배)
 - **연간 총액만 있는 항목**: 12로 나눠 균등 배정
 
-이 데이터는 가계부 대시보드(`02-dashboard.md`)와 내역 점검(`/inner/cashbook/review`)에서 "목표 vs 실제" 비교에 사용된다.
+이 데이터는 가계부 대시보드(`02-dashboard.md`)에서 "목표 vs 실제" 비교에 사용된다.
 
 ---
 

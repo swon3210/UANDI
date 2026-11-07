@@ -27,7 +27,7 @@ export function MonthlySummary({ income, expense, balance }: MonthlySummaryProps
         </span>
       </div>
       <div className="border-t border-border pt-2 flex items-center justify-between">
-        <span className="text-sm font-medium">잔액</span>
+        <span className="text-sm font-medium">수입 − 지출</span>
         <span className="text-base font-bold tabular-nums">{formatCurrency(balance)}</span>
       </div>
     </div>

@@ -65,6 +65,7 @@ type User = {
 type Couple = {
   id: string;
   memberUids: string[]; // 생성 시 1명, 커플 연결 완료 후 2명
+  inviteCode?: string; // 현재 유효한 초대 코드(inviteCodes/{code}). 만료·재발급 시 갱신. 구버전 문서엔 없음
   createdAt: Timestamp;
 };
 ```
@@ -83,9 +84,10 @@ type Couple = {
 type InviteCode = {
   code: string;
   coupleId: string;
-  createdBy: string;          // 커플 생성자 uid
-  expiresAt: Timestamp;       // 생성 후 48시간
-  consumedBy: string | null;  // 합류 시 두 번째 멤버의 uid. null이면 만석 아님
+  createdBy: string; // 커플 생성자 uid
+  createdByName?: string; // 생성자 표시 이름(비정규화). 합류 전 상대는 users/* 를 읽을 수 없어 여기서 보여준다
+  expiresAt: Timestamp; // 생성 후 48시간
+  consumedBy: string | null; // 합류 시 두 번째 멤버의 uid. null이면 만석 아님
   createdAt: Timestamp;
 };
 ```
@@ -114,6 +116,7 @@ type Folder = {
 > **커버 이미지**: 별도 필드 없음. 해당 폴더의 가장 최근 사진(`takenAt DESC` 첫 번째)을 자동으로 커버로 사용.
 
 > **중첩 규칙**: 폴더는 다른 폴더의 하위로 만들 수 있다. 최대 5단계(`depth 0~4`)까지 허용.
+>
 > - 생성 시 `depth = parent.depth + 1`, `path = [...parent.path, parent.id]` 로 계산.
 > - `path`는 `array-contains`로 "특정 폴더 및 그 하위 전체"를 한 번에 조회하기 위한 캐시.
 > - 삭제는 재귀 삭제(하위 폴더/사진 모두 함께 제거).
@@ -245,10 +248,10 @@ type NudgeStatus = 'pending' | 'seen' | 'done' | 'dismissed';
 type Nudge = {
   id: string;
   coupleId: string;
-  fromUid: string;              // 보낸 사람
-  toUid: string;               // 받는 사람 (파트너)
+  fromUid: string; // 보낸 사람
+  toUid: string; // 받는 사람 (파트너)
   type: NudgeType;
-  message: string;             // 프리셋 or 커스텀 (빈 문자열 허용)
+  message: string; // 프리셋 or 커스텀 (빈 문자열 허용)
   status: NudgeStatus;
   createdAt: Timestamp;
   respondedAt: Timestamp | null;
@@ -272,26 +275,29 @@ type Nudge = {
 
 ```ts
 type OuterSummary = {
-  byUser: Record<string /* uid */, {
-    forex?: {
-      realizedPnlKrw: number;       // 누적 실현 환차익(원)
-      unrealizedPnlKrw: number;     // 미실현 평가손익(원, 최신 환율 기준)
-      updatedAt: Timestamp;
-    };
-    investment?: {
-      totalValueKrw: number;        // 보유 종목 평가액 합계
-      totalCostKrw: number;         // 매입 원가 합계
-      updatedAt: Timestamp;
-    };
-    savings?: {
-      totalPrincipalKrw: number;    // 적금 원금 합계
-      monthlyContributionKrw: number; // 월 납입액 합계
-      updatedAt: Timestamp;
-    };
-  }>;
+  byUser: Record<
+    string /* uid */,
+    {
+      forex?: {
+        realizedPnlKrw: number; // 누적 실현 환차익(원)
+        unrealizedPnlKrw: number; // 미실현 평가손익(원, 최신 환율 기준)
+        updatedAt: Timestamp;
+      };
+      investment?: {
+        totalValueKrw: number; // 보유 종목 평가액 합계
+        totalCostKrw: number; // 매입 원가 합계
+        updatedAt: Timestamp;
+      };
+      savings?: {
+        totalPrincipalKrw: number; // 적금 원금 합계
+        monthlyContributionKrw: number; // 월 납입액 합계
+        updatedAt: Timestamp;
+      };
+    }
+  >;
   combined: {
-    totalRealizedPnlKrw: number;    // 모든 멤버 환테크 실현 손익 합
-    totalAssetKrw: number;          // forex+investment+savings 총 자산
+    totalRealizedPnlKrw: number; // 모든 멤버 환테크 실현 손익 합
+    totalAssetKrw: number; // forex+investment+savings 총 자산
     updatedAt: Timestamp;
   };
 };
@@ -309,16 +315,16 @@ type OuterSummary = {
 type ForexTrade = {
   id: string;
   coupleId: string;
-  uid: string;                      // 소유자 (sideHustles/{uid} 경로와 동일)
+  uid: string; // 소유자 (sideHustles/{uid} 경로와 동일)
   currency: 'USD' | 'JPY' | 'EUR' | 'CNY';
   side: 'buy' | 'sell';
-  rate: number;                     // 체결 환율 (1단위당 KRW; JPY는 100엔당)
-  amountForeign: number;            // 외화 수량
-  amountKrw: number;                // 원화 환산 금액(수수료 포함)
-  feeKrw: number;                   // 거래 수수료(원)
+  rate: number; // 체결 환율 (1단위당 KRW; JPY는 100엔당)
+  amountForeign: number; // 외화 수량
+  amountKrw: number; // 원화 환산 금액(수수료 포함)
+  feeKrw: number; // 거래 수수료(원)
   memo: string;
-  executedAt: Timestamp;            // 실제 체결 시점
-  createdAt: Timestamp;             // 서버 기록 시점
+  executedAt: Timestamp; // 실제 체결 시점
+  createdAt: Timestamp; // 서버 기록 시점
 };
 ```
 
@@ -333,9 +339,9 @@ type ForexHolding = {
   currency: 'USD' | 'JPY' | 'EUR' | 'CNY';
   coupleId: string;
   uid: string;
-  amountForeign: number;            // 현재 잔량 (외화)
-  averageRateKrw: number;           // 평균 매수 환율 (이동평균)
-  realizedPnlKrw: number;           // 누적 실현 손익(매도 시 적립)
+  amountForeign: number; // 현재 잔량 (외화)
+  averageRateKrw: number; // 평균 매수 환율 (이동평균)
+  realizedPnlKrw: number; // 누적 실현 손익(매도 시 적립)
   updatedAt: Timestamp;
 };
 ```
@@ -353,13 +359,13 @@ type Position = {
   id: string;
   coupleId: string;
   uid: string;
-  symbol: string;                   // 종목 코드 (예: '005930', 'AAPL')
+  symbol: string; // 종목 코드 (예: '005930', 'AAPL')
   market: 'KOSPI' | 'KOSDAQ' | 'NASDAQ' | 'NYSE' | 'OTHER';
-  name: string;                     // 사용자 표기명 (자유 입력)
-  quantity: number;                 // 보유 수량 (소수 허용 — 해외 주식 분수 매수)
-  averageCostKrw: number;           // 평균 매입 단가(원)
-  currentValueKrw: number | null;   // 현재 평가액(시세 갱신 시; v1.1 초기는 수동 입력 허용)
-  currency: 'KRW' | 'USD';          // 매입 통화
+  name: string; // 사용자 표기명 (자유 입력)
+  quantity: number; // 보유 수량 (소수 허용 — 해외 주식 분수 매수)
+  averageCostKrw: number; // 평균 매입 단가(원)
+  currentValueKrw: number | null; // 현재 평가액(시세 갱신 시; v1.1 초기는 수동 입력 허용)
+  currency: 'KRW' | 'USD'; // 매입 통화
   openedAt: Timestamp;
   updatedAt: Timestamp;
 };
@@ -378,13 +384,13 @@ type SavingsAccount = {
   id: string;
   coupleId: string;
   uid: string;
-  name: string;                     // 계좌 별칭 (예: "신한 정기적금")
+  name: string; // 계좌 별칭 (예: "신한 정기적금")
   bank: string;
-  principalKrw: number;             // 현재 원금(원)
-  monthlyContributionKrw: number;   // 월 납입액
-  interestRate: number;             // 연이율 (소수, 예: 0.035 = 3.5%)
+  principalKrw: number; // 현재 원금(원)
+  monthlyContributionKrw: number; // 월 납입액
+  interestRate: number; // 연이율 (소수, 예: 0.035 = 3.5%)
   startedAt: Timestamp;
-  maturesAt: Timestamp;             // 만기일
+  maturesAt: Timestamp; // 만기일
   updatedAt: Timestamp;
 };
 ```
@@ -408,29 +414,29 @@ type CommunityPost = {
   id: string;
   type: CommunityPostType;
   status: CommunityPostStatus;
-  title: string;            // user: '' 허용 / scraped: 원문 제목
-  body: string;             // user: 본문 / scraped: 짧은 발췌(인용 범위)
+  title: string; // user: '' 허용 / scraped: 원문 제목
+  body: string; // user: 본문 / scraped: 짧은 발췌(인용 범위)
   createdAt: Timestamp;
   publishedAt: Timestamp | null; // 노출 시각(정렬 키). pending이면 null
-  editedAt: Timestamp | null;    // 본인 수정 시각. 미수정이면 null('수정됨' 마커 판정)
-  reportCount: number;      // 트리거로 갱신 (Phase 4)
+  editedAt: Timestamp | null; // 본인 수정 시각. 미수정이면 null('수정됨' 마커 판정)
+  reportCount: number; // 트리거로 갱신 (Phase 4)
 
   // type === 'user'
   author?: {
     uid: string;
     coupleId: string | null; // 비커플 유저에도 열어둘 수 있도록 nullable
-    displayName: string;     // 작성 시점 프로필명 스냅샷(비정규화 의도)
+    displayName: string; // 작성 시점 프로필명 스냅샷(비정규화 의도)
     photoURL: string | null;
   };
-  imageUrl?: string | null;  // Storage 업로드 이미지, 최대 1장
+  imageUrl?: string | null; // Storage 업로드 이미지, 최대 1장
 
   // type === 'scraped'
   source?: {
     siteName: string;
-    url: string;             // 원문 링크(링크아웃)
+    url: string; // 원문 링크(링크아웃)
     ogImageUrl: string | null; // 원본 URL 그대로 참조, 우리 서버에 복제 금지
     originPublishedAt: Timestamp | null;
-    sourceId: string;        // 정규화 URL 해시 — 중복 수집 방지 키
+    sourceId: string; // 정규화 URL 해시 — 중복 수집 방지 키
   };
 };
 ```
@@ -449,12 +455,12 @@ type CommunityPost = {
 ```ts
 type CommunitySource = {
   id: string;
-  siteName: string;        // 출처 표시명 (scraped 글 source.siteName으로 사용)
-  feedUrl: string;         // RSS/Atom 피드 URL
-  enabled: boolean;        // false면 크롤 스킵
+  siteName: string; // 출처 표시명 (scraped 글 source.siteName으로 사용)
+  feedUrl: string; // RSS/Atom 피드 URL
+  enabled: boolean; // false면 크롤 스킵
   createdAt: Timestamp;
   lastCrawledAt: Timestamp | null; // 마지막 수집 시각 (운영 가시성)
-  lastError: string | null;        // 마지막 크롤 에러 메시지 (운영 가시성)
+  lastError: string | null; // 마지막 크롤 에러 메시지 (운영 가시성)
 };
 ```
 
@@ -469,39 +475,39 @@ type CommunitySource = {
 
 > 실제 rules 파일 작성 시 이 명세를 기반으로 합니다.
 
-| 컬렉션                                                    | 읽기                                       | 쓰기                                       |
-| --------------------------------------------------------- | ------------------------------------------ | ------------------------------------------ |
-| `users/{uid}`                                             | 본인만                                     | 본인만                                     |
-| `couples/{coupleId}`                                      | memberUids에 포함된 유저                   | memberUids 본인 또는 self-join(size 1→2, memberUids만 변경, 본인 추가) |
-| `inviteCodes/{code}`                                      | 로그인 유저, **get만 허용 (list 금지)** — 코드를 알아야 read 가능 | create: 본인이 createdBy. update: consumedBy를 null→본인 uid로 한 번만 (createdBy ≠ 본인). delete: createdBy 본인만 |
-| `couples/{coupleId}/folders/*`                            | 같은 커플 멤버                             | 같은 커플 멤버                             |
-| `couples/{coupleId}/photos/*`                             | 같은 커플 멤버                             | 같은 커플 멤버                             |
-| `couples/{coupleId}/cashbookEntries/*`                    | 같은 커플 멤버                             | 같은 커플 멤버                             |
-| `couples/{coupleId}/cashbookCategories/*`                 | 같은 커플 멤버                             | 같은 커플 멤버                             |
-| `couples/{coupleId}/nudges/*`                             | 같은 커플 멤버                             | create: 커플 멤버 & `fromUid == auth.uid` & `toUid != fromUid` & `type=='record-request'` & `status=='pending'`. update: 커플 멤버 & 변경 키 `status`/`respondedAt`만. delete: 금지 |
-| `couples/{coupleId}/meta/outerSummary`                    | 같은 커플 멤버                             | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신) |
-| `couples/{coupleId}/sideHustles/{uid}/**`                 | `uid == request.auth.uid` (본인만)         | `uid == request.auth.uid` (본인만)         |
-| `communityPosts/{postId}` *(전역)*                        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 본인 글에 한해 변경 키를 `body`/`imageUrl`/`editedAt`로만 한정(`diff().affectedKeys().hasOnly(...)` — `status`/`reportCount`/`author`/`type`/시각 변조 차단). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
-| `communityPosts/{postId}/reports/{uid}`                   | 클라이언트 read 불가(누적은 `reportCount`로만 노출) | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                  |
-| `admins/{uid}`                                            | 본인 uid 문서만(가드용)                    | 콘솔/Admin SDK만                                                                                                                                                                                          |
-| `communitySources/{id}` *(전역)*                          | admin만(`admins/{uid}` 존재)               | 클라이언트 전면 차단 — 추가/수정/삭제·크롤 갱신은 `/api/community/sources` + `runCrawl`(Admin SDK)만 |
+| 컬렉션                                    | 읽기                                                                                                                                                                                                                    | 쓰기                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users/{uid}`                             | 본인만                                                                                                                                                                                                                  | 본인만                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `couples/{coupleId}`                      | memberUids에 포함된 유저                                                                                                                                                                                                | memberUids 본인 또는 self-join(size 1→2, memberUids만 변경, 본인 추가)                                                                                                                                                                                                                                                                                                                                                  |
+| `inviteCodes/{code}`                      | 로그인 유저, **get만 허용 (list 금지)** — 코드를 알아야 read 가능                                                                                                                                                       | create: 본인이 createdBy. update: consumedBy를 null→본인 uid로 한 번만 (createdBy ≠ 본인). delete: createdBy 본인만                                                                                                                                                                                                                                                                                                     |
+| `couples/{coupleId}/folders/*`            | 같은 커플 멤버                                                                                                                                                                                                          | 같은 커플 멤버                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `couples/{coupleId}/photos/*`             | 같은 커플 멤버                                                                                                                                                                                                          | 같은 커플 멤버                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `couples/{coupleId}/cashbookEntries/*`    | 같은 커플 멤버                                                                                                                                                                                                          | 같은 커플 멤버                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `couples/{coupleId}/cashbookCategories/*` | 같은 커플 멤버                                                                                                                                                                                                          | 같은 커플 멤버                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `couples/{coupleId}/nudges/*`             | 같은 커플 멤버                                                                                                                                                                                                          | create: 커플 멤버 & `fromUid == auth.uid` & `toUid != fromUid` & `type=='record-request'` & `status=='pending'`. update: 커플 멤버 & 변경 키 `status`/`respondedAt`만. delete: 금지                                                                                                                                                                                                                                     |
+| `couples/{coupleId}/meta/outerSummary`    | 같은 커플 멤버                                                                                                                                                                                                          | 본인의 `byUser[uid]` 영역만 변경 가능 (`combined`는 서버 라우트에서만 갱신)                                                                                                                                                                                                                                                                                                                                             |
+| `couples/{coupleId}/sideHustles/{uid}/**` | `uid == request.auth.uid` (본인만)                                                                                                                                                                                      | `uid == request.auth.uid` (본인만)                                                                                                                                                                                                                                                                                                                                                                                      |
+| `communityPosts/{postId}` _(전역)_        | 로그인 유저 + `status == 'published'`만 (목록 쿼리는 반드시 `where('status','==','published')` 포함). admin은 pending/hidden read를 클라이언트에서 직접 못 함 — `/api/community/admin/posts`(서버측 Admin SDK)로 받는다 | **생성** user 글만 본인 작성(`type='user' + status='published' + reportCount=0 + source 없음`). **삭제** 본인만. **update**는 본인 글에 한해 변경 키를 `body`/`imageUrl`/`editedAt`로만 한정(`diff().affectedKeys().hasOnly(...)` — `status`/`reportCount`/`author`/`type`/시각 변조 차단). 상태 변경(승인/숨김/유지)은 `/api/community/moderate` 서버 라우트(verifyAdmin)에서만. scraped 생성은 영구적으로 Admin SDK만 |
+| `communityPosts/{postId}/reports/{uid}`   | 클라이언트 read 불가(누적은 `reportCount`로만 노출)                                                                                                                                                                     | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                                                                                                                                                                                             |
+| `admins/{uid}`                            | 본인 uid 문서만(가드용)                                                                                                                                                                                                 | 콘솔/Admin SDK만                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `communitySources/{id}` _(전역)_          | admin만(`admins/{uid}` 존재)                                                                                                                                                                                            | 클라이언트 전면 차단 — 추가/수정/삭제·크롤 갱신은 `/api/community/sources` + `runCrawl`(Admin SDK)만                                                                                                                                                                                                                                                                                                                    |
 
 ---
 
 ## 인덱스 요구사항
 
-| 컬렉션          | 인덱스 필드                            | 용도               |
-| --------------- | -------------------------------------- | ------------------ |
-| photos          | `coupleId ASC`, `takenAt DESC`         | 갤러리 시간순 정렬 |
-| photos          | `coupleId ASC`, `folderId ASC`, `takenAt DESC` | 폴더별 사진 조회 |
-| photos          | `coupleId ASC`, `tags ARRAY_CONTAINS`, `takenAt DESC` | 태그별 사진 조회 |
-| folders         | `parentFolderId ASC`, `createdAt DESC` | 부모 폴더별 하위 폴더 조회 |
-| folders         | `path ARRAY_CONTAINS`                  | 특정 폴더의 하위 전체 조회 (재귀 삭제) |
-| cashbookEntries | `coupleId ASC`, `date DESC`            | 가계부 최신순      |
-| cashbookEntries | `coupleId ASC`, `date ASC` (월 필터용) | 월별 조회          |
-| forexTrades (v1.1) | `executedAt DESC`                   | 본인 거래 최신순 (sideHustles 하위라 coupleId·uid는 경로로 결정됨) |
-| positions (v1.1)   | `updatedAt DESC`                    | 본인 포지션 최신순 |
-| savings (v1.1)     | `maturesAt ASC`                     | 만기일 빠른 순     |
-| communityPosts     | `status ASC`, `publishedAt DESC`    | 피드(승인 글 최신순) |
-| communityPosts     | `status ASC`, `createdAt DESC`      | admin 승인 대기 큐 |
-| communityPosts     | `status ASC`, `reportCount DESC`    | admin 신고 검토 (`status='published' AND reportCount >= 1`) |
+| 컬렉션             | 인덱스 필드                                           | 용도                                                               |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| photos             | `coupleId ASC`, `takenAt DESC`                        | 갤러리 시간순 정렬                                                 |
+| photos             | `coupleId ASC`, `folderId ASC`, `takenAt DESC`        | 폴더별 사진 조회                                                   |
+| photos             | `coupleId ASC`, `tags ARRAY_CONTAINS`, `takenAt DESC` | 태그별 사진 조회                                                   |
+| folders            | `parentFolderId ASC`, `createdAt DESC`                | 부모 폴더별 하위 폴더 조회                                         |
+| folders            | `path ARRAY_CONTAINS`                                 | 특정 폴더의 하위 전체 조회 (재귀 삭제)                             |
+| cashbookEntries    | `coupleId ASC`, `date DESC`                           | 가계부 최신순                                                      |
+| cashbookEntries    | `coupleId ASC`, `date ASC` (월 필터용)                | 월별 조회                                                          |
+| forexTrades (v1.1) | `executedAt DESC`                                     | 본인 거래 최신순 (sideHustles 하위라 coupleId·uid는 경로로 결정됨) |
+| positions (v1.1)   | `updatedAt DESC`                                      | 본인 포지션 최신순                                                 |
+| savings (v1.1)     | `maturesAt ASC`                                       | 만기일 빠른 순                                                     |
+| communityPosts     | `status ASC`, `publishedAt DESC`                      | 피드(승인 글 최신순)                                               |
+| communityPosts     | `status ASC`, `createdAt DESC`                        | admin 승인 대기 큐                                                 |
+| communityPosts     | `status ASC`, `reportCount DESC`                      | admin 신고 검토 (`status='published' AND reportCount >= 1`)        |

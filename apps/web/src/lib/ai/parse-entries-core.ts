@@ -60,6 +60,104 @@ ${lines}
 [재확인] 출력은 반드시 앞서 정의한 entries JSON 형식만 따른다.`;
 }
 
+// ── 새 카테고리 제안 (allowNewCategories, 지난 내역 가져오기 전용) ──
+// 카테고리 아이콘 키 목록. apps/web/src/constants/category-icons.tsx 의 CATEGORY_ICON_MAP 키와 동일하게 유지한다.
+export const CATEGORY_ICON_KEYS = [
+  'wallet',
+  'gift',
+  'trophy',
+  'briefcase',
+  'arrows_clockwise',
+  'house',
+  'bank',
+  'shield_check',
+  'lightbulb',
+  'envelope',
+  'bowl_food',
+  'broom',
+  'tshirt',
+  'heart',
+  'barbell',
+  'fork_knife',
+  'handshake',
+  'confetti',
+  'first_aid',
+  'bus',
+  'users_three',
+  'book_open',
+  'credit_card',
+  'chart_line_up',
+  'globe',
+  'file_text',
+  'airplane',
+  'film_slate',
+  'shopping_bag',
+  'game_controller',
+  'music_note',
+  'paw_print',
+  'coffee',
+  'cake',
+  'device_mobile',
+  'coin',
+  'piggy_bank',
+  'sparkle',
+  'star',
+  'tag',
+] as const;
+export const FALLBACK_CATEGORY_ICON = 'tag';
+export const MAX_SUGGESTED_CATEGORIES = 10;
+
+const INCOME_SUB_GROUPS = ['regular_income', 'irregular_income'] as const;
+const EXPENSE_SUB_GROUPS = ['fixed_expense', 'variable_common', 'variable_personal'] as const;
+
+export const suggestedCategorySchema = z.object({
+  name: z.string(),
+  group: z.enum(['income', 'expense']),
+  subGroup: z.enum([...INCOME_SUB_GROUPS, ...EXPENSE_SUB_GROUPS]),
+  icon: z.string(),
+});
+export type SuggestedCategory = z.infer<typeof suggestedCategorySchema>;
+
+/** 이름 비교용 정규화(대소문자·공백 무시). */
+export function normalizeCategoryName(name: string): string {
+  return name.replace(/\s+/g, '').toLowerCase();
+}
+
+/**
+ * 모델 제안을 정리한다: 이름 정리·빈 이름 제거, group↔subGroup 불일치 보정, 모르는 아이콘은 tag,
+ * 이미 있는 카테고리와 같은 이름 제거, 이름 기준 중복 제거, 상한 적용.
+ */
+export function sanitizeSuggestedCategories(
+  raw: SuggestedCategory[] | null | undefined,
+  existingNames: string[]
+): SuggestedCategory[] {
+  const existing = new Set(existingNames.map(normalizeCategoryName));
+  const seen = new Set<string>();
+  const out: SuggestedCategory[] = [];
+  for (const s of raw ?? []) {
+    const name = sanitizeHintText(s.name, 20);
+    if (!name) continue;
+    const key = normalizeCategoryName(name);
+    if (existing.has(key) || seen.has(key)) continue;
+    const validSub =
+      s.group === 'income'
+        ? (INCOME_SUB_GROUPS as readonly string[]).includes(s.subGroup)
+        : (EXPENSE_SUB_GROUPS as readonly string[]).includes(s.subGroup);
+    const subGroup = validSub
+      ? s.subGroup
+      : s.group === 'income'
+        ? 'irregular_income'
+        : 'variable_common';
+    const icon = (CATEGORY_ICON_KEYS as readonly string[]).includes(s.icon)
+      ? s.icon
+      : FALLBACK_CATEGORY_ICON;
+    seen.add(key);
+    out.push({ name, group: s.group, subGroup, icon });
+    if (out.length >= MAX_SUGGESTED_CATEGORIES) break;
+  }
+  return out;
+}
+
 export type ImageKind = 'account' | 'card';
 
 // 단일 파싱 entry 스키마. isTransfer는 계좌 내역의 단순 송금 여부(확인 필요 그룹용).
@@ -77,11 +175,13 @@ export const parsedEntrySchema = z.object({
 
 export type ParsedEntry = z.infer<typeof parsedEntrySchema>;
 
-/** parse-entries / sync-attachments 라우트가 클라이언트에 돌려주는 파싱 결과. */
+/** parse-entries 라우트가 클라이언트에 돌려주는 파싱 결과. */
 export type ParseResponse = {
   entries: ParsedEntry[];
   // imageKind='card'로 첨부했지만 카드 내역이 아니라고 판단되면 true.
   imageKindMismatch: boolean;
+  // allowNewCategories일 때 모델이 제안한 새 카테고리(정리 전). 라우트가 합치고 정리한다.
+  suggestedCategories: SuggestedCategory[];
 };
 
 /**
@@ -95,6 +195,8 @@ export const parseOutputSchema = z.object({
     .min(1)
     .max(MAX_ENTRIES),
   imageKindMismatch: z.boolean().nullable(),
+  // allowNewCategories가 아니면 null. strict 모드라 필드 자체는 항상 존재한다.
+  suggestedCategories: z.array(suggestedCategorySchema).nullable(),
 });
 
 export type ParseOutput = z.infer<typeof parseOutputSchema>;
@@ -107,6 +209,7 @@ export function fromParseOutput(output: ParseOutput): ParseResponse {
   return {
     entries: normalizeEntries(entries),
     imageKindMismatch: output.imageKindMismatch ?? false,
+    suggestedCategories: output.suggestedCategories ?? [],
   };
 }
 
@@ -152,6 +255,8 @@ export function buildSystemPrompt(options: {
   customRulesSection?: string;
   /** 과거 내역 기반 "설명 → 카테고리" 힌트. 없으면 생략. */
   categoryHints?: CategoryHint[];
+  /** true면 목록에 맞는 게 없을 때 새 카테고리를 제안해도 된다(지난 내역 가져오기). */
+  allowNewCategories?: boolean;
 }): string {
   const {
     categories,
@@ -161,9 +266,16 @@ export function buildSystemPrompt(options: {
     todayYear,
     customRulesSection = '',
     categoryHints,
+    allowNewCategories = false,
   } = options;
   const imageKindSection = buildImageKindSection(imageKind, hasImages);
   const categoryHintsSection = buildCategoryHintsSection(categoryHints);
+  const categoryRule = allowNewCategories
+    ? `- category는 제공된 목록에서 선택하는 것이 원칙. **목록에 분명히 맞는 게 없을 때만** 2~6자의 간결한 새 카테고리 이름을 category에 쓰고, 그 카테고리를 "suggestedCategories"에 한 번만 넣어라 (같은 새 카테고리를 여러 entry가 공유하면 이름을 정확히 같게)
+- suggestedCategories 각 항목: name(새 이름), group(수입이면 "income", 지출이면 "expense"), subGroup(수입: "regular_income"|"irregular_income" / 지출: "fixed_expense"=매달 고정, "variable_common"=부부 공동 변동, "variable_personal"=개인 변동), icon(아래 아이콘 키 중 하나)
+- 사용 가능한 아이콘 키: ${CATEGORY_ICON_KEYS.join(', ')}
+- 새 카테고리는 최대 ${MAX_SUGGESTED_CATEGORIES}개. 제안이 없으면 suggestedCategories는 null`
+    : '- category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택\n- suggestedCategories는 항상 null';
 
   return `너는 자연어와 영수증 이미지를 구조화된 JSON으로 변환하는 가계부 파서야.
 
@@ -201,7 +313,8 @@ ${categories.join(', ')}
       "isTransfer": true | false | null
     }
   ],
-  "imageKindMismatch": true | false | null
+  "imageKindMismatch": true | false | null,
+  "suggestedCategories": [{ "name": string, "group": "income" | "expense", "subGroup": string, "icon": string }] | null
 }
 
 규칙:
@@ -209,7 +322,7 @@ ${categories.join(', ')}
 - amount는 반드시 양의 정수 (원 단위)
 - "만원"은 10000, "천원"은 1000으로 변환
 - date가 명시되지 않으면 반드시 오늘 날짜(${today})를 사용
-- category는 반드시 제공된 목록에서 선택. 매칭되는 것이 없으면 가장 유사한 것 선택
+${categoryRule}
 - confidence는 파싱 확실도 (영수증이 흐리거나 정보가 불명확할수록 낮게)
 - 영수증 이미지가 가계부 영수증이 아니거나 금액을 전혀 읽을 수 없으면 confidence 0.3 이하로 설정${imageKindSection}${categoryHintsSection}${customRulesSection}`;
 }
@@ -234,9 +347,30 @@ export function normalizeEntries(entries: ParsedEntry[]): ParsedEntry[] {
 // ── Mock (USE_AI_MOCK) ──
 
 const MOCK_TEMPLATES: ParsedEntry[] = [
-  { type: 'expense', amount: 9000, category: '식비', description: '김치찌개', date: '', confidence: 0.95 },
-  { type: 'expense', amount: 15000, category: '교통', description: '택시', date: '', confidence: 0.9 },
-  { type: 'income', amount: 3500000, category: '정기급여', description: '월급', date: '', confidence: 0.98 },
+  {
+    type: 'expense',
+    amount: 9000,
+    category: '식비',
+    description: '김치찌개',
+    date: '',
+    confidence: 0.95,
+  },
+  {
+    type: 'expense',
+    amount: 15000,
+    category: '교통',
+    description: '택시',
+    date: '',
+    confidence: 0.9,
+  },
+  {
+    type: 'income',
+    amount: 3500000,
+    category: '정기급여',
+    description: '월급',
+    date: '',
+    confidence: 0.98,
+  },
 ];
 
 /**
@@ -246,57 +380,50 @@ const MOCK_TEMPLATES: ParsedEntry[] = [
 export function buildMockParseResponse(
   text: string | undefined,
   attachmentsCount: number,
-  imageKind?: ImageKind
+  imageKind?: ImageKind,
+  allowNewCategories = false
 ) {
   const today = dayjs().format('YYYY-MM-DD');
   const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
   const dates = [today, yesterday, today];
-  const textSegments = (text ?? '')
+  const segments = (text ?? '')
     .split(/[\n,]/)
     .map((s) => s.trim())
-    .filter(Boolean).length;
-  const count = Math.min(Math.max(textSegments + attachmentsCount, 1), MAX_ENTRIES);
+    .filter(Boolean);
+  const count = Math.min(Math.max(segments.length + attachmentsCount, 1), MAX_ENTRIES);
+
+  // 테스트용 결정적 신호: allowNewCategories이고 줄에 '반려동물'이 있으면 그 줄은 새 카테고리 제안
+  const MOCK_SUGGESTION: SuggestedCategory = {
+    name: '반려동물',
+    group: 'expense',
+    subGroup: 'variable_common',
+    icon: 'paw_print',
+  };
+  // 테스트용 결정적 신호: 줄에 '지난달'이 있으면 지난달 1일 날짜(가져오기 도착 달 검증)
+  const lastMonthFirst = dayjs().subtract(1, 'month').startOf('month').format('YYYY-MM-DD');
+  const entries = Array.from({ length: count }, (_, i) => {
+    const segment = segments[i];
+    const date = segment?.includes('지난달') ? lastMonthFirst : dates[i % dates.length];
+    const base = { ...MOCK_TEMPLATES[i % MOCK_TEMPLATES.length], date };
+    if (allowNewCategories && segment && segment.includes(MOCK_SUGGESTION.name)) {
+      return {
+        ...base,
+        type: 'expense' as const,
+        category: MOCK_SUGGESTION.name,
+        description: segment,
+        isTransfer: false,
+      };
+    }
+    return { ...base, isTransfer: false };
+  });
+  const suggested = entries.some((e) => e.category === MOCK_SUGGESTION.name)
+    ? [MOCK_SUGGESTION]
+    : [];
 
   return {
-    entries: Array.from({ length: count }, (_, i) => ({
-      ...MOCK_TEMPLATES[i % MOCK_TEMPLATES.length],
-      date: dates[i % dates.length],
-      isTransfer: false,
-    })),
+    entries,
     // 테스트용 결정적 신호: 카드 분류인데 입력 텍스트에 'mismatch'가 있으면 불일치로 간주.
     imageKindMismatch: imageKind === 'card' && (text ?? '').includes('mismatch'),
+    suggestedCategories: allowNewCategories ? suggested : undefined,
   };
-}
-
-/**
- * sync-attachments 라우트용 결정적 mock (이미지 1장당 결과).
- * - account: 이번 달 일반 1건 + 이번 달 송금 1건 + 전월 일반 1건 → 다월·송금 그룹 검증
- * - card: 이번 달 일반 2건
- */
-export function buildMockAttachmentEntries(imageKind: ImageKind): ParsedEntry[] {
-  const today = dayjs().startOf('day');
-  const thisMonth = today.format('YYYY-MM-DD');
-  const prevMonth = today.subtract(1, 'month').format('YYYY-MM-DD');
-
-  if (imageKind === 'account') {
-    return [
-      { type: 'expense', amount: 12000, category: '식비', description: '스타벅스', date: thisMonth, confidence: 0.95, isTransfer: false },
-      { type: 'expense', amount: 50000, category: '기타', description: '홍길동 이체', date: thisMonth, confidence: 0.8, isTransfer: true },
-      { type: 'expense', amount: 30000, category: '식비', description: '지난달 마트', date: prevMonth, confidence: 0.9, isTransfer: false },
-    ];
-  }
-  return [
-    { type: 'expense', amount: 18000, category: '식비', description: '김밥천국', date: thisMonth, confidence: 0.95, isTransfer: false },
-    { type: 'expense', amount: 9900, category: '쇼핑', description: '다이소', date: thisMonth, confidence: 0.92, isTransfer: false },
-  ];
-}
-
-/** entry 배열에서 YYYY-MM 고유값 정렬 배열을 만든다. */
-export function detectedMonthsOf(entries: { date: string }[]): string[] {
-  const set = new Set<string>();
-  for (const e of entries) {
-    const m = e.date.slice(0, 7);
-    if (/^\d{4}-\d{2}$/.test(m)) set.add(m);
-  }
-  return [...set].sort();
 }

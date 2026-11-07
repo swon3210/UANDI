@@ -2,47 +2,33 @@
 
 import type { FC } from 'react';
 import Image, { type StaticImageData } from 'next/image';
-import { Image as ImageIcon, TrendingUp, Users } from 'lucide-react';
+import { Camera, MessageSquareText, Plus } from 'lucide-react';
 import { cn } from '@uandi/ui';
-// 둘이 함께 가계부 쓰는 마스코트(환영) / 성공 마스코트(마무리). 정적 PNG라 screenshots:tour와 무관하다.
 import mascotSplash from '@uandi/ui/assets/mascot-splash.png';
 import mascotSuccess from '@uandi/ui/assets/mascot-success.png';
 
 /**
- * 말랑 가계부 온보딩 투어 슬라이드 정의.
- * 환영(1장)·마무리(마지막 장)는 마스코트 일러스트로 톤을 잡고,
- * 핵심 서비스인 가계부(내역/예산/현금흐름/점검)는 실제 화면 스크린샷으로 안내하며,
- * 갤러리·재테크·커뮤니티는 "그 외 기능" 한 장에 일괄 소개한다.
- * 가계부 스크린샷은 `pnpm --filter web screenshots:tour`(에뮬레이터 필요)로 갱신한다 →
- * apps/web/public/tour/*.webp. 환영(가계부 상단 탭)·그 외는 실제 데이터에 의존하지 않는 표현이다.
+ * 말랑 가계부 온보딩 투어 — "첫 행동 안내" 3장 (docs/pages/01-onboarding.md 「온보딩 투어」).
+ * 1) 둘이 함께 쓰는 가계부 → 2) 첫 내역 적기(+ 버튼) → 3) 예산·예측은 차차.
+ * 실제 화면 스크린샷은 쓰지 않는다 — UI가 바뀌어도 어긋나지 않도록 마스코트·아이콘·모형으로만 그린다.
  * 투어 오버레이(ServiceTourOverlay)와 Storybook 스토리가 공유하는 단일 소스.
  */
 export type TourSlide = {
-  id: string;
+  id: 'welcome' | 'first-entry' | 'entries-ready' | 'later';
   title: string;
-  description: string;
+  /** 짝꿍 이름 등 맥락을 받아 설명 문구를 만든다 */
+  description: (ctx: TourContext) => string;
   Preview: FC;
 };
 
-/** 가계부 화면 스크린샷 미리보기(공통 프레임). 실제 화면을 그대로 보여준다. */
-function ScreenshotPreview({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div className="flex justify-center">
-      <Image
-        src={src}
-        alt={alt}
-        // 실제 스크린샷 원본 크기(760×1253)와 일치시켜야 로드 전/후 종횡비가 같아 CLS가 없다.
-        // public/tour/*.webp를 재생성하면 이 값도 함께 맞춘다.
-        width={760}
-        height={1253}
-        sizes="200px"
-        className="h-auto w-[190px] rounded-2xl border border-border shadow-sm sm:w-[200px]"
-      />
-    </div>
-  );
-}
+export type TourContext = {
+  /** 짝꿍 표시 이름. 아직 없거나 못 읽었으면 null → "짝꿍" */
+  partnerName: string | null;
+  /** 내역이 이미 있으면(지난 내역 가져오기 직후 등) 2장이 "내역이 들어왔어요"로 바뀐다 */
+  hasEntries: boolean;
+};
 
-/** 마스코트 일러스트 미리보기(환영·마무리 슬라이드). 의미는 슬라이드 제목/설명이 전달하므로 alt는 비운다. */
+/** 마스코트 일러스트 미리보기. 의미는 슬라이드 제목/설명이 전달하므로 alt는 비운다. */
 function MascotPreview({ src, widthClassName }: { src: StaticImageData; widthClassName: string }) {
   return (
     <div className="flex justify-center">
@@ -51,117 +37,105 @@ function MascotPreview({ src, widthClassName }: { src: StaticImageData; widthCla
         alt=""
         sizes="240px"
         draggable={false}
-        // 정적 import라 next/image가 종횡비를 알고 있어 CLS가 없다. 표시 폭만 클래스로 지정한다.
         className={cn('h-auto select-none', widthClassName)}
       />
     </div>
   );
 }
 
-/** 슬라이드 1 — 환영. 둘이 함께 가계부 쓰는 마스코트 */
+/** 슬라이드 1 — 둘이 가계부 쓰는 마스코트 */
 const WelcomePreview: FC = () => (
-  <MascotPreview src={mascotSplash} widthClassName="w-[200px] sm:w-[220px]" />
+  <MascotPreview src={mascotSplash} widthClassName="w-[220px] sm:w-[240px]" />
 );
 
-/** 슬라이드 2~5 — 가계부 실제 화면 스크린샷 */
-const RecordPreview: FC = () => (
-  <ScreenshotPreview
-    src="/tour/cashbook-record.webp"
-    alt="가계부 내역 화면 — 월별 수입·지출·잔액 요약과 내역 목록"
-  />
-);
-const BudgetPreview: FC = () => (
-  <ScreenshotPreview src="/tour/cashbook-budget.webp" alt="연간 예산 계획 화면 — 수입·지출 목표" />
-);
-const CashflowPreview: FC = () => (
-  <ScreenshotPreview
-    src="/tour/cashbook-cashflow.webp"
-    alt="현금흐름 화면 — 날짜별 들어올 돈·나갈 돈"
-  />
-);
-const SettlementPreview: FC = () => (
-  <ScreenshotPreview
-    src="/tour/cashbook-settlement.webp"
-    alt="점검 화면 — 수입·지출 요약과 카테고리별 예산 대비 실적"
-  />
-);
-
-/** 슬라이드 6 — 그 외 기능(갤러리·재테크·커뮤니티 일괄) */
-const MORE_FEATURES = [
-  { Icon: ImageIcon, label: '갤러리', desc: '둘의 사진을 폴더·태그로 모으고 슬라이드쇼로' },
-  { Icon: TrendingUp, label: '재테크', desc: '환율·환테크와 커플 자산 합산 대시보드' },
-  { Icon: Users, label: '커뮤니티', desc: '신혼부부와 살림 정보·일상 나누기' },
+/** 입력 예시 칩 — 사진·문장만으로도 내역이 채워진다는 것을 보여준다 */
+const ENTRY_EXAMPLES = [
+  { Icon: Camera, label: '영수증 사진' },
+  { Icon: MessageSquareText, label: '"점심 만원"' },
 ] as const;
 
-const MorePreview: FC = () => (
-  <div className="space-y-2">
-    {MORE_FEATURES.map((m) => (
-      <div
-        key={m.label}
-        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+/** 슬라이드 2 — + 버튼 모형(실제 CashbookFab과 같은 생김새) + 입력 예시 */
+const FirstEntryPreview: FC = () => (
+  <div className="flex flex-col items-center gap-5">
+    <div className="flex items-center gap-3">
+      <span
+        aria-hidden
+        className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <m.Icon size={18} aria-hidden />
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-medium">{m.label}</div>
-          <div className="truncate text-xs text-muted-foreground">{m.desc}</div>
-        </div>
-      </div>
-    ))}
+        <Plus size={26} />
+      </span>
+      <span className="text-sm text-muted-foreground">
+        오른쪽 아래에 있는
+        <br />
+        <span className="font-semibold text-foreground">내역 추가</span> 버튼
+      </span>
+    </div>
+    <div className="flex gap-2">
+      {ENTRY_EXAMPLES.map((e) => (
+        <span
+          key={e.label}
+          className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground"
+        >
+          <e.Icon size={14} aria-hidden className="text-primary" />
+          {e.label}
+        </span>
+      ))}
+    </div>
   </div>
 );
 
-/** 슬라이드 7 — 마무리. 성공 마스코트로 투어를 축하하며 닫는다(시작하기). */
-const ReadyPreview: FC = () => (
+/** 슬라이드 3 — 성공 마스코트 */
+const LaterPreview: FC = () => (
   <MascotPreview src={mascotSuccess} widthClassName="w-[150px] sm:w-[160px]" />
 );
 
-export const TOUR_SLIDES: TourSlide[] = [
-  {
-    id: 'welcome',
-    title: '말랑 가계부에 오신 걸 환영해요',
-    description: '둘이 함께 쓰는 가계부로 내역 입력·결산·예측 기능을 제공해요.',
-    Preview: WelcomePreview,
+const WELCOME_SLIDE: TourSlide = {
+  id: 'welcome',
+  title: '둘이 함께 쓰는 가계부예요',
+  // 짝꿍이 아직 없으면(먼저 시작한 사람) 초대 안내로 바꾼다 — "짝꿍님과 같은 가계부"는 아직 해당이 없다.
+  description: (ctx) => {
+    const name = ctx.partnerName?.trim();
+    const first = name
+      ? `${name}님과 같은 가계부를 봐요.`
+      : '짝꿍을 초대하면 같은 가계부를 함께 봐요.';
+    return `${first}\n둘 중 누가 적어도 바로 함께 보여요.`;
   },
-  {
-    id: 'cashbook-record',
-    title: '내역을 기록하고 한눈에',
-    description:
-      '수입·지출을 같이 기록하고 이번 달 잔액까지 한눈에.\n영수증 사진·문장으로 자동 입력도 돼요.',
-    Preview: RecordPreview,
-  },
-  {
-    id: 'cashbook-budget',
-    title: '목표 세우기',
-    description:
-      '한 해 예산을 미리 세우고 월별로 분배해요.\n목표는 가계부 설정에서 언제든 다시 볼 수 있어요.',
-    Preview: BudgetPreview,
-  },
-  {
-    id: 'cashbook-cashflow',
-    title: '현금흐름으로 예측하기',
-    description:
-      '날짜별 들어올 돈·나갈 돈과 예정된 내역을 한눈에 확인해요.\n내역 화면의 “예상금액 조회하기”로 들어가요.',
-    Preview: CashflowPreview,
-  },
-  {
-    id: 'cashbook-settlement',
-    title: '점검하기',
-    description:
-      '(선택) 혹시 내역 입력에 틀린 게 없었는지 검증하는 기능이에요.\n취소내역·누락내역을 검증해요.',
-    Preview: SettlementPreview,
-  },
-  {
-    id: 'more',
-    title: '이런 기능도 있어요 (베타)',
-    description: '갤러리·재테크·커뮤니티로 둘의 일상을 더 풍성하게 채워보세요.',
-    Preview: MorePreview,
-  },
-  {
-    id: 'ready',
-    title: '이제 시작해볼까요?',
-    description: '둘이 함께 채워갈 가계부, 지금부터 시작이에요.',
-    Preview: ReadyPreview,
-  },
-];
+  Preview: WelcomePreview,
+};
+
+const FIRST_ENTRY_SLIDE: TourSlide = {
+  id: 'first-entry',
+  title: '첫 내역을 적어 볼까요?',
+  description: () =>
+    "오른쪽 아래 + 버튼을 누르면 돼요.\n영수증 사진이나 '점심 만원' 같은 문장만 적어도 자동으로 채워져요.",
+  Preview: FirstEntryPreview,
+};
+
+/** 내역이 이미 있을 때(지난 내역 가져오기 직후) 2장을 대신한다 */
+const ENTRIES_READY_SLIDE: TourSlide = {
+  id: 'entries-ready',
+  title: '내역이 들어왔어요',
+  description: () =>
+    '가져온 내역은 내역 화면에서 볼 수 있어요.\n앞으로는 오른쪽 아래 + 버튼으로 적으면 돼요.',
+  Preview: FirstEntryPreview,
+};
+
+const LATER_SLIDE: TourSlide = {
+  id: 'later',
+  title: '예산과 예측은 차차 같이',
+  description: (ctx) =>
+    `한 해 예산은 홈의 카드에서 세울 수 있어요.\n현금흐름 예측은 내역이 쌓일수록 정확해져요.\n${
+      ctx.hasEntries
+        ? '지금은 들어온 내역을 둘러보는 걸로 충분해요.'
+        : '지금은 첫 내역 하나면 충분해요.'
+    }`,
+  Preview: LaterPreview,
+};
+
+/** 맥락에 맞는 3장. 내역이 있으면 2장이 "내역이 들어왔어요"로 바뀐다. */
+export function tourSlidesFor(ctx: TourContext): TourSlide[] {
+  return [WELCOME_SLIDE, ctx.hasEntries ? ENTRIES_READY_SLIDE : FIRST_ENTRY_SLIDE, LATER_SLIDE];
+}
+
+/** 기본(내역 없음) 구성 — Storybook 등 참조용 */
+export const TOUR_SLIDES: TourSlide[] = tourSlidesFor({ partnerName: null, hasEntries: false });

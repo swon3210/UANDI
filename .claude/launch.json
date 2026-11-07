@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-emulator",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/jinsong/Documents/Github/UANDI/apps/web && set -a && . ./.env.test && set +a && rm -rf .next && /opt/homebrew/bin/pnpm exec next dev --port 3100"
+      ],
+      "port": 3100
+    }
+  ]
+}

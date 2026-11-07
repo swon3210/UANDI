@@ -60,7 +60,7 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
 
   test('가계부 하위 페이지에는 사이드바 토글 대신 뒤로가기만 있다', async ({ authedPage }) => {
     const nav = new AppSidebarPage(authedPage);
-    await authedPage.goto('/inner/cashbook/review');
+    await authedPage.goto('/inner/cashbook/history');
     await expect(authedPage.getByTestId('header-back')).toBeVisible();
     await expect(nav.trigger).toHaveCount(0);
   });

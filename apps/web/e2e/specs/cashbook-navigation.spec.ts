@@ -1,6 +1,11 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
-import { seedAnnualPlan } from '../helpers/emulator';
+import {
+  listAnnualPlans,
+  seedAnnualPlan,
+  seedAnnualPlanRevision,
+  seedDefaultCategories,
+} from '../helpers/emulator';
 
 /**
  * 가계부 상단 분류 탭(대시보드/내역/현금흐름/목표) 제거 후의 진입 경로.
@@ -94,35 +99,74 @@ test.describe('가계부 진입 경로 (상단 탭 없음)', () => {
   });
 });
 
-test.describe('올해 목표 자동 진입', () => {
-  test.use({ seedAnnualPlanPrompted: false });
-
-  test('올해 목표가 없으면 대시보드 진입 시 목표 설정 화면이 한 번 뜬다', async ({
+test.describe('올해 예산 권유 카드', () => {
+  test('올해 목표가 없으면 대시보드에 권유 카드가 보이고, 시작하기로 위저드에 간다', async ({
     authedPage,
   }) => {
-    // 로그인 직후(픽스처가 대시보드 진입까지 마침) 위저드로 이동한다
-    await expect(authedPage).toHaveURL(/\/inner\/cashbook\/plan\/annual\/wizard/, {
-      timeout: 20000,
-    });
-
-    // 두 번째 진입부터는 다시 뜨지 않는다 (설정에서 찾아 들어간다)
-    await authedPage.goto('/inner/cashbook');
     await expect(authedPage.getByTestId('dashboard-header')).toBeVisible();
+    // 위저드로 자동 이동하지 않는다
     await authedPage.waitForTimeout(2000);
     await expect(authedPage).toHaveURL(/\/inner\/cashbook$/);
+
+    const card = authedPage.getByTestId('annual-plan-prompt');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('올해 예산 세우기');
+    await authedPage.getByTestId('annual-plan-prompt-start').click();
+    await authedPage.waitForURL(/\/inner\/cashbook\/plan\/annual\/wizard/);
   });
 
-  test('올해 목표가 이미 있으면 자동으로 뜨지 않는다', async ({ authedContext }) => {
+  test('카드를 닫으면 숨고, 새로고침해도 다시 뜨지 않는다', async ({ authedPage }) => {
+    const card = authedPage.getByTestId('annual-plan-prompt');
+    await expect(card).toBeVisible();
+    await authedPage.getByTestId('annual-plan-prompt-dismiss').click();
+    await expect(card).toBeHidden();
+
+    await authedPage.goto('/inner/cashbook');
+    await expect(authedPage.getByTestId('dashboard-header')).toBeVisible();
+    await expect(card).toHaveCount(0);
+  });
+
+  test('플랜은 있는데 위저드를 끝내지 않았으면 이어서 세우기 카드가 보인다', async ({
+    authedContext,
+  }) => {
     const { page, uid, coupleId } = authedContext;
     await seedAnnualPlan(coupleId, new Date().getFullYear(), uid);
-    // 로그인 직후 자동 진입으로 심긴 플래그를 지워, 목표 존재 여부만으로 판단하게 한다
-    await page.evaluate(() =>
-      window.localStorage.removeItem(`moa:annual-plan-prompt:${new Date().getFullYear()}`)
-    );
-
     await page.goto('/inner/cashbook');
     await expect(page.getByTestId('dashboard-header')).toBeVisible();
-    await page.waitForTimeout(2000);
-    await expect(page).toHaveURL(/\/inner\/cashbook$/);
+    const card = page.getByTestId('annual-plan-prompt');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('예산 이어서 세우기');
+    await expect(page.getByTestId('annual-plan-prompt-resume')).toBeVisible();
+  });
+
+  test('올해 목표를 완성했으면(리비전 있음) 카드가 없다', async ({ authedContext }) => {
+    const { page, uid, coupleId } = authedContext;
+    const planId = await seedAnnualPlan(coupleId, new Date().getFullYear(), uid);
+    await seedAnnualPlanRevision(coupleId, planId, uid);
+    await page.goto('/inner/cashbook');
+    await expect(page.getByTestId('dashboard-header')).toBeVisible();
+    await page.waitForTimeout(1000);
+    await expect(page.getByTestId('annual-plan-prompt')).toHaveCount(0);
+  });
+
+  test('위저드 인트로에서 X로 나가면 빈 플랜이 지워지고 대시보드로 돌아온다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await page.goto('/inner/cashbook/plan/annual/wizard?step=intro');
+    await expect(page.getByRole('button', { name: '위저드 종료' })).toBeVisible();
+    // 진입 즉시 플랜이 만들어진다
+    await expect
+      .poll(async () => (await listAnnualPlans(coupleId)).length, { timeout: 10000 })
+      .toBe(1);
+
+    await page.getByRole('button', { name: '위저드 종료' }).click();
+    await page.waitForURL(/\/inner\/cashbook$/);
+    await expect
+      .poll(async () => (await listAnnualPlans(coupleId)).length, { timeout: 10000 })
+      .toBe(0);
+    // 플랜이 없으니 권유 카드가 다시 보인다
+    await expect(page.getByTestId('annual-plan-prompt')).toBeVisible();
   });
 });

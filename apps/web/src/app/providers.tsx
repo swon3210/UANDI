@@ -12,6 +12,7 @@ import { NativeFcmBridge } from '@/components/NativeFcmBridge';
 import { NativeSafeAreaFix } from '@/components/NativeSafeAreaFix';
 import { KeyboardInsetSync } from '@/components/KeyboardInsetSync';
 import { QuickAddBridge } from '@/components/QuickAddBridge';
+import { CashbookLiveSync } from '@/components/CashbookLiveSync';
 import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler';
 import { NavigationTracker } from '@/components/NavigationTracker';
 
@@ -29,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <NativeSafeAreaFix />
             <KeyboardInsetSync />
             <QuickAddBridge />
+            <CashbookLiveSync />
             <OverlayBackButtonHandler />
             <NavigationTracker />
             {children}

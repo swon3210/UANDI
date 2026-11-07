@@ -9,6 +9,14 @@ import {
   countEntriesByCategory as _countEntriesByCategory,
   bulkUpdateEntriesCategory as _bulkUpdateEntriesCategory,
 } from '@uandi/cashbook-core';
+import {
+  collection,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  type Unsubscribe,
+} from 'firebase/firestore';
 import type { CashbookEntry } from '@/types';
 import { getDb } from '@/lib/firebase/config';
 
@@ -31,6 +39,31 @@ export async function getEntriesInRange(
 
 export async function getLatestEntryDate(coupleId: string): Promise<Date | null> {
   return _getLatestEntryDate(getDb(), coupleId);
+}
+
+/**
+ * 가장 최근에 만들어진 내역 1건을 실시간으로 구독한다(없으면 null).
+ * 기간 내역 전체를 실시간으로 받는 대신, 최신 1건의 변화를 신호로 삼아 쿼리를 무효화하는 데 쓴다
+ * (`CashbookLiveSync`). hasPendingWrites는 내 로컬 쓰기(서버 확정 전)를 구분하기 위해 함께 넘긴다.
+ */
+export function subscribeToLatestEntry(
+  coupleId: string,
+  onChange: (latest: CashbookEntry | null, hasPendingWrites: boolean) => void
+): Unsubscribe {
+  const q = query(
+    collection(getDb(), `couples/${coupleId}/cashbookEntries`),
+    orderBy('createdAt', 'desc'),
+    limit(1)
+  );
+  return onSnapshot(q, (snap) => {
+    const first = snap.docs[0];
+    onChange(
+      first
+        ? ({ ...(first.data() as Omit<CashbookEntry, 'id'>), id: first.id } as CashbookEntry)
+        : null,
+      snap.metadata.hasPendingWrites
+    );
+  });
 }
 
 export async function addEntry(

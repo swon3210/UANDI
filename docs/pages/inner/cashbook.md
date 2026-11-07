@@ -36,7 +36,7 @@
 │  ┌───────────────────┐  │
 │  │  수입   +500,000   │  │
 │  │  지출   -230,000   │  │  ← 월별 요약 카드
-│  │  잔액    270,000   │  │
+│  │  수입−지출 270,000 │  │
 │  └───────────────────┘  │
 │                         │
 │  1월 15일                │  ← 날짜 그룹 헤더
@@ -99,6 +99,12 @@
 │  └───────────────────┘  │
 └─────────────────────────┘
 ```
+
+#### 빠른 추가 시트에서 직접 입력으로 저장할 때
+
+전역 FAB의 빠른 추가 시트(`quick-add-sheet`, `QuickAddBridge`)에서 "금액·카테고리 직접 입력"(`quick-add-manual`)으로
+이 폼을 열어 저장하면 **폼과 빠른 추가 시트가 함께 닫힌다**. 저장 뒤 시트가 남아 한 번 더 닫아야 했던 문제의 해결(2026-11 걷기 6구간).
+AI 파싱 경로는 기존대로 파싱이 끝나는 순간 시트를 닫고 미리보기 시트를 연다.
 
 ### 항목 상세 / 수정
 
@@ -295,3 +301,9 @@ formatCurrency(amount: number): string
 - 디자인 원칙 (Bottom Sheet, 금액 색상): `02-design-system.md`
 - 카테고리 체계 및 관리: `04a-cashbook-categories.md`
 - 연간 예산 계획: `04b-cashbook-annual-plan.md`
+
+## 제거된 기능: 점검(월 결산) — 2026-11-07
+
+- `/inner/cashbook/review`(월 결산: 영수증·스크린샷 첨부, 일괄 AI 분석, 결산 리포트 이미지 저장)와 `/review/entries`를 제거했다. 진입점은 #295 이후 이미 없었다.
+- 함께 제거: `Settlement*` 컴포넌트, `useSettlement`, `services/cashbook-settlement`, `lib/export/report`, `MonthSelector`, `/api/ai/sync-attachments`, 결산 첨부 업로드 헬퍼.
+- **데이터는 남아 있다**: Firestore `couples/{id}/cashbookSettlements/*` 문서와 Storage `couples/{id}/cashbookSettlements/**` 이미지, 보안 규칙은 그대로다. 정리하려면 별도 작업으로 지운다.

@@ -58,6 +58,8 @@ type SeedCoupleOptions = {
   inviteCode?: string;
   expiresInMs?: number; // 기본: 48h, 음수 = 이미 만료
   secondMemberUid?: string;
+  /** inviteCodes/{code}.createdByName — 코드 입력 화면의 "OO님의 초대예요" 힌트에 쓰인다 */
+  createdByName?: string;
 };
 
 export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
@@ -66,6 +68,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     inviteCode = 'TEST99',
     expiresInMs = 48 * 60 * 60 * 1000,
     secondMemberUid,
+    createdByName,
   } = options;
   const coupleId = `couple-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
@@ -82,6 +85,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
         fields: {
           id: { stringValue: coupleId },
           memberUids: { arrayValue: { values: memberValues } },
+          inviteCode: { stringValue: inviteCode },
           createdAt: { timestampValue: new Date().toISOString() },
         },
       }),
@@ -99,6 +103,7 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
           code: { stringValue: inviteCode },
           coupleId: { stringValue: coupleId },
           createdBy: { stringValue: uid },
+          ...(createdByName ? { createdByName: { stringValue: createdByName } } : {}),
           expiresAt: { timestampValue: expiresAt },
           consumedBy: secondMemberUid ? { stringValue: secondMemberUid } : { nullValue: null },
           createdAt: { timestampValue: new Date().toISOString() },
@@ -107,6 +112,48 @@ export async function seedCouple(options: SeedCoupleOptions): Promise<string> {
     }
   );
 
+  return coupleId;
+}
+
+/**
+ * 두 번째 유저가 초대 코드로 합류하는 상황을 에뮬레이터 REST(owner)로 재현한다.
+ * (브라우저 쪽 유저는 상대 users 문서를 쓸 수 없고, page.evaluate에선 firebase 모듈을 못 불러온다)
+ * inviteCodes.consumedBy → couples.memberUids 추가 → users/{uid2}.coupleId 순서로 갱신하고 coupleId를 돌려준다.
+ */
+export async function simulatePartnerJoin(
+  code: string,
+  uid2: string,
+  email2: string,
+  displayName2: string
+): Promise<string> {
+  const base = `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+  const headers = { 'Content-Type': 'application/json', Authorization: 'Bearer owner' };
+
+  const codeRes = await fetch(`${base}/inviteCodes/${code}`, { headers });
+  const codeDoc = (await codeRes.json()) as { fields: { coupleId: { stringValue: string } } };
+  const coupleId = codeDoc.fields.coupleId.stringValue;
+
+  await fetch(`${base}/inviteCodes/${code}?updateMask.fieldPaths=consumedBy`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ fields: { consumedBy: { stringValue: uid2 } } }),
+  });
+
+  const coupleRes = await fetch(`${base}/couples/${coupleId}`, { headers });
+  const coupleDoc = (await coupleRes.json()) as {
+    fields: { memberUids: { arrayValue: { values: { stringValue: string }[] } } };
+  };
+  const members = coupleDoc.fields.memberUids.arrayValue.values.map((v) => v.stringValue);
+  if (!members.includes(uid2)) members.push(uid2);
+  await fetch(`${base}/couples/${coupleId}?updateMask.fieldPaths=memberUids`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({
+      fields: { memberUids: { arrayValue: { values: members.map((m) => ({ stringValue: m })) } } },
+    }),
+  });
+
+  await seedUserDocument(uid2, email2, coupleId, { displayName: displayName2 });
   return coupleId;
 }
 
@@ -346,6 +393,51 @@ export async function seedAnnualPlan(
     }
   );
   return planId;
+}
+
+/** 위저드 완료 표시 — 리비전 1개. 대시보드 권유 카드는 리비전이 있으면 사라진다. */
+export async function seedAnnualPlanRevision(
+  coupleId: string,
+  planId: string,
+  createdBy: string
+): Promise<string> {
+  const revId = `rev-test-${Date.now()}`;
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/annualPlans/${planId}/revisions/${revId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: revId },
+          planId: { stringValue: planId },
+          coupleId: { stringValue: coupleId },
+          source: { stringValue: 'wizard_initial' },
+          createdBy: { stringValue: createdBy },
+          before: { mapValue: { fields: {} } },
+          after: { mapValue: { fields: {} } },
+          totals: {
+            mapValue: {
+              fields: {
+                before: {
+                  mapValue: {
+                    fields: { income: { integerValue: '0' }, expense: { integerValue: '0' } },
+                  },
+                },
+                after: {
+                  mapValue: {
+                    fields: { income: { integerValue: '0' }, expense: { integerValue: '0' } },
+                  },
+                },
+              },
+            },
+          },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    }
+  );
+  return revId;
 }
 
 export async function seedAnnualPlanItem(
@@ -1107,4 +1199,76 @@ export async function seedNotificationSettings(
       }),
     }
   );
+}
+
+type RestDoc = { name: string; fields?: Record<string, Record<string, unknown>> };
+
+function restValue(v: Record<string, unknown> | undefined): unknown {
+  if (!v) return undefined;
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return Number(v.doubleValue);
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('nullValue' in v) return null;
+  return undefined;
+}
+
+/** 커플 하위 컬렉션을 owner 권한으로 전부 읽는다(테스트 검증용). */
+async function listCoupleSubcollection(
+  coupleId: string,
+  sub: string
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/${sub}?pageSize=300`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const data = (await res.json()) as { documents?: RestDoc[] };
+  return (data.documents ?? []).map((d) => {
+    const out: Record<string, unknown> = { id: d.name.split('/').pop() };
+    for (const [k, v] of Object.entries(d.fields ?? {})) out[k] = restValue(v);
+    return out;
+  });
+}
+
+export async function listCategories(
+  coupleId: string
+): Promise<{ id: string; name: string; group: string; subGroup: string; icon: string }[]> {
+  const docs = await listCoupleSubcollection(coupleId, 'cashbookCategories');
+  return docs.map((d) => ({
+    id: String(d.id),
+    name: String(d.name),
+    group: String(d.group),
+    subGroup: String(d.subGroup),
+    icon: String(d.icon),
+  }));
+}
+
+export async function listEntries(
+  coupleId: string
+): Promise<{ id: string; category: string; amount: number; type: string; description: string }[]> {
+  const docs = await listCoupleSubcollection(coupleId, 'cashbookEntries');
+  return docs.map((d) => ({
+    id: String(d.id),
+    category: String(d.category),
+    amount: Number(d.amount),
+    type: String(d.type),
+    description: String(d.description),
+  }));
+}
+
+/** users/{uid}.coupleId 를 owner 권한으로 읽는다. */
+export async function getUserCoupleId(uid: string): Promise<string | null> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  if (res.status !== 200) return null;
+  const doc = (await res.json()) as RestDoc;
+  const v = restValue(doc.fields?.coupleId);
+  return typeof v === 'string' ? v : null;
+}
+
+export async function listAnnualPlans(coupleId: string): Promise<{ id: string; year: number }[]> {
+  const docs = await listCoupleSubcollection(coupleId, 'annualPlans');
+  return docs.map((d) => ({ id: String(d.id), year: Number(d.year) }));
 }
