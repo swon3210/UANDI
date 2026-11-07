@@ -221,3 +221,29 @@ export const HideAddAndHint: Story = {
     hideHint: true,
   },
 };
+
+// 같은 이름의 대분류가 공통/각자에 하나씩 있을 때: 누른 칩 하나만 선택되고 힌트도 그 구분을 따른다.
+const duplicateNameCategories: CashbookCategory[] = [
+  ...expenseCategories,
+  {
+    id: 'p-food-personal',
+    coupleId: 'c1',
+    group: 'expense',
+    subGroup: 'variable_personal',
+    name: '식비',
+    icon: 'fork_knife',
+    color: '#FFA726',
+    isDefault: true,
+    sortOrder: 1,
+    parentCategoryId: null,
+    description: '혼자 먹은 식사·간식',
+    examples: ['편의점', '혼밥'],
+    createdAt: ts,
+  },
+];
+
+export const DuplicateNames: Story = {
+  args: {
+    categories: duplicateNameCategories,
+  },
+};

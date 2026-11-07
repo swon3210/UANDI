@@ -89,4 +89,37 @@ test.describe('빠른 추가 시트', () => {
     // 이름이 겹치지 않는 카테고리는 그대로
     await expect(form.getByRole('button', { name: '여행', exact: true })).toBeVisible();
   });
+
+  test('이름이 같은 카테고리는 누른 칩 하나만 선택되고 힌트도 그 구분을 따른다', async ({
+    authedContext,
+  }) => {
+    const { page, coupleId } = authedContext;
+    await seedDefaultCategories(coupleId);
+    await seedCashbookCategory(coupleId, {
+      group: 'expense',
+      subGroup: 'variable_personal',
+      name: '식비',
+      icon: 'fork_knife',
+      sortOrder: 9,
+    });
+    await openQuickAddOnDashboard(page);
+    await page.getByTestId('quick-add-manual').click();
+    const form = page.getByTestId('entry-form-sheet');
+    await expect(form).toBeVisible();
+
+    const common = form.getByRole('button', { name: '식비 (공통)' });
+    const personal = form.getByRole('button', { name: '식비 (각자)' });
+
+    // 걷기 재검증(2026-11-07): 공통을 누르면 각자 칩도 함께 칠해졌다
+    await common.click();
+    await expect(common).toHaveAttribute('aria-pressed', 'true');
+    await expect(personal).toHaveAttribute('aria-pressed', 'false');
+    await expect(form.getByTestId('category-breadcrumb')).toContainText('공통');
+
+    // 힌트가 이름으로 첫 카테고리를 찾아 각자를 눌러도 "공통"으로 보였다
+    await personal.click();
+    await expect(personal).toHaveAttribute('aria-pressed', 'true');
+    await expect(common).toHaveAttribute('aria-pressed', 'false');
+    await expect(form.getByTestId('category-breadcrumb')).toContainText('각자');
+  });
 });
