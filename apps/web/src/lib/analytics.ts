@@ -7,6 +7,7 @@ import {
   setUserProperties,
   type Analytics,
 } from 'firebase/analytics';
+import { isAdminHost } from '@/lib/admin/admin-host';
 import { firebaseConfig, getFirebaseApp } from '@/lib/firebase/config';
 import { getClientPlatform } from '@/lib/native';
 
@@ -32,7 +33,12 @@ let analyticsPromise: Promise<Analytics | null> | null = null;
 let initialPageViewSkipped = false;
 
 function isAnalyticsEnabled(): boolean {
-  return !!firebaseConfig.measurementId && process.env.NEXT_PUBLIC_FIREBASE_USE_EMULATOR !== 'true';
+  return (
+    !!firebaseConfig.measurementId &&
+    process.env.NEXT_PUBLIC_FIREBASE_USE_EMULATOR !== 'true' &&
+    // 어드민 도메인의 운영자 사용은 서비스 이용 통계에 섞지 않는다
+    !isAdminHost(window.location.host)
+  );
 }
 
 /** GA로 보낼 경로. 초대 코드·사진 태그 이름처럼 사용자 값이 들어가는 세그먼트를 가린다. */

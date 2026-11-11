@@ -5,6 +5,7 @@ export type AdminUserRow = {
   uid: string;
   email: string | null;
   displayName: string | null;
+  photoURL: string | null;
   createdAt: string | null;
   lastActiveAt: string | null;
   coupleId: string | null;

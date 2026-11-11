@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { ADMIN_HOST, isAdminHost } from '@/lib/admin/admin-host';
 
 // AuthInit.tsx에서 로그인/로그아웃 시 설정하는 쿠키
 // 값: 'with_couple' | 'no_couple' | (없음 = 미인증 또는 첫 방문)
@@ -12,6 +13,21 @@ const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authCookie = request.cookies.get(AUTH_COOKIE)?.value;
+
+  // 어드민 전용 도메인: / 를 어드민 화면으로 보여주고 다른 앱 화면은 열지 않는다.
+  // 로그인은 어드민 화면이 직접 받으므로 쿠키 검사를 하지 않는다. 정적 파일·/__/auth 프록시는 통과.
+  if (ADMIN_HOST) {
+    if (isAdminHost(request.headers.get('host'))) {
+      if (pathname.startsWith('/__/') || /\.[a-z0-9]+$/i.test(pathname)) {
+        return NextResponse.next();
+      }
+      if (pathname === '/') return NextResponse.rewrite(new URL('/admin', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      return NextResponse.redirect(`https://${ADMIN_HOST}/`);
+    }
+  }
 
   // 쿠키 없음 = 미인증 또는 첫 방문
   // 보호된 경로(/inner, /outer, /settings, /onboarding)는 홈으로 리다이렉트
