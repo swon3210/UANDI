@@ -29,6 +29,7 @@ type AnalyticsEvents = {
 };
 
 let analyticsPromise: Promise<Analytics | null> | null = null;
+let initialPageViewSkipped = false;
 
 function isAnalyticsEnabled(): boolean {
   return !!firebaseConfig.measurementId && process.env.NEXT_PUBLIC_FIREBASE_USE_EMULATOR !== 'true';
@@ -56,7 +57,8 @@ function loadAnalytics(): Promise<Analytics | null> {
     if (!(await isSupported())) return null;
     // 초기화 전에 지정한 기본 파라미터는 config 직후 첫 이벤트 전에 적용된다.
     setSanitizedLocation(window.location.pathname);
-    // 자동 page_view 는 원본 URL을 보내므로 끄고 trackPageView 로 직접 보낸다.
+    // 화면 이동 시 page_view 는 trackPageView 로 직접 보낸다. 단, 첫 로드는 gtag 가
+    // send_page_view: false 를 무시하고 위의 정리된 page_location 으로 자동 전송한다(trackPageView 참고).
     return initializeAnalytics(getFirebaseApp(), { config: { send_page_view: false } });
   })().catch(() => null);
   return analyticsPromise;
@@ -74,7 +76,13 @@ export function trackEvent<K extends keyof AnalyticsEvents>(
 export function trackPageView(pathname: string): void {
   void loadAnalytics().then((analytics) => {
     if (!analytics) return;
-    logEvent(analytics, 'page_view', setSanitizedLocation(pathname));
+    const location = setSanitizedLocation(pathname);
+    // 첫 로드의 page_view 는 gtag 가 이미 자동으로 보냈다 — 또 보내면 화면당 2회로 집계된다(2026-11-11 프로덕션 확인).
+    if (!initialPageViewSkipped) {
+      initialPageViewSkipped = true;
+      return;
+    }
+    logEvent(analytics, 'page_view', location);
   });
 }
 
