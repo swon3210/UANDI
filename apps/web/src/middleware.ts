@@ -5,7 +5,8 @@ import type { NextRequest } from 'next/server';
 // 값: 'with_couple' | 'no_couple' | (없음 = 미인증 또는 첫 방문)
 const AUTH_COOKIE = 'uandi-auth';
 
-const PROTECTED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
+// /admin 은 로그인만 요구한다(커플 불필요). 권한은 API가 ADMIN_EMAILS 로 검사한다.
+const PROTECTED_ROUTES = ['/inner', '/outer', '/community', '/settings', '/admin'];
 const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
 
 export function middleware(request: NextRequest) {
