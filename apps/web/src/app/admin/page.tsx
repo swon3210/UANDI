@@ -1,18 +1,30 @@
 'use client';
 
-import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
-import { ArrowLeft, RefreshCw, ShieldOff } from 'lucide-react';
+import { toast } from 'sonner';
+import { LogIn, LogOut, RefreshCw, ShieldOff } from 'lucide-react';
 import { Button, EmptyState, Header } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
 import { AdminSummaryCards } from '@/components/admin/AdminSummaryCards';
 import { AdminUserTable } from '@/components/admin/AdminUserTable';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { signInWithGoogle, signOut } from '@/lib/firebase/auth';
 import { AdminForbiddenError } from '@/services/admin';
 import { authStatusAtom, userAtom } from '@/stores/auth.store';
 
-/** 운영자용 사용자 현황(docs/pages/06-admin.md). 접근 제어는 서버(ADMIN_EMAILS)가 한다. */
+async function handleSignIn() {
+  try {
+    await signInWithGoogle();
+  } catch {
+    toast.error('로그인하지 못했어요. 다시 시도해 주세요.');
+  }
+}
+
+/**
+ * 운영자용 사용자 현황(docs/pages/06-admin.md). 어드민 전용 도메인에서는 / 로 열린다.
+ * 접근 제어는 서버(ADMIN_EMAILS)가 하고, 이 화면은 로그인·권한 없음 안내만 맡는다.
+ */
 export default function AdminUsersPage() {
   const status = useAtomValue(authStatusAtom);
   const user = useAtomValue(userAtom);
@@ -21,25 +33,31 @@ export default function AdminUsersPage() {
 
   const header = (
     <Header
-      title="사용자 현황"
-      leftSlot={
-        <Button variant="ghost" size="icon" asChild aria-label="홈으로">
-          <Link href="/">
-            <ArrowLeft size={20} />
-          </Link>
-        </Button>
-      }
+      title="말랑 가계부 어드민"
       rightSlot={
-        data ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="새로고침"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
-          </Button>
+        signedIn ? (
+          <div className="flex items-center gap-1">
+            {data ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="새로고침"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+              >
+                <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="로그아웃"
+              data-testid="admin-logout"
+              onClick={() => void signOut()}
+            >
+              <LogOut size={18} />
+            </Button>
+          </div>
         ) : null
       }
     />
@@ -49,7 +67,23 @@ export default function AdminUsersPage() {
     return <MascotLoader fullScreen />;
   }
 
-  if (!signedIn || error instanceof AdminForbiddenError) {
+  if (!signedIn) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {header}
+        <main data-testid="admin-sign-in">
+          <EmptyState
+            icon={<LogIn />}
+            title="운영자 로그인"
+            description="허용된 운영자 Google 계정으로 로그인해 주세요"
+            action={<Button onClick={() => void handleSignIn()}>Google로 로그인</Button>}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (error instanceof AdminForbiddenError) {
     return (
       <div className="flex min-h-screen flex-col">
         {header}
@@ -57,7 +91,12 @@ export default function AdminUsersPage() {
           <EmptyState
             icon={<ShieldOff />}
             title="접근 권한이 없어요"
-            description="허용된 운영자 계정으로 로그인해야 볼 수 있어요"
+            description={`${user?.email ?? '이 계정'}은 운영자 계정이 아니에요`}
+            action={
+              <Button variant="outline" onClick={() => void signOut()}>
+                다른 계정으로 로그인
+              </Button>
+            }
           />
         </main>
       </div>

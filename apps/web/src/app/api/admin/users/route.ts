@@ -26,6 +26,19 @@ export async function GET(req: NextRequest) {
   const coupleIdByUid = new Map<string, string | null>(
     userDocs.map((d) => [d.id, (d.data()?.coupleId as string | null | undefined) ?? null])
   );
+  // 이름·사진은 앱에서 바꿀 수 있어 users/{uid} 문서가 단일 소스다(없으면 Auth 값).
+  const profileByUid = new Map(
+    userDocs.map((d) => {
+      const data = d.data();
+      return [
+        d.id,
+        {
+          displayName: (data?.displayName as string | undefined) || null,
+          photoURL: (data?.photoURL as string | null | undefined) ?? null,
+        },
+      ];
+    })
+  );
   const emailByUid = new Map(authUsers.map((u) => [u.uid, u.email ?? null]));
 
   const entriesOf = (coupleId: string) =>
@@ -63,7 +76,8 @@ export async function GET(req: NextRequest) {
       return {
         uid: u.uid,
         email: u.email ?? null,
-        displayName: u.displayName ?? null,
+        displayName: profileByUid.get(u.uid)?.displayName ?? u.displayName ?? null,
+        photoURL: profileByUid.get(u.uid)?.photoURL ?? u.photoURL ?? null,
         createdAt: u.metadata.creationTime ? new Date(u.metadata.creationTime).toISOString() : null,
         lastActiveAt: lastActive ? new Date(lastActive).toISOString() : null,
         coupleId,
