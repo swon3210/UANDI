@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { UserRecord } from 'firebase-admin/auth';
 import { adminAuth, adminDb } from '@/lib/ai/firebase-admin';
 import { verifyAdminEmail } from '@/lib/admin/verify-admin-email';
-import type { AdminUserRow } from '@/services/admin';
+import type { AdminUserPlatform, AdminUserRow } from '@/services/admin';
 
 // 어드민 사용자 현황 — ADMIN_EMAILS 계정만(docs/pages/06-admin.md).
 // 다른 사용자의 users/·couples/ 문서는 클라이언트 규칙상 읽을 수 없으므로 Admin SDK로 읽어 건수만 반환한다.
@@ -35,6 +35,10 @@ export async function GET(req: NextRequest) {
         {
           displayName: (data?.displayName as string | undefined) || null,
           photoURL: (data?.photoURL as string | null | undefined) ?? null,
+          clientPlatforms: (data?.clientPlatforms ?? {}) as Record<
+            string,
+            FirebaseFirestore.Timestamp | undefined
+          >,
         },
       ];
     })
@@ -69,9 +73,20 @@ export async function GET(req: NextRequest) {
         ? [...coupleIdByUid.entries()].find(([uid, id]) => id === coupleId && uid !== u.uid)?.[0]
         : undefined;
       const lastActive = u.metadata.lastRefreshTime ?? u.metadata.lastSignInTime;
-      const platforms = new Set(
-        tokensSnap.docs.map((d) => d.data().platform as string | undefined).filter(Boolean)
+      // 앱을 연 기록(clientPlatforms)이 기본이고, 기록 도입 전 사용자는 푸시 토큰의 플랫폼으로 보완한다.
+      const lastSeenByPlatform = new Map<string, string | null>(
+        Object.entries(profileByUid.get(u.uid)?.clientPlatforms ?? {}).map(([name, ts]) => [
+          name,
+          ts?.toDate?.()?.toISOString() ?? null,
+        ])
       );
+      for (const d of tokensSnap.docs) {
+        const name = d.data().platform as string | undefined;
+        if (name && !lastSeenByPlatform.has(name)) lastSeenByPlatform.set(name, null);
+      }
+      const platforms: AdminUserPlatform[] = [...lastSeenByPlatform]
+        .map(([name, lastSeenAt]) => ({ name, lastSeenAt }))
+        .sort((a, b) => (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? ''));
 
       return {
         uid: u.uid,
@@ -85,7 +100,7 @@ export async function GET(req: NextRequest) {
         myEntryCount: myCountSnap?.data().count ?? 0,
         coupleEntryCount: coupleId ? (coupleStats.get(coupleId)?.count ?? 0) : 0,
         lastEntryAt: coupleId ? (coupleStats.get(coupleId)?.lastEntryAt ?? null) : null,
-        platforms: [...platforms] as string[],
+        platforms,
       };
     })
   );

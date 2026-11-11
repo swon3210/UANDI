@@ -39,9 +39,18 @@ GA4(`docs/09-analytics.md`)에는 이메일·이름을 보낼 수 없으므로, 
 | 커플        | `users/{uid}.coupleId`의 다른 멤버 이메일, 없으면 「미연결」            |
 | 기록        | 본인 작성 내역 수 / 커플 전체 내역 수 (`count()` 집계)                  |
 | 마지막 기록 | 커플 `cashbookEntries`의 최신 `createdAt`                               |
-| 플랫폼      | `users/{uid}/fcmTokens`의 `platform` 값들 (푸시 토큰이 있을 때만)       |
+| 플랫폼      | 써 본 플랫폼 전부(최근 사용 순) — 아래 참고                             |
 
 - 금액·메모·카테고리 같은 가계부 내용은 보여주지 않는다. 건수만.
+
+### 플랫폼 기록
+
+- 로그인 상태로 앱을 열면 `ClientPlatformTracker`가 `users/{uid}.clientPlatforms.{web|android|ios}`에
+  마지막 사용 시각을 남긴다. 같은 기기·플랫폼에서는 하루 한 번만 쓴다(localStorage 표식). 어드민 도메인 방문은 기록하지 않는다.
+- 판별은 `getClientPlatform()`(네이티브 브리지 → RN WebView → Android WebView UA → web).
+- 표에는 기록된 플랫폼을 모두 배지로 보여준다(예: 「Android」「웹」). 배지에 마우스를 올리면 마지막 사용 시각.
+- 기록 도입 전 사용자는 푸시 토큰(`users/{uid}/fcmTokens`)의 `platform`으로 보완한다(시각 없음).
+  둘 다 없으면 `-`.
 
 ## 비용
 

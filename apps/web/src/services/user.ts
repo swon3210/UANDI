@@ -1,6 +1,7 @@
+import dayjs from 'dayjs';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
-import type { User } from '@/types';
+import type { FcmTokenPlatform, User } from '@/types';
 
 export async function getUserDocument(uid: string): Promise<User | null> {
   const snap = await getDoc(doc(getDb(), 'users', uid));
@@ -20,6 +21,28 @@ export async function createUserDocument(
 
 export async function updateUserDocument(uid: string, data: Partial<User>): Promise<void> {
   await updateDoc(doc(getDb(), 'users', uid), data);
+}
+
+/**
+ * 앱을 연 플랫폼의 마지막 사용 시각을 users/{uid}.clientPlatforms 에 남긴다(어드민 사용자 현황용).
+ * 같은 기기·플랫폼에서는 하루 한 번만 쓴다. 실패해도 앱 사용에는 영향이 없다(best-effort).
+ */
+export async function recordClientPlatform(uid: string, platform: FcmTokenPlatform): Promise<void> {
+  const key = `uandi:client-platform:${uid}:${platform}`;
+  const today = dayjs().format('YYYY-MM-DD');
+  try {
+    if (window.localStorage.getItem(key) === today) return;
+  } catch {
+    // 저장소 접근 불가(사생활 보호 모드 등) — 매번 쓰더라도 진행
+  }
+  await updateDoc(doc(getDb(), 'users', uid), {
+    [`clientPlatforms.${platform}`]: serverTimestamp(),
+  });
+  try {
+    window.localStorage.setItem(key, today);
+  } catch {
+    // 무시
+  }
 }
 
 /**

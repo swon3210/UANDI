@@ -18,7 +18,10 @@ export const SAMPLE_ADMIN_USERS: AdminUserRow[] = [
     myEntryCount: 142,
     coupleEntryCount: 230,
     lastEntryAt: '2026-11-10T11:00:00.000Z',
-    platforms: ['android'],
+    platforms: [
+      { name: 'android', lastSeenAt: '2026-11-10T12:30:00.000Z' },
+      { name: 'web', lastSeenAt: '2026-10-28T09:00:00.000Z' },
+    ],
   },
   {
     uid: 'uid-b',
@@ -32,7 +35,10 @@ export const SAMPLE_ADMIN_USERS: AdminUserRow[] = [
     myEntryCount: 88,
     coupleEntryCount: 230,
     lastEntryAt: '2026-11-10T11:00:00.000Z',
-    platforms: ['ios', 'web'],
+    platforms: [
+      { name: 'ios', lastSeenAt: '2026-11-08T22:10:00.000Z' },
+      { name: 'web', lastSeenAt: null },
+    ],
   },
   {
     uid: 'uid-c',
@@ -60,6 +66,6 @@ export const SAMPLE_ADMIN_USERS: AdminUserRow[] = [
     myEntryCount: 0,
     coupleEntryCount: 0,
     lastEntryAt: null,
-    platforms: ['web'],
+    platforms: [{ name: 'web', lastSeenAt: '2026-11-01T05:00:00.000Z' }],
   },
 ];
