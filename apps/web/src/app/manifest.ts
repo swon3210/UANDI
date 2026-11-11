@@ -1,17 +1,28 @@
 import type { MetadataRoute } from 'next';
+import { cookies, headers } from 'next/headers';
+import { LOCALE_COOKIE, resolveLocale } from '@/lib/locale';
+import { loadMessages } from '@/i18n/messages';
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  // 라우트 핸들러라 next-intl 의 getTranslations 대신 로케일을 직접 정한다(같은 규칙).
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  const locale = resolveLocale({
+    cookieValue: cookieStore.get(LOCALE_COOKIE)?.value,
+    acceptLanguage: headerStore.get('accept-language'),
+  });
+  const { metadata } = await loadMessages(locale);
+
   return {
-    name: '말랑 가계부',
-    short_name: '말랑',
-    description: '둘이 함께 쓰는 커플 가계부 — 함께 모아가는 즐거움',
+    name: String(metadata.title),
+    short_name: String(metadata.shortName),
+    description: String(metadata.description),
     start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#FAFAF8',
     theme_color: '#E8837A',
-    lang: 'ko',
+    lang: locale,
     icons: [
       {
         src: '/icons/favicon.svg',

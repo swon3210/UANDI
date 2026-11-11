@@ -2,14 +2,20 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft, ChevronRight, User as UserIcon } from 'lucide-react';
 import { Header, Button, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocaleSetting } from '@/hooks/useLocaleSetting';
+import { LanguageSettingRow } from '@/components/settings/LanguageSettingRow';
 
 /** 설정 첫 화면. 회원탈퇴는 프로필 편집 페이지 맨 아래로 옮겼다(docs/04-auth-flow.md). */
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations('settings');
+  const tCommon = useTranslations('common');
+  const { locale, setLocale, isPending } = useLocaleSetting();
 
   if (!user) return null;
 
@@ -17,9 +23,14 @@ export default function SettingsPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="settings-header"
-        title="설정"
+        title={t('title')}
         leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로가기">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label={tCommon('back')}
+          >
             <ArrowLeft size={20} />
           </Button>
         }
@@ -54,7 +65,7 @@ export default function SettingsPage() {
             data-testid="settings-cashbook"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
-            가계부 설정
+            {t('cashbook')}
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
           <Link
@@ -62,9 +73,10 @@ export default function SettingsPage() {
             data-testid="settings-ai"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
-            AI 설정
+            {t('ai')}
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
+          <LanguageSettingRow value={locale} onChange={setLocale} disabled={isPending} />
         </div>
       </main>
     </div>

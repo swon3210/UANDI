@@ -36,6 +36,9 @@ export default defineConfig({
   timeout: 180000,
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
+    // 브라우저 Accept-Language·navigator.language 를 한국어로 고정한다.
+    // 앱이 쿠키가 없으면 Accept-Language 로 언어를 고르므로(docs/10-i18n.md), 없으면 Chromium 기본(en-US)로 영어가 뜬다.
+    locale: 'ko-KR',
     // 시작(폰) 뷰포트. 태블릿 캡처는 spec 의 DEVICES 배열에서 setViewportSize 로 전환한다.
     //   디바이스 픽셀 = CSS 크기 × deviceScaleFactor = 1236×2400
     //   (각 변 320~3840px, 세로:가로 비율 ≤ 2:1 — 2400/1236 ≈ 1.94 만족)

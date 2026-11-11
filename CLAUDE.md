@@ -28,6 +28,7 @@ sh scripts/setup-env.sh
 
 | 작업            | 추가로 읽을 문서              |
 | --------------- | ----------------------------- |
+| UI 문자열 추가·수정 | `docs/10-i18n.md`           |
 | 인증 / 미들웨어 | `docs/04-auth-flow.md`        |
 | E2E 테스트 작성 | `docs/05-testing-strategy.md` |
 | 페이지 구현     | `docs/pages/[해당 페이지].md` |
@@ -141,6 +142,7 @@ sh scripts/setup-env.sh
 - Radix UI 패키지를 `package.json`에 직접 추가 (shadcn CLI가 자동 처리)
 - TailwindCSS v4에서 `@tailwind base/components/utilities` 사용 (`@import "tailwindcss"` 사용)
 - `@uidotdev/usehooks`로 커버되는 훅을 직접 구현 (위 목록 참고)
+- UI 문자열(한글/영문)을 컴포넌트에 직접 쓰기 — `apps/web/messages/{ko,en}` + `useTranslations()` 사용, 날짜 포맷은 `dateFormat()`, 금액은 `@/utils/currency` (`docs/10-i18n.md`). `pnpm i18n:check` 통과 필수
 
 ---
 

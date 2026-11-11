@@ -1,0 +1,10 @@
+{
+  "title": "Settings",
+  "cashbook": "Budget settings",
+  "ai": "AI settings",
+  "language": {
+    "label": "Language",
+    "description": "Choose the language the app is shown in",
+    "selectAriaLabel": "Select language"
+  }
+}

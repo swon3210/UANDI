@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Providers } from './providers';
+import { LocaleSync } from '@/components/LocaleSync';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -10,33 +13,42 @@ export const viewport: Viewport = {
   themeColor: '#E8837A',
 };
 
-export const metadata: Metadata = {
-  title: '말랑 가계부',
-  description: '둘이 함께 쓰는 커플 가계부 — 함께 모아가는 즐거움',
-  applicationName: '말랑 가계부',
-  appleWebApp: {
-    capable: true,
-    title: '말랑 가계부',
-    statusBarStyle: 'default',
-  },
-  formatDetection: {
-    telephone: false,
-  },
-  icons: {
-    icon: [
-      { url: '/icons/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/favicon-16.png', sizes: '16x16', type: 'image/png' },
-    ],
-    apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180' }],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('metadata');
+  return {
+    title: t('title'),
+    description: t('description'),
+    applicationName: t('title'),
+    appleWebApp: {
+      capable: true,
+      title: t('title'),
+      statusBarStyle: 'default',
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    icons: {
+      icon: [
+        { url: '/icons/favicon.svg', type: 'image/svg+xml' },
+        { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/icons/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      ],
+      apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180' }],
+    },
+  };
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // 로케일은 요청마다 src/i18n/request.ts 가 쿠키/Accept-Language 로 정한다(URL prefix 없음).
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+
   return (
-    <html lang="ko">
+    <html lang={locale}>
       <body className="bg-background text-foreground antialiased">
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <LocaleSync locale={locale} />
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

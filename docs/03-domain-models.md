@@ -52,6 +52,8 @@ type User = {
   createdAt: Timestamp;
   // 앱을 연 플랫폼별 마지막 사용 시각. 기기·플랫폼별 하루 1회 본인이 갱신(어드민 사용자 현황용)
   clientPlatforms?: { web?: Timestamp; android?: Timestamp; ios?: Timestamp };
+  // 설정에서 고른 표시 언어. 서버(AI 라우트·푸시)가 읽는 단일 소스. 없으면 쿠키/Accept-Language (docs/10-i18n.md)
+  locale?: 'ko' | 'en';
 };
 ```
 

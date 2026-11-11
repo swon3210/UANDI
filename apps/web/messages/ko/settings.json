@@ -1,0 +1,10 @@
+{
+  "title": "설정",
+  "cashbook": "가계부 설정",
+  "ai": "AI 설정",
+  "language": {
+    "label": "언어",
+    "description": "앱에 표시되는 언어를 고릅니다",
+    "selectAriaLabel": "언어 선택"
+  }
+}

@@ -83,6 +83,7 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:3000',
+    locale: 'ko-KR', // 앱이 Accept-Language 로 언어를 고르므로 한국어로 고정 (docs/10-i18n.md)
     trace: 'on-first-retry',
   },
   projects: [
