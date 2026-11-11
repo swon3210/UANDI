@@ -212,7 +212,7 @@ export default function CashbookPage() {
     setFilter(createDefaultFilterState());
   };
 
-  const addMutation = useAddEntry(coupleId);
+  const addMutation = useAddEntry(coupleId, 'history');
   const updateMutation = useUpdateEntry(coupleId);
   const deleteMutation = useDeleteEntry(coupleId);
 

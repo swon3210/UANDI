@@ -22,6 +22,7 @@ import coralMascot from '@uandi/ui/assets/mascot-couple-coral.png';
 import sageMascot from '@uandi/ui/assets/mascot-couple-sage.png';
 import { userAtom, authStatusAtom } from '@/stores/auth.store';
 import { setAuthCookie } from '@/lib/auth-cookie';
+import { trackEvent } from '@/lib/analytics';
 import { consumePendingInviteCode } from '@/lib/invite-code';
 import { shareInviteLink } from '@/lib/share-invite';
 import {
@@ -175,6 +176,7 @@ export default function OnboardingPage() {
               setIsLoading(true);
               try {
                 const result = await createCouple(user.uid, user.displayName);
+                trackEvent('couple_created');
                 setInviteCode(result.inviteCode);
                 setCoupleId(result.coupleId);
                 setStep('create_pending');
@@ -258,6 +260,7 @@ export default function OnboardingPage() {
     setJoinError('');
     try {
       const result = await joinCoupleByInviteCode(user.uid, otpValue);
+      trackEvent('couple_joined');
       setCoupleId(result.coupleId);
       const partner = await getUserDocumentWithRetry(result.partnerUid);
       setPartnerName(partner?.displayName?.trim() || PARTNER_FALLBACK_NAME);

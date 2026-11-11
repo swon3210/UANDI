@@ -17,6 +17,7 @@ import {
   type AnnualPlanTotals,
   type AnnualPlanValidation,
 } from '@/services/annual-plan';
+import { trackEvent } from '@/lib/analytics';
 import type { AnnualPlanItem, AnnualPlanRevision, CategoryGroup } from '@/types';
 
 const PLAN_KEY = 'annualPlan';
@@ -65,8 +66,10 @@ export function useCreateAnnualPlan(coupleId: string | null) {
   return useMutation({
     mutationFn: ({ year, createdBy }: { year: number; createdBy: string }) =>
       createAnnualPlan(coupleId!, year, createdBy),
-    onSuccess: (_data, variables) =>
-      qc.invalidateQueries({ queryKey: [PLAN_KEY, coupleId, variables.year] }),
+    onSuccess: (_data, variables) => {
+      trackEvent('annual_plan_created');
+      qc.invalidateQueries({ queryKey: [PLAN_KEY, coupleId, variables.year] });
+    },
     onError: () => toast.error('연간 계획 생성에 실패했어요.'),
   });
 }

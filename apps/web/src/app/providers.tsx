@@ -15,6 +15,7 @@ import { QuickAddBridge } from '@/components/QuickAddBridge';
 import { CashbookLiveSync } from '@/components/CashbookLiveSync';
 import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler';
 import { NavigationTracker } from '@/components/NavigationTracker';
+import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -33,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <CashbookLiveSync />
             <OverlayBackButtonHandler />
             <NavigationTracker />
+            <AnalyticsTracker />
             {children}
             <Toaster />
           </OverlayProvider>

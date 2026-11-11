@@ -79,7 +79,7 @@ function ImportPageContent() {
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
   const { data: categories, isPending: categoriesPending } = useCashbookCategories(coupleId);
-  const addEntriesMutation = useAddEntries(coupleId);
+  const addEntriesMutation = useAddEntries(coupleId, 'import');
 
   const [source, setSource] = useState<ImportSource>('card');
   const [step, setStep] = useState<ImportStep>('upload');

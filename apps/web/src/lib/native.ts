@@ -1,3 +1,5 @@
+import type { FcmTokenPlatform } from '@/types';
+
 /**
  * 모바일 네이티브(WebView) 래퍼가 주입하는 브리지(window.__UANDI_NATIVE__)를 읽는 유틸.
  *
@@ -17,4 +19,18 @@
 export function isIosNative(): boolean {
   if (typeof window === 'undefined') return false;
   return window.__UANDI_NATIVE__?.platform === 'ios';
+}
+
+/**
+ * 현재 웹이 어느 클라이언트에서 렌더링되는지(사용 분석의 client_platform 속성용).
+ * 안드로이드는 FCM 토큰이 없으면 platform 이 주입되지 않을 수 있어 RN WebView 존재 + UA 로 보완한다.
+ */
+export function getClientPlatform(): FcmTokenPlatform {
+  if (typeof window === 'undefined') return 'web';
+  const injected = window.__UANDI_NATIVE__?.platform;
+  if (injected) return injected;
+  if (window.ReactNativeWebView != null) {
+    return /Android/i.test(navigator.userAgent) ? 'android' : 'ios';
+  }
+  return 'web';
 }

@@ -5,6 +5,7 @@ import { useSetAtom } from 'jotai';
 import { Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged, getRedirectSignInResult } from '@/lib/firebase/auth';
 import { setAuthCookie } from '@/lib/auth-cookie';
+import { signUpMethod, trackEvent } from '@/lib/analytics';
 import { userAtom } from '@/stores/auth.store';
 import { getUserDocument, createUserDocument } from '@/services/user';
 import type { User } from '@/types';
@@ -49,6 +50,7 @@ export function AuthInit() {
           photoURL: newUserData.photoURL,
           coupleId: newUserData.coupleId,
         });
+        trackEvent('sign_up', { method: signUpMethod(firebaseUser.providerData[0]?.providerId) });
         userDoc = newUserData;
       }
 

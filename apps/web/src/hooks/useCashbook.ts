@@ -14,6 +14,7 @@ import {
 } from '@/services/cashbook';
 import type { CashbookCategory, CashbookEntry, CashbookEntryType } from '@/types';
 import { buildCategoryHints, type CategoryHint } from '@/utils/category-hints';
+import { trackEvent, type EntriesAddedSource } from '@/lib/analytics';
 
 /** 필터 시트의 기간 프리셋 버튼 값 (UI 표현). */
 export type PeriodPreset = 'thisMonth' | 'lastMonth' | 'last3Months' | 'thisYear' | 'custom';
@@ -316,7 +317,7 @@ function toastEntriesAdded(message: string, goToHistory: () => void) {
   );
 }
 
-export function useAddEntry(coupleId: string | null) {
+export function useAddEntry(coupleId: string | null, source: EntriesAddedSource) {
   const qc = useQueryClient();
   const router = useRouter();
   return useMutation({
@@ -324,6 +325,7 @@ export function useAddEntry(coupleId: string | null) {
       data: Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>
     ) => addEntry(coupleId!, data),
     onSuccess: () => {
+      trackEvent('entries_added', { source, count: 1 });
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
       toastEntriesAdded('내역을 추가했어요', () => router.push(HISTORY_PATH));
     },
@@ -331,7 +333,7 @@ export function useAddEntry(coupleId: string | null) {
   });
 }
 
-export function useAddEntries(coupleId: string | null) {
+export function useAddEntries(coupleId: string | null, source: EntriesAddedSource) {
   const qc = useQueryClient();
   const router = useRouter();
   return useMutation({
@@ -339,6 +341,7 @@ export function useAddEntries(coupleId: string | null) {
       entries: Array<Omit<CashbookEntry, 'id' | 'coupleId' | 'createdAt'> & Record<string, unknown>>
     ) => addEntries(coupleId!, entries),
     onSuccess: (count) => {
+      trackEvent('entries_added', { source, count });
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
       toastEntriesAdded(`${count}건 추가됐어요`, () => router.push(HISTORY_PATH));
     },

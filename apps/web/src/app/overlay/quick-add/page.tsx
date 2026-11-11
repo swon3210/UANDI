@@ -27,8 +27,8 @@ export default function OverlayQuickAddPage() {
 
   const { data: categories } = useCashbookCategories(coupleId);
   const resolveCategoryHints = useResolveCategoryHints(coupleId);
-  const addMutation = useAddEntry(coupleId);
-  const addManyMutation = useAddEntries(coupleId);
+  const addMutation = useAddEntry(coupleId, 'bubble');
+  const addManyMutation = useAddEntries(coupleId, 'bubble');
 
   if (status === 'loading') {
     return <MascotLoader fullScreen />;
