@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'use-intl';
 import { Plus, X } from 'lucide-react';
 import { Button } from '../../components/button';
 import { Input } from '../../components/input';
@@ -31,7 +32,11 @@ export type ParseEntriesPreferencesProps = {
 
 /** 한 줄 키워드로 정규화(개행/양끝 공백 제거 + 길이 캡). 서버가 최종 sanitize 하지만 UI에서도 막는다. */
 function normalizeKeyword(raw: string, maxLen: number): string {
-  return raw.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maxLen);
+  return raw
+    .replace(/[\r\n\t]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLen);
 }
 
 /**
@@ -49,11 +54,11 @@ export function ParseEntriesPreferences({
   categories,
   disabled,
 }: ParseEntriesPreferencesProps) {
+  const t = useTranslations('ui.aiPrefs.parse');
   const [newKeyword, setNewKeyword] = useState('');
 
   const hasCategories = categories.length > 0;
-  const canAddRule =
-    !disabled && hasCategories && value.categoryRules.length < MAX_CATEGORY_RULES;
+  const canAddRule = !disabled && hasCategories && value.categoryRules.length < MAX_CATEGORY_RULES;
 
   const updateRule = (index: number, patch: Partial<CategoryRule>) => {
     const next = value.categoryRules.map((rule, i) => (i === index ? { ...rule, ...patch } : rule));
@@ -93,8 +98,8 @@ export function ParseEntriesPreferences({
 
   return (
     <PreferenceSection
-      title="거래 파싱 맞춤화"
-      description="영수증·내역을 자동 분류할 때 우리만의 규칙을 먼저 적용해요."
+      title={t('title')}
+      description={t('description')}
       enabled={value.enabled}
       onEnabledChange={(enabled) => onChange({ ...value, enabled })}
       enabledTestId="ai-parse-enabled"
@@ -102,11 +107,9 @@ export function ParseEntriesPreferences({
     >
       {/* 가맹점/키워드 → 카테고리 규칙 */}
       <fieldset className="space-y-3" disabled={disabled}>
-        <legend className="text-sm font-medium">가맹점·키워드 → 카테고리</legend>
+        <legend className="text-sm font-medium">{t('rulesLegend')}</legend>
         {!hasCategories ? (
-          <p className="text-xs text-muted-foreground">
-            먼저 가계부 카테고리를 만들면 규칙을 추가할 수 있어요.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('needCategories')}</p>
         ) : null}
 
         {value.categoryRules.map((rule, index) => (
@@ -115,10 +118,8 @@ export function ParseEntriesPreferences({
               data-testid={`ai-parse-rule-${index}-match`}
               value={rule.match}
               maxLength={MAX_RULE_MATCH_LEN}
-              placeholder="예: 스타벅스"
-              onChange={(e) =>
-                updateRule(index, { match: e.target.value.replace(/[\r\n]/g, '') })
-              }
+              placeholder={t('matchPlaceholder')}
+              onChange={(e) => updateRule(index, { match: e.target.value.replace(/[\r\n]/g, '') })}
               className="flex-1"
             />
             <span className="text-xs text-muted-foreground">→</span>
@@ -130,7 +131,7 @@ export function ParseEntriesPreferences({
                 data-testid={`ai-parse-rule-${index}-category`}
                 className="w-28 shrink-0"
               >
-                <SelectValue placeholder="카테고리" />
+                <SelectValue placeholder={t('categoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
@@ -144,7 +145,7 @@ export function ParseEntriesPreferences({
               type="button"
               variant="ghost"
               size="icon"
-              aria-label="규칙 삭제"
+              aria-label={t('removeRule')}
               data-testid={`ai-parse-rule-${index}-remove`}
               onClick={() => removeRule(index)}
             >
@@ -162,27 +163,25 @@ export function ParseEntriesPreferences({
           disabled={!canAddRule}
         >
           <Plus size={16} className="mr-1" />
-          규칙 추가
+          {t('addRule')}
         </Button>
         {value.categoryRules.length >= MAX_CATEGORY_RULES ? (
           <p className="text-xs text-muted-foreground">
-            규칙은 최대 {MAX_CATEGORY_RULES}개까지 추가할 수 있어요.
+            {t('maxRules', { max: MAX_CATEGORY_RULES })}
           </p>
         ) : null}
       </fieldset>
 
       {/* 이체로 볼 키워드 */}
       <fieldset className="space-y-2" disabled={disabled}>
-        <legend className="text-sm font-medium">이체로 볼 키워드</legend>
-        <p className="text-xs text-muted-foreground">
-          이 키워드가 들어간 계좌 거래는 소비가 아닌 이체로 표시해 확인 대상에 넣어요.
-        </p>
+        <legend className="text-sm font-medium">{t('transferLegend')}</legend>
+        <p className="text-xs text-muted-foreground">{t('transferHint')}</p>
         <div className="flex items-center gap-2">
           <Input
             data-testid="ai-parse-transfer-input"
             value={newKeyword}
             maxLength={MAX_TRANSFER_KEYWORD_LEN}
-            placeholder="예: 홍길동, 토스"
+            placeholder={t('transferPlaceholder')}
             onChange={(e) => setNewKeyword(e.target.value.replace(/[\r\n]/g, ''))}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -200,7 +199,7 @@ export function ParseEntriesPreferences({
             onClick={addKeyword}
             disabled={disabled || value.transferKeywords.length >= MAX_TRANSFER_KEYWORDS}
           >
-            추가
+            {t('add')}
           </Button>
         </div>
         {value.transferKeywords.length > 0 ? (
@@ -214,7 +213,7 @@ export function ParseEntriesPreferences({
                 {keyword}
                 <button
                   type="button"
-                  aria-label={`${keyword} 삭제`}
+                  aria-label={t('removeKeyword', { keyword })}
                   data-testid={`ai-parse-transfer-remove-${keyword}`}
                   onClick={() => removeKeyword(keyword)}
                   className="text-muted-foreground hover:text-foreground"

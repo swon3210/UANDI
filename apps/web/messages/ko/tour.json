@@ -1,0 +1,33 @@
+{
+  "skip": "건너뛰기",
+  "viewEntries": "내역 보기",
+  "firstEntry": "첫 내역 적기",
+  "lookAround": "둘러볼게요",
+  "prev": "이전",
+  "next": "다음",
+  "addButtonHint": "오른쪽 아래에 있는<br></br><b>내역 추가</b> 버튼",
+  "examples": {
+    "receipt": "영수증 사진",
+    "sentence": "\"점심 만원\""
+  },
+  "welcome": {
+    "title": "둘이 함께 쓰는 가계부예요",
+    "withPartner": "{name}님과 같은 가계부를 봐요.",
+    "withoutPartner": "짝꿍을 초대하면 같은 가계부를 함께 봐요.",
+    "shared": "둘 중 누가 적어도 바로 함께 보여요."
+  },
+  "firstEntrySlide": {
+    "title": "첫 내역을 적어 볼까요?",
+    "description": "오른쪽 아래 + 버튼을 누르면 돼요.\n영수증 사진이나 '점심 만원' 같은 문장만 적어도 자동으로 채워져요."
+  },
+  "entriesReady": {
+    "title": "내역이 들어왔어요",
+    "description": "가져온 내역은 내역 화면에서 볼 수 있어요.\n앞으로는 오른쪽 아래 + 버튼으로 적으면 돼요."
+  },
+  "later": {
+    "title": "예산과 예측은 차차 같이",
+    "description": "한 해 예산은 홈의 카드에서 세울 수 있어요.\n현금흐름 예측은 내역이 쌓일수록 정확해져요.",
+    "hasEntries": "지금은 들어온 내역을 둘러보는 걸로 충분해요.",
+    "noEntries": "지금은 첫 내역 하나면 충분해요."
+  }
+}

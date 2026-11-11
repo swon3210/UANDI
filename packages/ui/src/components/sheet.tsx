@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 
 import { cn } from '@uandi/ui/lib/utils';
 
@@ -57,33 +58,36 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = 'right', className, children, style, onPointerDownOutside, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      // 하단 시트는 가상 키보드 높이(--keyboard-inset)만큼 위로 올려 입력칸이 가려지지 않게 한다.
-      // 키보드가 없으면 0px이라 기존(bottom-0) 동작과 동일하다.
-      style={side === 'bottom' ? { bottom: 'var(--keyboard-inset, 0px)', ...style } : style}
-      {...props}
-      onPointerDownOutside={(event) => {
-        onPointerDownOutside?.(event);
-        // 위에 겹쳐 연 다른 시트/다이얼로그 안을 누른 것은 이 시트의 바깥 클릭이 아니다.
-        // 터치 입력에서 Radix는 바깥 클릭 판정을 click 시점으로 미루는데, 그 click으로 위 시트가
-        // 먼저 닫히면 이 시트가 최상위 레이어가 되어 함께 닫혀버린다(필터 → 카테고리 시트 등).
-        const target = event.target as HTMLElement | null;
-        if (target?.closest('[role="dialog"], [role="alertdialog"]')) event.preventDefault();
-      }}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">닫기</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-));
+>(({ side = 'right', className, children, style, onPointerDownOutside, ...props }, ref) => {
+  const t = useTranslations('ui');
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        // 하단 시트는 가상 키보드 높이(--keyboard-inset)만큼 위로 올려 입력칸이 가려지지 않게 한다.
+        // 키보드가 없으면 0px이라 기존(bottom-0) 동작과 동일하다.
+        style={side === 'bottom' ? { bottom: 'var(--keyboard-inset, 0px)', ...style } : style}
+        {...props}
+        onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event);
+          // 위에 겹쳐 연 다른 시트/다이얼로그 안을 누른 것은 이 시트의 바깥 클릭이 아니다.
+          // 터치 입력에서 Radix는 바깥 클릭 판정을 click 시점으로 미루는데, 그 click으로 위 시트가
+          // 먼저 닫히면 이 시트가 최상위 레이어가 되어 함께 닫혀버린다(필터 → 카테고리 시트 등).
+          const target = event.target as HTMLElement | null;
+          if (target?.closest('[role="dialog"], [role="alertdialog"]')) event.preventDefault();
+        }}
+      >
+        {children}
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <X className="h-4 w-4" />
+          <span className="sr-only">{t('close')}</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  );
+});
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

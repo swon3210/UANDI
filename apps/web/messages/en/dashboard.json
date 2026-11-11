@@ -1,0 +1,145 @@
+{
+  "title": "Dashboard",
+  "history": "Entries",
+  "historyTitle": "Entries",
+  "viewHistory": "View entries",
+  "viewAll": "View all",
+  "recentEntries": "Recent entries",
+  "partnerFallback": "your partner",
+  "meFallback": "Me",
+  "won": "₩{amount}",
+  "group": {
+    "all": "All",
+    "expense": "Spending",
+    "income": "Income"
+  },
+  "subGroup": {
+    "all": "All {group}",
+    "fixed": "Fixed {group}",
+    "variable": "Variable {group}",
+    "fixedShort": "Fixed",
+    "variableShort": "Variable"
+  },
+  "period": {
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "prev": "Previous period",
+    "next": "Next period",
+    "pickLabel": "{label}, choose a period",
+    "pickerPrev": "Previous",
+    "pickerNext": "Next",
+    "pickTitle": {
+      "monthly": "Choose a month",
+      "yearly": "Choose a year"
+    },
+    "comparePickTitle": {
+      "monthly": "Choose what to compare",
+      "yearly": "Choose a year to compare"
+    },
+    "prevHint": {
+      "monthly": "Last month",
+      "yearly": "Last year"
+    }
+  },
+  "total": {
+    "expense": "Total spending",
+    "income": "Total income",
+    "withSubGroup": "{prefix} {label}",
+    "withCategories": "{label} ({count} categories)",
+    "allGroup": "All {group}",
+    "allSubGroup": "All {prefix} {group}"
+  },
+  "empty": {
+    "title": "No entries in this period",
+    "description": "Pick another period or add entries to your budget",
+    "import": "Import last month's entries"
+  },
+  "donut": {
+    "selectedCategories": "{count} selected categories",
+    "fixedVariable": "Fixed vs. variable {group}",
+    "selectCategories": "Select categories",
+    "sheetTitle": "Choose categories to show",
+    "emptyTitle": "No category entries",
+    "emptyDescription": "Pick another group or change the period",
+    "expand": "Show subcategories of {category}",
+    "fixedLabel": "Fixed {group}",
+    "variableLabel": "Variable {group}",
+    "directParent": "{parent} (other)"
+  },
+  "meter": {
+    "title": "Spending vs. income",
+    "valueText": "{percent}% of income spent",
+    "noIncome": "No income",
+    "income": "Income",
+    "expense": "Spending",
+    "empty": "No income or spending in this period",
+    "overPrefix": "Spent ",
+    "overSuffix": " more than income",
+    "leftPrefix": "Left over "
+  },
+  "compare": {
+    "title": "Period comparison",
+    "usual": "Usual",
+    "usualHint": "{months}-month median",
+    "buttonLabel": "Comparing with {label}, choose a period",
+    "noChange": "No change vs. {label}",
+    "versus": "vs. {label} ",
+    "selectedTotal": "Total of {count} selected categories",
+    "selectedCount": "{count} categories to compare",
+    "selectCategories": "Select categories",
+    "emptyTitle": "Nothing to compare",
+    "emptyDescription": "Neither period has entries. Try another comparison period",
+    "pickTitle": "Choose categories to compare",
+    "pickDescription": "Use 'Select categories' to pick what to compare",
+    "medianUnavailable": "Once you have {months}+ months of history, we'll compare with your usual",
+    "withUsual": "Compare with usual",
+    "recentMedian": "Median of the last {months} months",
+    "orSpecific": "or compare with a specific month"
+  },
+  "categorySheet": {
+    "title": "Choose categories to compare",
+    "search": "Search categories",
+    "selectedCount": "{count} selected",
+    "noResults": "No matching categories",
+    "clearAll": "Clear all",
+    "apply": "Apply",
+    "applyCount": "Apply {count}"
+  },
+  "aiSummary": {
+    "title": "AI summary",
+    "versus": "vs. {label}",
+    "noChange": "No change",
+    "error": "Couldn't build the AI summary. Please try again",
+    "retry": "Retry",
+    "fullReport": "View full report",
+    "selectedCategories": "{count} selected categories"
+  },
+  "planPrompt": {
+    "dismiss": "Dismiss budget suggestion",
+    "resumeTitle": "Finish setting up your budget",
+    "resumeProgress": "{done} items filled in. Keep going to finish",
+    "resumeStarted": "You've only just started. Keep going to finish",
+    "resume": "Continue",
+    "startTitle": "Set this year's budget",
+    "duration": "· about 5 min",
+    "startDescription": "Enter a few {year} salary and fixed-expense items to see what's left. You can also do this later in budget settings",
+    "start": "Get started"
+  },
+  "nudge": {
+    "fallbackMessage": "asked you to log some entries",
+    "ariaLabel": "Entry request from {name}",
+    "title": "{name} gave you a nudge 🐹",
+    "later": "Later",
+    "add": "Add entry",
+    "respondError": "Please try again in a moment.",
+    "sent": "Nudge sent 🐹",
+    "sendError": "Couldn't send the nudge. Please try again in a moment."
+  },
+  "couple": {
+    "inviteTitle": "Invite your partner",
+    "inviteDescription": "Send the code or link to your partner",
+    "waiting": "Home updates as soon as your partner joins",
+    "inviteError": "Couldn't load the invite code. Please try again in a moment",
+    "partnerJoined": "{name} has joined"
+  }
+}

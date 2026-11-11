@@ -7,13 +7,49 @@ import '../src/globals.css';
 import koCommon from '../../../apps/web/messages/ko/common.json';
 import koMetadata from '../../../apps/web/messages/ko/metadata.json';
 import koSettings from '../../../apps/web/messages/ko/settings.json';
+import koShell from '../../../apps/web/messages/ko/shell.json';
+import koLanding from '../../../apps/web/messages/ko/landing.json';
+import koOnboarding from '../../../apps/web/messages/ko/onboarding.json';
+import koTour from '../../../apps/web/messages/ko/tour.json';
+import koPwa from '../../../apps/web/messages/ko/pwa.json';
+import koUi from '../../../apps/web/messages/ko/ui.json';
+import koDashboard from '../../../apps/web/messages/ko/dashboard.json';
 import enCommon from '../../../apps/web/messages/en/common.json';
 import enMetadata from '../../../apps/web/messages/en/metadata.json';
 import enSettings from '../../../apps/web/messages/en/settings.json';
+import enShell from '../../../apps/web/messages/en/shell.json';
+import enLanding from '../../../apps/web/messages/en/landing.json';
+import enOnboarding from '../../../apps/web/messages/en/onboarding.json';
+import enTour from '../../../apps/web/messages/en/tour.json';
+import enPwa from '../../../apps/web/messages/en/pwa.json';
+import enUi from '../../../apps/web/messages/en/ui.json';
+import enDashboard from '../../../apps/web/messages/en/dashboard.json';
 
 const MESSAGES = {
-  ko: { common: koCommon, metadata: koMetadata, settings: koSettings },
-  en: { common: enCommon, metadata: enMetadata, settings: enSettings },
+  ko: {
+    common: koCommon,
+    metadata: koMetadata,
+    settings: koSettings,
+    shell: koShell,
+    landing: koLanding,
+    onboarding: koOnboarding,
+    tour: koTour,
+    pwa: koPwa,
+    ui: koUi,
+    dashboard: koDashboard,
+  },
+  en: {
+    common: enCommon,
+    metadata: enMetadata,
+    settings: enSettings,
+    shell: enShell,
+    landing: enLanding,
+    onboarding: enOnboarding,
+    tour: enTour,
+    pwa: enPwa,
+    ui: enUi,
+    dashboard: enDashboard,
+  },
 } as const;
 
 type StorybookLocale = keyof typeof MESSAGES;

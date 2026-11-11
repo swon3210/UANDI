@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Copy, Loader2, Share2 } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 import { cn } from '../../lib/utils';
 import { Button } from '../../components/button';
 
@@ -37,11 +38,12 @@ export function InviteCodePanel({
   onCopy,
   onShare,
   onStart,
-  expiresLabel = '코드는 48시간 후 만료돼요',
-  waitingLabel = '짝꿍이 입력하면 여기서 바로 알려드릴게요',
-  startHint = '짝꿍은 나중에 합류해도 돼요',
+  expiresLabel,
+  waitingLabel,
+  startHint,
   className,
 }: InviteCodePanelProps) {
+  const t = useTranslations('ui.onboarding');
   return (
     <div className={cn('flex flex-col items-center', className)}>
       <p
@@ -54,26 +56,30 @@ export function InviteCodePanel({
       <div className="mt-4 flex gap-2">
         <Button variant="outline" size="sm" className="gap-1" onClick={onCopy}>
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? '복사됨' : '코드 복사'}
+          {copied ? t('copied') : t('copyCode')}
         </Button>
         <Button variant="outline" size="sm" className="gap-1" onClick={onShare}>
           <Share2 size={14} />
-          링크 공유
+          {t('shareLink')}
         </Button>
       </div>
 
-      <p className="mt-5 text-center text-xs text-muted-foreground">{expiresLabel}</p>
+      <p className="mt-5 text-center text-xs text-muted-foreground">
+        {expiresLabel ?? t('expires')}
+      </p>
       <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="animate-spin" size={14} aria-hidden />
-        {waitingLabel}
+        {waitingLabel ?? t('waiting')}
       </p>
 
       {onStart ? (
         <div className="mt-8 w-full max-w-sm">
           <Button className="w-full" size="lg" onClick={onStart} data-testid="start-alone">
-            먼저 시작하기
+            {t('startAlone')}
           </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">{startHint}</p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            {startHint ?? t('startHint')}
+          </p>
         </div>
       ) : null}
     </div>

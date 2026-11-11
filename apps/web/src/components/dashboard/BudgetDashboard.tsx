@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import dayjs, { type Dayjs } from 'dayjs';
 import { BookOpen, ChevronRight, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -40,8 +41,9 @@ import {
   pickTopChanges,
 } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
-import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
+import { MEDIAN_MIN_SAMPLE_MONTHS, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import {
+  dateFormat,
   getPeriodLabel,
   getPeriodRange,
   isCurrentPeriod,
@@ -71,40 +73,9 @@ type Props = {
   coupleId: string;
 };
 
-const TOTAL_LABEL: Record<CategoryGroup, string> = {
-  expense: '지출 합계',
-  income: '수입 합계',
-};
-
 const TOTAL_COLOR: Record<CategoryGroup, string> = {
   expense: 'text-expense',
   income: 'text-income',
-};
-
-const SUB_GROUP_PREFIX: Record<Exclude<SubGroupFilter, 'all'>, string> = {
-  fixed: '고정',
-  variable: '변동',
-};
-
-const GROUP_NAME: Record<'expense' | 'income', string> = {
-  expense: '지출',
-  income: '수입',
-};
-
-const PICKER_TITLE: Record<PeriodKind, string> = {
-  monthly: '월 선택',
-  yearly: '연도 선택',
-};
-
-const COMPARE_PICKER_TITLE: Record<PeriodKind, string> = {
-  monthly: '비교 대상 선택', // 평소 또는 특정 달
-  yearly: '비교할 연도 선택',
-};
-
-// 비교 기간 기본값(직전 기간)의 보조 라벨
-const PREV_PERIOD_HINT: Record<PeriodKind, string> = {
-  monthly: '전월',
-  yearly: '전년',
 };
 
 /**
@@ -127,6 +98,12 @@ function buildHistoryHref(period: PeriodKind, cursor: Dayjs, group: CategoryGrou
 
 export function BudgetDashboard({ coupleId }: Props) {
   const router = useRouter();
+  const t = useTranslations('dashboard');
+  // 표시 라벨 (지출/수입, 고정/변동, 기간 선택기 제목) — 전부 messages/{locale}/dashboard.json
+  const groupName = (g: 'expense' | 'income') => t(`group.${g}`);
+  const subGroupPrefix = (s: Exclude<SubGroupFilter, 'all'>) =>
+    t(s === 'fixed' ? 'subGroup.fixedShort' : 'subGroup.variableShort');
+  const usualLabel = t('compare.usual');
   // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
   const [filters, updateFilters] = useDashboardFilters();
   const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
@@ -227,7 +204,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             data-testid="period-picker-sheet"
           >
             <SheetHeader>
-              <SheetTitle>{PICKER_TITLE[period]}</SheetTitle>
+              <SheetTitle>{t(`period.pickTitle.${period}`)}</SheetTitle>
             </SheetHeader>
             <div className="py-4">
               <PeriodPicker
@@ -259,7 +236,7 @@ export function BudgetDashboard({ coupleId }: Props) {
             data-testid="compare-picker-sheet"
           >
             <SheetHeader>
-              <SheetTitle>{COMPARE_PICKER_TITLE[period]}</SheetTitle>
+              <SheetTitle>{t(`period.comparePickTitle.${period}`)}</SheetTitle>
             </SheetHeader>
             <div className="py-4">
               <CompareTargetPicker
@@ -322,7 +299,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
           <CompareCategorySheet
-            title="표시할 카테고리 선택"
+            title={t('donut.sheetTitle')}
             options={donutOptions}
             initialSelected={donutSlices.map((c) => c.category)}
             onApply={(names) => updateFilters({ donutSelection: names })}
@@ -336,8 +313,8 @@ export function BudgetDashboard({ coupleId }: Props) {
   // 기간 비교: 지출·수입 '전체'는 총액만, 고정/변동은 선택이 없을 때 그 합계 1줄로 비교한다
   const compareTotalRowLabel = supportsSubGroup(group)
     ? subGroup === 'all'
-      ? `전체 ${GROUP_NAME[group]}`
-      : `전체 ${SUB_GROUP_PREFIX[subGroup]} ${GROUP_NAME[group]}`
+      ? t('total.allGroup', { group: groupName(group) })
+      : t('total.allSubGroup', { prefix: subGroupPrefix(subGroup), group: groupName(group) })
     : undefined;
   // 지금 비교 중인 카테고리 (비교 데이터에 있는 것만). 비어 있으면 총액 비교 → 범위 전체
   const comparedCategories = isGroupOverview
@@ -350,7 +327,7 @@ export function BudgetDashboard({ coupleId }: Props) {
     : undefined;
   const compareUnavailableMessage =
     isMedianCompare && !isMedianLoading && !medianComparison
-      ? MEDIAN_UNAVAILABLE_MESSAGE
+      ? t('compare.medianUnavailable', { months: MEDIAN_MIN_SAMPLE_MONTHS })
       : undefined;
   // AI 종합 분석은 월간 탭 전용 (평소·월별 추이를 근거로 쓴다)
   const analysisHref =
@@ -435,10 +412,10 @@ export function BudgetDashboard({ coupleId }: Props) {
     group === 'all'
       ? ''
       : supportsSubGroup(group) && subGroup !== 'all'
-        ? `${SUB_GROUP_PREFIX[subGroup]} ${TOTAL_LABEL[group]}`
-        : TOTAL_LABEL[group];
+        ? t('total.withSubGroup', { prefix: subGroupPrefix(subGroup), label: t(`total.${group}`) })
+        : t(`total.${group}`);
   const totalLabel = isDonutFiltered
-    ? `${baseTotalLabel} (카테고리 ${donutSlices.length}개)`
+    ? t('total.withCategories', { label: baseTotalLabel, count: donutSlices.length })
     : baseTotalLabel;
 
   return (
@@ -454,7 +431,7 @@ export function BudgetDashboard({ coupleId }: Props) {
       <GroupTabs value={group} onChange={handleGroupChange} />
       {supportsSubGroup(group) ? (
         <SubGroupTabs
-          groupLabel={group === 'expense' ? '지출' : '수입'}
+          groupLabel={groupName(group)}
           value={subGroup}
           onChange={handleSubGroupChange}
         />
@@ -470,7 +447,7 @@ export function BudgetDashboard({ coupleId }: Props) {
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">{totalLabel}</div>
             <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-              내역 보기
+              {t('viewHistory')}
               <ChevronRight size={14} />
             </span>
           </div>
@@ -489,13 +466,13 @@ export function BudgetDashboard({ coupleId }: Props) {
         <div data-testid="dashboard-empty" className="rounded-xl border border-border bg-card p-6">
           <EmptyState
             icon={<BookOpen size={32} />}
-            title="이 기간엔 내역이 없어요"
-            description="다른 기간을 선택하거나 가계부에 내역을 추가해보세요"
+            title={t('empty.title')}
+            description={t('empty.description')}
             action={
               <Button asChild variant="outline" size="sm">
                 <Link href="/inner/cashbook/import" data-testid="dashboard-import-link">
                   <Upload size={14} aria-hidden />
-                  지난달 내역 불러오기
+                  {t('empty.import')}
                 </Link>
               </Button>
             }
@@ -522,8 +499,8 @@ export function BudgetDashboard({ coupleId }: Props) {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground" data-testid="donut-caption">
                     {isDonutFiltered
-                      ? `선택한 카테고리 ${donutSlices.length}개`
-                      : `고정·변동 ${GROUP_NAME[group]}`}
+                      ? t('donut.selectedCategories', { count: donutSlices.length })
+                      : t('donut.fixedVariable', { group: groupName(group) })}
                   </span>
                   <Button
                     variant="ghost"
@@ -532,7 +509,7 @@ export function BudgetDashboard({ coupleId }: Props) {
                     data-testid="donut-category-button"
                     className="h-7 gap-0.5 px-2 text-xs"
                   >
-                    카테고리 선택
+                    {t('donut.selectCategories')}
                     <ChevronRight size={14} />
                   </Button>
                 </div>
@@ -552,12 +529,12 @@ export function BudgetDashboard({ coupleId }: Props) {
               isLoading={isMedianCompare ? isMedianLoading : isCompareLoading}
               group={group}
               currentLabel={label}
-              compareLabel={isMedianCompare ? '평소' : getPeriodLabel(period, compareCursor)}
+              compareLabel={isMedianCompare ? usualLabel : getPeriodLabel(period, compareCursor)}
               compareHint={
                 isMedianCompare
-                  ? `${MEDIAN_WINDOW_MONTHS}개월 중위값`
+                  ? t('compare.usualHint', { months: MEDIAN_WINDOW_MONTHS })
                   : isDefaultCompare
-                    ? PREV_PERIOD_HINT[period]
+                    ? t(`period.prevHint.${period}`)
                     : undefined
               }
               compareTotal={compareTotal}
@@ -576,14 +553,18 @@ export function BudgetDashboard({ coupleId }: Props) {
                     ? (compareTotalRowLabel ?? '')
                     : comparedCategories.length === 1
                       ? comparedCategories[0]
-                      : `선택한 카테고리 ${comparedCategories.length}개`
+                      : t('aiSummary.selectedCategories', { count: comparedCategories.length })
                 }
-                compareLabel={isMedianCompare ? '평소' : compareCursor.format('M월')}
-                currentLabel={cursor.format('M월')}
+                compareLabel={
+                  isMedianCompare ? usualLabel : compareCursor.format(dateFormat('monthShort'))
+                }
+                currentLabel={cursor.format(dateFormat('monthShort'))}
                 group={group}
                 items={summaryItems}
                 overall={composeOverallSummary({
-                  compareLabel: isMedianCompare ? '평소' : getPeriodLabel(period, compareCursor),
+                  compareLabel: isMedianCompare
+                    ? usualLabel
+                    : getPeriodLabel(period, compareCursor),
                   currentTotal: summaryRows.reduce((sum, r) => sum + r.current, 0),
                   compareTotal: compareTotal ?? summaryRows.reduce((sum, r) => sum + r.compare, 0),
                   rows: summaryRows,

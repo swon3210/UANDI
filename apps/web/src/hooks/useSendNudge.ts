@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { getLatestNudgeForPartner, sendNudge } from '@/services/nudge';
 
 const LATEST_KEY = 'nudge-latest';
@@ -27,6 +28,7 @@ export function useSendNudge(
   fromUid: string | null,
   toUid: string | null
 ) {
+  const t = useTranslations('dashboard.nudge');
   const qc = useQueryClient();
 
   return useMutation({
@@ -34,10 +36,10 @@ export function useSendNudge(
       sendNudge({ coupleId: coupleId!, fromUid: fromUid!, toUid: toUid!, message }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [LATEST_KEY, coupleId, fromUid, toUid] });
-      toast.success('입력 요청을 보냈어요 🐹');
+      toast.success(t('sent'));
     },
     onError: () => {
-      toast.error('요청 전송에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      toast.error(t('sendError'));
     },
   });
 }

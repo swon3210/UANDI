@@ -1,0 +1,89 @@
+{
+  "close": "Close",
+  "loading": "Loading",
+  "sidebar": {
+    "title": "Menu",
+    "description": "Navigate between spaces and pages",
+    "nav": "Main menu"
+  },
+  "onboarding": {
+    "connectedTitle": "You're connected with {name}!",
+    "connectedDescription": "Now you can fill in the budget together",
+    "start": "Get started",
+    "checkingCode": "Checking the invite code…",
+    "inviteFrom": "Invitation from {name}",
+    "codeConfirmed": "Invite code confirmed",
+    "copied": "Copied",
+    "copyCode": "Copy code",
+    "shareLink": "Share link",
+    "expires": "The code expires in 48 hours",
+    "waiting": "We'll let you know here as soon as your partner joins",
+    "startAlone": "Start on my own",
+    "startHint": "Your partner can join later"
+  },
+  "avatar": {
+    "change": "Change photo",
+    "add": "Add photo",
+    "remove": "Remove",
+    "uploading": "Uploading... {progress}%"
+  },
+  "aiPrefs": {
+    "tone": {
+      "legend": "Tone",
+      "friendly": { "label": "Friendly", "description": "Warm and encouraging" },
+      "concise": { "label": "Concise", "description": "Just the essentials, short and plain" },
+      "strict": { "label": "Strict", "description": "Cool-headed, focused on problems" }
+    },
+    "focus": {
+      "legend": "Analysis focus",
+      "saving": { "label": "Saving first", "description": "Spending you could cut comes first" },
+      "investment": {
+        "label": "Building assets",
+        "description": "Room to save and invest comes first"
+      },
+      "balanced": { "label": "Balanced", "description": "Income and spending evenly" }
+    },
+    "length": {
+      "legend": "Length",
+      "short": { "label": "Short", "description": "Key points in 3–4 lines" },
+      "normal": { "label": "Normal", "description": "Default length" },
+      "detailed": { "label": "Detailed", "description": "Reasoning for every item" }
+    },
+    "stance": {
+      "legend": "Forecast stance",
+      "conservative": {
+        "label": "Conservative",
+        "description": "Fewer predictions, lower confidence"
+      },
+      "standard": { "label": "Standard", "description": "Follow your usual pattern" },
+      "aggressive": { "label": "Aggressive", "description": "More predictions, higher confidence" }
+    },
+    "analyze": {
+      "title": "Spending analysis",
+      "description": "Adjust the tone and direction of the monthly spending report to suit you two."
+    },
+    "predict": {
+      "title": "Cash flow forecast",
+      "description": "Tune how the calendar's 'AI expected entries' are estimated.",
+      "excludeLegend": "Categories to leave out of forecasts",
+      "noCategories": "No categories yet.",
+      "excludeHint": "Selected categories won't appear in the forecast list."
+    },
+    "parse": {
+      "title": "Transaction parsing",
+      "description": "Apply your own rules first when receipts and statements are auto-categorized.",
+      "rulesLegend": "Merchant/keyword → category",
+      "needCategories": "Create budget categories first to add rules.",
+      "matchPlaceholder": "e.g. Starbucks",
+      "categoryPlaceholder": "Category",
+      "removeRule": "Remove rule",
+      "addRule": "Add rule",
+      "maxRules": "You can add up to {max} rules.",
+      "transferLegend": "Keywords that mean a transfer",
+      "transferHint": "Account transactions containing these keywords are marked as transfers, not spending, and flagged for review.",
+      "transferPlaceholder": "e.g. John Doe, Venmo",
+      "add": "Add",
+      "removeKeyword": "Remove {keyword}"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslations } from 'use-intl';
 import { ImagePlus, Trash2, User as UserIcon } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
 import { Button } from '../../components/button';
@@ -27,6 +28,7 @@ export function ProfileAvatarUploader({
   uploadProgress = null,
   disabled,
 }: ProfileAvatarUploaderProps) {
+  const t = useTranslations('ui.avatar');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isUploading = uploadProgress !== null;
   const busy = isUploading || !!disabled;
@@ -42,9 +44,7 @@ export function ProfileAvatarUploader({
     <div className="flex flex-col items-center gap-4">
       <Avatar className="h-24 w-24" data-testid="profile-avatar">
         {photoURL ? <AvatarImage src={photoURL} alt={displayName} /> : null}
-        <AvatarFallback className="text-2xl">
-          {initial || <UserIcon size={32} />}
-        </AvatarFallback>
+        <AvatarFallback className="text-2xl">{initial || <UserIcon size={32} />}</AvatarFallback>
       </Avatar>
 
       <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ export function ProfileAvatarUploader({
           data-testid="profile-avatar-change"
         >
           <ImagePlus size={16} className="mr-1" />
-          {photoURL ? '사진 변경' : '사진 등록'}
+          {photoURL ? t('change') : t('add')}
         </Button>
         {photoURL ? (
           <Button
@@ -70,7 +70,7 @@ export function ProfileAvatarUploader({
             data-testid="profile-avatar-remove"
           >
             <Trash2 size={16} className="mr-1" />
-            삭제
+            {t('remove')}
           </Button>
         ) : null}
       </div>
@@ -79,7 +79,7 @@ export function ProfileAvatarUploader({
         <div className="w-full max-w-[200px] space-y-1" data-testid="profile-avatar-progress">
           <Progress value={uploadProgress} className="h-2" />
           <p className="text-center text-xs text-muted-foreground">
-            업로드 중... {uploadProgress}%
+            {t('uploading', { progress: uploadProgress })}
           </p>
         </div>
       ) : null}

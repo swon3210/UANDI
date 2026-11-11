@@ -1,0 +1,35 @@
+{
+  "partnerFallback": "짝꿍",
+  "preparing": "가계부를 준비하고 있어요",
+  "tagline": "함께 모아가는 즐거움",
+  "create": {
+    "title": "처음 시작해요",
+    "description": "새 공간을 만들고 짝꿍을 초대해요",
+    "ariaLabel": "새 커플 공간 만들기",
+    "creating": "공간을 만드는 중…"
+  },
+  "join": {
+    "title": "초대 코드를 받았어요",
+    "description": "짝꿍이 보낸 6자리 코드로 합류해요",
+    "ariaLabel": "초대 코드 입력하기",
+    "enterCode": "초대 코드를 입력하세요",
+    "connect": "연결하기"
+  },
+  "back": "뒤로",
+  "invite": {
+    "title": "짝꿍을 초대해요",
+    "description": "코드나 링크를 짝꿍에게 보내 주세요"
+  },
+  "errors": {
+    "INVITE_CODE_NOT_FOUND": "존재하지 않는 초대 코드예요",
+    "INVITE_CODE_EXPIRED": "초대 코드가 만료됐어요. 상대방에게 새 코드를 요청해 주세요",
+    "COUPLE_ALREADY_FULL": "이미 연결된 커플이에요",
+    "CANNOT_JOIN_OWN_COUPLE": "내가 만든 코드예요. 상대방에게 공유해 주세요",
+    "unknown": "오류가 발생했어요. 다시 시도해 주세요"
+  },
+  "share": {
+    "title": "말랑 가계부 초대",
+    "text": "둘이 함께 쓰는 말랑 가계부에 초대해요. 초대 코드: {code}",
+    "copied": "초대 링크를 복사했어요"
+  }
+}

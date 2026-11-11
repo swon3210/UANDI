@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, Minus, Search } from 'lucide-react';
 import { Button, cn, Input, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
 import { CATEGORY_ICON_MAP } from '@/constants/category-icons';
 import type { CashbookCategory, CategoryGroup } from '@/types';
+import { getActiveLocale, INTL_LOCALE_TAGS } from '@/lib/locale';
 
 export type CompareCategoryOption = {
   name: string;
@@ -57,7 +59,8 @@ type CategoryGroupNode = {
   children: CompareCategoryOption[];
 };
 
-const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'ko');
+const byName = (a: { name: string }, b: { name: string }) =>
+  a.name.localeCompare(b.name, INTL_LOCALE_TAGS[getActiveLocale()]);
 
 /**
  * 옵션을 상위 → 하위 2단계로 묶는다. 상위·하위 모두 이름 가나다 순으로 정렬한다.
@@ -116,13 +119,9 @@ type Props = {
  * 카테고리를 고르는 바텀시트 (기간 비교 대상, 전체 탭 도넛 표시 대상).
  * 카테고리가 많아도 고르기 쉽게 검색 + 세로 목록으로 보여주고, '적용'을 눌러야 반영된다.
  */
-export function CompareCategorySheet({
-  options,
-  initialSelected,
-  onApply,
-  onClose,
-  title = '비교할 카테고리 선택',
-}: Props) {
+export function CompareCategorySheet({ options, initialSelected, onApply, onClose, title }: Props) {
+  const t = useTranslations('dashboard.categorySheet');
+  const sheetTitle = title ?? t('title');
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [search, setSearch] = useState('');
 
@@ -150,7 +149,7 @@ export function CompareCategorySheet({
       onOpenAutoFocus={(e) => e.preventDefault()}
     >
       <SheetHeader>
-        <SheetTitle>{title}</SheetTitle>
+        <SheetTitle>{sheetTitle}</SheetTitle>
       </SheetHeader>
 
       <div className="relative mt-3">
@@ -161,20 +160,20 @@ export function CompareCategorySheet({
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="카테고리 검색"
-          aria-label="카테고리 검색"
+          placeholder={t('search')}
+          aria-label={t('search')}
           data-testid="compare-category-search"
           className="h-9 pl-8"
         />
       </div>
 
-      <div className="px-1 pt-3 text-[11px] text-muted-foreground">{selected.length}개 선택됨</div>
+      <div className="px-1 pt-3 text-[11px] text-muted-foreground">
+        {t('selectedCount', { count: selected.length })}
+      </div>
 
       <ul className="-mx-1 flex-1 overflow-y-auto py-1" data-testid="compare-category-list">
         {groups.length === 0 ? (
-          <li className="px-2 py-6 text-center text-xs text-muted-foreground">
-            검색 결과가 없어요
-          </li>
+          <li className="px-2 py-6 text-center text-xs text-muted-foreground">{t('noResults')}</li>
         ) : (
           groups.map((g) => {
             // 하위가 없는 상위는 일반 단일 항목과 같다.
@@ -235,7 +234,7 @@ export function CompareCategorySheet({
           onClick={() => setSelected([])}
           disabled={selected.length === 0}
         >
-          전체 해제
+          {t('clearAll')}
         </Button>
         <Button
           type="button"
@@ -246,7 +245,7 @@ export function CompareCategorySheet({
             onClose();
           }}
         >
-          {selected.length > 0 ? `${selected.length}개 적용` : '적용'}
+          {selected.length > 0 ? t('applyCount', { count: selected.length }) : t('apply')}
         </Button>
       </div>
     </SheetContent>

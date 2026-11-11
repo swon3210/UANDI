@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -81,6 +82,8 @@ function InviteSheetContent({
     queryFn: () => ensureActiveInviteCode(coupleId, uid, displayName),
     staleTime: 60 * 1000,
   });
+  const t = useTranslations('dashboard.couple');
+  const tShare = useTranslations('onboarding.share');
   const [, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
 
@@ -98,8 +101,8 @@ function InviteSheetContent({
       className="rounded-t-[20px] max-h-[90vh]"
     >
       <SheetHeader>
-        <SheetTitle>짝꿍을 초대해요</SheetTitle>
-        <SheetDescription>코드나 링크를 짝꿍에게 보내 주세요</SheetDescription>
+        <SheetTitle>{t('inviteTitle')}</SheetTitle>
+        <SheetDescription>{t('inviteDescription')}</SheetDescription>
       </SheetHeader>
       <div className="py-4">
         {code ? (
@@ -107,13 +110,17 @@ function InviteSheetContent({
             code={code}
             copied={copied}
             onCopy={handleCopy}
-            onShare={() => shareInviteLink(code, copyToClipboard)}
-            waitingLabel="짝꿍이 들어오면 홈 화면이 바로 바뀌어요"
+            onShare={() =>
+              shareInviteLink(code, copyToClipboard, {
+                title: tShare('title'),
+                text: tShare('text', { code }),
+                copied: tShare('copied'),
+              })
+            }
+            waitingLabel={t('waiting')}
           />
         ) : isError ? (
-          <p className="text-center text-sm text-destructive">
-            초대 코드를 불러오지 못했어요. 잠시 후 다시 열어 주세요
-          </p>
+          <p className="text-center text-sm text-destructive">{t('inviteError')}</p>
         ) : (
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="h-16 w-48 rounded-xl" />
@@ -135,6 +142,7 @@ export function CoupleStatusSection() {
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? null;
   const queryClient = useQueryClient();
+  const t = useTranslations('dashboard');
   // 열려 있는 초대 시트 id — 짝꿍이 합류하면 닫는다
   const inviteOverlayRef = useRef<string | null>(null);
 
@@ -156,7 +164,9 @@ export function CoupleStatusSection() {
         overlay.close(inviteOverlayRef.current);
         inviteOverlayRef.current = null;
       }
-      toast.success(`${partner?.displayName?.trim() || '짝꿍'}님이 합류했어요`);
+      toast.success(
+        t('couple.partnerJoined', { name: partner?.displayName?.trim() || t('partnerFallback') })
+      );
     },
   });
 
@@ -195,8 +205,8 @@ export function CoupleStatusSection() {
   const isOnline =
     partnerLastSeenMs != null && nowMs - partnerLastSeenMs < PRESENCE_ONLINE_THRESHOLD_MS;
 
-  const partnerName = partnerUser.displayName?.trim() || '짝꿍';
-  const myName = meUser?.displayName?.trim() || '나';
+  const partnerName = partnerUser.displayName?.trim() || t('partnerFallback');
+  const myName = meUser?.displayName?.trim() || t('meFallback');
 
   const handleEdit = () => {
     overlay.open(({ isOpen, close, unmount }) => (

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@uandi/ui';
-import type { PeriodKind } from '@/utils/date';
+import { dateFormat, type PeriodKind } from '@/utils/date';
 
 type Props = {
   kind: PeriodKind;
@@ -47,6 +48,7 @@ function PickerNav({
   onPrev: () => void;
   onNext: () => void;
 }) {
+  const t = useTranslations('dashboard.period');
   return (
     <div className="flex items-center justify-between">
       <Button
@@ -54,7 +56,7 @@ function PickerNav({
         size="icon"
         onClick={onPrev}
         data-testid="period-picker-prev"
-        aria-label="이전"
+        aria-label={t('pickerPrev')}
       >
         <ChevronLeft size={18} />
       </Button>
@@ -67,7 +69,7 @@ function PickerNav({
         onClick={onNext}
         disabled={!canGoNext}
         data-testid="period-picker-next"
-        aria-label="다음"
+        aria-label={t('pickerNext')}
       >
         <ChevronRight size={18} />
       </Button>
@@ -81,7 +83,7 @@ function MonthPicker({ value, highlightValue, today, onSelect }: PickerProps) {
   return (
     <div className="space-y-3">
       <PickerNav
-        title={viewYear.format('YYYY년')}
+        title={viewYear.format(dateFormat('year'))}
         canGoNext={viewYear.isBefore(today, 'year')}
         onPrev={() => setViewYear((y) => y.subtract(1, 'year'))}
         onNext={() => setViewYear((y) => y.add(1, 'year'))}
@@ -100,7 +102,7 @@ function MonthPicker({ value, highlightValue, today, onSelect }: PickerProps) {
               aria-pressed={selected}
               className="h-12"
             >
-              {i + 1}월
+              {m.format(dateFormat('monthShort'))}
             </Button>
           );
         })}

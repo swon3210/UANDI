@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Button,
   Progress,
@@ -39,7 +40,8 @@ export function ServiceTourOverlay({
   context = DEFAULT_CONTEXT,
   defaultStep = 0,
 }: ServiceTourOverlayProps) {
-  const slides = tourSlidesFor(context);
+  const t = useTranslations('tour');
+  const slides = tourSlidesFor(context, t);
   const total = slides.length;
   const [step, setStep] = useState(defaultStep);
 
@@ -73,14 +75,14 @@ export function ServiceTourOverlay({
               data-testid="tour-skip"
               className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              건너뛰기
+              {t('skip')}
             </button>
           ) : null}
         </div>
         <Progress value={progressValue} className="h-1.5" />
         <DialogTitle className="pt-1 text-xl">{current.title}</DialogTitle>
         <DialogDescription className="whitespace-pre-line text-sm leading-relaxed">
-          {current.description(context)}
+          {current.description}
         </DialogDescription>
       </DialogHeader>
 
@@ -99,15 +101,15 @@ export function ServiceTourOverlay({
               onClick={onViewEntries ?? onClose}
               data-testid="tour-view-entries"
             >
-              내역 보기
+              {t('viewEntries')}
             </Button>
           ) : (
             <Button type="button" size="lg" onClick={onFirstEntry} data-testid="tour-first-entry">
-              첫 내역 적기
+              {t('firstEntry')}
             </Button>
           )}
           <Button type="button" variant="ghost" onClick={onClose} data-testid="tour-start">
-            둘러볼게요
+            {t('lookAround')}
           </Button>
         </div>
       ) : (
@@ -119,11 +121,11 @@ export function ServiceTourOverlay({
             disabled={isFirst}
             data-testid="tour-prev"
           >
-            이전
+            {t('prev')}
           </Button>
           <div className="flex-1" />
           <Button type="button" onClick={goNext} data-testid="tour-next">
-            다음
+            {t('next')}
           </Button>
         </div>
       )}

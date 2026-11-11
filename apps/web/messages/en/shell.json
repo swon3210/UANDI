@@ -1,0 +1,21 @@
+{
+  "openMenu": "Open menu",
+  "goBack": "Go back",
+  "home": "Home",
+  "profileMenu": "Profile menu",
+  "tourAgain": "Replay tutorial",
+  "settings": "Settings",
+  "logout": "Log out",
+  "sections": {
+    "inner": "Our home",
+    "cashbook": "Budget",
+    "photos": "Gallery",
+    "outer": "Side income",
+    "outerHome": "Home",
+    "forex": "Forex",
+    "investment": "Investments",
+    "savings": "Savings",
+    "community": "Community",
+    "communityFeed": "Feed"
+  }
+}

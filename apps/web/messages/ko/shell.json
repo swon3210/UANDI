@@ -1,0 +1,21 @@
+{
+  "openMenu": "메뉴 열기",
+  "goBack": "뒤로 가기",
+  "home": "홈으로",
+  "profileMenu": "프로필 메뉴",
+  "tourAgain": "튜토리얼 다시 보기",
+  "settings": "설정",
+  "logout": "로그아웃",
+  "sections": {
+    "inner": "우리집",
+    "cashbook": "가계부",
+    "photos": "갤러리",
+    "outer": "재테크",
+    "outerHome": "홈",
+    "forex": "환테크",
+    "investment": "투자",
+    "savings": "적금",
+    "community": "커뮤니티",
+    "communityFeed": "피드"
+  }
+}

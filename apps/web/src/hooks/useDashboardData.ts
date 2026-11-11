@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { type Dayjs } from 'dayjs';
 import { buildCategoryColorMap, distinctColors, getCategoryColor } from '@uandi/cashbook-core';
 import { useCashbookEntriesInRange } from '@/hooks/useCashbook';
@@ -94,9 +95,12 @@ function buildByCategory(
 }
 
 /** 상위에 직접 기록된 금액을 하위 목록에서 구분해 보여줄 때의 라벨 */
-export function directParentLabel(parent: string): string {
-  return `${parent}(기타)`;
-}
+export type DashboardLabels = {
+  /** 상위에 직접 기록된 금액 라벨 (예: "식비(기타)") */
+  directParent: (parent: string) => string;
+  /** 고정/변동 묶음 라벨 (예: "고정 지출") */
+  fixedVariable: (kind: 'fixed' | 'variable', group: 'expense' | 'income') => string;
+};
 
 /**
  * 하위 카테고리 금액을 상위 카테고리로 합친다. 카테고리 메타(타입+이름 → 상위 이름)로 판단하고,
@@ -105,7 +109,8 @@ export function directParentLabel(parent: string): string {
 function buildByParent(
   entries: CashbookEntry[],
   categories: CashbookCategory[] | undefined,
-  colorMap: ReadonlyMap<string, string>
+  colorMap: ReadonlyMap<string, string>,
+  labels: DashboardLabels
 ): CategoryTreeSlice[] {
   const byId = new Map((categories ?? []).map((c) => [c.id, c]));
   const parentOf = new Map<string, string>();
@@ -134,7 +139,7 @@ function buildByParent(
       ? []
       : [...children.entries()]
           .map(([name, value]) => ({
-            category: name === parent ? directParentLabel(parent) : name,
+            category: name === parent ? labels.directParent(parent) : name,
             amount: value,
             // 상위 직접 기록분은 상위 색, 하위는 하위 카테고리 색
             color: getCategoryColor(colorMap, group, name),
@@ -158,17 +163,14 @@ function buildTypeTotals(entries: CashbookEntry[]): Record<CategoryGroup, number
   return totals;
 }
 
-const FIXED_VARIABLE_LABEL: Record<'expense' | 'income', [string, string]> = {
-  expense: ['고정 지출', '변동 지출'],
-  income: ['고정 수입', '변동 수입'],
-};
 // 고정/변동은 카테고리가 아닌 묶음이라 카테고리 색과 겹치지 않는 고정 색을 쓴다.
 const FIXED_VARIABLE_COLOR: [string, string] = ['#D8635A', '#3B82F6'];
 
 function buildByFixedVariable(
   entries: CashbookEntry[],
   group: GroupFilter,
-  fixedLookup: Set<string>
+  fixedLookup: Set<string>,
+  labels: DashboardLabels
 ): CategorySlice[] {
   if (!supportsSubGroup(group)) return [];
   let fixed = 0;
@@ -178,7 +180,8 @@ function buildByFixedVariable(
     if (fixedLookup.has(`${e.type}:${e.category}`)) fixed += e.amount;
     else variable += e.amount;
   }
-  const [fixedLabel, variableLabel] = FIXED_VARIABLE_LABEL[group];
+  const fixedLabel = labels.fixedVariable('fixed', group);
+  const variableLabel = labels.fixedVariable('variable', group);
   return [
     { category: fixedLabel, amount: fixed, color: FIXED_VARIABLE_COLOR[0] },
     { category: variableLabel, amount: variable, color: FIXED_VARIABLE_COLOR[1] },
@@ -251,6 +254,17 @@ export function useDashboardData(args: {
   const entriesQuery = useCashbookEntriesInRange(coupleId, start, end);
   const compareQuery = useCashbookEntriesInRange(coupleId, compareRange.start, compareRange.end);
   const categoriesQuery = useCashbookCategories(coupleId);
+  const t = useTranslations('dashboard');
+  const labels = useMemo<DashboardLabels>(
+    () => ({
+      directParent: (parent) => t('donut.directParent', { parent }),
+      fixedVariable: (kind, group) =>
+        t(kind === 'fixed' ? 'donut.fixedLabel' : 'donut.variableLabel', {
+          group: t(`group.${group}`),
+        }),
+    }),
+    [t]
+  );
 
   return useMemo(() => {
     const fixedLookup = buildFixedLookup(categoriesQuery.data);
@@ -261,9 +275,9 @@ export function useDashboardData(args: {
 
     return {
       byCategory: buildByCategory(filtered, colorMap),
-      byParent: buildByParent(filtered, categoriesQuery.data, colorMap),
+      byParent: buildByParent(filtered, categoriesQuery.data, colorMap, labels),
       typeTotals: buildTypeTotals(entriesQuery.data ?? []),
-      byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup),
+      byFixedVariable: buildByFixedVariable(entriesQuery.data ?? [], group, fixedLookup, labels),
       total,
       hasEntries: filtered.length > 0,
       // 전체 탭 최근 내역 카드용. 그룹 필터와 무관하게 기간 안 내역을 날짜 내림차순으로.
@@ -285,5 +299,6 @@ export function useDashboardData(args: {
     categoriesQuery.isLoading,
     group,
     subGroup,
+    labels,
   ]);
 }

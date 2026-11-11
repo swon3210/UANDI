@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts';
 import { BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import {
@@ -48,8 +49,8 @@ type Props = {
 };
 
 // 막대 라벨: 만원 단위로 반올림해 읽기 쉽게 (예: 1,700,000 → 170만원, 281,000 → 28만원, 5,000 → 5,000원)
-function formatBarLabel(n: number): string {
-  return `${formatCurrencyMan(n)}원`;
+function formatBarLabel(n: number, won: (amount: string) => string): string {
+  return won(formatCurrencyMan(n));
 }
 
 // 현재 기간 막대 색: 그룹 시맨틱 색. 비교 기간은 회색으로 눌러 현재 기간이 먼저 읽히게 한다.
@@ -84,9 +85,10 @@ function DeltaSummary({
   group: CategoryGroup;
   compareLabel: string;
 }) {
+  const t = useTranslations('dashboard.compare');
   const delta = current - compare;
   if (delta === 0) {
-    return <span className="text-muted-foreground">{compareLabel} 대비 변동 없음</span>;
+    return <span className="text-muted-foreground">{t('noChange', { label: compareLabel })}</span>;
   }
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   const rate = compare !== 0 ? Math.round((delta / Math.abs(compare)) * 100) : null;
@@ -94,7 +96,7 @@ function DeltaSummary({
     <>
       {/* 좋은 변화(지출 감소·수입 증가)는 😎, 나쁜 변화는 🚨 */}
       <span data-testid="compare-delta-emoji">{good ? '😎' : '🚨'} </span>
-      <span className="text-muted-foreground">{compareLabel} 대비 </span>
+      <span className="text-muted-foreground">{t('versus', { label: compareLabel })}</span>
       <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
         {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
         {rate !== null ? ` (${Math.abs(rate)}%)` : ''}
@@ -117,6 +119,9 @@ export function PeriodCompareChart({
   totalRowLabel,
   onSelectCategoriesClick,
 }: Props) {
+  const t = useTranslations('dashboard.compare');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   // 선택한 카테고리만 막대로 비교한다 (rows 정렬 순서 유지)
   const selectedRows = comparison.rows.filter((r) => selectedCategories.includes(r.category));
   // 선택이 없고 총액 막대 이름이 있으면 전체 합계 1줄로 비교한다
@@ -150,13 +155,13 @@ export function PeriodCompareChart({
   return (
     <div data-testid="period-compare" className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">기간 비교</span>
+        <span className="text-xs text-muted-foreground">{t('title')}</span>
         <Button
           variant="outline"
           size="sm"
           onClick={onCompareClick}
           data-testid="compare-period-button"
-          aria-label={`비교 기간 ${compareLabel}, 비교 기간 선택`}
+          aria-label={t('buttonLabel', { label: compareLabel })}
           className="h-7 gap-1 px-2 text-xs"
         >
           <span data-testid="compare-period-label">{compareLabel}</span>
@@ -180,7 +185,7 @@ export function PeriodCompareChart({
                   className="text-[11px] text-muted-foreground"
                   data-testid="compare-summary-caption"
                 >
-                  선택한 카테고리 {rows.length}개 합계
+                  {t('selectedTotal', { count: rows.length })}
                 </div>
               )}
               <div data-testid="compare-summary" className="grid grid-cols-2 gap-2">
@@ -230,7 +235,7 @@ export function PeriodCompareChart({
             >
               {isTotalMode ? null : (
                 <span className="text-xs text-muted-foreground">
-                  비교할 카테고리 {rows.length}개
+                  {t('selectedCount', { count: rows.length })}
                 </span>
               )}
               <Button
@@ -240,7 +245,7 @@ export function PeriodCompareChart({
                 data-testid="compare-category-button"
                 className="ml-auto h-7 gap-0.5 px-2 text-xs"
               >
-                카테고리 선택
+                {t('selectCategories')}
                 <ChevronRight size={14} />
               </Button>
             </div>
@@ -250,16 +255,16 @@ export function PeriodCompareChart({
             <div data-testid="trend-chart">
               <EmptyState
                 icon={<BarChart3 size={32} />}
-                title="비교할 내역이 없어요"
-                description="두 기간 모두 내역이 없어요. 다른 비교 기간을 선택해보세요"
+                title={t('emptyTitle')}
+                description={t('emptyDescription')}
               />
             </div>
           ) : rows.length === 0 ? (
             <div data-testid="trend-chart">
               <EmptyState
                 icon={<BarChart3 size={32} />}
-                title="비교할 카테고리를 선택해주세요"
-                description="'카테고리 선택'에서 비교할 카테고리를 골라보세요"
+                title={t('pickTitle')}
+                description={t('pickDescription')}
               />
             </div>
           ) : (
@@ -292,7 +297,11 @@ export function PeriodCompareChart({
                       formatter={(value, name) => (
                         <span className="font-mono tabular-nums">
                           {config[String(name)]?.label}{' '}
-                          {typeof value === 'number' ? Math.round(value).toLocaleString() : value}원
+                          {won(
+                            typeof value === 'number'
+                              ? Math.round(value).toLocaleString()
+                              : String(value)
+                          )}
                         </span>
                       )}
                     />
@@ -310,7 +319,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-foreground"
                     fontSize={10}
-                    formatter={(label) => formatBarLabel(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0, won)}
                   />
                 </Bar>
                 <Bar
@@ -325,7 +334,7 @@ export function PeriodCompareChart({
                     offset={6}
                     className="fill-muted-foreground"
                     fontSize={10}
-                    formatter={(label) => formatBarLabel(Number(label) || 0)}
+                    formatter={(label) => formatBarLabel(Number(label) || 0, won)}
                   />
                 </Bar>
               </BarChart>

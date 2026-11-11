@@ -1,7 +1,14 @@
 import type { AnchorHTMLAttributes, ComponentType, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 import { Logo } from '../Logo';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../components/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '../components/sheet';
 import { cn } from '../lib/utils';
 
 export type Space = 'inner' | 'outer' | 'community';
@@ -71,6 +78,7 @@ export function AppSidebar({
   footer,
 }: AppSidebarProps) {
   const activeHref = getActiveHref(sections, activePath);
+  const t = useTranslations('ui.sidebar');
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -81,12 +89,12 @@ export function AppSidebar({
         className="flex w-[280px] max-w-[80vw] flex-col p-0"
       >
         <SheetHeader className="border-b border-border px-5 py-4 text-left">
-          <SheetTitle className="sr-only">메뉴</SheetTitle>
+          <SheetTitle className="sr-only">{t('title')}</SheetTitle>
           <Logo variant="full" className="h-7 w-auto" />
-          <SheetDescription className="sr-only">공간과 페이지로 이동합니다</SheetDescription>
+          <SheetDescription className="sr-only">{t('description')}</SheetDescription>
         </SheetHeader>
 
-        <nav aria-label="주요 메뉴" className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        <nav aria-label={t('nav')} className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
           {sections.map((section) => {
             const SectionIcon = section.Icon;
             return (

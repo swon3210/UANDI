@@ -6,5 +6,46 @@
     "label": "Language",
     "description": "Choose the language the app is shown in",
     "selectAriaLabel": "Select language"
+  },
+  "profile": {
+    "title": "Edit profile",
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter your name",
+    "nameRequired": "Please enter your name",
+    "nameTooLong": "Name can be up to {max} characters",
+    "saving": "Saving...",
+    "complete": "Done",
+    "saveFailed": "Couldn't save. Please try again.",
+    "saved": "Profile saved.",
+    "saveError": "Couldn't save your profile. Please try again.",
+    "loginRequired": "Please sign in."
+  },
+  "deleteAccount": {
+    "button": "Delete account",
+    "title": "Delete account",
+    "description": "Deleting your account is permanent. Data in the couple space stays with your partner. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "pending": "Deleting...",
+    "failed": "Couldn't delete your account. Please try again."
+  },
+  "cropper": {
+    "title": "Edit photo",
+    "description": "Crop your profile photo to a square. Drag to move, use the slider to zoom.",
+    "zoom": "Zoom",
+    "processing": "Processing...",
+    "apply": "Apply",
+    "cancel": "Cancel"
+  },
+  "aiPage": {
+    "title": "AI settings",
+    "intro": "Tune the prompts the budget AI uses to suit you two. Features that are off use the default behavior.",
+    "loading": "Loading...",
+    "note": "Changes apply after you save. AI features can be used up to 50 times a day.",
+    "saving": "Saving...",
+    "save": "Save",
+    "reset": "Reset to defaults",
+    "saved": "AI settings saved.",
+    "saveError": "Couldn't save AI settings. Please try again."
   }
 }

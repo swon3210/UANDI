@@ -7,7 +7,18 @@ import type { Locale } from '@/lib/locale';
  *   (`node scripts/check-message-parity.mjs` 가 ko/en 파일·키 불일치를 잡는다)
  * - 컴포넌트에서는 `useTranslations('settings')` 처럼 네임스페이스로 접근한다.
  */
-export const MESSAGE_NAMESPACES = ['common', 'metadata', 'settings'] as const;
+export const MESSAGE_NAMESPACES = [
+  'common',
+  'metadata',
+  'settings',
+  'shell',
+  'landing',
+  'onboarding',
+  'tour',
+  'pwa',
+  'ui',
+  'dashboard',
+] as const;
 export type MessageNamespace = (typeof MESSAGE_NAMESPACES)[number];
 
 export type Messages = Record<MessageNamespace, Record<string, unknown>>;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { respondToNudge, subscribeToReceivedNudge } from '@/services/nudge';
 import type { Nudge, NudgeStatus } from '@/types';
 
@@ -24,6 +25,7 @@ export function useReceivedNudge(coupleId: string | null, uid: string | null): N
 
 /** 받은 콕 찌르기에 응답(seen / dismissed)한다. */
 export function useRespondToNudge(coupleId: string | null) {
+  const t = useTranslations('dashboard.nudge');
   return useMutation({
     mutationFn: ({
       nudgeId,
@@ -33,7 +35,7 @@ export function useRespondToNudge(coupleId: string | null) {
       status: Exclude<NudgeStatus, 'pending'>;
     }) => respondToNudge(coupleId!, nudgeId, status),
     onError: () => {
-      toast.error('잠시 후 다시 시도해 주세요.');
+      toast.error(t('respondError'));
     },
   });
 }

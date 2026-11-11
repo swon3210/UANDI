@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { Tabs, TabsList, TabsTrigger } from '@uandi/ui';
 import type { GroupFilter } from '@/hooks/useDashboardData';
 
@@ -6,19 +7,16 @@ type Props = {
   onChange: (value: GroupFilter) => void;
 };
 
-const OPTIONS: Array<{ value: GroupFilter; label: string }> = [
-  { value: 'all', label: '전체' },
-  { value: 'expense', label: '지출' },
-  { value: 'income', label: '수입' },
-];
+const OPTIONS: GroupFilter[] = ['all', 'expense', 'income'];
 
 export function GroupTabs({ value, onChange }: Props) {
+  const t = useTranslations('dashboard.group');
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as GroupFilter)} data-testid="group-tabs">
       <TabsList className="grid w-full grid-cols-3">
         {OPTIONS.map((opt) => (
-          <TabsTrigger key={opt.value} value={opt.value} className="text-xs">
-            {opt.label}
+          <TabsTrigger key={opt} value={opt} className="text-xs">
+            {t(opt)}
           </TabsTrigger>
         ))}
       </TabsList>

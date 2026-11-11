@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import { useTranslations } from 'next-intl';
 import { Button, Separator } from '@uandi/ui';
 import type { PeriodKind } from '@/utils/date';
 import { MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
@@ -30,6 +31,7 @@ export function CompareTargetPicker({
   onSelectMedian,
   onSelectPeriod,
 }: Props) {
+  const t = useTranslations('dashboard.compare');
   const isMedian = value === 'median';
   const picker = (
     <PeriodPicker
@@ -51,18 +53,18 @@ export function CompareTargetPicker({
         aria-pressed={isMedian}
         className="h-auto w-full flex-col items-start gap-0.5 px-4 py-3 text-left"
       >
-        <span className="text-sm font-semibold">평소와 비교</span>
+        <span className="text-sm font-semibold">{t('withUsual')}</span>
         <span
           className={
             isMedian ? 'text-xs text-primary-foreground/80' : 'text-xs text-muted-foreground'
           }
         >
-          최근 {MEDIAN_WINDOW_MONTHS}개월 중위값
+          {t('recentMedian', { months: MEDIAN_WINDOW_MONTHS })}
         </span>
       </Button>
       <div className="flex items-center gap-3">
         <Separator className="flex-1" />
-        <span className="text-[11px] text-muted-foreground">또는 특정 달과 비교</span>
+        <span className="text-[11px] text-muted-foreground">{t('orSpecific')}</span>
         <Separator className="flex-1" />
       </div>
       {picker}

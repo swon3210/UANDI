@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '@/stores/auth.store';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
@@ -11,6 +12,7 @@ import { NudgeReceivedCard } from './NudgeReceivedCard';
  * 데이터 연결만 맡고 모양은 NudgeReceivedCard가 담당한다.
  */
 export function NudgeReceivedSection() {
+  const t = useTranslations('dashboard');
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? null;
@@ -21,7 +23,8 @@ export function NudgeReceivedSection() {
 
   if (!nudge) return null;
 
-  const partnerName = members?.find((m) => m.uid === nudge.fromUid)?.displayName?.trim() || '짝꿍';
+  const partnerName =
+    members?.find((m) => m.uid === nudge.fromUid)?.displayName?.trim() || t('partnerFallback');
 
   return (
     <NudgeReceivedCard

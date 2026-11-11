@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { User as UserIcon, Settings, LogOut, GraduationCap } from 'lucide-react';
 import {
   Avatar,
@@ -22,6 +23,7 @@ import { openServiceTour } from '@/components/tutorial/openServiceTour';
 export function ProfileMenu() {
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations('shell');
 
   return (
     <DropdownMenu>
@@ -29,7 +31,7 @@ export function ProfileMenu() {
         <button
           className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-testid="profile-menu-trigger"
-          aria-label="프로필 메뉴"
+          aria-label={t('profileMenu')}
         >
           <Avatar className="h-8 w-8">
             {user?.photoURL ? (
@@ -44,15 +46,15 @@ export function ProfileMenu() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => openServiceTour()} data-testid="menu-tour">
           <GraduationCap size={16} className="mr-2" />
-          튜토리얼 다시 보기
+          {t('tourAgain')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings')} data-testid="menu-settings">
           <Settings size={16} className="mr-2" />
-          설정
+          {t('settings')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => signOut()} data-testid="menu-logout">
           <LogOut size={16} className="mr-2" />
-          로그아웃
+          {t('logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Receipt } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
@@ -25,6 +26,7 @@ const WIZARD_INTRO = `${WIZARD_PATH}?step=intro`;
 const PLAN_PROMPT_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function Dashboard() {
+  const t = useTranslations('dashboard');
   const { user } = useAuth();
   const coupleId = user?.coupleId;
   const { data: members } = useCoupleMembers(coupleId ?? null);
@@ -66,13 +68,13 @@ export function Dashboard() {
   return (
     <>
       <PageHeader
-        title="대시보드"
+        title={t('title')}
         data-testid="dashboard-header"
         rightSlot={
           <Button asChild variant="ghost" size="sm" className="gap-1 px-2">
             <Link href="/inner/cashbook/history" data-testid="dashboard-history-link">
               <Receipt size={16} aria-hidden />
-              내역
+              {t('history')}
             </Link>
           </Button>
         }

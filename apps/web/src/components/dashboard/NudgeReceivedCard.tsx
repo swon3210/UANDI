@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Hand, Loader2 } from 'lucide-react';
 import { Button } from '@uandi/ui';
 
@@ -17,8 +18,6 @@ type NudgeReceivedCardProps = {
   className?: string;
 };
 
-const EMPTY_MESSAGE_FALLBACK = '가계부 입력을 부탁했어요';
-
 /**
  * 대시보드의 "받은 콕 찌르기" 카드.
  * 푸시가 오지 않는 환경(웹·푸시 미허용·함수 미배포)에서도 짝꿍의 요청을 앱 안에서 알 수 있게 한다.
@@ -32,12 +31,13 @@ export function NudgeReceivedCard({
   isPending = false,
   className,
 }: NudgeReceivedCardProps) {
-  const body = message.trim() || EMPTY_MESSAGE_FALLBACK;
+  const t = useTranslations('dashboard.nudge');
+  const body = message.trim() || t('fallbackMessage');
 
   return (
     <section
       data-testid="nudge-received"
-      aria-label={`${partnerName}님의 입력 요청`}
+      aria-label={t('ariaLabel', { name: partnerName })}
       className={['rounded-xl border border-coral-200 bg-coral-50 p-4', className]
         .filter(Boolean)
         .join(' ')}
@@ -51,7 +51,7 @@ export function NudgeReceivedCard({
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-foreground">
-            {partnerName}님이 콕 찔렀어요 🐹
+            {t('title', { name: partnerName })}
           </h3>
           <p className="mt-0.5 break-words text-sm text-muted-foreground">“{body}”</p>
         </div>
@@ -65,7 +65,7 @@ export function NudgeReceivedCard({
           disabled={isPending}
           data-testid="nudge-received-dismiss"
         >
-          나중에
+          {t('later')}
         </Button>
         <Button
           type="button"
@@ -75,7 +75,7 @@ export function NudgeReceivedCard({
           data-testid="nudge-received-add"
         >
           {isPending ? <Loader2 className="mr-1 animate-spin" size={14} aria-hidden /> : null}
-          내역 적기
+          {t('add')}
         </Button>
       </div>
     </section>

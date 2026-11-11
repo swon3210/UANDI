@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { overlay } from 'overlay-kit';
 import {
   Menu,
@@ -25,49 +26,59 @@ import {
 } from '@uandi/ui';
 import { isIosNative } from '@/lib/native';
 
+type SectionLabels = ReturnType<typeof useTranslations<'shell.sections'>>;
+
 /**
  * 사이드바 섹션 구성. 공간(우리집/재테크/커뮤니티)별로 실제 존재하는 목적지만 노출한다.
  * (하단탭을 대체 — docs/08-spaces.md §4 참고)
  */
-const SECTIONS: SidebarSection[] = [
-  {
-    id: 'inner',
-    label: '우리집',
-    Icon: Home,
-    items: [
-      { id: 'cashbook', label: '가계부', href: '/inner/cashbook', Icon: BookOpen },
-      { id: 'photos', label: '갤러리', href: '/inner/photos', Icon: ImageIcon },
-    ],
-  },
-  {
-    id: 'outer',
-    label: '재테크',
-    Icon: Briefcase,
-    items: [
-      { id: 'outer-home', label: '홈', href: '/outer', Icon: LayoutDashboard },
-      { id: 'forex', label: '환테크', href: '/outer/forex', Icon: Wallet },
-      { id: 'investment', label: '투자', href: '/outer/investment', Icon: TrendingUp },
-      { id: 'savings', label: '적금', href: '/outer/savings', Icon: PiggyBank },
-    ],
-  },
-  {
-    id: 'community',
-    label: '커뮤니티',
-    Icon: Users,
-    items: [{ id: 'community-feed', label: '피드', href: '/community', Icon: MessageCircle }],
-  },
-];
+function buildSections(t: SectionLabels): SidebarSection[] {
+  return [
+    {
+      id: 'inner',
+      label: t('inner'),
+      Icon: Home,
+      items: [
+        { id: 'cashbook', label: t('cashbook'), href: '/inner/cashbook', Icon: BookOpen },
+        { id: 'photos', label: t('photos'), href: '/inner/photos', Icon: ImageIcon },
+      ],
+    },
+    {
+      id: 'outer',
+      label: t('outer'),
+      Icon: Briefcase,
+      items: [
+        { id: 'outer-home', label: t('outerHome'), href: '/outer', Icon: LayoutDashboard },
+        { id: 'forex', label: t('forex'), href: '/outer/forex', Icon: Wallet },
+        { id: 'investment', label: t('investment'), href: '/outer/investment', Icon: TrendingUp },
+        { id: 'savings', label: t('savings'), href: '/outer/savings', Icon: PiggyBank },
+      ],
+    },
+    {
+      id: 'community',
+      label: t('community'),
+      Icon: Users,
+      items: [
+        {
+          id: 'community-feed',
+          label: t('communityFeed'),
+          href: '/community',
+          Icon: MessageCircle,
+        },
+      ],
+    },
+  ];
+}
 
 /**
  * 노출할 사이드바 섹션. iOS 네이티브(App Store 심사 대응)에서는 "우리집 > 가계부" 하나만
  * 남기고 갤러리 항목·재테크 섹션·커뮤니티 섹션을 숨긴다. Android/웹 브라우저는 전체 노출.
  */
-function visibleSections(): SidebarSection[] {
-  if (!isIosNative()) return SECTIONS;
-  return SECTIONS.filter((s) => s.id === 'inner').map((s) => ({
-    ...s,
-    items: s.items.filter((i) => i.id === 'cashbook'),
-  }));
+function visibleSections(sections: SidebarSection[]): SidebarSection[] {
+  if (!isIosNative()) return sections;
+  return sections
+    .filter((s) => s.id === 'inner')
+    .map((s) => ({ ...s, items: s.items.filter((i) => i.id === 'cashbook') }));
 }
 
 /** 현재 경로에서 공간 톤(coral/indigo/violet)을 결정. */
@@ -87,10 +98,12 @@ const SidebarLink = (props: SidebarLinkProps) => <Link {...props} />;
  */
 export function AppSidebarTrigger() {
   const pathname = usePathname();
+  const t = useTranslations('shell');
+  const tSections = useTranslations('shell.sections');
 
   const openSidebar = () => {
     // 클릭 시점(순수 클라이언트)에 계산 — SSR/hydration 불일치 없이 iOS 여부를 반영한다.
-    const sections = visibleSections();
+    const sections = visibleSections(buildSections(tSections));
     overlay.open(({ isOpen, close, unmount }) => {
       const dismiss = () => {
         close();
@@ -114,7 +127,7 @@ export function AppSidebarTrigger() {
     <Button
       variant="ghost"
       size="icon"
-      aria-label="메뉴 열기"
+      aria-label={t('openMenu')}
       data-testid="sidebar-trigger"
       onClick={openSidebar}
     >

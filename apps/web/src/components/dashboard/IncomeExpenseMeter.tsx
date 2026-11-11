@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { cn } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
 
@@ -17,6 +18,7 @@ type Props = {
  * "아직 수입을 안 적었어요" 같은 문구가 빠뜨린 것처럼 읽혔다(2026-11 걷기). 수입 0원 칸으로 충분하다.
  */
 export function IncomeExpenseMeter({ income, expense }: Props) {
+  const t = useTranslations('dashboard.meter');
   const hasIncome = income > 0;
   const ratio = hasIncome ? expense / income : expense > 0 ? Infinity : 0;
   const isOver = ratio > 1;
@@ -27,7 +29,7 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
   return (
     <div data-testid="income-expense-meter" className="space-y-3">
       <div className="flex items-end justify-between gap-2">
-        <span className="text-xs text-muted-foreground">수입 대비 지출</span>
+        <span className="text-xs text-muted-foreground">{t('title')}</span>
         <span
           data-testid="meter-percent"
           className={cn('text-2xl font-semibold', isOver ? 'text-expense' : 'text-foreground')}
@@ -38,11 +40,11 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
 
       <div
         role="meter"
-        aria-label="수입 대비 지출"
+        aria-label={t('title')}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent ?? 100}
-        aria-valuetext={percent !== null ? `수입의 ${percent}% 지출` : '수입 없음'}
+        aria-valuetext={percent !== null ? t('valueText', { percent }) : t('noIncome')}
         className="h-3 w-full overflow-hidden rounded-full bg-expense/15"
       >
         <div
@@ -56,7 +58,7 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
         <div className="rounded-lg bg-muted/50 px-3 py-2">
           <dt className="flex items-center gap-1.5 text-muted-foreground">
             <span className="h-2 w-2 shrink-0 rounded-full bg-expense/25" />
-            수입
+            {t('income')}
           </dt>
           <dd data-testid="meter-income" className="mt-0.5 text-sm font-semibold tabular-nums">
             {formatCurrency(income)}
@@ -65,7 +67,7 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
         <div className="rounded-lg bg-muted/50 px-3 py-2">
           <dt className="flex items-center gap-1.5 text-muted-foreground">
             <span className="h-2 w-2 shrink-0 rounded-full bg-expense" />
-            지출
+            {t('expense')}
           </dt>
           <dd data-testid="meter-expense" className="mt-0.5 text-sm font-semibold tabular-nums">
             {formatCurrency(expense)}
@@ -79,18 +81,18 @@ export function IncomeExpenseMeter({ income, expense }: Props) {
           className="flex min-h-10 items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm font-semibold"
         >
           {!hasIncome ? (
-            <span className="text-muted-foreground">이 기간엔 수입·지출 내역이 없어요</span>
+            <span className="text-muted-foreground">{t('empty')}</span>
           ) : isOver ? (
             <span>
-              🚨 <span className="text-muted-foreground">수입보다 </span>
+              🚨 <span className="text-muted-foreground">{t('overPrefix')}</span>
               <span className="font-extrabold tabular-nums text-expense">
                 {formatCurrency(expense - income)}
               </span>
-              <span className="text-muted-foreground"> 더 썼어요</span>
+              <span className="text-muted-foreground">{t('overSuffix')}</span>
             </span>
           ) : (
             <span>
-              😎 <span className="text-muted-foreground">남은 금액 </span>
+              😎 <span className="text-muted-foreground">{t('leftPrefix')}</span>
               <span className="font-extrabold tabular-nums text-income">
                 {formatCurrency(income - expense)}
               </span>

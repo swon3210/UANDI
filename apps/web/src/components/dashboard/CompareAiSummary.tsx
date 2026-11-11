@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 // AI 분석 영역은 본문(Pretendard)과 다른 휴머니스트 글꼴로 데이터 카드와 구분한다
 import '@fontsource/ibm-plex-sans-kr/400.css';
 import '@fontsource/ibm-plex-sans-kr/500.css';
@@ -66,6 +67,7 @@ export function CompareAiSummary({
   onRetry,
   href,
 }: Props) {
+  const t = useTranslations('dashboard');
   // 모든 카테고리가 같은 축을 쓰도록 가장 큰 금액을 100%로
   const maxAmount = Math.max(1, ...items.flatMap((item) => [item.current, item.compare ?? 0]));
   const isWaiting = status === 'loading' || status === 'streaming';
@@ -75,10 +77,12 @@ export function CompareAiSummary({
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
           <Sparkles size={14} className="shrink-0 text-primary" />
-          <span className="shrink-0 font-medium text-foreground">AI 요약</span>
+          <span className="shrink-0 font-medium text-foreground">{t('aiSummary.title')}</span>
           <span className="truncate">· {scopeTitle}</span>
         </h3>
-        <span className="shrink-0 text-[11px] text-muted-foreground">{compareLabel} 대비</span>
+        <span className="shrink-0 text-[11px] text-muted-foreground">
+          {t('aiSummary.versus', { label: compareLabel })}
+        </span>
       </div>
 
       {overall ? (
@@ -119,8 +123,8 @@ export function CompareAiSummary({
                   )}
                 >
                   {delta === 0
-                    ? '변동 없음'
-                    : `${delta > 0 ? '▲' : '▼'} ${formatCurrencyMan(Math.abs(delta))}원`}
+                    ? t('aiSummary.noChange')
+                    : `${delta > 0 ? '▲' : '▼'} ${t('won', { amount: formatCurrencyMan(Math.abs(delta)) })}`}
                 </span>
               </div>
               <div className="space-y-0.5">
@@ -150,7 +154,7 @@ export function CompareAiSummary({
                         which === 'current' && 'text-foreground'
                       )}
                     >
-                      {formatCurrencyMan(amount)}원
+                      {t('won', { amount: formatCurrencyMan(amount) })}
                     </span>
                   </div>
                 ))}
@@ -175,9 +179,7 @@ export function CompareAiSummary({
 
       {status === 'error' ? (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-destructive">
-            {errorMessage || 'AI 요약을 만들지 못했어요. 다시 시도해 주세요'}
-          </p>
+          <p className="text-xs text-destructive">{errorMessage || t('aiSummary.error')}</p>
           <Button
             variant="ghost"
             size="sm"
@@ -186,14 +188,14 @@ export function CompareAiSummary({
             className="h-7 shrink-0 gap-1 px-2 text-xs"
           >
             <RefreshCw size={12} />
-            다시 시도
+            {t('aiSummary.retry')}
           </Button>
         </div>
       ) : null}
 
       <Button asChild variant="outline" size="sm" className="w-full gap-1">
         <Link href={href} data-testid="compare-ai-analysis">
-          전체 리포트 보기
+          {t('aiSummary.fullReport')}
           <ChevronRight size={14} />
         </Link>
       </Button>
