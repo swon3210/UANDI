@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-const EFFECTIVE_DATE = '2026년 6월 19일';
+const EFFECTIVE_DATE = '2026년 11월 11일';
 const CONTACT_EMAIL = 'swon3210@gmail.com';
 const OPERATOR_NAME = '이송원';
 
@@ -93,6 +93,13 @@ export default function PrivacyPolicyPage() {
               서비스 이용 과정에서 발생하는 접속 로그, 오류 로그, IP 주소, 브라우저/기기 정보(OS, 앱
               버전)
             </li>
+            <li>
+              <strong>서비스 이용 기록</strong>: 방문한 화면, 주요 기능 사용 여부(가입, 커플 연결,
+              가계부 내역 추가 건수와 추가 경로, 연간 목표 생성), 이용 환경(웹·Android·iOS), 서비스
+              내부 회원 식별자(uid), 분석용 쿠키·기기 식별자 — Google Analytics를 통해 수집합니다.
+              가계부 금액·메모·카테고리 이름, 사진, 이메일·이름 등은 분석 목적으로 전송하지
+              않습니다.
+            </li>
           </ul>
 
           <h2 className="mt-8 text-lg font-semibold">2. 개인정보의 처리 목적</h2>
@@ -106,6 +113,7 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>푸시 알림 발송 (이용자가 동의한 경우에 한함)</li>
             <li>서비스 운영 및 오류 대응, 보안 위협 대응</li>
+            <li>서비스 이용 통계 분석 및 기능 개선</li>
             <li>이용자 문의 응대</li>
           </ul>
 
@@ -158,7 +166,7 @@ export default function PrivacyPolicyPage() {
                   <td className="px-3 py-2 border-b border-border">Google LLC (Firebase)</td>
                   <td className="px-3 py-2 border-b border-border">
                     인증(Authentication), 데이터베이스(Firestore), 파일 저장소(Storage), 푸시
-                    알림(FCM)
+                    알림(FCM), 서비스 이용 통계 분석(Google Analytics)
                   </td>
                   <td className="px-3 py-2 border-b border-border">
                     미국·아시아 등 Google Cloud 리전
@@ -329,6 +337,21 @@ export default function PrivacyPolicyPage() {
             서비스는 로그인 상태 유지를 위해 인증 세션 쿠키(
             <code>uandi-auth</code>)를 사용합니다. 브라우저 설정에서 쿠키 저장을 거부할 경우 로그인
             기능이 제한될 수 있습니다.
+          </p>
+          <p className="mt-2">
+            또한 서비스 이용 통계를 분석하기 위해 Google Analytics(Google Analytics for Firebase)를
+            사용하며, 이를 위해 분석용 쿠키와 기기 내 저장소(로컬 스토리지)에 무작위 식별자를
+            저장합니다. 수집된 정보는 개별 이용자를 직접 식별하지 않는 통계 형태로 이용하며, 광고
+            목적으로 이용하지 않습니다. 이용자는 브라우저 설정에서 쿠키를 차단하거나{' '}
+            <a
+              href="https://tools.google.com/dlpage/gaoptout"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Google Analytics 차단 부가기능
+            </a>
+            을 설치해 수집을 거부할 수 있습니다.
           </p>
 
           <h3 className="mt-3 font-semibold">나. 앱 권한</h3>

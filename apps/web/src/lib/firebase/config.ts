@@ -38,11 +38,13 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  // 사용 분석(GA4) 스위치 — 없으면 analytics가 아무것도 보내지 않는다(docs/09-analytics.md)
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 let _app: FirebaseApp | undefined;
 
-function getFirebaseApp(): FirebaseApp {
+export function getFirebaseApp(): FirebaseApp {
   // Firebase Client SDK는 브라우저 전용 — 서버에서 호출 시 아무 동작도 하지 않음
   if (typeof window === 'undefined') return undefined as unknown as FirebaseApp;
   if (!_app) {

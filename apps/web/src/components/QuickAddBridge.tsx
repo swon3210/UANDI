@@ -38,8 +38,8 @@ function QuickAddSheetContent({
 
   const { data: categories } = useCashbookCategories(coupleId);
   const resolveCategoryHints = useResolveCategoryHints(coupleId);
-  const addMutation = useAddEntry(coupleId);
-  const addManyMutation = useAddEntries(coupleId);
+  const addMutation = useAddEntry(coupleId, 'quick_add');
+  const addManyMutation = useAddEntries(coupleId, 'quick_add');
 
   // 빈 입력으로 제출하면 직접 입력 폼을 연다(history 페이지와 동일한 UX).
   // 저장하면 폼과 함께 빠른 추가 시트도 닫는다(남겨 두면 한 번 더 닫아야 했다 — 2026-11 걷기 6구간).
