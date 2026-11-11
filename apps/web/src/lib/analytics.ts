@@ -82,11 +82,17 @@ export function trackPageView(pathname: string): void {
 export function identifyUser(user: { uid: string; hasCouple: boolean } | null): void {
   void loadAnalytics().then((analytics) => {
     if (!analytics) return;
-    setUserId(analytics, user?.uid ?? null);
-    setUserProperties(analytics, {
-      client_platform: getClientPlatform(),
-      has_couple: user ? String(user.hasCouple) : null,
-    });
+    // global: gtag 'set' 으로 보낸다. 기본값('config' update)은 현재 gtag.js 에서 이후 이벤트에
+    // uid·up.* 가 붙지 않는 것을 프로덕션에서 확인했다(2026-11-11).
+    setUserId(analytics, user?.uid ?? null, { global: true });
+    setUserProperties(
+      analytics,
+      {
+        client_platform: getClientPlatform(),
+        has_couple: user ? String(user.hasCouple) : null,
+      },
+      { global: true }
+    );
   });
 }
 

@@ -8,6 +8,10 @@ Firebase 프로젝트에 연결된 GA4 속성 하나로 웹·앱(WebView) 데이
 - **가계부 내용은 보내지 않는다.** 금액, 메모, 카테고리 이름, 사진 태그, 이메일·이름 등은 이벤트 파라미터에 넣지 않는다.
   파라미터는 정해진 값(enum)과 개수만 허용한다.
 - **URL도 정리해서 보낸다.** 자동 page_view를 끄고 직접 보내며, 쿼리스트링은 버리고 아래 경로 세그먼트는 가린다.
+  코드의 `send_page_view: false`만으로는 첫 로드의 자동 page_view가 막히지 않으므로(gtag.js가 GA 쪽 태그 설정으로 한 번 더 보냄)
+  GA4 향상된 측정의 「페이지 조회수」도 꺼야 한다(아래 운영 설정 3).
+- **user_id·사용자 속성은 `{ global: true }`로 보낸다.** Firebase 기본 방식(gtag `config` update)은 현재 gtag.js에서
+  이후 이벤트에 `uid`·`up.*`가 붙지 않는다. `global`은 gtag `set`을 써서 모든 이벤트에 붙는다.
   - `/invite/{code}` → `/invite/:code`
   - `/inner/photos/tag/{tagName}` → `/inner/photos/tag/:tag`
 - **켜는 스위치는 `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` 하나다.** 값이 없거나 에뮬레이터 모드
@@ -57,7 +61,11 @@ AI 분석 리포트 열람 같은 화면 단위 지표는 별도 이벤트 없�
 
 1. Firebase 콘솔 → 프로젝트 설정 → 통합 → Google Analytics 사용 설정, 웹 앱의 `measurementId` 확인
 2. GA4 관리 → 데이터 수집 → **Google 신호 끄기** (소규모 데이터가 임계값 처리로 가려지는 것 방지)
-3. GA4 관리 → 데이터 스트림(웹) → 향상된 측정 → **「브라우저 기록 이벤트 기반 페이지 변경」 끄기** (직접 보내는 page_view와 중복·원본 URL 노출 방지)
+3. GA4 관리 → 데이터 스트림(웹) → 향상된 측정 → **「페이지 조회수」 토글 자체를 끄기**.
+   켜 두면 첫 로드마다 page_view가 하나 더 나가 조회수가 부푼다. (이 자동 전송분도 초기화 전에 지정한 정리된
+   `page_location`을 쓰므로 초대 코드·쿼리스트링은 노출되지 않는 것을 확인했다.)
+   코드가 직접 보내는 page_view는 이 토글과 무관하게 수집된다. 스크롤·이탈 클릭 등 다른 항목은 켜 둬도 된다.
+   (확인: 프로덕션에서 `google-analytics.com/g/collect` 요청 중 `en=page_view`가 화면당 한 번, `dp=` 파라미터가 붙은 것만 나가야 한다)
 4. GA4 관리 → 맞춤 정의 → 사용자 범위 `client_platform`, `has_couple` / 이벤트 범위 `source`, `method` 등록
 5. Vercel `uandi-web` Production 환경변수에 `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` 추가 후 재배포
 6. 개인정보처리방침(`/privacy`), Play 데이터 보안 양식, App Store 개인정보 라벨 갱신
