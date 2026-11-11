@@ -24,8 +24,9 @@ export function middleware(request: NextRequest) {
       if (pathname === '/') return NextResponse.rewrite(new URL('/admin', request.url));
       return NextResponse.redirect(new URL('/', request.url));
     }
+    // 서비스 도메인에는 어드민이 없는 것처럼 404(존재하지 않는 경로로 rewrite → not-found)
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-      return NextResponse.redirect(`https://${ADMIN_HOST}/`);
+      return NextResponse.rewrite(new URL('/_not-found-admin', request.url));
     }
   }
 

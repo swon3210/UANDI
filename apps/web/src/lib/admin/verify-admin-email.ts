@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ADMIN_HOST, isAdminHost } from '@/lib/admin/admin-host';
 import { adminAuth } from '@/lib/ai/firebase-admin';
 
 /** ADMIN_EMAILS(쉼표 구분)를 소문자 목록으로. 공개 저장소라 이메일은 코드가 아닌 환경변수에 둔다. */
@@ -12,11 +13,16 @@ function getAdminEmails(): string[] {
 /**
  * 어드민 API의 보안 경계(docs/pages/06-admin.md).
  * Bearer 토큰을 verify해 토큰의 이메일이 ADMIN_EMAILS 에 있고 인증된 이메일일 때만 통과.
+ * 어드민 전용 도메인이 정해져 있으면 그 도메인으로 온 요청만 받는다(다른 도메인은 404).
  * 커뮤니티 모더레이션의 admins/{uid} 와는 별개다.
  */
 export async function verifyAdminEmail(
   req: NextRequest
 ): Promise<{ uid: string; email: string } | NextResponse> {
+  if (ADMIN_HOST && !isAdminHost(req.headers.get('host'))) {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 });
