@@ -177,13 +177,21 @@ export function AdminUserTable({ users }: AdminUserTableProps) {
                   </td>
                   <td className="px-3 py-2 tabular-nums">{formatDate(u.lastEntryAt)}</td>
                   <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1" data-testid="admin-user-platforms">
                       {u.platforms.length === 0 ? (
                         <span className="text-xs text-muted-foreground">-</span>
                       ) : (
                         u.platforms.map((p) => (
-                          <Badge key={p} variant="secondary">
-                            {PLATFORM_LABELS[p] ?? p}
+                          <Badge
+                            key={p.name}
+                            variant="secondary"
+                            title={
+                              p.lastSeenAt
+                                ? `마지막 사용 ${formatDate(p.lastSeenAt, true)}`
+                                : '푸시 알림 토큰으로 확인'
+                            }
+                          >
+                            {PLATFORM_LABELS[p.name] ?? p.name}
                           </Badge>
                         ))
                       )}

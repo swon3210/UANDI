@@ -23,6 +23,8 @@ export type User = {
   photoURL: string | null;
   coupleId: string | null;
   createdAt: Timestamp;
+  /** 앱을 연 플랫폼별 마지막 사용 시각(어드민 사용자 현황용, 기기·플랫폼별 하루 1회 갱신). 구버전 문서엔 없다 */
+  clientPlatforms?: Partial<Record<FcmTokenPlatform, Timestamp>>;
 };
 
 export type Couple = {

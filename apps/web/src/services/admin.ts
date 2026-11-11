@@ -13,7 +13,13 @@ export type AdminUserRow = {
   myEntryCount: number;
   coupleEntryCount: number;
   lastEntryAt: string | null;
-  platforms: string[];
+  /** 써 본 플랫폼들(최근 사용 순). lastSeenAt 이 없으면 푸시 토큰으로만 알게 된 플랫폼. */
+  platforms: AdminUserPlatform[];
+};
+
+export type AdminUserPlatform = {
+  name: string;
+  lastSeenAt: string | null;
 };
 
 export type AdminUsersResponse = {

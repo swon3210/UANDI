@@ -43,6 +43,17 @@ test.describe('어드민 사용자 현황 (/admin)', () => {
     const adminUid = await createTestUser(ADMIN_EMAIL, PASSWORD);
     await seedUserDocument(adminUid, ADMIN_EMAIL, null);
     await signInAs(page, ADMIN_EMAIL);
+    // 앱을 연 플랫폼 기록(ClientPlatformTracker)이 저장된 뒤에 어드민 데이터를 읽는다
+    await expect
+      .poll(async () => {
+        const res = await fetch(
+          `http://localhost:8080/v1/projects/uandi-test/databases/(default)/documents/users/${adminUid}`,
+          { headers: { Authorization: 'Bearer owner' } }
+        );
+        const json = await res.json();
+        return Object.keys(json.fields?.clientPlatforms?.mapValue?.fields ?? {});
+      })
+      .toEqual(['web']);
 
     await page.goto('/admin');
     await expect(page.getByTestId('admin-users-page')).toBeVisible();
@@ -57,6 +68,16 @@ test.describe('어드민 사용자 현황 (/admin)', () => {
     await expect(row.getByTestId('admin-user-avatar').locator('img')).toHaveAttribute('src', PHOTO);
 
     await expect(page.getByTestId('admin-summary-total')).toContainText('3');
+
+    // 웹으로 앱을 연 기록(clientPlatforms.web)이 플랫폼 칸에 보인다. 한 번도 열지 않은 user2 는 '-'
+    const adminRow = page.getByTestId('admin-user-row').filter({
+      has: page.getByTestId('admin-user-email').getByText(ADMIN_EMAIL, { exact: true }),
+    });
+    await expect(adminRow.getByTestId('admin-user-platforms')).toHaveText('웹');
+    const user2Row = page.getByTestId('admin-user-row').filter({
+      has: page.getByTestId('admin-user-email').getByText('user2@test.com', { exact: true }),
+    });
+    await expect(user2Row.getByTestId('admin-user-platforms')).toHaveText('-');
 
     // 기록 많은 순 정렬 → 기록 2건인 user1 이 맨 위
     await page.getByTestId('admin-sort-myEntryCount').click();
