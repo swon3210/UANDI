@@ -73,6 +73,8 @@ export {
   occurrenceDateInMonth,
   shouldFireOn,
   formatRecurrence,
+  KO_RECURRENCE_LABELS,
+  type RecurrenceLabels,
   WEEK_LABELS,
   WEEKDAY_LABELS,
 } from './utils/recurrence';

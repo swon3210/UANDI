@@ -1,5 +1,9 @@
 import dayjs, { type Dayjs } from 'dayjs';
-import { occurrenceDateInMonth, formatRecurrence } from '@uandi/cashbook-core/utils/recurrence';
+import {
+  occurrenceDateInMonth,
+  formatRecurrence,
+  type RecurrenceLabels,
+} from '@uandi/cashbook-core/utils/recurrence';
 import type {
   CashbookCategory,
   CashbookEntryType,
@@ -332,7 +336,9 @@ export type RecurrenceOccurrence = {
  */
 export function buildRecurrenceOccurrences(
   categories: CashbookCategory[],
-  opts: { from: Dayjs; months: number }
+  opts: { from: Dayjs; months: number },
+  /** 발생 근거 라벨 로케일(useRecurrenceLabels). 생략하면 한국어 */
+  labels?: RecurrenceLabels
 ): RecurrenceOccurrence[] {
   const start = opts.from.startOf('day');
   const end = start.add(opts.months, 'month').endOf('day');
@@ -361,7 +367,7 @@ export function buildRecurrenceOccurrences(
         type: cat.group, // 'income' | 'expense'
         amount,
         date: occ.toDate(),
-        note: formatRecurrence(r),
+        note: formatRecurrence(r, labels),
       });
     }
   }

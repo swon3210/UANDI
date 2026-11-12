@@ -40,6 +40,15 @@ test.describe('설정 — 언어', () => {
     await expect(page.getByTestId('dashboard-header')).toContainText('Dashboard');
     await page.getByTestId('sidebar-trigger').click();
     await expect(page.getByTestId('app-sidebar')).toContainText('Budget');
+    await page.keyboard.press('Escape');
+
+    // 가계부 내역·카테고리 설정도 영어다 (Phase 2 2차 추출 범위)
+    await page.goto('/inner/cashbook/history');
+    await expect(page.getByTestId('cashbook-header')).toContainText('Entries');
+    await page.goto('/inner/cashbook/categories');
+    await expect(page.getByTestId('categories-header')).toContainText('Categories');
+    // 픽스처 커플엔 카테고리가 없어 빈 상태 + 추가 버튼이 영어로 보인다
+    await expect(page.getByRole('button', { name: 'Add category' })).toBeVisible();
   });
 
   test('쿠키가 지워져도(새 기기) users.locale 로 영어가 복원된다', async ({ authedContext }) => {

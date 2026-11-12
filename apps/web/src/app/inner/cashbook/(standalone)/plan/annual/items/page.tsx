@@ -1,5 +1,6 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { Suspense, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
@@ -37,12 +38,11 @@ import {
 } from '@/hooks/useAnnualPlan';
 import { spreadAnnualEvenly } from '@/services/annual-plan';
 import { GOAL_CATEGORY_BY_KEY, type GoalCategoryKey } from '@/constants/goal-categories';
-import { SUB_GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
 import { AnnualPlanItemForm } from '@/components/cashbook/AnnualPlanItemForm';
 import { formatCurrencyMan } from '@/utils/currency';
 import { MascotLoader } from '@/components/MascotLoader';
-import type { AnnualPlanItem, CashbookCategory } from '@/types';
+import type { AnnualPlanItem, CashbookCategory, CategorySubGroup } from '@/types';
 
 const VALID_GROUPS: GoalCategoryKey[] = ['income', 'expense'];
 const ANNUAL_MAIN = '/inner/cashbook/plan/annual';
@@ -57,6 +57,7 @@ export default function AnnualPlanItemsPage() {
 }
 
 function ItemsPageInner() {
+  const labels = useCategoryLabels();
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawGroup = searchParams.get('group');
@@ -295,7 +296,7 @@ function ItemsPageInner() {
                   className="mb-2 px-1 text-[12px] font-semibold text-stone-500"
                   data-testid={`plan-items-subgroup-${subGroup}`}
                 >
-                  {SUB_GROUP_LABELS[subGroup as keyof typeof SUB_GROUP_LABELS]}
+                  {labels.subGroup(subGroup as CategorySubGroup)}
                 </div>
                 <div className="divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-card">
                   {rows.map(({ item, category }) => (

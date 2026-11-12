@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
@@ -29,7 +31,7 @@ import {
   useDeleteCategory,
 } from '@/hooks/useCashbookCategories';
 import { countEntriesByCategory } from '@/services/cashbook';
-import { GROUP_LABELS, RECURRENCE_SUBGROUPS } from '@/constants/default-categories';
+import { RECURRENCE_SUBGROUPS } from '@/constants/default-categories';
 import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
 import { buildRecurrencePayload } from '@/utils/recurrence-form';
@@ -39,6 +41,8 @@ import { BackButton } from '@/components/shell/BackButton';
 const TAB_ORDER: CategoryGroup[] = ['income', 'expense'];
 
 export default function CashbookCategoriesPage() {
+  const t = useTranslations('cashbook.categories');
+  const labels = useCategoryLabels();
   const router = useRouter();
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
@@ -138,14 +142,12 @@ export default function CashbookCategoriesPage() {
     if (childCount > 0 || usedCount > 0) {
       const messageLines: string[] = [];
       if (childCount > 0) {
-        messageLines.push(`하위 카테고리 ${childCount}개도 함께 삭제됩니다.`);
+        messageLines.push(t('deleteChildren', { count: childCount }));
       }
       if (usedCount > 0) {
-        messageLines.push(
-          `이 카테고리를 사용 중인 항목이 ${usedCount}건 있습니다. 삭제해도 기존 항목의 카테고리 이름은 그대로 유지됩니다.`
-        );
+        messageLines.push(t('deleteUsed', { count: usedCount }));
       }
-      messageLines.push('삭제하시겠습니까?');
+      messageLines.push(t('deleteConfirm'));
 
       const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
         <Dialog
@@ -159,7 +161,7 @@ export default function CashbookCategoriesPage() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>카테고리 삭제</DialogTitle>
+              <DialogTitle>{t('deleteTitle')}</DialogTitle>
               <DialogDescription>{messageLines.join(' ')}</DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2">
@@ -170,7 +172,7 @@ export default function CashbookCategoriesPage() {
                   setTimeout(unmount, 300);
                 }}
               >
-                취소
+                {t('cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -179,7 +181,7 @@ export default function CashbookCategoriesPage() {
                   setTimeout(unmount, 300);
                 }}
               >
-                삭제
+                {t('delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -196,7 +198,7 @@ export default function CashbookCategoriesPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="categories-header"
-        title="카테고리 설정"
+        title={t('title')}
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" data-testid="header-left" />}
         rightSlot={
           <Button
@@ -204,7 +206,7 @@ export default function CashbookCategoriesPage() {
             size="icon"
             className="h-8 w-8"
             data-testid="categories-orphans-link"
-            aria-label="미분류 내역 정리"
+            aria-label={t('orphansLink')}
             onClick={() => router.push('/inner/cashbook/categories/orphans')}
           >
             <Inbox size={20} />
@@ -217,7 +219,7 @@ export default function CashbookCategoriesPage() {
           <TabsList className="w-full">
             {TAB_ORDER.map((group) => (
               <TabsTrigger key={group} value={group} className="flex-1">
-                {GROUP_LABELS[group]}
+                {labels.group(group)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -239,7 +241,7 @@ export default function CashbookCategoriesPage() {
         <div className="mt-4">
           <Button variant="outline" className="w-full" onClick={handleAdd}>
             <Plus size={16} className="mr-2" />
-            카테고리 추가
+            {t('add')}
           </Button>
         </div>
       </main>

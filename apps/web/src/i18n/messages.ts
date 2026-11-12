@@ -18,6 +18,7 @@ export const MESSAGE_NAMESPACES = [
   'pwa',
   'ui',
   'dashboard',
+  'cashbook',
 ] as const;
 export type MessageNamespace = (typeof MESSAGE_NAMESPACES)[number];
 

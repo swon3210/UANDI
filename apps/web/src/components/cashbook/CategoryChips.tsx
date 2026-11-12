@@ -1,14 +1,12 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge, Input } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType, CategoryGroup, CategorySubGroup } from '@/types';
-import {
-  SUB_GROUPS_BY_GROUP,
-  SUB_GROUP_LABELS,
-  SUB_GROUP_SHORT_LABELS,
-} from '@/constants/default-categories';
+import { SUB_GROUPS_BY_GROUP } from '@/constants/default-categories';
 import { CategoryIcon } from './CategoryIcon';
 
 const MAX_RECOMMENDATIONS = 3;
@@ -63,6 +61,8 @@ export function CategoryChips({
   hideAdd,
   hideHint,
 }: CategoryChipsProps) {
+  const t = useTranslations('cashbook.categoryPicker');
+  const labels = useCategoryLabels();
   const group = activeType as CategoryGroup;
   const subGroups = SUB_GROUPS_BY_GROUP[group] ?? [];
 
@@ -77,7 +77,7 @@ export function CategoryChips({
   );
   const parentChipLabel = (parent: CashbookCategory) =>
     duplicateNames.has(parent.name)
-      ? `${parent.name} (${SUB_GROUP_SHORT_LABELS[parent.subGroup]})`
+      ? `${parent.name} (${labels.subGroupShort(parent.subGroup)})`
       : parent.name;
   const childrenByParent = new Map<string, CashbookCategory[]>();
   for (const c of categories) {
@@ -155,7 +155,7 @@ export function CategoryChips({
       {label ?? cat.name}
       {cat.parentCategoryId && (
         <Badge variant="secondary" className="px-1 py-0 text-[9px] font-normal">
-          {SUB_GROUP_SHORT_LABELS[cat.subGroup]}
+          {labels.subGroupShort(cat.subGroup)}
         </Badge>
       )}
     </button>
@@ -173,7 +173,7 @@ export function CategoryChips({
             data-testid="category-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="카테고리 검색"
+            placeholder={t('search')}
             className="h-9 pl-8"
           />
         </div>
@@ -182,7 +182,7 @@ export function CategoryChips({
       {query ? (
         <div data-testid="category-search-results">
           {searchResults.length === 0 ? (
-            <p className="text-xs text-muted-foreground">검색 결과가 없어요</p>
+            <p className="text-xs text-muted-foreground">{t('noResults')}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {searchResults.map((cat) => renderSelectChip(cat))}
@@ -198,14 +198,14 @@ export function CategoryChips({
             onClick={() => setDrilledParentId(null)}
           >
             <ChevronLeft size={14} />
-            대분류
+            {t('parents')}
           </button>
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <CategoryIcon name={drilledParent.icon} size={14} />
             {drilledParent.name}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {renderSelectChip(drilledParent, `${drilledParent.name} 전체`)}
+            {renderSelectChip(drilledParent, t('allOf', { name: drilledParent.name }))}
             {drilledChildren.map((child) => renderSelectChip(child))}
           </div>
         </div>
@@ -217,7 +217,7 @@ export function CategoryChips({
             return (
               <div key={sg}>
                 <div className="mb-1 text-xs text-muted-foreground">
-                  {SUB_GROUP_LABELS[sg as CategorySubGroup]}
+                  {labels.subGroup(sg as CategorySubGroup)}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {subParents.map((parent) => {
@@ -240,7 +240,7 @@ export function CategoryChips({
                         {hasChildren && (
                           <ChevronRight
                             size={13}
-                            aria-label="하위 카테고리 보기"
+                            aria-label={t('showChildren')}
                             className="opacity-50"
                           />
                         )}
@@ -256,7 +256,7 @@ export function CategoryChips({
 
       {hasOrphanValue && !query && (
         <div>
-          <div className="mb-1 text-xs text-muted-foreground">선택됨</div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('selected')}</div>
           <button
             type="button"
             data-testid={`category-chip-${value}`}
@@ -275,7 +275,7 @@ export function CategoryChips({
               <>
                 {selectedParent.name}{' '}
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-                  {SUB_GROUP_SHORT_LABELS[selectedParent.subGroup]}
+                  {labels.subGroupShort(selectedParent.subGroup)}
                 </Badge>{' '}
                 <span className="text-muted-foreground">&gt;</span> {selectedCat.name}
               </>
@@ -283,7 +283,7 @@ export function CategoryChips({
               <>
                 {selectedCat.name}{' '}
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-                  {SUB_GROUP_SHORT_LABELS[selectedCat.subGroup]}
+                  {labels.subGroupShort(selectedCat.subGroup)}
                 </Badge>
               </>
             )}
@@ -293,7 +293,8 @@ export function CategoryChips({
               {selectedCat.description && <span>{selectedCat.description}</span>}
               {selectedCat.examples.length > 0 && (
                 <span>
-                  {selectedCat.description ? ' · ' : ''}예시: {selectedCat.examples.join(', ')}
+                  {selectedCat.description ? ' · ' : ''}
+                  {t('examples', { examples: selectedCat.examples.join(', ') })}
                 </span>
               )}
             </div>
@@ -303,7 +304,7 @@ export function CategoryChips({
 
       {!query && recommended.length > 0 && (
         <div data-testid="category-recommendations">
-          <div className="mb-1 text-xs text-muted-foreground">메모와 비슷한 카테고리</div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('similar')}</div>
           <div className="flex flex-wrap gap-1.5">
             {recommended.map((cat) => (
               <button
@@ -320,7 +321,7 @@ export function CategoryChips({
                 <CategoryIcon name={cat.icon} size={12} />
                 {cat.name}
                 <Badge variant="secondary" className="px-1 py-0 text-[9px] font-normal">
-                  {SUB_GROUP_SHORT_LABELS[cat.subGroup]}
+                  {labels.subGroupShort(cat.subGroup)}
                 </Badge>
               </button>
             ))}
@@ -337,7 +338,7 @@ export function CategoryChips({
           disabled={disableAdd}
         >
           <Plus size={14} />
-          카테고리 추가
+          {t('add')}
         </button>
       )}
     </div>

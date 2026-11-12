@@ -1,10 +1,9 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import {
-  GROUP_LABELS,
-  SUB_GROUP_LABELS,
   type CashbookCategory,
   type CategoryGroup,
   type CategorySubGroup,
@@ -102,6 +101,7 @@ function SectionBlock({
   onChangeRow: (itemId: string, monthlyAmounts: number[]) => void;
   onResetRow: (itemId: string) => void;
 }) {
+  const labels = useCategoryLabels();
   return (
     <>
       <tr aria-hidden>
@@ -112,7 +112,7 @@ function SectionBlock({
               GROUP_TONE[section.group]
             )}
           >
-            {GROUP_LABELS[section.group]}
+            {labels.group(section.group)}
           </div>
         </td>
       </tr>
@@ -140,12 +140,13 @@ function SubGroupBlock({
   onChangeRow: (itemId: string, monthlyAmounts: number[]) => void;
   onResetRow: (itemId: string) => void;
 }) {
+  const labels = useCategoryLabels();
   return (
     <>
       <tr aria-hidden>
         <td colSpan={14} className="border-b border-stone-100 bg-stone-50/60 p-0">
           <div className="sticky left-0 z-10 inline-flex items-center px-3 py-1 text-[10.5px] font-medium uppercase tracking-wide text-stone-500">
-            {SUB_GROUP_LABELS[subGroup]}
+            {labels.subGroup(subGroup)}
           </div>
         </td>
       </tr>

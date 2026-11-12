@@ -1,6 +1,8 @@
 'use client';
 /* eslint-disable react-hooks/incompatible-library -- RHF watch() is known-incompatible with React Compiler */
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +29,6 @@ import {
   TabsTrigger,
 } from '@uandi/ui';
 import type { CashbookEntry, CashbookEntryType, CashbookCategory, CategoryGroup } from '@/types';
-import { GROUP_LABELS } from '@/constants/default-categories';
 import { useAddCategory } from '@/hooks/useCashbookCategories';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { CategoryChips } from './CategoryChips';
@@ -36,17 +37,24 @@ import { AuthorAvatar } from './AuthorAvatar';
 
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 
-const schema = z.object({
-  amount: z
-    .number({ error: '금액을 입력해주세요' })
-    .positive('금액을 입력해주세요')
-    .int('금액은 원 단위 정수로 입력해주세요'),
-  category: z.string().min(1, '카테고리를 선택해주세요'),
-  date: z.string().min(1),
-  description: z.string(),
-});
+/** 에러 문구는 로케일을 타므로 컴포넌트 안에서 만든다 */
+function buildSchema(msg: {
+  amountRequired: string;
+  amountInteger: string;
+  categoryRequired: string;
+}) {
+  return z.object({
+    amount: z
+      .number({ error: msg.amountRequired })
+      .positive(msg.amountRequired)
+      .int(msg.amountInteger),
+    category: z.string().min(1, msg.categoryRequired),
+    date: z.string().min(1),
+    description: z.string(),
+  });
+}
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 type EntryFormProps = {
   categories: CashbookCategory[];
@@ -85,6 +93,13 @@ export function EntryForm({
   createdBy,
   title,
 }: EntryFormProps) {
+  const t = useTranslations('cashbook.entryForm');
+  const labels = useCategoryLabels();
+  const schema = buildSchema({
+    amountRequired: t('amountRequired'),
+    amountInteger: t('amountInteger'),
+    categoryRequired: t('categoryRequired'),
+  });
   const [activeType, setActiveType] = useState<CashbookEntryType>(
     editingEntry?.type ?? prefill?.type ?? 'expense'
   );
@@ -92,9 +107,7 @@ export function EntryForm({
 
   // 편집 모드에서만 작성자 표시 (신규 추가 시 작성자는 본인이고 아직 저장 전).
   const { data: members } = useCoupleMembers(coupleId);
-  const author = editingEntry
-    ? members?.find((m) => m.uid === editingEntry.createdBy)
-    : undefined;
+  const author = editingEntry ? members?.find((m) => m.uid === editingEntry.createdBy) : undefined;
 
   // 안드로이드 하드웨어/브라우저 뒤로가기는 전역 OverlayBackButtonHandler가
   // (overlay-kit 오버레이 단위로) 페이지 이동 대신 닫기로 처리한다.
@@ -140,12 +153,12 @@ export function EntryForm({
           size="icon"
           className="shrink-0"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t('close')}
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <SheetTitle className="min-w-0 flex-1 truncate text-base">
-          {title ?? (editingEntry ? '내역 수정' : '내역 추가')}
+          {title ?? (editingEntry ? t('editTitle') : t('addTitle'))}
         </SheetTitle>
         {author && (
           <div className="flex shrink-0 items-center gap-1.5 pr-1 text-xs text-muted-foreground">
@@ -168,7 +181,7 @@ export function EntryForm({
               <TabsList className="w-full">
                 {TAB_ORDER.map((type) => (
                   <TabsTrigger key={type} value={type} className="flex-1">
-                    {GROUP_LABELS[type as CategoryGroup]}
+                    {labels.group(type as CategoryGroup)}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -179,7 +192,7 @@ export function EntryForm({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>금액</FormLabel>
+                  <FormLabel>{t('amount')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -200,7 +213,7 @@ export function EntryForm({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>카테고리</FormLabel>
+                  <FormLabel>{t('category')}</FormLabel>
                   <FormControl>
                     <CategoryChips
                       key={activeType}
@@ -251,7 +264,7 @@ export function EntryForm({
               name="date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>날짜</FormLabel>
+                  <FormLabel>{t('date')}</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
@@ -265,9 +278,9 @@ export function EntryForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>메모 (선택)</FormLabel>
+                  <FormLabel>{t('memo')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="메모를 입력하세요" {...field} />
+                    <Input placeholder={t('memoPlaceholder')} {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -286,7 +299,7 @@ export function EntryForm({
                     onClose();
                   }}
                 >
-                  삭제
+                  {t('delete')}
                 </Button>
               )}
               <Button
@@ -294,7 +307,7 @@ export function EntryForm({
                 className="flex-1"
                 disabled={!selectedCategory || !form.watch('amount')}
               >
-                저장
+                {t('save')}
               </Button>
             </div>
           </div>

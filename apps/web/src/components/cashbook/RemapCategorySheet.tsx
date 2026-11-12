@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import {
   SheetContent,
@@ -11,7 +13,6 @@ import {
   Button,
 } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType, CategoryGroup } from '@/types';
-import { GROUP_LABELS } from '@/constants/default-categories';
 import { CategoryChips } from './CategoryChips';
 
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
@@ -37,6 +38,8 @@ export function RemapCategorySheet({
   onConfirm,
   onClose,
 }: RemapCategorySheetProps) {
+  const t = useTranslations('cashbook.orphans');
+  const labels = useCategoryLabels();
   const [activeType, setActiveType] = useState<CashbookEntryType>(initialType);
   const [selected, setSelected] = useState<string>('');
 
@@ -44,8 +47,8 @@ export function RemapCategorySheet({
 
   const targetText =
     selectedEntryCount < totalEntryCount
-      ? `적용 대상: 선택된 ${selectedEntryCount}건 / 전체 ${totalEntryCount}건`
-      : `적용 대상: 전체 ${totalEntryCount}건`;
+      ? t('targetPartial', { selected: selectedEntryCount, total: totalEntryCount })
+      : t('targetAll', { total: totalEntryCount });
 
   return (
     <SheetContent
@@ -54,7 +57,7 @@ export function RemapCategorySheet({
       data-testid="remap-sheet"
     >
       <SheetHeader>
-        <SheetTitle>&ldquo;{fromName}&rdquo; 재매칭</SheetTitle>
+        <SheetTitle>{t('remapTitle', { name: fromName })}</SheetTitle>
       </SheetHeader>
 
       <div className="flex flex-col gap-4 overflow-y-auto overflow-x-hidden px-1 pb-4 pt-3">
@@ -70,7 +73,7 @@ export function RemapCategorySheet({
           <TabsList className="w-full">
             {TAB_ORDER.map((type) => (
               <TabsTrigger key={type} value={type} className="flex-1">
-                {GROUP_LABELS[type as CategoryGroup]}
+                {labels.group(type as CategoryGroup)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -95,7 +98,7 @@ export function RemapCategorySheet({
           data-testid="remap-cancel"
           onClick={onClose}
         >
-          취소
+          {t('cancel')}
         </Button>
         <Button
           type="button"
@@ -104,7 +107,7 @@ export function RemapCategorySheet({
           disabled={!selected || isSubmitting}
           onClick={() => onConfirm(selected)}
         >
-          재매칭
+          {t('remap')}
         </Button>
       </div>
     </SheetContent>

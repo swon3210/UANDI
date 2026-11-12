@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,11 +20,9 @@ import {
   SheetTitle,
 } from '@uandi/ui';
 
-const schema = z.object({
-  password: z.string().min(1, '비밀번호를 입력해주세요'),
-});
+const buildSchema = (required: string) => z.object({ password: z.string().min(1, required) });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 type PdfPasswordSheetProps = {
   fileName: string;
@@ -45,8 +44,9 @@ export function PdfPasswordSheet({
   onSubmit,
   onCancel,
 }: PdfPasswordSheetProps) {
+  const t = useTranslations('cashbook.pdf');
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(buildSchema(t('passwordRequired'))),
     defaultValues: { password: '' },
   });
 
@@ -59,10 +59,10 @@ export function PdfPasswordSheet({
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2">
           <Lock size={16} className="text-primary" />
-          PDF 비밀번호
+          {t('title')}
         </SheetTitle>
         <SheetDescription className="truncate" title={fileName}>
-          {fileName} 파일이 잠겨 있어요. 열람 비밀번호를 입력해주세요.
+          {t('description', { name: fileName })}
         </SheetDescription>
       </SheetHeader>
 
@@ -76,7 +76,7 @@ export function PdfPasswordSheet({
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>비밀번호</FormLabel>
+                <FormLabel>{t('password')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -84,7 +84,7 @@ export function PdfPasswordSheet({
                     autoFocus
                     inputMode="text"
                     data-testid="pdf-password-input"
-                    placeholder="예: 생년월일 6자리"
+                    placeholder={t('placeholder')}
                     {...field}
                   />
                 </FormControl>
@@ -106,7 +106,7 @@ export function PdfPasswordSheet({
               disabled={isSubmitting}
               data-testid="pdf-password-cancel"
             >
-              이 파일 건너뛰기
+              {t('skip')}
             </Button>
             <Button
               type="submit"
@@ -114,7 +114,7 @@ export function PdfPasswordSheet({
               disabled={isSubmitting}
               data-testid="pdf-password-submit"
             >
-              열기
+              {t('open')}
             </Button>
           </div>
         </form>

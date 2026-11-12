@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import {
   getMonthlyEntries,
@@ -308,16 +309,17 @@ const HISTORY_PATH = '/inner/cashbook/history';
  * 추가 완료 토스트. 내역 화면이 아닌 곳(대시보드 등)에서 적었으면 "내역 보기" 액션을 붙여
  * 방금 적은 내역이 어디 갔는지 바로 찾아가게 한다(2026-11 첫 주 걷기).
  */
-function toastEntriesAdded(message: string, goToHistory: () => void) {
+function toastEntriesAdded(message: string, actionLabel: string, goToHistory: () => void) {
   const onHistory =
     typeof window !== 'undefined' && window.location.pathname.startsWith(HISTORY_PATH);
   toast.success(
     message,
-    onHistory ? undefined : { action: { label: '내역 보기', onClick: goToHistory } }
+    onHistory ? undefined : { action: { label: actionLabel, onClick: goToHistory } }
   );
 }
 
 export function useAddEntry(coupleId: string | null, source: EntriesAddedSource) {
+  const t = useTranslations('cashbook.toasts');
   const qc = useQueryClient();
   const router = useRouter();
   return useMutation({
@@ -327,13 +329,14 @@ export function useAddEntry(coupleId: string | null, source: EntriesAddedSource)
     onSuccess: () => {
       trackEvent('entries_added', { source, count: 1 });
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
-      toastEntriesAdded('내역을 추가했어요', () => router.push(HISTORY_PATH));
+      toastEntriesAdded(t('entryAdded'), t('viewHistory'), () => router.push(HISTORY_PATH));
     },
-    onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error(t('addFailed')),
   });
 }
 
 export function useAddEntries(coupleId: string | null, source: EntriesAddedSource) {
+  const t = useTranslations('cashbook.toasts');
   const qc = useQueryClient();
   const router = useRouter();
   return useMutation({
@@ -343,13 +346,16 @@ export function useAddEntries(coupleId: string | null, source: EntriesAddedSourc
     onSuccess: (count) => {
       trackEvent('entries_added', { source, count });
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
-      toastEntriesAdded(`${count}건 추가됐어요`, () => router.push(HISTORY_PATH));
+      toastEntriesAdded(t('entriesAdded', { count }), t('viewHistory'), () =>
+        router.push(HISTORY_PATH)
+      );
     },
-    onError: () => toast.error('내역 추가에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error(t('addFailed')),
   });
 }
 
 export function useUpdateEntry(coupleId: string | null) {
+  const t = useTranslations('cashbook.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -360,15 +366,16 @@ export function useUpdateEntry(coupleId: string | null) {
       data: Partial<Pick<CashbookEntry, 'type' | 'amount' | 'category' | 'description' | 'date'>>;
     }) => updateEntry(coupleId!, entryId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
-    onError: () => toast.error('내역 수정에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error(t('updateFailed')),
   });
 }
 
 export function useDeleteEntry(coupleId: string | null) {
+  const t = useTranslations('cashbook.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (entryId: string) => deleteEntry(coupleId!, entryId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] }),
-    onError: () => toast.error('내역 삭제에 실패했어요. 다시 시도해주세요.'),
+    onError: () => toast.error(t('deleteFailed')),
   });
 }

@@ -9,6 +9,7 @@ import type tour from '../../messages/ko/tour.json';
 import type pwa from '../../messages/ko/pwa.json';
 import type ui from '../../messages/ko/ui.json';
 import type dashboard from '../../messages/ko/dashboard.json';
+import type cashbook from '../../messages/ko/cashbook.json';
 
 /**
  * next-intl 타입 보강 — `useLocale()`/`getLocale()` 이 Locale 유니온을 돌려주고,
@@ -29,6 +30,7 @@ declare module 'next-intl' {
       pwa: typeof pwa;
       ui: typeof ui;
       dashboard: typeof dashboard;
+      cashbook: typeof cashbook;
     };
   }
 }

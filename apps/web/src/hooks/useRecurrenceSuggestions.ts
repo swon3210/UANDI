@@ -4,16 +4,13 @@ import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
-import { formatRecurrence } from '@uandi/cashbook-core/utils/recurrence';
+import { useCategoryLabels, useFormatRecurrence } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useCashbookCategories, useUpdateCategory } from './useCashbookCategories';
 import { useCashbookEntriesInRange } from './useCashbook';
 import { addCategory } from '@/services/cashbook-categories';
 import { bulkUpdateEntriesCategory } from '@/services/cashbook';
-import {
-  RECURRENCE_SUBGROUPS,
-  SUB_GROUP_LABELS,
-  recurrenceSubGroupFor,
-} from '@/constants/default-categories';
+import { RECURRENCE_SUBGROUPS, recurrenceSubGroupFor } from '@/constants/default-categories';
 import { detectRecurringPatterns } from '@/utils/auto-detect';
 import type { RecurrenceSuggestionView } from '@/components/cashbook/RecurrenceSuggestionCard';
 import type { CashbookCategory, RecurringSchedule } from '@/types';
@@ -21,10 +18,6 @@ import type { CashbookCategory, RecurringSchedule } from '@/types';
 const DETECT_MONTHS = 6;
 // 정기 발생을 켰는데 이 기간(개월) 동안 발생이 끊기면 "해제 제안" 후보.
 const STOPPED_MONTHS = 2;
-
-function kindNoun(type: 'income' | 'expense'): string {
-  return type === 'income' ? '정기 수입' : '정기 지출';
-}
 
 /**
  * 정기 발생 등록/이동/해제 제안(Phase 6·7) — 영속 예측 doc 없는 읽기 시점 제안.
@@ -49,6 +42,11 @@ export function useRecurrenceSuggestions(coupleId: string | null) {
   );
   const { data: entries } = useCashbookEntriesInRange(coupleId, range.from, range.to);
   const updateCategory = useUpdateCategory(coupleId);
+  const t = useTranslations('cashbook.recurrenceSuggestion');
+  const tRec = useTranslations('cashbook.recurrence');
+  const formatRecurrence = useFormatRecurrence();
+  const kindNoun = (type: 'income' | 'expense') =>
+    type === 'income' ? t('incomeNoun') : t('expenseNoun');
 
   const suggestions = useMemo<RecurrenceSuggestionView[]>(() => {
     if (!categories || !entries) return [];
@@ -99,12 +97,12 @@ export function useRecurrenceSuggestions(coupleId: string | null) {
         kind: RECURRENCE_SUBGROUPS.includes(cat.subGroup) ? 'add' : 'move',
         dayOfMonth: p.dayOfMonth,
         amount: p.amount,
-        scheduleLabel: `매월 ${p.dayOfMonth}일쯤`,
+        scheduleLabel: tRec('aroundDay', { day: p.dayOfMonth }),
         entryIds: p.entryIds,
       });
     }
     return out;
-  }, [categories, entries]);
+  }, [categories, entries, formatRecurrence, tRec]);
 
   const accept = (s: RecurrenceSuggestionView) => {
     // move는 사용자가 새 카테고리 이름·아이콘을 정해야 해서 one-tap으로 처리하지 않는다.
@@ -118,7 +116,7 @@ export function useRecurrenceSuggestions(coupleId: string | null) {
         },
         {
           onSuccess: () =>
-            toast.success(`'${s.categoryName}' 항목의 ${kindNoun(s.type)} 등록을 해제했어요`),
+            toast.success(t('removed', { name: s.categoryName, noun: kindNoun(s.type) })),
         }
       );
       return;
@@ -137,7 +135,7 @@ export function useRecurrenceSuggestions(coupleId: string | null) {
       },
       {
         onSuccess: () =>
-          toast.success(`'${s.categoryName}' 항목을 ${kindNoun(s.type)}에 등록했어요`),
+          toast.success(t('registered', { name: s.categoryName, noun: kindNoun(s.type) })),
       }
     );
   };
@@ -166,6 +164,8 @@ export type MoveRecurrenceInput = {
  * 패턴이 사라져 제안이 자연히 소멸하고, 새 카테고리는 recurrence가 있어 캘린더 ◇ 예측에 바로 반영된다.
  */
 export function useMoveRecurrenceToNewCategory(coupleId: string | null) {
+  const t = useTranslations('cashbook.recurrenceSuggestion');
+  const labels = useCategoryLabels();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ suggestion, category }: MoveRecurrenceInput) => {
@@ -189,9 +189,9 @@ export function useMoveRecurrenceToNewCategory(coupleId: string | null) {
     onSuccess: ({ name, moved }, { suggestion }) => {
       qc.invalidateQueries({ queryKey: ['cashbookCategories', coupleId] });
       qc.invalidateQueries({ queryKey: ['cashbookEntries', coupleId] });
-      const targetLabel = SUB_GROUP_LABELS[recurrenceSubGroupFor(suggestion.type)];
-      toast.success(`'${name}' ${targetLabel} 카테고리를 만들고 내역 ${moved}건을 옮겼어요`);
+      const targetLabel = labels.subGroup(recurrenceSubGroupFor(suggestion.type));
+      toast.success(t('moved', { name, target: targetLabel, count: moved }));
     },
-    onError: () => toast.error('카테고리를 만들지 못했어요. 다시 시도해주세요.'),
+    onError: () => toast.error(t('moveFailed')),
   });
 }

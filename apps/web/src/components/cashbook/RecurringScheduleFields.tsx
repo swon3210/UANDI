@@ -1,5 +1,7 @@
 'use client';
 
+import { dateFormat } from '@/utils/date';
+import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import {
   Switch,
@@ -28,13 +30,7 @@ export type RecurringScheduleValue = {
   anchorMonth?: string;
 };
 
-const FREQUENCY_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: '매월' },
-  { value: 2, label: '격월' },
-  { value: 3, label: '분기' },
-  { value: 6, label: '반기' },
-  { value: 12, label: '매년' },
-];
+const FREQUENCY_VALUES = [1, 2, 3, 6, 12] as const;
 
 /** 시작 월 후보: (편집 중 과거 anchor가 있으면 포함) + 이번 달부터 12개월. */
 function buildMonthOptions(existing?: string): { value: string; label: string }[] {
@@ -45,7 +41,7 @@ function buildMonthOptions(existing?: string): { value: string; label: string }[
     const v = m.format('YYYY-MM');
     if (seen.has(v)) return;
     seen.add(v);
-    out.push({ value: v, label: m.format('YYYY년 M월') });
+    out.push({ value: v, label: m.format(dateFormat('monthYear')) });
   };
   if (existing && dayjs(`${existing}-01`).isBefore(now)) push(dayjs(`${existing}-01`));
   for (let i = 0; i < 12; i++) push(now.add(i, 'month'));
@@ -59,24 +55,9 @@ type RecurringScheduleFieldsProps = {
   variant?: 'income' | 'expense';
 };
 
-const WEEK_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: '첫째' },
-  { value: 2, label: '둘째' },
-  { value: 3, label: '셋째' },
-  { value: 4, label: '넷째' },
-  { value: 5, label: '다섯째' },
-  { value: -1, label: '마지막' },
-];
+const WEEK_VALUES = [1, 2, 3, 4, 5, -1] as const;
 
-const WEEKDAY_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: '월' },
-  { value: 2, label: '화' },
-  { value: 3, label: '수' },
-  { value: 4, label: '목' },
-  { value: 5, label: '금' },
-  { value: 6, label: '토' },
-  { value: 7, label: '일' },
-];
+const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
 
 function parseIntOrUndefined(raw: string): number | undefined {
   if (raw.trim() === '') return undefined;
@@ -99,7 +80,18 @@ export function RecurringScheduleFields({
 }: RecurringScheduleFieldsProps) {
   const patch = (partial: Partial<RecurringScheduleValue>) => onChange({ ...value, ...partial });
 
-  const occurrenceHint = variant === 'income' ? '들어오는 날' : '나가는 날';
+  const t = useTranslations('cashbook.recurrenceFields');
+  const tRec = useTranslations('cashbook.recurrence');
+  const FREQUENCY_OPTIONS = FREQUENCY_VALUES.map((value) => ({
+    value,
+    label: t(`freq.${value}`),
+  }));
+  const WEEK_OPTIONS = WEEK_VALUES.map((value) => ({ value, label: tRec(`week.${value}`) }));
+  const WEEKDAY_OPTIONS = WEEKDAY_VALUES.map((value) => ({
+    value,
+    label: t(`weekdayShort.${value}`),
+  }));
+  const occurrenceHint = variant === 'income' ? t('incomeDay') : t('expenseDay');
   const intervalMonths = value.intervalMonths ?? 1;
   const monthOptions = buildMonthOptions(value.anchorMonth);
 
@@ -119,9 +111,9 @@ export function RecurringScheduleFields({
     <section data-testid="recurrence-section" className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <Label className="text-sm font-semibold">정기 발생 알림</Label>
+          <Label className="text-sm font-semibold">{t('title')}</Label>
           <p className="text-xs text-muted-foreground">
-            설정한 주기의 {occurrenceHint}에 맞춰 기록 알림을 받아요.
+            {t('description', { day: occurrenceHint })}
           </p>
         </div>
         <Switch
@@ -135,7 +127,7 @@ export function RecurringScheduleFields({
         <div className="flex flex-col gap-4 pl-0.5">
           {/* 발생 빈도 (매월/격월/분기/반기/매년) */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-sm">발생 빈도</Label>
+            <Label className="text-sm">{t('frequency')}</Label>
             <div className="flex flex-wrap gap-2">
               {FREQUENCY_OPTIONS.map((opt) => {
                 const selected = intervalMonths === opt.value;
@@ -159,7 +151,7 @@ export function RecurringScheduleFields({
           {intervalMonths > 1 && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="recurrence-anchor-month" className="text-sm">
-                시작 월
+                {t('anchorMonth')}
               </Label>
               <Select
                 value={value.anchorMonth ?? monthOptions[0]?.value}
@@ -170,7 +162,7 @@ export function RecurringScheduleFields({
                   data-testid="recurrence-anchor-month"
                   className="w-40"
                 >
-                  <SelectValue placeholder="시작 월" />
+                  <SelectValue placeholder={t('anchorMonth')} />
                 </SelectTrigger>
                 <SelectContent>
                   {monthOptions.map((opt) => (
@@ -181,15 +173,16 @@ export function RecurringScheduleFields({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                이 달부터 {FREQUENCY_OPTIONS.find((o) => o.value === intervalMonths)?.label}로
-                반복돼요. 사이 달은 건너뛰어요.
+                {t('anchorHint', {
+                  freq: FREQUENCY_OPTIONS.find((o) => o.value === intervalMonths)?.label ?? '',
+                })}
               </p>
             </div>
           )}
 
           {/* 발생 주기 방식 */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-sm">발생 주기</Label>
+            <Label className="text-sm">{t('kind')}</Label>
             <RadioGroup
               value={value.kind}
               onValueChange={(kind) => patch({ kind: kind as RecurringScheduleValue['kind'] })}
@@ -197,12 +190,16 @@ export function RecurringScheduleFields({
             >
               {(
                 [
-                  { value: 'dayOfMonth', label: '매월 며칠' },
-                  { value: 'nthWeekday', label: '매월 몇째 주' },
+                  { value: 'dayOfMonth', label: t('kindDayOfMonth') },
+                  { value: 'nthWeekday', label: t('kindNthWeekday') },
                 ] as const
               ).map((opt) => (
                 <div key={opt.value} className="flex items-center">
-                  <RadioGroupItem value={opt.value} id={`recurrence-kind-${opt.value}`} className="sr-only" />
+                  <RadioGroupItem
+                    value={opt.value}
+                    id={`recurrence-kind-${opt.value}`}
+                    className="sr-only"
+                  />
                   <Label
                     htmlFor={`recurrence-kind-${opt.value}`}
                     data-testid={`recurrence-kind-${opt.value}`}
@@ -219,10 +216,10 @@ export function RecurringScheduleFields({
           {value.kind === 'dayOfMonth' && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="recurrence-day-input" className="text-sm">
-                매월 며칠
+                {t('dayLabel')}
               </Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">매월</span>
+                <span className="text-sm text-muted-foreground">{t('everyMonth')}</span>
                 <Input
                   id="recurrence-day-input"
                   data-testid="recurrence-day-input"
@@ -233,11 +230,9 @@ export function RecurringScheduleFields({
                   value={value.dayOfMonth ?? ''}
                   onChange={(e) => patch({ dayOfMonth: parseIntOrUndefined(e.target.value) })}
                 />
-                <span className="text-sm text-muted-foreground">일</span>
+                <span className="text-sm text-muted-foreground">{t('daySuffix')}</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                해당 월에 그 날이 없으면 말일에 알림을 보내요.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('dayHint')}</p>
             </div>
           )}
 
@@ -245,7 +240,7 @@ export function RecurringScheduleFields({
           {value.kind === 'nthWeekday' && (
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm">몇째 주</Label>
+                <Label className="text-sm">{t('weekLabel')}</Label>
                 <div className="flex flex-wrap gap-2">
                   {WEEK_OPTIONS.map((opt) => {
                     const selected = value.week === opt.value;
@@ -266,7 +261,7 @@ export function RecurringScheduleFields({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm">요일</Label>
+                <Label className="text-sm">{t('weekdayLabel')}</Label>
                 <div className="flex flex-wrap gap-2">
                   {WEEKDAY_OPTIONS.map((opt) => {
                     const selected = value.weekday === opt.value;
@@ -291,7 +286,7 @@ export function RecurringScheduleFields({
           {/* 며칠 전 알림 */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="recurrence-lead-input" className="text-sm">
-              미리 알림
+              {t('lead')}
             </Label>
             <div className="flex items-center gap-2">
               <Input
@@ -304,14 +299,14 @@ export function RecurringScheduleFields({
                 value={value.leadDays ?? 0}
                 onChange={(e) => patch({ leadDays: parseIntOrUndefined(e.target.value) ?? 0 })}
               />
-              <span className="text-sm text-muted-foreground">일 전 (0 = 당일)</span>
+              <span className="text-sm text-muted-foreground">{t('leadSuffix')}</span>
             </div>
           </div>
 
           {/* 예상 금액 */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="recurrence-amount-input" className="text-sm">
-              예상 금액 (선택)
+              {t('expected')}
             </Label>
             <div className="flex items-center gap-2">
               <Input
@@ -320,13 +315,13 @@ export function RecurringScheduleFields({
                 type="number"
                 min={0}
                 inputMode="numeric"
-                placeholder="예: 800000"
+                placeholder={t('expectedPlaceholder')}
                 value={value.expectedAmount ?? ''}
                 onChange={(e) =>
                   patch({ expectedAmount: parseIntOrUndefined(e.target.value) ?? null })
                 }
               />
-              <span className="text-sm text-muted-foreground">원</span>
+              <span className="text-sm text-muted-foreground">{t('won')}</span>
             </div>
           </div>
         </div>

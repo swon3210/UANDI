@@ -1,5 +1,8 @@
 'use client';
 
+import { getActiveLocale, INTL_LOCALE_TAGS } from '@/lib/locale';
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import {
@@ -15,11 +18,7 @@ import {
   TabsTrigger,
 } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType, CategoryGroup, CategorySubGroup } from '@/types';
-import {
-  GROUP_LABELS,
-  SUB_GROUP_LABELS,
-  SUB_GROUPS_BY_GROUP,
-} from '@/constants/default-categories';
+import { SUB_GROUPS_BY_GROUP } from '@/constants/default-categories';
 import { CategoryIcon } from './CategoryIcon';
 
 const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
@@ -27,7 +26,8 @@ const TAB_ORDER: CashbookEntryType[] = ['expense', 'income'];
 const SHOW_SEARCH_THRESHOLD = 8;
 
 // 카테고리는 이름 가나다 순으로 보여준다.
-const byName = (a: CashbookCategory, b: CashbookCategory) => a.name.localeCompare(b.name, 'ko');
+const byName = (a: CashbookCategory, b: CashbookCategory) =>
+  a.name.localeCompare(b.name, INTL_LOCALE_TAGS[getActiveLocale()]);
 
 type CategoryFilterSheetProps = {
   categories: CashbookCategory[];
@@ -52,6 +52,8 @@ export function CategoryFilterSheet({
   onApply,
   onClose,
 }: CategoryFilterSheetProps) {
+  const t = useTranslations('cashbook.categoryPicker');
+  const labels = useCategoryLabels();
   const [activeType, setActiveType] = useState<CashbookEntryType>(initialType);
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [search, setSearch] = useState('');
@@ -150,7 +152,7 @@ export function CategoryFilterSheet({
       data-testid="category-filter-sheet"
     >
       <SheetHeader>
-        <SheetTitle>카테고리 선택</SheetTitle>
+        <SheetTitle>{t('title')}</SheetTitle>
       </SheetHeader>
 
       <div className="flex flex-col gap-3 overflow-y-auto overflow-x-hidden px-1 pb-4 pt-3">
@@ -163,7 +165,7 @@ export function CategoryFilterSheet({
                 className="flex-1"
                 data-testid={`category-filter-tab-${type}`}
               >
-                {GROUP_LABELS[type as CategoryGroup]}
+                {labels.group(type as CategoryGroup)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -178,8 +180,8 @@ export function CategoryFilterSheet({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="카테고리 검색"
-              aria-label="카테고리 검색"
+              placeholder={t('search')}
+              aria-label={t('search')}
               data-testid="category-filter-search"
               className="h-9 pl-8"
             />
@@ -189,7 +191,7 @@ export function CategoryFilterSheet({
         {query ? (
           <div data-testid="category-filter-search-results">
             {searchResults.length === 0 ? (
-              <p className="text-xs text-muted-foreground">검색 결과가 없어요</p>
+              <p className="text-xs text-muted-foreground">{t('noResults')}</p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {searchResults.map((cat) => renderSelectChip(cat))}
@@ -197,7 +199,7 @@ export function CategoryFilterSheet({
             )}
           </div>
         ) : typeCategories.length === 0 ? (
-          <p className="px-1 py-3 text-xs text-muted-foreground">해당 타입의 카테고리가 없어요</p>
+          <p className="px-1 py-3 text-xs text-muted-foreground">{t('noneForType')}</p>
         ) : drilledParent ? (
           <div className="space-y-2">
             <button
@@ -207,14 +209,14 @@ export function CategoryFilterSheet({
               onClick={() => setDrilledParentId(null)}
             >
               <ChevronLeft size={14} />
-              대분류
+              {t('parents')}
             </button>
             <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <CategoryIcon name={drilledParent.icon} size={14} color={drilledParent.color} />
               {drilledParent.name}
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {renderSelectChip(drilledParent, `${drilledParent.name} 전체`)}
+              {renderSelectChip(drilledParent, t('allOf', { name: drilledParent.name }))}
               {drilledChildren.map((child) => renderSelectChip(child))}
             </div>
           </div>
@@ -226,7 +228,7 @@ export function CategoryFilterSheet({
               return (
                 <div key={sg} data-testid={`category-filter-section-${sg}`}>
                   <div className="mb-1 text-xs text-muted-foreground">
-                    {SUB_GROUP_LABELS[sg as CategorySubGroup]}
+                    {labels.subGroup(sg as CategorySubGroup)}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {subParents.map((parent) => {
@@ -261,7 +263,7 @@ export function CategoryFilterSheet({
                           )}
                           <ChevronRight
                             size={13}
-                            aria-label="하위 카테고리 보기"
+                            aria-label={t('showChildren')}
                             className="opacity-50"
                           />
                         </button>
@@ -284,7 +286,7 @@ export function CategoryFilterSheet({
           onClick={toggleSelectAllInTab}
           disabled={tabNames.length === 0}
         >
-          {allTabSelected ? '전체 해제' : '전체 선택'}
+          {allTabSelected ? t('deselectAll') : t('selectAll')}
         </Button>
         <Button
           type="button"
@@ -295,7 +297,7 @@ export function CategoryFilterSheet({
             onClose();
           }}
         >
-          {selected.length > 0 ? `${selected.length}개 적용` : '적용'}
+          {selected.length > 0 ? t('applyCount', { count: selected.length }) : t('apply')}
         </Button>
       </div>
     </SheetContent>

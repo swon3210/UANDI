@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -29,7 +31,7 @@ import {
   type CashflowSettingsFormValue,
 } from '@/components/cashbook/CashflowSettingsForm';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
-import { SUB_GROUP_LABELS, recurrenceSubGroupFor } from '@/constants/default-categories';
+import { recurrenceSubGroupFor } from '@/constants/default-categories';
 import { buildRecurrencePayload } from '@/utils/recurrence-form';
 import { formatDay } from '@/utils/date';
 import type { CashbookCategory } from '@/types';
@@ -84,6 +86,8 @@ function MoveSuggestionSheetContent({
   sortOrder: number;
   onClose: () => void;
 }) {
+  const tForm = useTranslations('cashbook.categoryForm');
+  const labels = useCategoryLabels();
   const moveMutation = useMoveRecurrenceToNewCategory(coupleId);
   const targetSubGroup = recurrenceSubGroupFor(suggestion.type);
 
@@ -91,7 +95,7 @@ function MoveSuggestionSheetContent({
     <CategoryForm
       group={suggestion.type}
       lockedSubGroup={targetSubGroup}
-      title={`${SUB_GROUP_LABELS[targetSubGroup]} 카테고리 만들기`}
+      title={tForm('makeTitle', { subGroup: labels.subGroup(targetSubGroup) })}
       takenNames={takenNames}
       initialValues={{
         icon: source?.icon,
