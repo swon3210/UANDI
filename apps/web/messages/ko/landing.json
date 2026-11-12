@@ -6,7 +6,7 @@
   },
   "inviteBanner": {
     "title": "초대 링크로 들어왔어요",
-    "description": "로그인하면 바로 짝꿍과 연결돼요 · 코드 {code}"
+    "description": "로그인하면 바로 짝꿍과 연결돼요 · 코드 <code></code>"
   },
   "mascotAlt": "둘이 함께 가계부를 쓰는 말랑 마스코트",
   "headline": "둘이 함께 쓰는<br></br>말랑 가계부",

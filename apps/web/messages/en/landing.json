@@ -6,7 +6,7 @@
   },
   "inviteBanner": {
     "title": "You came from an invite link",
-    "description": "Sign in and you'll be connected right away · code {code}"
+    "description": "Sign in and you'll be connected right away · code <code></code>"
   },
   "mascotAlt": "Malang mascots keeping a budget together",
   "headline": "A budget<br></br>for the two of you",

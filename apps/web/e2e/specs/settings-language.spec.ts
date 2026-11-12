@@ -34,6 +34,12 @@ test.describe('설정 — 언어', () => {
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(settings.header).toContainText('Settings');
+
+    // 대시보드·사이드바도 영어로 보인다 (Phase 2 1차 추출 범위)
+    await page.goto('/inner/cashbook');
+    await expect(page.getByTestId('dashboard-header')).toContainText('Dashboard');
+    await page.getByTestId('sidebar-trigger').click();
+    await expect(page.getByTestId('app-sidebar')).toContainText('Budget');
   });
 
   test('쿠키가 지워져도(새 기기) users.locale 로 영어가 복원된다', async ({ authedContext }) => {
