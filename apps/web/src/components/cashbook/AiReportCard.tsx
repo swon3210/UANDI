@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import Markdown from 'react-markdown';
@@ -36,7 +37,9 @@ export const MARKDOWN_COMPONENTS: ComponentProps<typeof Markdown>['components'] 
 };
 
 /** 스트리밍 AI 보고서 카드: 로딩 → 점진 표시 → 완료/실패 + 다시 분석 */
-export function AiReportCard({ content, status, errorMessage, onRetry, title = 'AI 분석' }: Props) {
+export function AiReportCard({ content, status, errorMessage, onRetry, title }: Props) {
+  const t = useTranslations('cashbook.analysis.report');
+  const resolvedTitle = title ?? t('title');
   const showContent = content.length > 0 && status !== 'loading';
   const isBusy = status === 'loading' || status === 'streaming';
 
@@ -45,7 +48,7 @@ export function AiReportCard({ content, status, errorMessage, onRetry, title = '
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-sm font-semibold">
           <Sparkles size={14} className="text-primary" />
-          {title}
+          {resolvedTitle}
         </h3>
         {!isBusy ? (
           <Button
@@ -56,7 +59,7 @@ export function AiReportCard({ content, status, errorMessage, onRetry, title = '
             className="h-7 gap-1 px-2 text-xs"
           >
             <RefreshCw size={12} />
-            다시 분석
+            {t('retry')}
           </Button>
         ) : null}
       </div>
@@ -67,7 +70,7 @@ export function AiReportCard({ content, status, errorMessage, onRetry, title = '
           className="flex items-center gap-2 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground"
         >
           <Loader2 size={14} className="animate-spin" />
-          분석 중이에요...
+          {t('analyzing')}
         </div>
       ) : null}
 
@@ -85,7 +88,7 @@ export function AiReportCard({ content, status, errorMessage, onRetry, title = '
 
       {status === 'error' ? (
         <p data-testid="category-analysis-error" className="text-xs text-destructive">
-          {errorMessage || '분석에 실패했어요. 다시 시도해 주세요'}
+          {errorMessage || t('failed')}
         </p>
       ) : null}
     </section>

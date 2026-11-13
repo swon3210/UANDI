@@ -35,7 +35,7 @@ export function useDayPredictions(
 }
 
 /** CashbookPrediction → 점선 박스 표시용 view. */
-export function toPromptView(p: CashbookPrediction) {
+export function toPromptView(p: CashbookPrediction, monthlyDay: (day: number) => string) {
   return {
     id: p.id,
     type: p.type,
@@ -44,7 +44,6 @@ export function toPromptView(p: CashbookPrediction) {
     description: p.description,
     source: p.source,
     date: p.date.toDate(),
-    recurrenceLabel:
-      p.source === 'auto' ? `매월 ${dayjs(p.date.toDate()).date()}일` : null,
+    recurrenceLabel: p.source === 'auto' ? monthlyDay(dayjs(p.date.toDate()).date()) : null,
   };
 }

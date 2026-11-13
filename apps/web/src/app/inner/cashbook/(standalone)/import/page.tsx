@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Suspense, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -46,7 +47,6 @@ type ParsedRow = {
 
 /** 제안을 뺐을 때 내역이 가는 곳. 기본 목록에 없으므로 필요할 때 만든다. */
 const FALLBACK_CATEGORY = {
-  name: '기타',
   group: 'expense' as const,
   subGroup: 'variable_common' as const,
   icon: 'tag',
@@ -70,6 +70,7 @@ function dashboardPathForEntries(entries: ConfirmedEntry[]): string {
 }
 
 function ImportPageContent() {
+  const t = useTranslations('cashbook.import');
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromOnboarding = searchParams.get('onboarding') === '1';
@@ -141,8 +142,8 @@ function ImportPageContent() {
     drafts.forEach((d, i) => {
       if (!d.included) return;
       const key = normalizeCategoryName(d.name);
-      if (!key) next[i] = '이름을 입력해 주세요';
-      else if (taken.has(key) || seen.has(key)) next[i] = '이미 있는 카테고리예요';
+      if (!key) next[i] = t('nameRequired');
+      else if (taken.has(key) || seen.has(key)) next[i] = t('duplicate');
       seen.add(key);
     });
     setErrors(next);
@@ -155,7 +156,7 @@ function ImportPageContent() {
     return rows.map((r) => {
       const d = byOriginal.get(normalizeCategoryName(r.category));
       if (!d) return r;
-      return { ...r, category: d.included ? d.name.trim() : FALLBACK_CATEGORY.name };
+      return { ...r, category: d.included ? d.name.trim() : t('fallbackCategory') };
     });
   };
 
@@ -170,9 +171,9 @@ function ImportPageContent() {
       // (2) 확정한 새 카테고리 + 필요하면 '기타'
       const included = drafts.filter((d) => d.included);
       const needsFallback =
-        confirmed.some((e) => e.category === FALLBACK_CATEGORY.name) &&
+        confirmed.some((e) => e.category === t('fallbackCategory')) &&
         !existing.some(
-          (c) => normalizeCategoryName(c.name) === normalizeCategoryName(FALLBACK_CATEGORY.name)
+          (c) => normalizeCategoryName(c.name) === normalizeCategoryName(t('fallbackCategory'))
         );
       const toCreate: Omit<CashbookCategory, 'id' | 'coupleId' | 'createdAt'>[] = included.map(
         (d, i) => ({
@@ -191,11 +192,12 @@ function ImportPageContent() {
       if (needsFallback) {
         toCreate.push({
           ...FALLBACK_CATEGORY,
+          name: t('fallbackCategory'),
           color: COLOR_PRESETS[COLOR_PRESETS.length - 1],
           isDefault: false,
           sortOrder: 999,
           parentCategoryId: null,
-          description: '분류하지 않은 지출',
+          description: t('fallbackDescription'),
           examples: [],
         });
       }
@@ -207,7 +209,7 @@ function ImportPageContent() {
       closePreview();
       router.replace(dashboardPathForEntries(confirmed));
     } catch {
-      toast.error('저장에 실패했어요. 다시 시도해 주세요');
+      toast.error(t('saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -259,7 +261,7 @@ function ImportPageContent() {
       data-testid="import-skip"
       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
-      건너뛰기
+      {t('skip')}
     </button>
   ) : (
     <BackButton fallbackHref={DASHBOARD} />
@@ -267,16 +269,16 @@ function ImportPageContent() {
 
   return (
     <>
-      <Header title="지난 내역 가져오기" leftSlot={leftSlot} />
+      <Header title={t('title')} leftSlot={leftSlot} />
       <main className="mx-auto w-full max-w-md px-4 pb-24 pt-3">
         {/* 모바일 폭에서 헤더 제목과 겹치지 않도록 단계 표시는 본문 상단에 둔다 */}
         <ImportStepIndicator current={stepNumber} className="mb-4 justify-end" />
         {step === 'upload' ? (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-semibold leading-snug">지난 내역을 가져와요</h2>
+              <h2 className="text-xl font-semibold leading-snug">{t('uploadTitle')}</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                통장이나 카드 내역을 올리면 내역과 카테고리를 한 번에 준비해 드려요
+                {t('uploadDescription')}
               </p>
             </div>
             <ImportSourcePicker value={source} onChange={setSource} />
@@ -304,17 +306,18 @@ function ImportPageContent() {
                 )
               }
             />
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              사진·PDF를 첨부하거나 내역을 붙여넣고 보내면 돼요. 잠긴 PDF는 비밀번호를 물어봐요.
-            </p>
+            <p className="text-xs leading-relaxed text-muted-foreground">{t('uploadHint')}</p>
           </div>
         ) : (
           <div className="space-y-5">
             <div>
-              <h2 className="text-xl font-semibold leading-snug">이런 카테고리로 나눴어요</h2>
+              <h2 className="text-xl font-semibold leading-snug">{t('categoriesTitle')}</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {rows.length}건을 {usedCategories.length + drafts.length}개 카테고리로 나눴어요.
-                기본 카테고리 {DEFAULT_CATEGORIES.length}개는 함께 준비돼요
+                {t('categoriesDescription', {
+                  entries: rows.length,
+                  categories: usedCategories.length + drafts.length,
+                  defaults: DEFAULT_CATEGORIES.length,
+                })}
               </p>
             </div>
             <SuggestedCategoryList
@@ -329,7 +332,7 @@ function ImportPageContent() {
             <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 px-4 py-3 backdrop-blur">
               <div className="mx-auto flex max-w-md gap-2">
                 <Button variant="outline" onClick={() => setStep('upload')} disabled={isSaving}>
-                  다시 올리기
+                  {t('reupload')}
                 </Button>
                 <Button
                   className="flex-1"
@@ -338,7 +341,7 @@ function ImportPageContent() {
                   data-testid="import-next"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={16} /> : null}
-                  내역 확인하기
+                  {t('review')}
                 </Button>
               </div>
             </div>

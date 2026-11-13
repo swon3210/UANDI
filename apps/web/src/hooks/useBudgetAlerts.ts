@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { toast } from 'sonner';
+import { useSubjectParticle } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { Timestamp } from 'firebase/firestore';
 import { userAtom } from '@/stores/auth.store';
@@ -10,7 +12,6 @@ import { useMonthlyBudget, getBudgetThreshold, type BudgetThreshold } from './us
 import { useCashbookCategories } from './useCashbookCategories';
 import { useNotificationSettings } from './useNotificationSettings';
 import { useSsrSafeLocalStorage } from './useSsrSafeLocalStorage';
-import { josa } from '@/utils/josa';
 import type { BudgetAlert } from '@/components/cashbook/BudgetAlertBanner';
 import type { CashbookEntry, MonthlyBudgetItem, CashbookCategory } from '@/types';
 
@@ -20,10 +21,13 @@ function makeKey(scopeId: string, threshold: Threshold): string {
   return `${scopeId}-${threshold}`;
 }
 
+type AlertT = ReturnType<typeof useTranslations<'cashbook.budgetAlert'>>;
+
 function computeAlerts(
   entries: CashbookEntry[],
   budgetItems: MonthlyBudgetItem[],
-  categories: CashbookCategory[]
+  categories: CashbookCategory[],
+  allLabel: string
 ): BudgetAlert[] {
   const alerts: BudgetAlert[] = [];
 
@@ -59,7 +63,7 @@ function computeAlerts(
     alerts.push({
       key: makeKey('total', totalT),
       scope: 'total',
-      label: '전체',
+      label: allLabel,
       threshold: totalT,
     });
   }
@@ -67,15 +71,19 @@ function computeAlerts(
   return alerts;
 }
 
-function toastMessageForAlert(alert: BudgetAlert): string {
+function toastMessageForAlert(
+  alert: BudgetAlert,
+  t: AlertT,
+  subject: (label: string) => string
+): string {
   if (alert.scope === 'total') {
-    if (alert.threshold === 'warn80') return '이번 달 전체 지출이 예산의 80%를 넘었어요';
-    if (alert.threshold === 'over100') return '이번 달 전체 지출이 예산을 넘었어요';
-    return '이번 달 전체 지출이 예산보다 20% 이상 초과됐어요';
+    if (alert.threshold === 'warn80') return t('toastTotalWarn');
+    if (alert.threshold === 'over100') return t('toastTotalOver');
+    return t('toastTotalOver120');
   }
-  if (alert.threshold === 'warn80') return `이번 달 ${josa(alert.label, '이/가')} 예산의 80%를 넘었어요`;
-  if (alert.threshold === 'over100') return `이번 달 ${josa(alert.label, '이/가')} 예산을 넘었어요`;
-  return `${josa(alert.label, '이/가')} 예산보다 20% 이상 초과됐어요`;
+  if (alert.threshold === 'warn80') return t('toastWarn', { subject: subject(alert.label) });
+  if (alert.threshold === 'over100') return t('toastOver', { subject: subject(alert.label) });
+  return t('toastOver120', { subject: subject(alert.label) });
 }
 
 type AddedExpense = {
@@ -86,6 +94,8 @@ type AddedExpense = {
 };
 
 export function useBudgetAlerts(coupleId: string | null, year: number, month1: number) {
+  const t = useTranslations('cashbook.budgetAlert');
+  const subject = useSubjectParticle();
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
 
@@ -100,8 +110,8 @@ export function useBudgetAlerts(coupleId: string | null, year: number, month1: n
   const allAlerts = useMemo<BudgetAlert[]>(() => {
     if (!enabled) return [];
     if (!entries || !budgetItems || !categories) return [];
-    return computeAlerts(entries, budgetItems, categories);
-  }, [enabled, entries, budgetItems, categories]);
+    return computeAlerts(entries, budgetItems, categories, t('all'));
+  }, [enabled, entries, budgetItems, categories, t]);
 
   const storageKey = `budget-alert-dismissed::${coupleId ?? '__none'}`;
   const [dismissedMap, setDismissedMap] = useSsrSafeLocalStorage<Record<string, boolean>>(
@@ -148,14 +158,14 @@ export function useBudgetAlerts(coupleId: string | null, year: number, month1: n
       description: '',
     } as unknown as CashbookEntry;
 
-    const before = computeAlerts(entries, budgetItems, categories);
-    const after = computeAlerts([...entries, fakeEntry], budgetItems, categories);
+    const before = computeAlerts(entries, budgetItems, categories, t('all'));
+    const after = computeAlerts([...entries, fakeEntry], budgetItems, categories, t('all'));
 
     const beforeKeys = new Set(before.map((a) => a.key));
     const newAlerts = after.filter((a) => !beforeKeys.has(a.key));
 
     for (const alert of newAlerts) {
-      toast.warning(toastMessageForAlert(alert), { duration: 4000 });
+      toast.warning(toastMessageForAlert(alert, t, subject), { duration: 4000 });
     }
   };
 

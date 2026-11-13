@@ -33,6 +33,7 @@ import { useMonthlyMedianComparison } from '@/hooks/useMonthlyMedianComparison';
 import type { CategoryGroup } from '@/types';
 import {
   analysisScopeName,
+  type AnalysisScopeLabels,
   buildCategoryAnalysisHref,
   composeOverallSummary,
   extractReportSummary,
@@ -104,6 +105,13 @@ export function BudgetDashboard({ coupleId }: Props) {
   const subGroupPrefix = (s: Exclude<SubGroupFilter, 'all'>) =>
     t(s === 'fixed' ? 'subGroup.fixedShort' : 'subGroup.variableShort');
   const usualLabel = t('compare.usual');
+  const scopeLabels: AnalysisScopeLabels = {
+    all: (g, sg) =>
+      sg === 'all'
+        ? t('total.allGroup', { group: groupName(g) })
+        : t('total.allSubGroup', { prefix: subGroupPrefix(sg), group: groupName(g) }),
+    selectedCount: (count) => t('aiSummary.selectedCategories', { count }),
+  };
   // 필터는 URL 쿼리에 저장해 다른 페이지에 다녀와도 유지한다
   const [filters, updateFilters] = useDashboardFilters();
   const { period, cursor, group, subGroup, compareSelection, categorySelection, donutSelection } =
@@ -361,7 +369,7 @@ export function BudgetDashboard({ coupleId }: Props) {
         : parseCategoryAnalysisParams(new URLSearchParams(settledSummaryQuery)),
     [settledSummaryQuery]
   );
-  const summaryScope = summaryParams ? analysisScopeName(summaryParams) : null;
+  const summaryScope = summaryParams ? analysisScopeName(summaryParams, scopeLabels) : null;
   const { data: summaryData } = useCategoryAnalysisData(coupleId, summaryParams);
   const summaryReport = useCategoryAnalysisReport(
     coupleId,

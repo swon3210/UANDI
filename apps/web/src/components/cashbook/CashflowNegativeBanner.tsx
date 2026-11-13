@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { X, TriangleAlert } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import { formatCurrency } from '@/utils/currency';
@@ -21,6 +22,7 @@ export function CashflowNegativeBanner({
   subLabel,
   onDismiss,
 }: CashflowNegativeBannerProps) {
+  const t = useTranslations('cashbook.cashflow.negative');
   return (
     <div
       data-testid="cashflow-negative-banner"
@@ -36,11 +38,15 @@ export function CashflowNegativeBanner({
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">잔액 부족 주의</p>
+        <p className="text-sm font-semibold">{t('title')}</p>
         <p className="mt-0.5 text-xs leading-5 text-coral-700/90">
-          <span className="font-medium">{label}</span>
-          {subLabel ? ` (${subLabel})` : ''}에 잔액이{' '}
-          <span className="font-semibold tabular-nums">{formatCurrency(balance)}</span>으로 부족해요
+          {t.rich('body', {
+            label,
+            sub: subLabel ? ` (${subLabel})` : '',
+            balance: formatCurrency(balance),
+            label_: (chunks) => chunks,
+            amount: (chunks) => <span className="font-semibold tabular-nums">{chunks}</span>,
+          })}
         </p>
       </div>
 
@@ -50,7 +56,7 @@ export function CashflowNegativeBanner({
         size="icon"
         className="-mr-1 -mt-1 h-7 w-7 shrink-0 text-current hover:bg-coral-100"
         onClick={onDismiss}
-        aria-label="알림 닫기"
+        aria-label={t('dismiss')}
         data-testid="cashflow-negative-dismiss"
       >
         <X size={15} />

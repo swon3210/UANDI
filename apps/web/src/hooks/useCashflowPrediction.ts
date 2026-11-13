@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import { predictCashflow } from '@/services/ai';
 import { useCashbookEntriesInRange } from './useCashbook';
@@ -41,11 +42,9 @@ export type CashflowPredictionResult = {
  * 결과는 useCashflowCalendar에 넘겨 현금흐름 카드의 들어올/나갈/남는 돈에 반영된다.
  */
 export function useCashflowPrediction(coupleId: string | null): CashflowPredictionResult {
+  const t = useTranslations('cashbook.cashflow');
   const from = useMemo(() => dayjs().startOf('day'), []);
-  const horizonEnd = useMemo(
-    () => from.add(CASHFLOW_HORIZON_MONTHS, 'month').endOf('day'),
-    [from]
-  );
+  const horizonEnd = useMemo(() => from.add(CASHFLOW_HORIZON_MONTHS, 'month').endOf('day'), [from]);
   const pastFrom = useMemo(
     () => from.subtract(LLM_PREDICTION_LOOKBACK_MONTHS, 'month').toDate(),
     [from]
@@ -83,7 +82,7 @@ export function useCashflowPrediction(coupleId: string | null): CashflowPredicti
       setStored({ predictions, ranAt: new Date().toISOString() });
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'AI 예측에 실패했어요. 다시 시도해주세요.');
+      toast.error(err instanceof Error ? err.message : t('predictFailed'));
     },
   });
 

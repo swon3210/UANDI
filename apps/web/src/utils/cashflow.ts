@@ -1,4 +1,5 @@
 import dayjs, { type Dayjs } from 'dayjs';
+import { dateFormat } from '@/utils/date';
 import {
   occurrenceDateInMonth,
   formatRecurrence,
@@ -163,7 +164,7 @@ export function buildWeeklyBuckets(from: Dayjs, months = 3): WeekBucket[] {
     const end = weekEnd.isAfter(horizonEnd) ? horizonEnd : weekEnd;
     out.push({
       key: `week-${i}`,
-      label: `${weekStart.format('M월 D일')} ~ ${end.format('M월 D일')}`,
+      label: `${weekStart.format(dateFormat('monthDay'))} ~ ${end.format(dateFormat('monthDay'))}`,
       start: weekStart.startOf('day').toDate(),
       end: end.endOf('day').toDate(),
     });
@@ -194,7 +195,7 @@ export function paydayBoundaries(instances: PaydayInstance[]): CardBoundary[] {
         key: dayjs(date).format('YYYY-MM-DD'),
         label: insts.map((i) => i.label).join(' · '),
         endDate: dayjs(date).endOf('day').toDate(),
-        subLabel: dayjs(date).format('M월 D일 (ddd)'),
+        subLabel: dayjs(date).format(dateFormat('monthDayWeekday')),
         paydayType: insts[0].type,
       };
     })
@@ -429,7 +430,7 @@ export function recurrenceBoundaries(occurrences: RecurrenceOccurrence[]): CardB
         key: dayjs(date).format('YYYY-MM-DD'),
         label: [...new Set(occs.map((o) => o.categoryName))].join(' · '),
         endDate: dayjs(date).endOf('day').toDate(),
-        subLabel: dayjs(date).format('M월 D일 (ddd)'),
+        subLabel: dayjs(date).format(dateFormat('monthDayWeekday')),
       };
     })
     .sort((a, b) => a.endDate.getTime() - b.endDate.getTime());

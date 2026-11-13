@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels, type CategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -29,7 +31,6 @@ import { WIZARD_ENTRY_PARAM, parseWizardEntry, withWizardEntry } from '@/lib/pla
 import {
   DEFAULT_WIZARD_MODE,
   REGULAR_SUBGROUPS,
-  WIZARD_GROUP_LABEL,
   isWizardMode,
   type WizardMode,
 } from '@/constants/plan-wizard';
@@ -62,6 +63,8 @@ export default function AnnualPlanWizardPage() {
 
 function WizardPageInner() {
   const router = useRouter();
+  const t = useTranslations('cashbook.wizard.page');
+  const labels = useCategoryLabels();
   const searchParams = useSearchParams();
   const stepParam = searchParams.get('step');
   const catIdxParam = searchParams.get('catIdx');
@@ -248,7 +251,7 @@ function WizardPageInner() {
       wizardMode: null,
     }).catch(() => {});
     await invalidatePlan();
-    toast.success(isInitial ? '예산 계획을 완성했어요!' : '예산을 다시 세웠어요');
+    toast.success(isInitial ? t('completed') : t('redone'));
     router.replace(withWizardEntry(PLAN_PATH, entry));
   };
 
@@ -350,6 +353,8 @@ function WizardPageInner() {
   if (isLoading) return <MascotLoader fullScreen />;
 
   const rendered = renderStep({
+    t,
+    labels,
     current: wizard.current,
     wizard,
     validation,
@@ -409,6 +414,8 @@ function applyDrafts(
 }
 
 type RenderStepArgs = {
+  t: ReturnType<typeof useTranslations<'cashbook.wizard.page'>>;
+  labels: CategoryLabels;
   current: WizardStep;
   wizard: UsePlanWizardResult;
   validation: ReturnType<typeof useValidateAnnualPlan>;
@@ -434,6 +441,8 @@ function renderStep({
   onChangeAvg,
   onChangeMonthly,
   saving,
+  t,
+  labels,
 }: RenderStepArgs): {
   title: string;
   subtitle?: string;
@@ -443,9 +452,9 @@ function renderStep({
 } {
   if (current.kind === 'intro') {
     return {
-      title: `${year}년 연간 예산`,
-      subtitle: '시작하기',
-      nextLabel: '시작하기',
+      title: t('titleIntro', { year }),
+      subtitle: t('start'),
+      nextLabel: t('start'),
       nextDisabled: false,
       body: (
         <PlanWizardIntro
@@ -459,18 +468,23 @@ function renderStep({
   }
 
   if (current.kind === 'category') {
-    const groupLabel = WIZARD_GROUP_LABEL[current.group];
+    const groupLabel = labels.group(current.group);
     const total = wizard.itemsByGroup[current.group].length;
     const phaseLabel =
       current.phase === 'avg'
-        ? '평균'
+        ? t('phaseAvg')
         : REGULAR_SUBGROUPS.has(current.item.subGroup)
-          ? '월별 조정'
-          : '월별 입력';
+          ? t('phaseAdjust')
+          : t('phaseInput');
     return {
       title: current.category.name,
-      subtitle: `${groupLabel} · ${current.catIdx + 1} / ${total} · ${phaseLabel}`,
-      nextLabel: '다음',
+      subtitle: t('subtitle', {
+        group: groupLabel,
+        index: current.catIdx + 1,
+        total,
+        phase: phaseLabel,
+      }),
+      nextLabel: t('next'),
       nextDisabled: false,
       body: (
         <PlanWizardCategoryStep
@@ -487,9 +501,9 @@ function renderStep({
 
   if (current.kind === 'validate') {
     return {
-      title: '예산 검증',
-      subtitle: '수입 ≥ 지출',
-      nextLabel: '다음',
+      title: t('validateTitle'),
+      subtitle: t('validateSubtitle'),
+      nextLabel: t('next'),
       nextDisabled: !validation.ok,
       body: <PlanWizardValidate validation={validation} />,
     };
@@ -497,9 +511,9 @@ function renderStep({
 
   // summary
   return {
-    title: '완료',
-    subtitle: `${year}년 예산 요약`,
-    nextLabel: saving ? '저장 중...' : '완료',
+    title: t('doneTitle'),
+    subtitle: t('doneSubtitle', { year }),
+    nextLabel: saving ? t('saving') : t('done'),
     nextDisabled: saving,
     body: <PlanWizardSummary year={year} items={items} saving={saving} />,
   };

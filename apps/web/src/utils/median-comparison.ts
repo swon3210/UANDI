@@ -4,8 +4,6 @@ import type { CashbookEntry } from '@/types';
 export const MEDIAN_WINDOW_MONTHS = 6;
 /** 중위값을 믿을 만한 최소 기록 달 수 (1개월이면 전월 비교와 같아 의미가 없다) */
 export const MEDIAN_MIN_SAMPLE_MONTHS = 2;
-/** 기록 있는 달이 부족해 평소와 비교할 수 없을 때 안내 문구 */
-export const MEDIAN_UNAVAILABLE_MESSAGE = `지난달 기록이 ${MEDIAN_MIN_SAMPLE_MONTHS}개월 이상 쌓이면 평소와 비교해 드려요`;
 
 /** 정렬 후 가운데 값. 짝수 개면 가운데 두 값의 평균. 빈 배열이면 0. */
 export function median(values: number[]): number {

@@ -1,6 +1,9 @@
 {
   "labels": {
-    "group": { "expense": "지출", "income": "수입" },
+    "group": {
+      "expense": "지출",
+      "income": "수입"
+    },
     "subGroup": {
       "regular_income": "정기 수입",
       "irregular_income": "비정기 수입",
@@ -25,7 +28,14 @@
       "12": "매년",
       "other": "{n}개월마다"
     },
-    "week": { "1": "첫째", "2": "둘째", "3": "셋째", "4": "넷째", "5": "다섯째", "-1": "마지막" },
+    "week": {
+      "1": "첫째",
+      "2": "둘째",
+      "3": "셋째",
+      "4": "넷째",
+      "5": "다섯째",
+      "-1": "마지막"
+    },
     "weekday": {
       "1": "월요일",
       "2": "화요일",
@@ -38,7 +48,8 @@
     "dayOfMonth": "{interval} {day}일",
     "nthWeekday": "{week} 주 {weekday}",
     "leadDays": " · {n}일 전",
-    "aroundDay": "매월 {day}일쯤"
+    "aroundDay": "매월 {day}일쯤",
+    "monthlyDay": "매월 {day}일"
   },
   "history": {
     "editThenAdd": "수정 후 추가",
@@ -127,7 +138,13 @@
     "title": "정기 발생 알림",
     "description": "설정한 주기의 {day}에 맞춰 기록 알림을 받아요.",
     "frequency": "발생 빈도",
-    "freq": { "1": "매월", "2": "격월", "3": "분기", "6": "반기", "12": "매년" },
+    "freq": {
+      "1": "매월",
+      "2": "격월",
+      "3": "분기",
+      "6": "반기",
+      "12": "매년"
+    },
     "anchorMonth": "시작 월",
     "anchorHint": "이 달부터 {freq}로 반복돼요. 사이 달은 건너뛰어요.",
     "kind": "발생 주기",
@@ -139,7 +156,15 @@
     "dayHint": "해당 월에 그 날이 없으면 말일에 알림을 보내요.",
     "weekLabel": "몇째 주",
     "weekdayLabel": "요일",
-    "weekdayShort": { "1": "월", "2": "화", "3": "수", "4": "목", "5": "금", "6": "토", "7": "일" },
+    "weekdayShort": {
+      "1": "월",
+      "2": "화",
+      "3": "수",
+      "4": "목",
+      "5": "금",
+      "6": "토",
+      "7": "일"
+    },
     "lead": "미리 알림",
     "leadSuffix": "일 전 (0 = 당일)",
     "expected": "예상 금액 (선택)",
@@ -301,5 +326,457 @@
     "categories": "카테고리 설정",
     "notifications": "알림 설정",
     "background": "배경 이미지"
+  },
+  "wizard": {
+    "intro": {
+      "eyebrow": "{year}년 연간 예산",
+      "headline": "한 해 예산을<br></br>단계별로 세워볼게요",
+      "description": "수입 → 지출 순서로 카테고리별 월 금액을 입력하면<br></br>연간 합계와 잉여를 자동으로 보여드려요.",
+      "modeGroup": "예산 세우는 방식",
+      "modes": {
+        "quick": {
+          "title": "핵심만 빠르게",
+          "description": "월급·고정 지출·함께 쓰는 변동 지출만 월 평균으로. 약 5분"
+        },
+        "full": {
+          "title": "전체 항목 꼼꼼히",
+          "description": "모든 카테고리를 월별로 조정하면서. 약 20분"
+        }
+      },
+      "count": "{count}개",
+      "flowTitle": "진행 흐름",
+      "flowIncome": "수입 카테고리 {count}개 입력",
+      "flowIncomeHintQuick": "정기 수입을 월 평균으로",
+      "flowIncomeHintFull": "정기수입은 월 평균 → 12개월 그리드 순서",
+      "flowExpense": "지출 카테고리 {count}개 입력",
+      "flowExpenseHintQuick": "고정 지출·함께 쓰는 변동 지출을 월 평균으로",
+      "flowExpenseHintFull": "고정 지출은 평균 입력, 변동/명절은 그리드 직접",
+      "flowValidate": "검증",
+      "flowValidateHint": "수입 ≥ 지출 인지 확인",
+      "flowDone": "완료",
+      "flowDoneHint": "결과 요약 후 메인으로",
+      "notesTitle": "알아두기",
+      "note1": "· 입력은 단계마다 즉시 저장돼요. 중간에 나가도 홈 카드에서 이어서 할 수 있어요.",
+      "note2": "· 모르는 항목은 \"이 항목은 건너뛰기\"로 넘기고 나중에 채워도 돼요.",
+      "noteQuick": "· 나머지 항목은 0원으로 두고, 경제 목표 → 예산 항목 설정에서 언제든 채울 수 있어요.",
+      "noteFull": "· 정기 항목은 평균을 입력한 뒤 12개월 그리드에서 특정 달만 조정할 수 있어요.",
+      "total": "총 {count}개 카테고리"
+    },
+    "shell": {
+      "next": "다음",
+      "prev": "이전",
+      "exit": "위저드 종료",
+      "skipItem": "이 항목은 건너뛰기"
+    },
+    "page": {
+      "titleIntro": "{year}년 연간 예산",
+      "start": "시작하기",
+      "phaseAvg": "평균",
+      "phaseAdjust": "월별 조정",
+      "phaseInput": "월별 입력",
+      "subtitle": "{group} · {index} / {total} · {phase}",
+      "validateTitle": "예산 검증",
+      "validateSubtitle": "수입 ≥ 지출",
+      "doneTitle": "완료",
+      "doneSubtitle": "{year}년 예산 요약",
+      "saving": "저장 중...",
+      "done": "완료",
+      "completed": "예산 계획을 완성했어요!",
+      "redone": "예산을 다시 세웠어요",
+      "next": "다음"
+    },
+    "summary": {
+      "eyebrow": "{year}년 예산 완성",
+      "saving": "저장 중...",
+      "ready": "예산 계획이 준비됐어요",
+      "surplusIntro": "연간 잉여 <strong>{amount}</strong>으로 한 해를 시작합니다.",
+      "annualIncome": "연간 수입",
+      "annualExpense": "연간 지출",
+      "monthlyTitle": "월별 합계",
+      "peakMonth": "가장 많이 지출이 잡힌 달은 <strong>{month}</strong>이에요.",
+      "footer": "완료를 누르면 수정 이력에 기록되고 메인 페이지로 돌아갑니다."
+    },
+    "validate": {
+      "step": "4단계 · 검증",
+      "headline": "수입이 지출을<br></br>감당할 수 있는지 확인해요",
+      "description": "연간 합계도, 매달 들어오는 돈도 지출 이상일 때만 다음 단계로 넘어갈 수 있어요.",
+      "ok": "검증 통과",
+      "monthlyIssue": "적자가 나는 달이 있어요",
+      "short": "예산이 부족해요",
+      "okDetail": "수입에서 지출을 빼고 {amount}이 남아요.",
+      "monthlyDetail": "연간 합계는 흑자지만 {count}개월은 나가는 돈이 더 많아요.",
+      "shortDetail": "지출 합계가 수입보다 {amount} 더 많아요.",
+      "surplus": "잉여",
+      "deficit": "부족",
+      "deficitMonths": "적자가 나는 달",
+      "advice": "이전 단계로 돌아가 지출 항목을 줄이거나<br></br>수입 항목을 늘려보세요.",
+      "annualIncome": "연간 수입",
+      "annualExpense": "연간 지출"
+    },
+    "step": {
+      "incomeHint": "두 사람 수입을 합쳐 적어요",
+      "variableHint": "함께 쓰는 지출의 한 달 평균이에요. 정확하지 않아도 괜찮아요",
+      "captionRegular": "정기 항목 · 월 평균",
+      "captionVariable": "변동 항목 · 월 평균",
+      "quickNote": "나중에 경제 목표에서 달마다 다르게 조정할 수 있어요."
+    },
+    "irregular": {
+      "caption": "비정기 항목",
+      "fillTitle": "균등 채우기",
+      "fillDescription": "연 합계를 입력하고 버튼을 누르면 12개월에 균등 분배해요.",
+      "fillPlaceholder": "연 합계 입력",
+      "fill": "채우기",
+      "annualTotal": "연간 합계",
+      "hint": "특정 달에만 발생하는 항목이라면 해당 셀에만 금액을 입력하세요."
+    },
+    "avg": {
+      "caption": "정기 항목 · 1단계",
+      "annualNote": "다음 단계에서 12개월 그리드로 특정 달을 조정할 수 있어요.",
+      "monthlyAvg": "월 평균 금액",
+      "won": "원",
+      "annualTotal": "연간 합계 (× 12)"
+    },
+    "adjust": {
+      "caption": "정기 항목 · 2단계",
+      "monthlyAvg": "월 평균",
+      "resetToAvg": "평균으로 초기화",
+      "description": "12개월이 평균값으로 자동 채워졌어요. 특정 달만 다르게 두려면 셀을 직접 수정하세요.",
+      "annualTotal": "연간 합계",
+      "vsAvg": "평균 대비 {sign}{amount}"
+    }
+  },
+  "goals": {
+    "income": {
+      "label": "수입",
+      "goalLabel": "연간 수입 목표"
+    },
+    "expense": {
+      "label": "지출",
+      "goalLabel": "연간 지출 한도"
+    },
+    "pageTitle": "{year}년 경제 목표",
+    "bulkEdit": "월별 일괄 수정",
+    "redo": "처음부터 다시 세우기",
+    "current": "현재 {amount}",
+    "achieved": "달성 {pct}%",
+    "setItems": "{label} 예산 항목 설정",
+    "setItemsShort": "예산 항목 설정",
+    "itemCount": "{count}개 항목",
+    "expectedSurplus": "예상 연간 잉여",
+    "incomeGoal": "수입 목표",
+    "expenseLimit": "지출 한도",
+    "setGoals": "목표 설정",
+    "items": {
+      "updated": "항목을 수정했어요",
+      "added": "항목을 추가했어요",
+      "deleteTitle": "예산 항목 삭제",
+      "deleteDescription": "\"{name}\" 항목을 삭제하시겠습니까? 월별 분배도 함께 사라집니다.",
+      "cancel": "취소",
+      "deleted": "항목을 삭제했어요",
+      "delete": "삭제",
+      "title": "{label} 예산 항목",
+      "back": "뒤로",
+      "add": "항목 추가",
+      "emptyTitle": "등록된 항목이 없어요",
+      "emptyDescription": "우측 상단 +를 눌러 첫 항목을 추가해보세요",
+      "more": "더보기",
+      "edit": "편집"
+    },
+    "itemForm": {
+      "numberOnly": "숫자만 입력해 주세요",
+      "min": "0 이상이어야 해요",
+      "integer": "금액은 원 단위 정수로 입력해주세요",
+      "tooLarge": "너무 큰 금액이에요",
+      "categoryRequired": "카테고리를 선택해 주세요",
+      "editTitle": "예산 항목 편집",
+      "addTitle": "예산 항목 추가",
+      "category": "카테고리",
+      "categoryValue": "카테고리: <strong>{name}</strong>",
+      "selectCategory": "카테고리 선택",
+      "annualAmount": "연간 금액",
+      "placeholder": "예: 12000000",
+      "note": "월별 분배는 12개월 균등으로 설정돼요. 월별 비균등 조정은 메인 화면의 일괄수정에서 가능해요.",
+      "save": "저장"
+    },
+    "toasts": {
+      "createFailed": "연간 계획 생성에 실패했어요.",
+      "itemSaveFailed": "항목 저장에 실패했어요.",
+      "amountFailed": "금액 수정에 실패했어요.",
+      "itemDeleteFailed": "항목 삭제에 실패했어요.",
+      "bulkFailed": "일괄 수정 저장에 실패했어요."
+    }
+  },
+  "bulkEdit": {
+    "title": "월별 일괄 수정",
+    "subtitle": "{year}년 · 카테고리 × 월별 금액 한 번에 조정",
+    "back": "뒤로",
+    "saved": "월별 예산을 저장했어요",
+    "income": "수입",
+    "expense": "지출",
+    "resetAll": "전체 되돌리기",
+    "saving": "저장 중...",
+    "saveCount": "{count}개 항목 저장",
+    "noChanges": "변경 사항 없음",
+    "noChangesHint": "변경 사항이 없어요. 셀을 수정하면 차이가 표시됩니다.",
+    "ok": "검증 통과 · 잉여 {amount}",
+    "monthlyIssue": "{count}개월 적자 · 매달 수입이 지출을 못 따라가요",
+    "short": "예산 부족 · {amount} 초과",
+    "noDelta": "변동 없음",
+    "category": "카테고리",
+    "delta": "변동",
+    "empty": "수정할 카테고리가 없어요.",
+    "resetRow": "이 행 되돌리기"
+  },
+  "cashflow": {
+    "title": "현금흐름",
+    "movedDescription": "'{name}'에서 {schedule} 반복되던 항목",
+    "setupTitle": "현금흐름을 보려면 설정이 필요해요",
+    "setupDescription": "기준 날짜에 가지고 있던 현금(최초 현금)을 넣으면, 그 뒤로 기록한 수입·지출을 더해 오늘 잔액과 앞으로의 날짜별 남는 돈을 예측해 드려요",
+    "setup": "최초 현금 설정하기",
+    "aiTitle": "AI 예상 내역",
+    "aiLoading": "AI가 예상 내역을 불러오는 중…",
+    "aiApplied": "{count}건이 현금흐름에 반영됐어요",
+    "aiAsOf": " · {time} 기준",
+    "aiNone": "예상할 만한 패턴을 찾지 못했어요",
+    "aiSoon": "곧 예상 내역을 불러올게요",
+    "refresh": "갱신",
+    "guide": "<mark>◇</mark> 표시는 아직 확정되지 않은 예측이에요. 직접 등록한 <b>정기 발생</b>과 과거 소비·수입 패턴을 분석한 <b>AI 추론</b>으로 계산해요. 각 항목을 펼치면 어떤 근거로 잡혔는지 볼 수 있어요.",
+    "baseline": {
+      "edit": "최초 현금 수정",
+      "todayCash": "오늘 기준 예상 현금",
+      "initial": "최초 현금 ",
+      "asOf": " · {date} 기준",
+      "computed": "에서 기록을 더해 계산했어요.",
+      "editShort": "수정"
+    },
+    "card": {
+      "remaining": "남는 돈",
+      "inflow": "들어올",
+      "outflow": "나갈",
+      "noTransactions": "이 날짜까지 잡힌 거래가 없어요"
+    },
+    "list": {
+      "emptyTitle": "표시할 지출 예정일이 없어요",
+      "emptyDescription": "큰 지출 예정일과 현재 보유 현금을 설정하면 현금흐름이 보여요"
+    },
+    "negative": {
+      "title": "잔액 부족 주의",
+      "body": "<label>{label}</label>{sub}에 잔액이 <amount>{balance}</amount>으로 부족해요",
+      "dismiss": "알림 닫기"
+    },
+    "settings": {
+      "dateRequired": "기준 날짜를 선택해주세요",
+      "amountRequired": "금액을 입력해주세요",
+      "min": "0 이상이어야 해요",
+      "integer": "금액은 원 단위 정수로 입력해주세요",
+      "title": "최초 현금 설정",
+      "date": "기준 날짜",
+      "dateHint": "이 날 각자 가지고 있던 현금을 기준으로, 이후 기록을 작성자별로 더해 각자 오늘 잔액을 계산해요.",
+      "perPerson": "사람별 최초 현금 (기준 날짜 기준)",
+      "won": "원",
+      "total": "합계",
+      "hint": "기준 날짜의 각자 보유 현금을 <strong>한 번만</strong> 넣으면, 이후 가계부에 기록한 수입·지출을 작성자별로 더해 각자 오늘 잔액과 앞으로의 현금흐름을 예측해요.",
+      "tip": "월세·관리비·정기 급여 같은 <strong>고정 지출·수입</strong>은 카테고리의 <strong>정기 발생</strong>에서 발생일과 예상 금액을 설정하면 이 캘린더에 자동으로 표시돼요.",
+      "save": "저장",
+      "saved": "최초 현금을 저장했어요.",
+      "saveFailed": "현금흐름 설정 저장에 실패했어요. 다시 시도해주세요."
+    },
+    "row": {
+      "recurrence": "정기 발생",
+      "recurrenceWith": "정기 발생 · {detail}",
+      "llm": "AI 추론",
+      "llmWith": "AI 추론 · {detail}",
+      "prediction": "예측",
+      "predictionWith": "예측 · {detail}",
+      "confirmed": "확정",
+      "delete": "예측 삭제"
+    },
+    "predictFailed": "AI 예측에 실패했어요. 다시 시도해주세요."
+  },
+  "prediction": {
+    "source": {
+      "calendar": "캘린더",
+      "auto": "자동감지",
+      "llm": "AI 예측",
+      "recurrence": "정기"
+    },
+    "add": "추가",
+    "editThenAdd": "수정 후 추가",
+    "no": "아니오",
+    "retroTitle": "지난 예측, 실제로 일어났나요?",
+    "retroDismiss": "회고 알림 닫기",
+    "yes": "네",
+    "toasts": {
+      "addFailed": "예측 추가에 실패했어요. 다시 시도해주세요.",
+      "confirmFailed": "예측 확정에 실패했어요. 다시 시도해주세요.",
+      "rejectFailed": "예측 거절에 실패했어요. 다시 시도해주세요.",
+      "failed": "처리에 실패했어요. 다시 시도해주세요.",
+      "deleteFailed": "예측 삭제에 실패했어요. 다시 시도해주세요."
+    }
+  },
+  "monthlySummary": {
+    "income": "수입",
+    "expense": "지출",
+    "balance": "수입 − 지출"
+  },
+  "import": {
+    "fallbackCategory": "기타",
+    "fallbackDescription": "분류하지 않은 지출",
+    "nameRequired": "이름을 입력해 주세요",
+    "duplicate": "이미 있는 카테고리예요",
+    "saveFailed": "저장에 실패했어요. 다시 시도해 주세요",
+    "skip": "건너뛰기",
+    "title": "지난 내역 가져오기",
+    "uploadTitle": "지난 내역을 가져와요",
+    "uploadDescription": "통장이나 카드 내역을 올리면 내역과 카테고리를 한 번에 준비해 드려요",
+    "uploadHint": "사진·PDF를 첨부하거나 내역을 붙여넣고 보내면 돼요. 잠긴 PDF는 비밀번호를 물어봐요.",
+    "categoriesTitle": "이런 카테고리로 나눴어요",
+    "categoriesDescription": "{entries}건을 {categories}개 카테고리로 나눴어요. 기본 카테고리 {defaults}개는 함께 준비돼요",
+    "reupload": "다시 올리기",
+    "review": "내역 확인하기",
+    "sources": {
+      "card": {
+        "label": "카드 내역",
+        "hint": "카드 사용 내역 화면이나 이용내역서 PDF를 올려요"
+      },
+      "account": {
+        "label": "통장 내역",
+        "hint": "카드대금 일괄출금은 빼고, 송금은 따로 표시해 드려요"
+      }
+    },
+    "sourceGroup": "내역 종류",
+    "steps": {
+      "1": "올리기",
+      "2": "카테고리",
+      "3": "내역 확인"
+    },
+    "stepAria": "{step}단계 {label}"
+  },
+  "notifications": {
+    "denied": "브라우저 알림 권한이 거부되어 푸시 알림을 받을 수 없어요.",
+    "unsupported": "이 브라우저에서는 푸시 알림을 지원하지 않아요.",
+    "registerFailed": "푸시 알림 등록에 실패했어요. 잠시 후 다시 시도해주세요.",
+    "testSent": "테스트 푸시를 발송했어요 (성공 {success}, 실패 {failure})",
+    "testAllFailed": "발송에 모두 실패했어요. 첫 실패 사유: {reason}",
+    "unknown": "알 수 없음",
+    "testFailed": "테스트 푸시 발송에 실패했어요.",
+    "title": "알림 설정",
+    "pwaTitle": "모바일에서 백그라운드 알림 받기",
+    "pwaDescription": "홈 화면에 추가해야 브라우저가 꺼져 있어도 푸시 알림이 도달해요.",
+    "pwaHow": "홈 화면에 추가하는 방법 보기",
+    "testTitle": "알림 동작 확인",
+    "testDescription": "등록된 디바이스로 테스트 푸시를 1건 발송해 셋업이 정상인지 확인할 수 있어요.",
+    "testSending": "발송 중…",
+    "testSend": "테스트 푸시 보내기",
+    "form": {
+      "reminderTitle": "기록 알림",
+      "enable": "알림 받기",
+      "time": "시간",
+      "days": "요일 선택",
+      "budgetTitle": "예산 경고 알림",
+      "selfAlert": "내 지출 알림도 화면에 띄우기",
+      "selfAlertHint": "앱을 켜둔 상태에서 본인 지출로 인한 예산 경고를 토스트로 표시해요.",
+      "recurringTitle": "고정 지출·수입 알림",
+      "recurringHint": "카테고리에 설정한 발생일에 맞춰 월세·구독·정기 급여 기록을 알려드려요.",
+      "nudgeTitle": "입력 요청 알림",
+      "nudgeHint": "파트너가 “콕 찌르기”로 가계부 입력을 요청하면 알려드려요.",
+      "saving": "저장 중...",
+      "save": "저장"
+    },
+    "saved": "알림 설정이 저장되었습니다.",
+    "saveFailed": "알림 설정 저장에 실패했습니다.",
+    "preview": {
+      "appName": "말랑 가계부",
+      "partnerBody": "이번 달 식비가 예산의 80%를 넘었어요",
+      "selfBody": "[내 지출] 이번 달 카페가 예산을 넘었어요",
+      "description": "포그라운드 상태에서 FCM 메시지를 받았을 때 표시되는 토스트 미리보기.",
+      "partner": "파트너 알림 (warn80) 띄우기",
+      "self": "본인 알림 (over100) 띄우기"
+    },
+    "bubble": {
+      "title": "플로팅 버블",
+      "description": "다른 앱을 쓰는 중에도 화면에 빠른 추가 버블을 띄워요.",
+      "aria": "플로팅 버블 켜기"
+    },
+    "background": {
+      "alt": "가계부 배경",
+      "change": "변경",
+      "remove": "삭제",
+      "select": "배경 이미지 선택",
+      "uploading": "업로드 중... {progress}%"
+    },
+    "opacity": {
+      "label": "투명도",
+      "hint": "낮을수록 화면이 투명해집니다"
+    }
+  },
+  "analysis": {
+    "title": "카테고리 AI 분석",
+    "sheetTitle": "분석할 카테고리 선택",
+    "notFoundTitle": "분석할 카테고리를 찾을 수 없어요",
+    "notFoundDescription": "대시보드 기간 비교의 'AI 분석'으로 들어와 주세요",
+    "goBack": "뒤로 가기",
+    "recentMedian": "최근 {months}개월 중위값",
+    "prevMonth": "전월",
+    "all": "전체",
+    "trendTitle": "{scope} 최근 {months}개월 추이",
+    "trendMedian": " · 점선 = 평소 {amount}",
+    "usual": "평소",
+    "usualWithWindow": "평소(최근 {months}개월 중위값)",
+    "report": {
+      "title": "AI 분석",
+      "retry": "다시 분석",
+      "analyzing": "분석 중이에요...",
+      "failed": "분석에 실패했어요. 다시 시도해 주세요"
+    },
+    "breakdown": {
+      "noChange": "변동 없음",
+      "topChanges": "{total}개 중 큰 변화 {shown}개",
+      "byCategory": "카테고리별 변화 · {count}개",
+      "range": "{compare} → 이번 달"
+    },
+    "summary": {
+      "noChange": "{label} 대비 변동 없음",
+      "versus": "{label} 대비 ",
+      "asOf": "{month} 기준",
+      "selectCategories": "카테고리 선택",
+      "thisMonth": "이번 달"
+    },
+    "trend": {
+      "amount": "금액",
+      "filterAria": "추이 카테고리"
+    }
+  },
+  "budgetAlert": {
+    "totalOver": "{subject} 예산을 넘었어요",
+    "totalOver120": "{subject} 예산보다 20% 이상 초과됐어요",
+    "totalSubject": "이번 달 전체 지출",
+    "categoryCount": "예산을 초과한 카테고리 {count}개",
+    "detail": "자세히 보기",
+    "dismissAll": "예산 알림 모두 닫기",
+    "all": "전체",
+    "toastTotalWarn": "이번 달 전체 지출이 예산의 80%를 넘었어요",
+    "toastTotalOver": "이번 달 전체 지출이 예산을 넘었어요",
+    "toastTotalOver120": "이번 달 전체 지출이 예산보다 20% 이상 초과됐어요",
+    "toastWarn": "이번 달 {subject} 예산의 80%를 넘었어요",
+    "toastOver": "이번 달 {subject} 예산을 넘었어요",
+    "toastOver120": "{subject} 예산보다 20% 이상 초과됐어요"
+  },
+  "nudge": {
+    "cooldown": "방금 요청을 보냈어요. 약 {minutes}분 후 다시 보낼 수 있어요.",
+    "partnerFallback": "파트너",
+    "button": "{name}님 콕 찌르기"
+  },
+  "examples": {
+    "remove": "{item} 제거",
+    "placeholder": "예시 추가 후 Enter",
+    "max": "최대 {max}개까지"
+  },
+  "misc": {
+    "remapped": "{count}건 재매칭했어요",
+    "remapFailed": "재매칭에 실패했어요. 다시 시도해주세요.",
+    "otherCategory": "기타",
+    "messageSaved": "한마디를 남겼어요 🐹",
+    "messageSaveFailed": "저장에 실패했어요. 잠시 후 다시 시도해 주세요."
   }
 }

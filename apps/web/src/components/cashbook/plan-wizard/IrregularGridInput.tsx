@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button, Input } from '@uandi/ui';
 import { Sparkles } from 'lucide-react';
@@ -20,6 +21,9 @@ export function IrregularGridInput({
   monthlyAmounts,
   onChange,
 }: IrregularGridInputProps) {
+  const t = useTranslations('cashbook.wizard.irregular');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const annual = monthlyAmounts.reduce((s, v) => s + v, 0);
   /**
    * 균등채우기 입력란의 값(숫자만). 그리드 합계(annual)와 독립적으로 관리한다.
@@ -44,15 +48,13 @@ export function IrregularGridInput({
 
   return (
     <div className="space-y-5" data-testid="irregular-grid-input">
-      <CategoryHeader category={category} caption="비정기 항목" />
+      <CategoryHeader category={category} caption={t('caption')} />
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-[12px] font-medium text-stone-700">균등 채우기</div>
-            <p className="text-[11px] leading-relaxed text-stone-500">
-              연 합계를 입력하고 버튼을 누르면 12개월에 균등 분배해요.
-            </p>
+            <div className="text-[12px] font-medium text-stone-700">{t('fillTitle')}</div>
+            <p className="text-[11px] leading-relaxed text-stone-500">{t('fillDescription')}</p>
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
@@ -64,7 +66,7 @@ export function IrregularGridInput({
             onChange={(e) => {
               setSpreadInput(e.target.value.replace(/[^\d]/g, ''));
             }}
-            placeholder="연 합계 입력"
+            placeholder={t('fillPlaceholder')}
             className="h-10 flex-1 text-right tabular-nums"
           />
           <Button
@@ -78,7 +80,7 @@ export function IrregularGridInput({
             data-testid="irregular-spread-apply"
           >
             <Sparkles size={14} />
-            채우기
+            {t('fill')}
           </Button>
         </div>
       </section>
@@ -91,17 +93,15 @@ export function IrregularGridInput({
 
       <section className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-[12px] font-medium text-coral-700">연간 합계</span>
+          <span className="text-[12px] font-medium text-coral-700">{t('annualTotal')}</span>
           <span
             className="text-[18px] font-bold tabular-nums text-coral-700"
             data-testid="irregular-grid-annual"
           >
-            {formatCurrencyMan(annual)}원
+            {won(formatCurrencyMan(annual))}
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-coral-600/80">
-          특정 달에만 발생하는 항목이라면 해당 셀에만 금액을 입력하세요.
-        </p>
+        <p className="mt-1 text-[11px] text-coral-600/80">{t('hint')}</p>
       </section>
     </div>
   );

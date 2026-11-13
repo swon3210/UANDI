@@ -125,6 +125,8 @@ function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState 
 
 export default function CashbookPage() {
   const t = useTranslations('cashbook');
+  const tRec = useTranslations('cashbook.recurrence');
+  const monthlyDay = (day: number) => tRec('monthlyDay', { day });
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
@@ -259,7 +261,11 @@ export default function CashbookPage() {
       if (existing) existing.promptViews.push(...views);
       else map.set(key, { date: dayjs(key).toDate(), entries: [], promptViews: views });
     };
-    for (const [key, preds] of promptsByDate) pushViews(key, preds.map(toPromptView));
+    for (const [key, preds] of promptsByDate)
+      pushViews(
+        key,
+        preds.map((p) => toPromptView(p, monthlyDay))
+      );
     for (const [key, views] of recurrencePromptsByDate) pushViews(key, views);
     const dir = filter.sort === 'latest' ? -1 : 1;
     return [...map.values()].sort((a, b) => (a.date.getTime() - b.date.getTime()) * dir);

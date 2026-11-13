@@ -1,13 +1,16 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import dayjs from 'dayjs';
+import { dateFormat } from '@/utils/date';
 import {
   formatRecurrence,
   type RecurrenceLabels,
   type RecurringSchedule,
 } from '@uandi/cashbook-core';
 import type { CategoryGroup, CategorySubGroup } from '@/types';
+import { josa } from '@/utils/josa';
 
 export type CategoryLabels = {
   group: (group: CategoryGroup) => string;
@@ -64,4 +67,27 @@ export function useRecurrenceLabels(): RecurrenceLabels {
 export function useFormatRecurrence(): (schedule: RecurringSchedule) => string {
   const labels = useRecurrenceLabels();
   return useCallback((schedule) => formatRecurrence(schedule, labels), [labels]);
+}
+
+/** 1월…12월 / Jan…Dec — 위저드·월 그리드 열 머리글 */
+export function useMonthLabels(): string[] {
+  const locale = useLocale();
+  return useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) =>
+        dayjs().month(i).startOf('month').format(dateFormat('monthShort'))
+      ),
+    // 로케일이 바뀌면 dateFormat 결과가 달라진다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locale]
+  );
+}
+
+/**
+ * 문장 주어에 붙는 조사 처리. 한국어면 받침에 맞춰 "이/가"를 붙이고("식비가"), 그 외 로케일은 그대로.
+ * 메시지는 `{subject} 예산을 넘었어요` / `{subject} is over budget` 처럼 주어를 인자로 받는다.
+ */
+export function useSubjectParticle(): (label: string) => string {
+  const locale = useLocale();
+  return useCallback((label: string) => (locale === 'ko' ? josa(label, '이/가') : label), [locale]);
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
@@ -31,7 +33,6 @@ type Props = {
   onSelectCategories?: () => void;
 };
 
-const GROUP_LABEL: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
 const GROUP_TONE: Record<CategoryGroup, string> = {
   expense: 'text-expense',
   income: 'text-income',
@@ -50,16 +51,17 @@ function Delta({
   compareLabel: string;
   group: CategoryGroup;
 }) {
+  const t = useTranslations('cashbook.analysis.summary');
   const delta = current - compare;
   if (delta === 0) {
-    return <span className="text-muted-foreground">{compareLabel} 대비 변동 없음</span>;
+    return <span className="text-muted-foreground">{t('noChange', { label: compareLabel })}</span>;
   }
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   const rate = compare !== 0 ? Math.round((Math.abs(delta) / Math.abs(compare)) * 100) : null;
   return (
     <>
       <span>{good ? '😎' : '🚨'} </span>
-      <span className="text-muted-foreground">{compareLabel} 대비 </span>
+      <span className="text-muted-foreground">{t('versus', { label: compareLabel })}</span>
       <span className={cn('font-extrabold tabular-nums', good ? 'text-income' : 'text-expense')}>
         {delta > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(delta))}
         {rate !== null ? ` (${rate}%)` : ''}
@@ -81,6 +83,8 @@ export function CategoryAnalysisSummary({
   unavailableMessage,
   onSelectCategories,
 }: Props) {
+  const t = useTranslations('cashbook.analysis.summary');
+  const labels = useCategoryLabels();
   return (
     <section data-testid="category-analysis-summary" className="space-y-3">
       <div>
@@ -88,10 +92,10 @@ export function CategoryAnalysisSummary({
           <h2 data-testid="category-analysis-title" className="truncate text-xl font-semibold">
             {title}
           </h2>
-          <span className="shrink-0 text-xs text-muted-foreground">{GROUP_LABEL[group]}</span>
+          <span className="shrink-0 text-xs text-muted-foreground">{labels.group(group)}</span>
         </div>
         <p data-testid="category-analysis-month" className="mt-0.5 text-xs text-muted-foreground">
-          {monthLabel} 기준
+          {t('asOf', { month: monthLabel })}
         </p>
         {categories.length > 0 || onSelectCategories ? (
           <div className="mt-2 flex items-start gap-2">
@@ -119,7 +123,7 @@ export function CategoryAnalysisSummary({
                 data-testid="category-analysis-category-button"
                 className="-mr-2 -mt-1 h-7 shrink-0 gap-0.5 px-2 text-xs"
               >
-                카테고리 선택
+                {t('selectCategories')}
                 <ChevronRight size={14} />
               </Button>
             ) : null}
@@ -129,7 +133,7 @@ export function CategoryAnalysisSummary({
 
       <dl className="grid grid-cols-2 gap-2">
         <div className="rounded-lg bg-muted/50 px-3 py-2">
-          <dt className="text-[11px] text-muted-foreground">이번 달</dt>
+          <dt className="text-[11px] text-muted-foreground">{t('thisMonth')}</dt>
           <dd
             data-testid="category-analysis-current"
             className={cn('mt-0.5 text-lg font-semibold tabular-nums', GROUP_TONE[group])}

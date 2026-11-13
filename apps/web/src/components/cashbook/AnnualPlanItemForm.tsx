@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,16 +24,18 @@ import {
 } from '@uandi/ui';
 import type { AnnualPlanItem, CashbookCategory } from '@/types';
 
-const schema = z.object({
-  categoryId: z.string().optional(),
-  annualAmount: z
-    .number({ error: '숫자만 입력해 주세요' })
-    .min(0, '0 이상이어야 해요')
-    .int('금액은 원 단위 정수로 입력해주세요')
-    .max(1_000_000_000, '너무 큰 금액이에요'),
-});
+type ItemFormMessages = { numberOnly: string; min: string; integer: string; tooLarge: string };
+const buildSchema = (msg: ItemFormMessages) =>
+  z.object({
+    categoryId: z.string().optional(),
+    annualAmount: z
+      .number({ error: msg.numberOnly })
+      .min(0, msg.min)
+      .int(msg.integer)
+      .max(1_000_000_000, msg.tooLarge),
+  });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 type AnnualPlanItemFormProps = {
   editingItem?: AnnualPlanItem;
@@ -49,6 +52,13 @@ export function AnnualPlanItemForm({
   onSubmit,
   onClose,
 }: AnnualPlanItemFormProps) {
+  const t = useTranslations('cashbook.goals.itemForm');
+  const schema = buildSchema({
+    numberOnly: t('numberOnly'),
+    min: t('min'),
+    integer: t('integer'),
+    tooLarge: t('tooLarge'),
+  });
   const isEditing = !!editingItem;
 
   const form = useForm<FormValues>({
@@ -61,7 +71,7 @@ export function AnnualPlanItemForm({
 
   const handleSubmit = async (data: FormValues) => {
     if (!isEditing && !data.categoryId) {
-      form.setError('categoryId', { message: '카테고리를 선택해 주세요' });
+      form.setError('categoryId', { message: t('categoryRequired') });
       return;
     }
     try {
@@ -82,7 +92,7 @@ export function AnnualPlanItemForm({
       data-testid="annual-plan-item-form-sheet"
     >
       <SheetHeader>
-        <SheetTitle>{isEditing ? '예산 항목 편집' : '예산 항목 추가'}</SheetTitle>
+        <SheetTitle>{isEditing ? t('editTitle') : t('addTitle')}</SheetTitle>
       </SheetHeader>
 
       <Form {...form}>
@@ -92,7 +102,10 @@ export function AnnualPlanItemForm({
         >
           {isEditing ? (
             <div className="rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
-              카테고리: <span className="font-semibold">{editingCategory?.name ?? '—'}</span>
+              {t.rich('categoryValue', {
+                name: editingCategory?.name ?? '—',
+                strong: (chunks) => <span className="font-semibold">{chunks}</span>,
+              })}
             </div>
           ) : (
             <FormField
@@ -100,11 +113,11 @@ export function AnnualPlanItemForm({
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>카테고리</FormLabel>
+                  <FormLabel>{t('category')}</FormLabel>
                   <FormControl>
                     <Select value={field.value || ''} onValueChange={field.onChange}>
                       <SelectTrigger data-testid="plan-item-form-category-trigger">
-                        <SelectValue placeholder="카테고리 선택" />
+                        <SelectValue placeholder={t('selectCategory')} />
                       </SelectTrigger>
                       <SelectContent>
                         {availableCategories.map((c) => (
@@ -126,13 +139,13 @@ export function AnnualPlanItemForm({
             name="annualAmount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>연간 금액</FormLabel>
+                <FormLabel>{t('annualAmount')}</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    placeholder="예: 12000000"
+                    placeholder={t('placeholder')}
                     {...field}
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
@@ -142,13 +155,10 @@ export function AnnualPlanItemForm({
             )}
           />
 
-          <p className="px-1 text-[11px] text-stone-400">
-            월별 분배는 12개월 균등으로 설정돼요. 월별 비균등 조정은 메인 화면의 일괄수정에서
-            가능해요.
-          </p>
+          <p className="px-1 text-[11px] text-stone-400">{t('note')}</p>
 
           <Button type="submit" className="w-full">
-            저장
+            {t('save')}
           </Button>
         </form>
       </Form>

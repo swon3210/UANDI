@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { RegularAvgInput } from './RegularAvgInput';
 import { RegularGridAdjust } from './RegularGridAdjust';
 import { IrregularGridInput } from './IrregularGridInput';
@@ -30,12 +31,16 @@ export function avgValueOf(item: AnnualPlanItem): number {
 }
 
 /** 수입 정기 항목: 공동 가계부라 두 사람 합산이라는 걸 첫 입력에서 알려준다 */
-function hintFor(item: AnnualPlanItem, mode: WizardMode): string | undefined {
+function hintFor(
+  item: AnnualPlanItem,
+  mode: WizardMode,
+  t: (key: 'incomeHint' | 'variableHint') => string
+): string | undefined {
   if (item.group === 'income' && item.subGroup === 'regular_income') {
-    return '두 사람 수입을 합쳐 적어요';
+    return t('incomeHint');
   }
   if (mode === 'quick' && item.subGroup === 'variable_common') {
-    return '함께 쓰는 지출의 한 달 평균이에요. 정확하지 않아도 괜찮아요';
+    return t('variableHint');
   }
   return undefined;
 }
@@ -48,6 +53,7 @@ export function PlanWizardCategoryStep({
   onChangeAvg,
   onChangeMonthly,
 }: PlanWizardCategoryStepProps) {
+  const t = useTranslations('cashbook.wizard.step');
   const isRegular = REGULAR_SUBGROUPS.has(item.subGroup);
   const isQuick = mode === 'quick';
 
@@ -57,9 +63,9 @@ export function PlanWizardCategoryStep({
         category={category}
         value={avgValueOf(item)}
         onChange={onChangeAvg}
-        caption={isRegular ? '정기 항목 · 월 평균' : '변동 항목 · 월 평균'}
-        hint={hintFor(item, mode)}
-        annualNote={isQuick ? '나중에 경제 목표에서 달마다 다르게 조정할 수 있어요.' : undefined}
+        caption={isRegular ? t('captionRegular') : t('captionVariable')}
+        hint={hintFor(item, mode, t)}
+        annualNote={isQuick ? t('quickNote') : undefined}
       />
     );
   }

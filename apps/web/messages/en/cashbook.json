@@ -1,6 +1,9 @@
 {
   "labels": {
-    "group": { "expense": "Spending", "income": "Income" },
+    "group": {
+      "expense": "Spending",
+      "income": "Income"
+    },
     "subGroup": {
       "regular_income": "Regular income",
       "irregular_income": "Irregular income",
@@ -25,7 +28,14 @@
       "12": "Yearly",
       "other": "Every {n} months"
     },
-    "week": { "1": "1st", "2": "2nd", "3": "3rd", "4": "4th", "5": "5th", "-1": "last" },
+    "week": {
+      "1": "1st",
+      "2": "2nd",
+      "3": "3rd",
+      "4": "4th",
+      "5": "5th",
+      "-1": "last"
+    },
     "weekday": {
       "1": "Monday",
       "2": "Tuesday",
@@ -38,7 +48,8 @@
     "dayOfMonth": "{interval} on day {day}",
     "nthWeekday": "{week} {weekday}",
     "leadDays": " · {n} days before",
-    "aroundDay": "Around day {day} each month"
+    "aroundDay": "Around day {day} each month",
+    "monthlyDay": "Day {day} each month"
   },
   "history": {
     "editThenAdd": "Edit and add",
@@ -315,5 +326,457 @@
     "categories": "Categories",
     "notifications": "Notifications",
     "background": "Background image"
+  },
+  "wizard": {
+    "intro": {
+      "eyebrow": "{year} annual budget",
+      "headline": "Let's build this year's budget<br></br>step by step",
+      "description": "Enter monthly amounts per category, income then spending,<br></br>and we'll show the annual total and surplus automatically.",
+      "modeGroup": "How to build the budget",
+      "modes": {
+        "quick": {
+          "title": "Just the essentials",
+          "description": "Salary, fixed spending and shared variable spending as monthly averages. About 5 min"
+        },
+        "full": {
+          "title": "Every item in detail",
+          "description": "Adjust every category month by month. About 20 min"
+        }
+      },
+      "count": "{count}",
+      "flowTitle": "How it goes",
+      "flowIncome": "Enter {count} income categories",
+      "flowIncomeHintQuick": "Regular income as a monthly average",
+      "flowIncomeHintFull": "Regular income: monthly average, then a 12-month grid",
+      "flowExpense": "Enter {count} spending categories",
+      "flowExpenseHintQuick": "Fixed and shared variable spending as monthly averages",
+      "flowExpenseHintFull": "Fixed spending by average; variable and holidays directly in the grid",
+      "flowValidate": "Check",
+      "flowValidateHint": "Make sure income ≥ spending",
+      "flowDone": "Done",
+      "flowDoneHint": "Summary, then back to the main screen",
+      "notesTitle": "Good to know",
+      "note1": "· Every step saves right away. If you leave, you can continue from the card on Home.",
+      "note2": "· Not sure about an item? Use \"Skip this item\" and fill it in later.",
+      "noteQuick": "· Other items stay at 0 and you can fill them in anytime under Financial goals → Budget items.",
+      "noteFull": "· For regular items, enter an average and then adjust specific months in the 12-month grid.",
+      "total": "{count} categories in total"
+    },
+    "shell": {
+      "next": "Next",
+      "prev": "Back",
+      "exit": "Exit wizard",
+      "skipItem": "Skip this item"
+    },
+    "page": {
+      "titleIntro": "{year} annual budget",
+      "start": "Get started",
+      "phaseAvg": "Average",
+      "phaseAdjust": "Adjust months",
+      "phaseInput": "Monthly input",
+      "subtitle": "{group} · {index} / {total} · {phase}",
+      "validateTitle": "Budget check",
+      "validateSubtitle": "Income ≥ spending",
+      "doneTitle": "Done",
+      "doneSubtitle": "{year} budget summary",
+      "saving": "Saving...",
+      "done": "Finish",
+      "completed": "Your budget plan is complete!",
+      "redone": "Budget rebuilt",
+      "next": "Next"
+    },
+    "summary": {
+      "eyebrow": "{year} budget complete",
+      "saving": "Saving...",
+      "ready": "Your budget plan is ready",
+      "surplusIntro": "You start the year with an annual surplus of <strong>{amount}</strong>.",
+      "annualIncome": "Annual income",
+      "annualExpense": "Annual spending",
+      "monthlyTitle": "Monthly totals",
+      "peakMonth": "The month with the most spending planned is <strong>{month}</strong>.",
+      "footer": "Finishing records a revision and returns you to the main screen."
+    },
+    "validate": {
+      "step": "Step 4 · Check",
+      "headline": "Let's check that income<br></br>can cover spending",
+      "description": "You can move on only when both the annual total and each month's income are at least as much as spending.",
+      "ok": "Check passed",
+      "monthlyIssue": "Some months run a deficit",
+      "short": "The budget falls short",
+      "okDetail": "After spending, {amount} of income is left.",
+      "monthlyDetail": "The year is in surplus, but {count} months spend more than they earn.",
+      "shortDetail": "Spending exceeds income by {amount}.",
+      "surplus": "Surplus",
+      "deficit": "Shortfall",
+      "deficitMonths": "Months in deficit",
+      "advice": "Go back and reduce spending items<br></br>or add income items.",
+      "annualIncome": "Annual income",
+      "annualExpense": "Annual spending"
+    },
+    "step": {
+      "incomeHint": "Enter both of your incomes combined",
+      "variableHint": "A monthly average of shared spending. It doesn't have to be exact",
+      "captionRegular": "Regular item · monthly average",
+      "captionVariable": "Variable item · monthly average",
+      "quickNote": "You can adjust individual months later under Financial goals."
+    },
+    "irregular": {
+      "caption": "Irregular item",
+      "fillTitle": "Spread evenly",
+      "fillDescription": "Enter the annual total and press the button to spread it across 12 months.",
+      "fillPlaceholder": "Annual total",
+      "fill": "Fill",
+      "annualTotal": "Annual total",
+      "hint": "If it only happens in certain months, enter amounts in those cells only."
+    },
+    "avg": {
+      "caption": "Regular item · step 1",
+      "annualNote": "In the next step you can adjust specific months in the 12-month grid.",
+      "monthlyAvg": "Monthly average",
+      "won": "KRW",
+      "annualTotal": "Annual total (× 12)"
+    },
+    "adjust": {
+      "caption": "Regular item · step 2",
+      "monthlyAvg": "Monthly average",
+      "resetToAvg": "Reset to average",
+      "description": "All 12 months were filled with the average. Edit a cell to make a month different.",
+      "annualTotal": "Annual total",
+      "vsAvg": "vs. average {sign}{amount}"
+    }
+  },
+  "goals": {
+    "income": {
+      "label": "Income",
+      "goalLabel": "Annual income goal"
+    },
+    "expense": {
+      "label": "Spending",
+      "goalLabel": "Annual spending limit"
+    },
+    "pageTitle": "{year} financial goals",
+    "bulkEdit": "Edit months in bulk",
+    "redo": "Start over",
+    "current": "Currently {amount}",
+    "achieved": "{pct}% reached",
+    "setItems": "Set {label} budget items",
+    "setItemsShort": "Set budget items",
+    "itemCount": "{count} items",
+    "expectedSurplus": "Expected annual surplus",
+    "incomeGoal": "Income goal",
+    "expenseLimit": "Spending limit",
+    "setGoals": "Set goals",
+    "items": {
+      "updated": "Item updated",
+      "added": "Item added",
+      "deleteTitle": "Delete budget item",
+      "deleteDescription": "Delete \"{name}\"? Its monthly breakdown will be removed too.",
+      "cancel": "Cancel",
+      "deleted": "Item deleted",
+      "delete": "Delete",
+      "title": "{label} budget items",
+      "back": "Back",
+      "add": "Add item",
+      "emptyTitle": "No items yet",
+      "emptyDescription": "Tap + in the top right to add your first item",
+      "more": "More",
+      "edit": "Edit"
+    },
+    "itemForm": {
+      "numberOnly": "Please enter numbers only",
+      "min": "Must be 0 or more",
+      "integer": "Enter the amount in whole won",
+      "tooLarge": "That amount is too large",
+      "categoryRequired": "Please choose a category",
+      "editTitle": "Edit budget item",
+      "addTitle": "Add budget item",
+      "category": "Category",
+      "categoryValue": "Category: <strong>{name}</strong>",
+      "selectCategory": "Select a category",
+      "annualAmount": "Annual amount",
+      "placeholder": "e.g. 12000000",
+      "note": "The amount is spread evenly across 12 months. Use bulk edit on the main screen to adjust individual months.",
+      "save": "Save"
+    },
+    "toasts": {
+      "createFailed": "Couldn't create the annual plan.",
+      "itemSaveFailed": "Couldn't save the item.",
+      "amountFailed": "Couldn't update the amount.",
+      "itemDeleteFailed": "Couldn't delete the item.",
+      "bulkFailed": "Couldn't save the bulk edit."
+    }
+  },
+  "bulkEdit": {
+    "title": "Edit months in bulk",
+    "subtitle": "{year} · adjust every category and month at once",
+    "back": "Back",
+    "saved": "Monthly budget saved",
+    "income": "Income",
+    "expense": "Spending",
+    "resetAll": "Revert all",
+    "saving": "Saving...",
+    "saveCount": "Save {count} items",
+    "noChanges": "No changes",
+    "noChangesHint": "No changes yet. Edit a cell to see the difference.",
+    "ok": "Check passed · surplus {amount}",
+    "monthlyIssue": "{count} months in deficit · spending outpaces income",
+    "short": "Over budget · exceeds by {amount}",
+    "noDelta": "No change",
+    "category": "Category",
+    "delta": "Change",
+    "empty": "No categories to edit.",
+    "resetRow": "Revert this row"
+  },
+  "cashflow": {
+    "title": "Cash flow",
+    "movedDescription": "Repeating item moved from '{name}' ({schedule})",
+    "setupTitle": "Set up to see your cash flow",
+    "setupDescription": "Enter the cash you had on a starting date, and we'll add every entry since then to forecast today's balance and what's left on upcoming dates",
+    "setup": "Set starting cash",
+    "aiTitle": "AI expected entries",
+    "aiLoading": "AI is loading expected entries…",
+    "aiApplied": "{count} entries added to the cash flow",
+    "aiAsOf": " · as of {time}",
+    "aiNone": "Couldn't find a pattern to forecast",
+    "aiSoon": "Expected entries are coming soon",
+    "refresh": "Refresh",
+    "guide": "Items marked <mark>◇</mark> are forecasts, not confirmed yet. They come from the <b>recurring items</b> you set up and <b>AI inference</b> from your past income and spending. Expand an item to see why it's there.",
+    "baseline": {
+      "edit": "Edit starting cash",
+      "todayCash": "Expected cash today",
+      "initial": "Starting cash ",
+      "asOf": " · as of {date}",
+      "computed": ", plus entries since then.",
+      "editShort": "Edit"
+    },
+    "card": {
+      "remaining": "Left over",
+      "inflow": "In",
+      "outflow": "Out",
+      "noTransactions": "No transactions up to this date"
+    },
+    "list": {
+      "emptyTitle": "No upcoming spending dates",
+      "emptyDescription": "Set big upcoming expenses and your current cash to see the cash flow"
+    },
+    "negative": {
+      "title": "Low balance warning",
+      "body": "On <label>{label}</label>{sub} the balance drops to <amount>{balance}</amount>",
+      "dismiss": "Dismiss"
+    },
+    "settings": {
+      "dateRequired": "Please choose a starting date",
+      "amountRequired": "Please enter an amount",
+      "min": "Must be 0 or more",
+      "integer": "Enter the amount in whole won",
+      "title": "Starting cash",
+      "date": "Starting date",
+      "dateHint": "We take the cash each of you had on this date and add each person's entries since then to get today's balance.",
+      "perPerson": "Starting cash per person (on the starting date)",
+      "won": "KRW",
+      "total": "Total",
+      "hint": "Enter each person's cash on the starting date <strong>once</strong>, and we'll add the income and spending you log afterwards to forecast each person's balance and upcoming cash flow.",
+      "tip": "<strong>Fixed spending and income</strong> such as rent, utilities and salary show up here automatically when you set a date and expected amount under a category's <strong>recurring</strong> settings.",
+      "save": "Save",
+      "saved": "Starting cash saved.",
+      "saveFailed": "Couldn't save cash flow settings. Please try again."
+    },
+    "row": {
+      "recurrence": "Recurring",
+      "recurrenceWith": "Recurring · {detail}",
+      "llm": "AI inference",
+      "llmWith": "AI inference · {detail}",
+      "prediction": "Forecast",
+      "predictionWith": "Forecast · {detail}",
+      "confirmed": "Confirmed",
+      "delete": "Delete forecast"
+    },
+    "predictFailed": "AI forecast failed. Please try again."
+  },
+  "prediction": {
+    "source": {
+      "calendar": "Calendar",
+      "auto": "Auto-detected",
+      "llm": "AI forecast",
+      "recurrence": "Recurring"
+    },
+    "add": "Add",
+    "editThenAdd": "Edit and add",
+    "no": "No",
+    "retroTitle": "Did these past forecasts actually happen?",
+    "retroDismiss": "Dismiss review",
+    "yes": "Yes",
+    "toasts": {
+      "addFailed": "Couldn't add the forecast. Please try again.",
+      "confirmFailed": "Couldn't confirm the forecast. Please try again.",
+      "rejectFailed": "Couldn't reject the forecast. Please try again.",
+      "failed": "Something went wrong. Please try again.",
+      "deleteFailed": "Couldn't delete the forecast. Please try again."
+    }
+  },
+  "monthlySummary": {
+    "income": "Income",
+    "expense": "Spending",
+    "balance": "Income − spending"
+  },
+  "import": {
+    "fallbackCategory": "Other",
+    "fallbackDescription": "Uncategorized spending",
+    "nameRequired": "Please enter a name",
+    "duplicate": "This category already exists",
+    "saveFailed": "Couldn't save. Please try again",
+    "skip": "Skip",
+    "title": "Import past entries",
+    "uploadTitle": "Bring in your past entries",
+    "uploadDescription": "Upload bank or card statements and we'll prepare the entries and categories at once",
+    "uploadHint": "Attach photos or PDFs, or paste the entries and send. We'll ask for the password of locked PDFs.",
+    "categoriesTitle": "Here's how we sorted them",
+    "categoriesDescription": "{entries} entries sorted into {categories} categories. The {defaults} default categories come along too",
+    "reupload": "Upload again",
+    "review": "Review entries",
+    "sources": {
+      "card": {
+        "label": "Card statement",
+        "hint": "Upload a card activity screen or statement PDF"
+      },
+      "account": {
+        "label": "Bank statement",
+        "hint": "Card bill payments are skipped and transfers are marked separately"
+      }
+    },
+    "sourceGroup": "Statement type",
+    "steps": {
+      "1": "Upload",
+      "2": "Categories",
+      "3": "Review"
+    },
+    "stepAria": "Step {step} {label}"
+  },
+  "notifications": {
+    "denied": "Browser notifications are blocked, so push notifications can't be delivered.",
+    "unsupported": "This browser doesn't support push notifications.",
+    "registerFailed": "Couldn't register for push notifications. Please try again in a moment.",
+    "testSent": "Test push sent (succeeded {success}, failed {failure})",
+    "testAllFailed": "Every send failed. First reason: {reason}",
+    "unknown": "unknown",
+    "testFailed": "Couldn't send the test push.",
+    "title": "Notifications",
+    "pwaTitle": "Get background notifications on mobile",
+    "pwaDescription": "Add the app to your Home Screen so push arrives even when the browser is closed.",
+    "pwaHow": "See how to add to Home Screen",
+    "testTitle": "Check notifications",
+    "testDescription": "Send one test push to your registered devices to confirm the setup works.",
+    "testSending": "Sending…",
+    "testSend": "Send test push",
+    "form": {
+      "reminderTitle": "Logging reminder",
+      "enable": "Notify me",
+      "time": "Time",
+      "days": "Days",
+      "budgetTitle": "Budget warnings",
+      "selfAlert": "Also show my own spending alerts on screen",
+      "selfAlertHint": "While the app is open, show a toast for budget warnings caused by your own spending.",
+      "recurringTitle": "Fixed spending & income",
+      "recurringHint": "Remind you to log rent, subscriptions and salary on the dates set in each category.",
+      "nudgeTitle": "Entry requests",
+      "nudgeHint": "Let you know when your partner nudges you to log entries.",
+      "saving": "Saving...",
+      "save": "Save"
+    },
+    "saved": "Notification settings saved.",
+    "saveFailed": "Couldn't save notification settings.",
+    "preview": {
+      "appName": "Malang Budget",
+      "partnerBody": "Food spending this month passed 80% of the budget",
+      "selfBody": "[My spending] Cafés went over budget this month",
+      "description": "Preview of the toast shown when an FCM message arrives in the foreground.",
+      "partner": "Show partner alert (warn80)",
+      "self": "Show own alert (over100)"
+    },
+    "bubble": {
+      "title": "Floating bubble",
+      "description": "Show a Quick Add bubble on screen even while using other apps.",
+      "aria": "Turn on floating bubble"
+    },
+    "background": {
+      "alt": "Budget background",
+      "change": "Change",
+      "remove": "Remove",
+      "select": "Choose a background image",
+      "uploading": "Uploading... {progress}%"
+    },
+    "opacity": {
+      "label": "Opacity",
+      "hint": "Lower values make the screen more transparent"
+    }
+  },
+  "analysis": {
+    "title": "Category AI analysis",
+    "sheetTitle": "Choose categories to analyze",
+    "notFoundTitle": "Couldn't find categories to analyze",
+    "notFoundDescription": "Open this from 'AI analysis' in the dashboard's period comparison",
+    "goBack": "Go back",
+    "recentMedian": "Median of the last {months} months",
+    "prevMonth": "Last month",
+    "all": "All",
+    "trendTitle": "{scope} · last {months} months",
+    "trendMedian": " · dotted line = usual {amount}",
+    "usual": "Usual",
+    "usualWithWindow": "Usual (median of the last {months} months)",
+    "report": {
+      "title": "AI analysis",
+      "retry": "Analyze again",
+      "analyzing": "Analyzing...",
+      "failed": "Analysis failed. Please try again"
+    },
+    "breakdown": {
+      "noChange": "No change",
+      "topChanges": "Top {shown} changes of {total}",
+      "byCategory": "Changes by category · {count}",
+      "range": "{compare} → this month"
+    },
+    "summary": {
+      "noChange": "No change vs. {label}",
+      "versus": "vs. {label} ",
+      "asOf": "As of {month}",
+      "selectCategories": "Select categories",
+      "thisMonth": "This month"
+    },
+    "trend": {
+      "amount": "Amount",
+      "filterAria": "Trend category"
+    }
+  },
+  "budgetAlert": {
+    "totalOver": "{subject} is over budget",
+    "totalOver120": "{subject} is more than 20% over budget",
+    "totalSubject": "Total spending this month",
+    "categoryCount": "{count} categories over budget",
+    "detail": "See details",
+    "dismissAll": "Dismiss all budget alerts",
+    "all": "All",
+    "toastTotalWarn": "Total spending this month passed 80% of the budget",
+    "toastTotalOver": "Total spending this month is over budget",
+    "toastTotalOver120": "Total spending this month is more than 20% over budget",
+    "toastWarn": "{subject} passed 80% of its budget this month",
+    "toastOver": "{subject} is over budget this month",
+    "toastOver120": "{subject} is more than 20% over budget"
+  },
+  "nudge": {
+    "cooldown": "You just sent a nudge. You can send another in about {minutes} min.",
+    "partnerFallback": "your partner",
+    "button": "Nudge {name}"
+  },
+  "examples": {
+    "remove": "Remove {item}",
+    "placeholder": "Add an example and press Enter",
+    "max": "Up to {max}"
+  },
+  "misc": {
+    "remapped": "{count} entries reassigned",
+    "remapFailed": "Couldn't reassign. Please try again.",
+    "otherCategory": "Other",
+    "messageSaved": "Message saved 🐹",
+    "messageSaveFailed": "Couldn't save. Please try again in a moment."
   }
 }

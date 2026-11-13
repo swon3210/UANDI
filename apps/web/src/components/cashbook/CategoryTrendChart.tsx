@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Bar, BarChart, Cell, LabelList, ReferenceLine, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
@@ -26,14 +27,17 @@ const CURRENT_COLOR: Record<CategoryGroup, string> = {
 };
 const PAST_COLOR = 'hsl(var(--muted-foreground) / 0.35)';
 
-function formatBarLabel(n: number): string {
-  return n === 0 ? '' : `${formatCurrencyMan(n)}원`;
+function formatBarLabel(n: number, won: (amount: string) => string): string {
+  return n === 0 ? '' : won(formatCurrencyMan(n));
 }
 
 /** 최근 달들의 카테고리 금액 막대 + 평소 점선 (점선 설명은 호출부 캡션에서) */
 export function CategoryTrendChart({ points, median, group }: Props) {
+  const t = useTranslations('cashbook.analysis.trend');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const config: ChartConfig = {
-    amount: { label: '금액', color: CURRENT_COLOR[group] },
+    amount: { label: t('amount'), color: CURRENT_COLOR[group] },
   };
   return (
     <ChartContainer
@@ -51,7 +55,9 @@ export function CategoryTrendChart({ points, median, group }: Props) {
               hideLabel
               formatter={(value) => (
                 <span className="font-mono tabular-nums">
-                  {typeof value === 'number' ? Math.round(value).toLocaleString() : value}원
+                  {won(
+                    typeof value === 'number' ? Math.round(value).toLocaleString() : String(value)
+                  )}
                 </span>
               )}
             />
@@ -71,7 +77,7 @@ export function CategoryTrendChart({ points, median, group }: Props) {
             offset={4}
             fontSize={10}
             className="fill-muted-foreground"
-            formatter={(label) => formatBarLabel(Number(label) || 0)}
+            formatter={(label) => formatBarLabel(Number(label) || 0, won)}
           />
         </Bar>
       </BarChart>

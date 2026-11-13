@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
@@ -26,12 +28,13 @@ import { useCashbookCategories } from '@/hooks/useCashbookCategories';
 import { userAtom } from '@/stores/auth.store';
 import {
   analysisScopeName,
+  type AnalysisScopeLabels,
   buildCategoryAnalysisHref,
   parseCategoryAnalysisParams,
 } from '@/utils/category-analysis';
 import { formatCurrency } from '@/utils/currency';
-import { getPeriodLabel } from '@/utils/date';
-import { MEDIAN_UNAVAILABLE_MESSAGE, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
+import { dateFormat, getPeriodLabel } from '@/utils/date';
+import { MEDIAN_MIN_SAMPLE_MONTHS, MEDIAN_WINDOW_MONTHS } from '@/utils/median-comparison';
 import { BackButton } from '@/components/shell/BackButton';
 
 export default function CategoryAnalysisPage() {
@@ -44,6 +47,24 @@ export default function CategoryAnalysisPage() {
 }
 
 function CategoryAnalysisPageInner() {
+  const t = useTranslations('cashbook.analysis');
+  const tDash = useTranslations('dashboard');
+  const labels = useCategoryLabels();
+  const scopeLabels = useMemo<AnalysisScopeLabels>(
+    () => ({
+      all: (group, subGroup) =>
+        subGroup === 'all'
+          ? tDash('total.allGroup', { group: labels.group(group) })
+          : tDash('total.allSubGroup', {
+              prefix: tDash(
+                subGroup === 'fixed' ? 'subGroup.fixedShort' : 'subGroup.variableShort'
+              ),
+              group: labels.group(group),
+            }),
+      selectedCount: (count) => tDash('aiSummary.selectedCategories', { count }),
+    }),
+    [tDash, labels]
+  );
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAtomValue(userAtom);
@@ -52,7 +73,7 @@ function CategoryAnalysisPageInner() {
   // 매 렌더 새 객체가 되면 아래 데이터 계산이 매번 다시 돌아 쿼리 키 문자열로 고정한다
   const query = searchParams.toString();
   const params = useMemo(() => parseCategoryAnalysisParams(new URLSearchParams(query)), [query]);
-  const names = params ? analysisScopeName(params) : null;
+  const names = params ? analysisScopeName(params, scopeLabels) : null;
   const { data, isLoading } = useCategoryAnalysisData(coupleId, params);
   const hasData = data !== null && data.rows.length > 0;
   const report = useCategoryAnalysisReport(
@@ -79,7 +100,7 @@ function CategoryAnalysisPageInner() {
       return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && closeAndUnmount()}>
           <CompareCategorySheet
-            title="분석할 카테고리 선택"
+            title={t('sheetTitle')}
             options={options}
             initialSelected={params.categories}
             onApply={(names) =>
@@ -99,16 +120,12 @@ function CategoryAnalysisPageInner() {
   const selectedTrend = data?.trends.find((t) => t.category === trendCategory) ?? null;
   const trendMedian = selectedTrend ? selectedTrend.median : (data?.median ?? null);
 
-  // 스트리밍 중 매 청크마다 다시 렌더되므로 차트 데이터는 고정해 둔다
-  const trendPoints = useMemo(
-    () =>
-      (data?.points ?? []).map((p, i) => ({
-        label: p.cursor.format('M월'),
-        amount: selectedTrend ? selectedTrend.amounts[i] : p.amount,
-        isCurrent: p.isCurrent,
-      })),
-    [data, selectedTrend]
-  );
+  // 스트리밍 중 매 청크마다 다시 렌더되지만 React Compiler 가 data·selectedTrend 기준으로 메모이즈한다
+  const trendPoints = (data?.points ?? []).map((p, i) => ({
+    label: p.cursor.format(dateFormat('monthShort')),
+    amount: selectedTrend ? selectedTrend.amounts[i] : p.amount,
+    isCurrent: p.isCurrent,
+  }));
 
   const reportStatus: AiReportStatus = report.isError
     ? 'error'
@@ -121,7 +138,7 @@ function CategoryAnalysisPageInner() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        title="카테고리 AI 분석"
+        title={t('title')}
         data-testid="category-analysis-header"
         leftSlot={<BackButton data-testid="category-analysis-back" />}
       />
@@ -134,11 +151,11 @@ function CategoryAnalysisPageInner() {
           >
             <EmptyState
               icon={<SearchX size={32} />}
-              title="분석할 카테고리를 찾을 수 없어요"
-              description="대시보드 기간 비교의 'AI 분석'으로 들어와 주세요"
+              title={t('notFoundTitle')}
+              description={t('notFoundDescription')}
               action={
                 <Button variant="outline" size="sm" onClick={() => router.back()}>
-                  뒤로 가기
+                  {t('goBack')}
                 </Button>
               }
             />
@@ -158,18 +175,20 @@ function CategoryAnalysisPageInner() {
                 group={params.group}
                 monthLabel={getPeriodLabel('monthly', params.cursor)}
                 currentAmount={data.currentAmount}
-                compareLabel={compareTargetLabel(params.compare)}
+                compareLabel={compareTargetLabel(params.compare, t('usual'))}
                 compareHint={
                   params.compare === 'median'
                     ? data.median !== null
-                      ? `최근 ${data.sampleMonths}개월 중위값`
+                      ? t('recentMedian', { months: data.sampleMonths })
                       : undefined
                     : params.compare.isSame(params.cursor.subtract(1, 'month'), 'month')
-                      ? '전월'
+                      ? t('prevMonth')
                       : undefined
                 }
                 compareAmount={data.compareAmount}
-                unavailableMessage={MEDIAN_UNAVAILABLE_MESSAGE}
+                unavailableMessage={tDash('compare.medianUnavailable', {
+                  months: MEDIAN_MIN_SAMPLE_MONTHS,
+                })}
                 onSelectCategories={handleOpenCategorySheet}
               />
             </div>
@@ -189,8 +208,13 @@ function CategoryAnalysisPageInner() {
                 data-testid="category-analysis-trend-caption"
                 className="text-xs text-muted-foreground"
               >
-                {selectedTrend?.category ?? '전체'} 최근 {MEDIAN_WINDOW_MONTHS}개월 추이
-                {trendMedian !== null ? ` · 점선 = 평소 ${formatCurrency(trendMedian)}` : ''}
+                {t('trendTitle', {
+                  scope: selectedTrend?.category ?? t('all'),
+                  months: MEDIAN_WINDOW_MONTHS,
+                })}
+                {trendMedian !== null
+                  ? t('trendMedian', { amount: formatCurrency(trendMedian) })
+                  : ''}
               </div>
               <CategoryTrendChart group={params.group} median={trendMedian} points={trendPoints} />
             </div>
@@ -199,7 +223,11 @@ function CategoryAnalysisPageInner() {
               <div className="rounded-xl border border-border bg-card p-4">
                 <CategoryAnalysisBreakdown
                   group={params.group}
-                  compareLabel={params.compare === 'median' ? '평소' : params.compare.format('M월')}
+                  compareLabel={
+                    params.compare === 'median'
+                      ? t('usual')
+                      : params.compare.format(dateFormat('monthShort'))
+                  }
                   rows={data.rows.map((r) => ({ ...r, color: colorOf(r.category) }))}
                 />
               </div>

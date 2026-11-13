@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { forwardRef, useState, type ComponentProps, type KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 import { Input } from '@uandi/ui';
@@ -12,6 +13,7 @@ type ExampleChipListProps = {
 };
 
 export function ExampleChipList({ value, onRemove }: ExampleChipListProps) {
+  const t = useTranslations('cashbook.examples');
   if (value.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -24,7 +26,7 @@ export function ExampleChipList({ value, onRemove }: ExampleChipListProps) {
           {item}
           <button
             type="button"
-            aria-label={`${item} 제거`}
+            aria-label={t('remove', { item })}
             className="text-muted-foreground hover:text-foreground"
             onClick={() => onRemove(item)}
           >
@@ -43,10 +45,9 @@ type ExampleTagInputProps = {
 } & Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'onKeyDown' | 'onBlur' | 'ref'>;
 
 export const ExampleTagInput = forwardRef<HTMLInputElement, ExampleTagInputProps>(
-  function ExampleTagInput(
-    { value, onAdd, onRemoveLast, placeholder = '예시 추가 후 Enter', disabled, ...rest },
-    ref
-  ) {
+  function ExampleTagInput({ value, onAdd, onRemoveLast, placeholder, disabled, ...rest }, ref) {
+    const t = useTranslations('cashbook.examples');
+    const resolvedPlaceholder = placeholder ?? t('placeholder');
     const [draft, setDraft] = useState('');
     const reachedMax = value.length >= EXAMPLES_MAX;
 
@@ -80,7 +81,7 @@ export const ExampleTagInput = forwardRef<HTMLInputElement, ExampleTagInputProps
         {...rest}
         ref={ref}
         value={draft}
-        placeholder={reachedMax ? `최대 ${EXAMPLES_MAX}개까지` : placeholder}
+        placeholder={reachedMax ? t('max', { max: EXAMPLES_MAX }) : resolvedPlaceholder}
         disabled={disabled || reachedMax}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}

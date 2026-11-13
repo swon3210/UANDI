@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { AlertTriangle, CheckCircle2, RotateCcw } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 import { formatCurrencyMan } from '@/utils/currency';
@@ -30,6 +31,9 @@ export function BulkEditSummaryBar({
   onSave,
   onResetAll,
 }: BulkEditSummaryBarProps) {
+  const t = useTranslations('cashbook.bulkEdit');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const hasChanges = changedCount > 0;
   const canSave = hasChanges && validation.ok && !saving;
 
@@ -42,14 +46,14 @@ export function BulkEditSummaryBar({
         <ValidationLine validation={validation} hasChanges={hasChanges} />
         <div className="mt-2 grid grid-cols-2 gap-2">
           <DeltaPill
-            label="수입"
+            label={t('income')}
             before={totalsBefore.income}
             after={totalsAfter.income}
             tone="income"
             testId="bulk-edit-delta-income"
           />
           <DeltaPill
-            label="지출"
+            label={t('expense')}
             before={totalsBefore.expense}
             after={totalsAfter.expense}
             tone="expense"
@@ -66,7 +70,7 @@ export function BulkEditSummaryBar({
             className="gap-1.5"
           >
             <RotateCcw size={14} />
-            전체 되돌리기
+            {t('resetAll')}
           </Button>
           <Button
             type="button"
@@ -75,7 +79,11 @@ export function BulkEditSummaryBar({
             data-testid="bulk-edit-save"
             className="flex-1"
           >
-            {saving ? '저장 중...' : hasChanges ? `${changedCount}개 항목 저장` : '변경 사항 없음'}
+            {saving
+              ? t('saving')
+              : hasChanges
+                ? t('saveCount', { count: changedCount })
+                : t('noChanges')}
           </Button>
         </div>
       </div>
@@ -90,6 +98,9 @@ function ValidationLine({
   validation: AnnualPlanValidation;
   hasChanges: boolean;
 }) {
+  const t = useTranslations('cashbook.bulkEdit');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const { ok, deficit, totals, deficitMonths } = validation;
   const surplus = totals.income - totals.expense;
   const monthlyOnlyIssue = deficit <= 0 && deficitMonths.length > 0;
@@ -100,7 +111,7 @@ function ValidationLine({
         className="flex items-center gap-1.5 text-[12px] text-stone-500"
         data-testid="bulk-edit-validation"
       >
-        <span>변경 사항이 없어요. 셀을 수정하면 차이가 표시됩니다.</span>
+        <span>{t('noChangesHint')}</span>
       </div>
     );
   }
@@ -120,10 +131,10 @@ function ValidationLine({
       )}
       <span>
         {ok
-          ? `검증 통과 · 잉여 ${formatCurrencyMan(surplus)}원`
+          ? t('ok', { amount: won(formatCurrencyMan(surplus)) })
           : monthlyOnlyIssue
-            ? `${deficitMonths.length}개월 적자 · 매달 수입이 지출을 못 따라가요`
-            : `예산 부족 · ${formatCurrencyMan(deficit)}원 초과`}
+            ? t('monthlyIssue', { count: deficitMonths.length })
+            : t('short', { amount: won(formatCurrencyMan(deficit)) })}
       </span>
     </div>
   );
@@ -149,6 +160,7 @@ function DeltaPill({
   tone: DeltaTone;
   testId?: string;
 }) {
+  const t = useTranslations('cashbook.bulkEdit');
   const delta = after - before;
   const sign = delta > 0 ? '+' : delta < 0 ? '-' : '±';
 
@@ -160,7 +172,7 @@ function DeltaPill({
       <div className="text-[10px] font-medium opacity-80">{label}</div>
       <div className="mt-0.5 text-[13px] font-bold tabular-nums">{formatCurrencyMan(after)}</div>
       <div className="text-[10px] tabular-nums opacity-80">
-        {delta === 0 ? '변동 없음' : `${sign}${formatCurrencyMan(Math.abs(delta))}`}
+        {delta === 0 ? t('noDelta') : `${sign}${formatCurrencyMan(Math.abs(delta))}`}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Button, cn } from '@uandi/ui';
 
 export type TrendCategoryOption = {
@@ -14,10 +15,10 @@ type Props = {
   onChange: (value: string | null) => void;
 };
 
-const ALL_LABEL = '전체';
-
 /** 추이 차트 위 카테고리 필터: `전체`(묶음 합계) + 카테고리 하나씩. 넘치면 가로 스크롤 */
 export function TrendCategoryFilter({ options, value, onChange }: Props) {
+  const t = useTranslations('cashbook.analysis.trend');
+  const tAll = useTranslations('cashbook.analysis')('all');
   const chip = (key: string | null, label: string, color?: string) => {
     const selected = value === key;
     return (
@@ -45,10 +46,10 @@ export function TrendCategoryFilter({ options, value, onChange }: Props) {
   return (
     <div
       role="group"
-      aria-label="추이 카테고리"
+      aria-label={t('filterAria')}
       className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
     >
-      {chip(null, ALL_LABEL)}
+      {chip(null, tAll)}
       {options.map((o) => chip(o.name, o.name, o.color))}
     </div>
   );

@@ -1,10 +1,11 @@
 'use client';
 
+import { useSubjectParticle } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import type { BudgetThreshold } from '@/hooks/useMonthlyBudget';
-import { josa } from '@/utils/josa';
 
 export type BudgetAlert = {
   key: string; // localStorage dismiss key suffix: `${scopeId}-${threshold}`
@@ -34,20 +35,15 @@ function isOver(threshold: Exclude<BudgetThreshold, 'safe'>): threshold is OverT
   return threshold === 'over100' || threshold === 'over120';
 }
 
-function totalMessage(threshold: OverThreshold): string {
-  const subject = josa('이번 달 전체 지출', '이/가');
-  return threshold === 'over120'
-    ? `${subject} 예산보다 20% 이상 초과됐어요`
-    : `${subject} 예산을 넘었어요`;
-}
-
 export function BudgetAlertBanner({
   alerts,
   onDismissAll,
   detailHref = '/inner/cashbook',
 }: BudgetAlertBannerProps) {
-  const over = alerts.filter(
-    (a): a is BudgetAlert & { threshold: OverThreshold } => isOver(a.threshold)
+  const t = useTranslations('cashbook.budgetAlert');
+  const subject = useSubjectParticle();
+  const over = alerts.filter((a): a is BudgetAlert & { threshold: OverThreshold } =>
+    isOver(a.threshold)
   );
   if (over.length === 0) return null;
 
@@ -71,20 +67,22 @@ export function BudgetAlertBanner({
           {totalOver && (
             <p className="font-medium">
               <span aria-hidden>{EMOJI[totalOver.threshold]} </span>
-              {totalMessage(totalOver.threshold)}
+              {totalOver.threshold === 'over120'
+                ? t('totalOver120', { subject: subject(t('totalSubject')) })
+                : t('totalOver', { subject: subject(t('totalSubject')) })}
             </p>
           )}
           {catOver.length > 0 && (
             <p>
               <span aria-hidden>{EMOJI[catThreshold]} </span>
-              예산을 초과한 카테고리 {catOver.length}개
+              {t('categoryCount', { count: catOver.length })}
               <span aria-hidden> · </span>
               <Link
                 href={detailHref}
                 data-testid="budget-alert-detail-link"
                 className="font-medium underline underline-offset-2"
               >
-                자세히 보기
+                {t('detail')}
               </Link>
             </p>
           )}
@@ -96,7 +94,7 @@ export function BudgetAlertBanner({
           className="h-6 w-6 shrink-0 text-current hover:bg-black/5"
           onClick={onDismissAll}
           data-testid="budget-alert-dismiss-all"
-          aria-label="예산 알림 모두 닫기"
+          aria-label={t('dismissAll')}
         >
           <X size={14} />
         </Button>

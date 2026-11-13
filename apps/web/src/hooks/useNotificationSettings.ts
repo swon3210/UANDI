@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   getNotificationSettings,
   updateNotificationSettings,
@@ -17,6 +18,7 @@ export function useNotificationSettings(userId: string | null) {
 }
 
 export function useUpdateNotificationSettings(userId: string | null) {
+  const t = useTranslations('cashbook.notifications');
   const qc = useQueryClient();
 
   return useMutation({
@@ -29,10 +31,10 @@ export function useUpdateNotificationSettings(userId: string | null) {
     }) => updateNotificationSettings(userId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, userId] });
-      toast.success('알림 설정이 저장되었습니다.');
+      toast.success(t('saved'));
     },
     onError: () => {
-      toast.error('알림 설정 저장에 실패했습니다.');
+      toast.error(t('saveFailed'));
     },
   });
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { cn } from '@uandi/ui';
 import type { CategoryGroup } from '@/types';
 import { pickTopChanges, TOP_CHANGES_LIMIT } from '@/utils/category-analysis';
@@ -25,9 +26,10 @@ type Props = {
 const INCREASE_IS_GOOD: Record<CategoryGroup, boolean> = { expense: false, income: true };
 
 function DeltaCell({ row, group }: { row: CategoryAnalysisBreakdownRow; group: CategoryGroup }) {
+  const t = useTranslations('cashbook.analysis.breakdown');
   if (row.compare === null) return <span className="text-muted-foreground">—</span>;
   const delta = row.current - row.compare;
-  if (delta === 0) return <span className="text-muted-foreground">변동 없음</span>;
+  if (delta === 0) return <span className="text-muted-foreground">{t('noChange')}</span>;
   const good = delta > 0 === INCREASE_IS_GOOD[group];
   return (
     <span className={cn('tabular-nums', good ? 'text-income' : 'text-expense')}>
@@ -46,16 +48,17 @@ export function CategoryAnalysisBreakdown({
   compareLabel,
   limit = TOP_CHANGES_LIMIT,
 }: Props) {
+  const t = useTranslations('cashbook.analysis.breakdown');
   const shown = pickTopChanges(rows, limit);
   return (
     <section data-testid="category-analysis-breakdown" className="space-y-1">
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
         <span>
           {rows.length > shown.length
-            ? `${rows.length}개 중 큰 변화 ${shown.length}개`
-            : `카테고리별 변화 · ${shown.length}개`}
+            ? t('topChanges', { total: rows.length, shown: shown.length })
+            : t('byCategory', { count: shown.length })}
         </span>
-        <span>{compareLabel} → 이번 달</span>
+        <span>{t('range', { compare: compareLabel })}</span>
       </div>
       <ul className="divide-y divide-border">
         {shown.map((row) => (

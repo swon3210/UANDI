@@ -1,8 +1,9 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { cn } from '@uandi/ui';
-import { WIZARD_MODES, WIZARD_MODE_LABEL, type WizardMode } from '@/constants/plan-wizard';
+import { WIZARD_MODES, type WizardMode } from '@/constants/plan-wizard';
 
 export type WizardModeCounts = Record<WizardMode, { income: number; expense: number }>;
 
@@ -19,6 +20,7 @@ type PlanWizardIntroProps = {
  * 2026-11 첫 주 걷기: "26개 카테고리 × 평균+그리드"는 첫 주 부부에게 과했다 → 빠른 모드가 기본.
  */
 export function PlanWizardIntro({ year, counts, mode, onModeChange }: PlanWizardIntroProps) {
+  const t = useTranslations('cashbook.wizard.intro');
   const { income, expense } = counts[mode];
   const total = income + expense;
   const isQuick = mode === 'quick';
@@ -26,20 +28,16 @@ export function PlanWizardIntro({ year, counts, mode, onModeChange }: PlanWizard
   return (
     <div className="space-y-5" data-testid="wizard-intro">
       <section className="rounded-2xl bg-gradient-to-br from-coral-400 to-coral-500 p-6 text-white shadow-[0_6px_24px_hsl(4_74%_69%/0.3)]">
-        <div className="text-[12px] opacity-85">{year}년 연간 예산</div>
+        <div className="text-[12px] opacity-85">{t('eyebrow', { year })}</div>
         <h1 className="mt-1 text-[22px] font-extrabold leading-tight">
-          한 해 예산을
-          <br />
-          단계별로 세워볼게요
+          {t.rich('headline', { br: () => <br /> })}
         </h1>
         <p className="mt-3 text-[13px] leading-relaxed opacity-90">
-          수입 → 지출 순서로 카테고리별 월 금액을 입력하면
-          <br />
-          연간 합계와 잉여를 자동으로 보여드려요.
+          {t.rich('description', { br: () => <br /> })}
         </p>
       </section>
 
-      <section className="space-y-2" role="radiogroup" aria-label="예산 세우는 방식">
+      <section className="space-y-2" role="radiogroup" aria-label={t('modeGroup')}>
         {WIZARD_MODES.map((m) => {
           const selected = m === mode;
           const c = counts[m];
@@ -69,13 +67,13 @@ export function PlanWizardIntro({ year, counts, mode, onModeChange }: PlanWizard
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] font-semibold text-stone-900">
-                  {WIZARD_MODE_LABEL[m].title}
+                  {t(`modes.${m}.title`)}
                   <span className="ml-1.5 text-[12px] font-normal text-stone-400">
-                    {c.income + c.expense}개
+                    {t('count', { count: c.income + c.expense })}
                   </span>
                 </span>
                 <span className="mt-0.5 block text-[12px] leading-relaxed text-stone-500">
-                  {WIZARD_MODE_LABEL[m].description}
+                  {t(`modes.${m}.description`)}
                 </span>
               </span>
             </button>
@@ -84,44 +82,34 @@ export function PlanWizardIntro({ year, counts, mode, onModeChange }: PlanWizard
       </section>
 
       <section className="rounded-2xl border border-stone-200 bg-white p-5">
-        <h2 className="text-[14px] font-semibold text-stone-900">진행 흐름</h2>
+        <h2 className="text-[14px] font-semibold text-stone-900">{t('flowTitle')}</h2>
         <ol className="mt-3 space-y-2.5 text-[13px] text-stone-700">
           <FlowItem
             num={1}
-            label={`수입 카테고리 ${income}개 입력`}
-            hint={isQuick ? '정기 수입을 월 평균으로' : '정기수입은 월 평균 → 12개월 그리드 순서'}
+            label={t('flowIncome', { count: income })}
+            hint={isQuick ? t('flowIncomeHintQuick') : t('flowIncomeHintFull')}
           />
           <FlowItem
             num={2}
-            label={`지출 카테고리 ${expense}개 입력`}
-            hint={
-              isQuick
-                ? '고정 지출·함께 쓰는 변동 지출을 월 평균으로'
-                : '고정 지출은 평균 입력, 변동/명절은 그리드 직접'
-            }
+            label={t('flowExpense', { count: expense })}
+            hint={isQuick ? t('flowExpenseHintQuick') : t('flowExpenseHintFull')}
           />
-          <FlowItem num={3} label="검증" hint="수입 ≥ 지출 인지 확인" />
-          <FlowItem num={4} label="완료" hint="결과 요약 후 메인으로" />
+          <FlowItem num={3} label={t('flowValidate')} hint={t('flowValidateHint')} />
+          <FlowItem num={4} label={t('flowDone')} hint={t('flowDoneHint')} />
         </ol>
       </section>
 
       <section className="rounded-2xl border border-stone-200 bg-stone-50 p-5">
-        <h2 className="text-[13px] font-semibold text-stone-700">알아두기</h2>
+        <h2 className="text-[13px] font-semibold text-stone-700">{t('notesTitle')}</h2>
         <ul className="mt-2.5 space-y-1.5 text-[12px] leading-relaxed text-stone-600">
-          <li>· 입력은 단계마다 즉시 저장돼요. 중간에 나가도 홈 카드에서 이어서 할 수 있어요.</li>
-          <li>{'· 모르는 항목은 "이 항목은 건너뛰기"로 넘기고 나중에 채워도 돼요.'}</li>
-          {isQuick ? (
-            <li>
-              · 나머지 항목은 0원으로 두고, 경제 목표 → 예산 항목 설정에서 언제든 채울 수 있어요.
-            </li>
-          ) : (
-            <li>· 정기 항목은 평균을 입력한 뒤 12개월 그리드에서 특정 달만 조정할 수 있어요.</li>
-          )}
+          <li>{t('note1')}</li>
+          <li>{t('note2')}</li>
+          {isQuick ? <li>{t('noteQuick')}</li> : <li>{t('noteFull')}</li>}
         </ul>
       </section>
 
       <p className="text-center text-[12px] text-stone-400" data-testid="wizard-intro-total">
-        총 {total}개 카테고리
+        {t('total', { count: total })}
       </p>
     </div>
   );

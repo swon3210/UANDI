@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   getCashflowSettings,
   updateCashflowSettings,
@@ -17,16 +18,17 @@ export function useCashflowSettings(coupleId: string | null) {
 }
 
 export function useUpdateCashflowSettings(coupleId: string | null) {
+  const t = useTranslations('cashbook.cashflow.settings');
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (data: CashflowSettingsInput) => updateCashflowSettings(coupleId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, coupleId] });
-      toast.success('최초 현금을 저장했어요.');
+      toast.success(t('saved'));
     },
     onError: () => {
-      toast.error('현금흐름 설정 저장에 실패했어요. 다시 시도해주세요.');
+      toast.error(t('saveFailed'));
     },
   });
 }

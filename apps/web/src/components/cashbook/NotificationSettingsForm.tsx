@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,15 +16,7 @@ import {
   Separator,
 } from '@uandi/ui';
 
-const DAY_LABELS = [
-  { value: 1, label: '월' },
-  { value: 2, label: '화' },
-  { value: 3, label: '수' },
-  { value: 4, label: '목' },
-  { value: 5, label: '금' },
-  { value: 6, label: '토' },
-  { value: 7, label: '일' },
-];
+const DAY_VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
 
 const notificationSettingsSchema = z.object({
   recordReminder: z.object({
@@ -56,6 +49,8 @@ export function NotificationSettingsForm({
   onSave,
   isSaving,
 }: NotificationSettingsFormProps) {
+  const t = useTranslations('cashbook.notifications.form');
+  const tRec = useTranslations('cashbook.recurrenceFields');
   const form = useForm<NotificationSettingsFormValues>({
     resolver: zodResolver(notificationSettingsSchema),
     defaultValues,
@@ -78,14 +73,14 @@ export function NotificationSettingsForm({
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
         {/* 기록 알림 */}
         <div className="space-y-4">
-          <h3 className="text-base font-semibold">기록 알림</h3>
+          <h3 className="text-base font-semibold">{t('reminderTitle')}</h3>
 
           <FormField
             control={form.control}
             name="recordReminder.enabled"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between">
-                <FormLabel className="text-sm">알림 받기</FormLabel>
+                <FormLabel className="text-sm">{t('enable')}</FormLabel>
                 <FormControl>
                   <Switch
                     checked={field.value}
@@ -104,7 +99,7 @@ export function NotificationSettingsForm({
                 name="recordReminder.time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">시간</FormLabel>
+                    <FormLabel className="text-sm">{t('time')}</FormLabel>
                     <FormControl>
                       <Input
                         type="time"
@@ -118,9 +113,10 @@ export function NotificationSettingsForm({
               />
 
               <div data-testid="day-selector">
-                <span className="text-sm font-medium">요일 선택</span>
+                <span className="text-sm font-medium">{t('days')}</span>
                 <div className="flex gap-2 mt-2">
-                  {DAY_LABELS.map(({ value, label }) => {
+                  {DAY_VALUES.map((value) => {
+                    const label = tRec(`weekdayShort.${value}`);
                     const isSelected = selectedDays.includes(value);
                     return (
                       <button
@@ -148,14 +144,14 @@ export function NotificationSettingsForm({
 
         {/* 예산 경고 알림 */}
         <div className="space-y-4">
-          <h3 className="text-base font-semibold">예산 경고 알림</h3>
+          <h3 className="text-base font-semibold">{t('budgetTitle')}</h3>
 
           <FormField
             control={form.control}
             name="budgetWarning.enabled"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between">
-                <FormLabel className="text-sm">알림 받기</FormLabel>
+                <FormLabel className="text-sm">{t('enable')}</FormLabel>
                 <FormControl>
                   <Switch
                     checked={field.value}
@@ -174,10 +170,8 @@ export function NotificationSettingsForm({
               render={({ field }) => (
                 <FormItem className="flex items-start justify-between gap-4 pl-1">
                   <div className="space-y-1">
-                    <FormLabel className="text-sm">내 지출 알림도 화면에 띄우기</FormLabel>
-                    <p className="text-xs text-muted-foreground">
-                      앱을 켜둔 상태에서 본인 지출로 인한 예산 경고를 토스트로 표시해요.
-                    </p>
+                    <FormLabel className="text-sm">{t('selfAlert')}</FormLabel>
+                    <p className="text-xs text-muted-foreground">{t('selfAlertHint')}</p>
                   </div>
                   <FormControl>
                     <Switch
@@ -196,7 +190,7 @@ export function NotificationSettingsForm({
 
         {/* 고정 지출·수입 알림 */}
         <div className="space-y-4">
-          <h3 className="text-base font-semibold">고정 지출·수입 알림</h3>
+          <h3 className="text-base font-semibold">{t('recurringTitle')}</h3>
 
           <FormField
             control={form.control}
@@ -204,10 +198,8 @@ export function NotificationSettingsForm({
             render={({ field }) => (
               <FormItem className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <FormLabel className="text-sm">알림 받기</FormLabel>
-                  <p className="text-xs text-muted-foreground">
-                    카테고리에 설정한 발생일에 맞춰 월세·구독·정기 급여 기록을 알려드려요.
-                  </p>
+                  <FormLabel className="text-sm">{t('enable')}</FormLabel>
+                  <p className="text-xs text-muted-foreground">{t('recurringHint')}</p>
                 </div>
                 <FormControl>
                   <Switch
@@ -225,7 +217,7 @@ export function NotificationSettingsForm({
 
         {/* 입력 요청("콕 찌르기") 알림 */}
         <div className="space-y-4">
-          <h3 className="text-base font-semibold">입력 요청 알림</h3>
+          <h3 className="text-base font-semibold">{t('nudgeTitle')}</h3>
 
           <FormField
             control={form.control}
@@ -233,10 +225,8 @@ export function NotificationSettingsForm({
             render={({ field }) => (
               <FormItem className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <FormLabel className="text-sm">알림 받기</FormLabel>
-                  <p className="text-xs text-muted-foreground">
-                    파트너가 &ldquo;콕 찌르기&rdquo;로 가계부 입력을 요청하면 알려드려요.
-                  </p>
+                  <FormLabel className="text-sm">{t('enable')}</FormLabel>
+                  <p className="text-xs text-muted-foreground">{t('nudgeHint')}</p>
                 </div>
                 <FormControl>
                   <Switch
@@ -251,7 +241,7 @@ export function NotificationSettingsForm({
         </div>
 
         <Button type="submit" className="w-full" disabled={isSaving}>
-          {isSaving ? '저장 중...' : '저장'}
+          {isSaving ? t('saving') : t('save')}
         </Button>
       </form>
     </Form>

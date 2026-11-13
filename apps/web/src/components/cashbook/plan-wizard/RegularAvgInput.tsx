@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Input } from '@uandi/ui';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
@@ -23,10 +24,15 @@ export function RegularAvgInput({
   category,
   value,
   onChange,
-  caption = '정기 항목 · 1단계',
+  caption,
   hint,
-  annualNote = '다음 단계에서 12개월 그리드로 특정 달을 조정할 수 있어요.',
+  annualNote,
 }: RegularAvgInputProps) {
+  const t = useTranslations('cashbook.wizard.avg');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
+  const resolvedCaption = caption ?? t('caption');
+  const resolvedNote = annualNote === undefined ? t('annualNote') : annualNote;
   const [draft, setDraft] = useState<string | null>(null);
   const display = draft !== null ? draft : formatNumber(value);
 
@@ -34,11 +40,11 @@ export function RegularAvgInput({
 
   return (
     <div className="space-y-5" data-testid="regular-avg-input">
-      <CategoryHeader category={category} caption={caption} />
+      <CategoryHeader category={category} caption={resolvedCaption} />
 
       <section className="rounded-2xl border border-stone-200 bg-white p-5">
         <label className="block">
-          <div className="text-[13px] font-medium text-stone-700">월 평균 금액</div>
+          <div className="text-[13px] font-medium text-stone-700">{t('monthlyAvg')}</div>
           <div className="mt-3 flex items-baseline gap-2">
             <Input
               type="text"
@@ -56,11 +62,11 @@ export function RegularAvgInput({
               className="h-12 flex-1 text-right text-[20px] font-bold tabular-nums"
               placeholder="0"
             />
-            <span className="text-[14px] font-semibold text-stone-500">원</span>
+            <span className="text-[14px] font-semibold text-stone-500">{t('won')}</span>
           </div>
           {value > 0 && (
             <div className="mt-1 text-right text-[12px] text-stone-400">
-              {formatCurrencyMan(value)}원
+              {won(formatCurrencyMan(value))}
             </div>
           )}
         </label>
@@ -76,15 +82,15 @@ export function RegularAvgInput({
 
       <section className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-[12px] font-medium text-coral-700">연간 합계 (× 12)</span>
+          <span className="text-[12px] font-medium text-coral-700">{t('annualTotal')}</span>
           <span
             className="text-[18px] font-bold tabular-nums text-coral-700"
             data-testid="regular-avg-annual"
           >
-            {formatCurrencyMan(annual)}원
+            {won(formatCurrencyMan(annual))}
           </span>
         </div>
-        {annualNote ? <p className="mt-1 text-[11px] text-coral-600/80">{annualNote}</p> : null}
+        {resolvedNote ? <p className="mt-1 text-[11px] text-coral-600/80">{resolvedNote}</p> : null}
       </section>
     </div>
   );

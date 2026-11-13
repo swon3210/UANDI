@@ -203,6 +203,7 @@ export function useCashflowCalendar(
     from,
     llmPredictions,
     startingBalance,
+    recurrenceLabels,
   ]);
 
   return {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { Suspense, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -57,6 +58,10 @@ export default function AnnualPlanItemsPage() {
 }
 
 function ItemsPageInner() {
+  const t = useTranslations('cashbook.goals.items');
+  const tGoals = useTranslations('cashbook.goals');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const labels = useCategoryLabels();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -158,7 +163,7 @@ function ItemsPageInner() {
                 itemId: existing.id,
                 data: spread,
               });
-              toast.success('항목을 수정했어요');
+              toast.success(t('updated'));
               return;
             }
             if (!data.categoryId) return;
@@ -181,7 +186,7 @@ function ItemsPageInner() {
                 updatedAt: Timestamp.now(),
               },
             });
-            toast.success('항목을 추가했어요');
+            toast.success(t('added'));
           }}
           onClose={() => {
             close();
@@ -205,10 +210,8 @@ function ItemsPageInner() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>예산 항목 삭제</DialogTitle>
-            <DialogDescription>
-              &quot;{categoryName}&quot; 항목을 삭제하시겠습니까? 월별 분배도 함께 사라집니다.
-            </DialogDescription>
+            <DialogTitle>{t('deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('deleteDescription', { name: categoryName })}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
             <Button
@@ -218,7 +221,7 @@ function ItemsPageInner() {
                 setTimeout(unmount, 300);
               }}
             >
-              취소
+              {t('cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -226,10 +229,10 @@ function ItemsPageInner() {
                 await deleteMutation.mutateAsync(item.id);
                 close();
                 setTimeout(unmount, 300);
-                toast.success('항목을 삭제했어요');
+                toast.success(t('deleted'));
               }}
             >
-              삭제
+              {t('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -241,14 +244,14 @@ function ItemsPageInner() {
     <div className="flex min-h-screen flex-col bg-stone-50">
       <Header
         data-testid="annual-plan-items-header"
-        title={`${theme.label} 예산 항목`}
+        title={t('title', { label: tGoals(`${theme.key}.label`) })}
         leftSlot={
           <Button
             variant="ghost"
             size="icon"
             className="h-9 w-9"
             data-testid="annual-plan-items-back"
-            aria-label="뒤로"
+            aria-label={t('back')}
             onClick={() => router.push(ANNUAL_MAIN)}
           >
             <ChevronLeft size={20} />
@@ -261,7 +264,7 @@ function ItemsPageInner() {
               size="icon"
               className="h-9 w-9"
               data-testid="annual-plan-items-add"
-              aria-label="항목 추가"
+              aria-label={t('add')}
               onClick={() => openItemForm()}
             >
               <Plus size={18} />
@@ -272,21 +275,23 @@ function ItemsPageInner() {
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-20">
         <div className="mb-4 rounded-2xl border border-stone-200 bg-card p-4">
-          <div className="text-xs text-stone-500">{theme.goalLabel}</div>
+          <div className="text-xs text-stone-500">{tGoals(`${theme.key}.goalLabel`)}</div>
           <div
             className={cn('mt-1 text-2xl font-bold tabular-nums', theme.accentClass)}
             data-testid="annual-plan-items-total"
           >
-            {formatCurrencyMan(total)}원
+            {won(formatCurrencyMan(total))}
           </div>
-          <div className="mt-0.5 text-xs text-stone-400">{groupItems.length}개 항목</div>
+          <div className="mt-0.5 text-xs text-stone-400">
+            {tGoals('itemCount', { count: groupItems.length })}
+          </div>
         </div>
 
         {sortedRows.length === 0 ? (
           <EmptyState
             icon={<FolderOpen size={36} />}
-            title="등록된 항목이 없어요"
-            description="우측 상단 +를 눌러 첫 항목을 추가해보세요"
+            title={t('emptyTitle')}
+            description={t('emptyDescription')}
           />
         ) : (
           <div className="space-y-5">
@@ -321,7 +326,7 @@ function ItemsPageInner() {
                         className={cn('text-[14px] font-semibold tabular-nums', theme.accentClass)}
                         data-testid={`plan-item-row-${category.name}-amount`}
                       >
-                        {formatCurrencyMan(item.annualAmount)}원
+                        {won(formatCurrencyMan(item.annualAmount))}
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -329,20 +334,20 @@ function ItemsPageInner() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            aria-label="더보기"
+                            aria-label={t('more')}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openItemForm(item)}>
-                            편집
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => handleDelete(item, category.name)}
                           >
-                            삭제
+                            {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
