@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { FileText, X } from 'lucide-react';
 
 export type AttachmentKind = 'image' | 'pdf';
@@ -28,6 +29,7 @@ export function AttachmentThumbnail({
   index,
   onRemove,
 }: AttachmentThumbnailProps) {
+  const t = useTranslations('cashbook.aiParse');
   return (
     <div
       data-testid={`ai-parse-thumbnail-${index}`}
@@ -52,7 +54,7 @@ export function AttachmentThumbnail({
       <button
         type="button"
         data-testid={`ai-parse-thumbnail-remove-${index}`}
-        aria-label={`${name} 제거`}
+        aria-label={t('remove', { name })}
         onClick={onRemove}
         className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground shadow hover:bg-background"
       >

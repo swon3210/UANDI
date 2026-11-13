@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import { signInWithApple, signInWithGoogle } from '@/lib/firebase/auth';
@@ -9,10 +10,11 @@ import { PENDING_INVITE_CODE_KEY, normalizeInviteCode } from '@/lib/invite-code'
 import { useSsrSafeLocalStorage } from '@/hooks/useSsrSafeLocalStorage';
 import { LandingHero } from '@/components/landing/LandingHero';
 
-const ERROR_MESSAGES: Record<string, string> = {
-  'auth/popup-blocked': '팝업이 차단되었어요. 브라우저 설정에서 팝업을 허용해 주세요.',
-  'auth/network-request-failed': '네트워크 오류가 발생했어요. 연결 상태를 확인해 주세요.',
-};
+/** Firebase auth 에러 코드 → landing.errors 메시지 키 */
+const ERROR_KEYS = {
+  'auth/popup-blocked': 'popupBlocked',
+  'auth/network-request-failed': 'network',
+} as const;
 
 type Provider = 'google' | 'apple';
 
@@ -26,6 +28,7 @@ function AppleIcon() {
 }
 
 export function LandingPage() {
+  const t = useTranslations('landing');
   const [loadingProvider, setLoadingProvider] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
   // 초대 링크(/invite/{code})로 들어온 경우 — 로그인 전엔 배너로만 알리고, 코드는 온보딩이 이어받는다
@@ -52,7 +55,8 @@ export function LandingPage() {
       if (code === 'auth/popup-closed-by-user') {
         // 정상 취소 — 에러 표시 없음
       } else {
-        setError(ERROR_MESSAGES[code] ?? '로그인 중 문제가 발생했어요. 다시 시도해 주세요.');
+        const key = ERROR_KEYS[code as keyof typeof ERROR_KEYS] ?? 'unknown';
+        setError(t(`errors.${key}`));
       }
     } finally {
       setLoadingProvider(null);
@@ -74,10 +78,10 @@ export function LandingPage() {
             {loadingProvider === 'google' ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                로그인 중...
+                {t('signingIn')}
               </>
             ) : (
-              '구글로 시작하기'
+              t('googleLogin')
             )}
           </Button>
           <Button
@@ -90,12 +94,12 @@ export function LandingPage() {
             {loadingProvider === 'apple' ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                로그인 중...
+                {t('signingIn')}
               </>
             ) : (
               <>
                 <AppleIcon />
-                Apple로 계속하기
+                {t('appleLogin')}
               </>
             )}
           </Button>
@@ -109,11 +113,16 @@ export function LandingPage() {
             </p>
           )}
           <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-            로그인 시{' '}
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-              개인정보처리방침
-            </Link>
-            에 동의하는 것으로 간주됩니다.
+            {t.rich('privacyConsent', {
+              link: (chunks) => (
+                <Link
+                  href="/privacy"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </div>
@@ -123,7 +132,7 @@ export function LandingPage() {
           className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           data-testid="footer-privacy-link"
         >
-          개인정보처리방침
+          {t('privacyPolicy')}
         </Link>
       </footer>
     </main>

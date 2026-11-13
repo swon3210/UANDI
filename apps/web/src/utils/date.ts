@@ -3,9 +3,46 @@ import 'dayjs/locale/ko';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import type { Timestamp } from 'firebase/firestore';
 import type { PeriodSelection } from '@/hooks/useCashbook';
+import { getActiveLocale, type Locale } from '@/lib/locale';
 
+// 초기 전역 로케일. 클라이언트에서는 LocaleSync 가 현재 표시 언어로 다시 맞춘다.
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
+
+/** 표시 언어별 날짜 포맷. 새 포맷이 필요하면 여기에 ko/en 을 함께 추가한다(하드코딩 금지). */
+const DATE_FORMATS = {
+  ko: {
+    full: 'YYYY년 M월 D일',
+    monthYear: 'YYYY년 M월',
+    monthDay: 'M월 D일',
+    monthShort: 'M월',
+    monthDayWeekday: 'M월 D일 (ddd)',
+    monthDayWeekdayShort: 'M월 D일 (dd)',
+    monthDayTime: 'M월 D일 HH:mm',
+    dotDate: 'YYYY.M.D',
+    year: 'YYYY년',
+    shortDate: 'YYYY. M. D.',
+  },
+  en: {
+    full: 'MMM D, YYYY',
+    monthYear: 'MMM YYYY',
+    monthDay: 'MMM D',
+    monthShort: 'MMM',
+    monthDayWeekday: 'MMM D (ddd)',
+    monthDayWeekdayShort: 'MMM D (dd)',
+    monthDayTime: 'MMM D HH:mm',
+    dotDate: 'M/D/YYYY',
+    year: 'YYYY',
+    shortDate: 'M/D/YYYY',
+  },
+} satisfies Record<Locale, Record<string, string>>;
+
+type DateFormatKey = keyof (typeof DATE_FORMATS)['ko'];
+
+/** 현재 표시 언어의 dayjs 포맷 문자열 */
+export function dateFormat(key: DateFormatKey): string {
+  return DATE_FORMATS[getActiveLocale()][key];
+}
 
 export function formatRelativeTime(date: Date | Timestamp | null | undefined): string {
   if (!date) return '';
@@ -15,16 +52,16 @@ export function formatRelativeTime(date: Date | Timestamp | null | undefined): s
 
 export function formatDate(date: Date | Timestamp): string {
   const d = 'toDate' in date ? date.toDate() : date;
-  return dayjs(d).format('YYYY년 M월 D일');
+  return dayjs(d).format(dateFormat('full'));
 }
 
 export function formatMonthYear(date: Date): string {
-  return dayjs(date).format('YYYY년 M월');
+  return dayjs(date).format(dateFormat('monthYear'));
 }
 
 export function formatDay(date: Date | Timestamp): string {
   const d = 'toDate' in date ? date.toDate() : date;
-  return dayjs(d).format('M월 D일');
+  return dayjs(d).format(dateFormat('monthDay'));
 }
 
 export type PeriodKind = 'monthly' | 'yearly';
@@ -44,9 +81,9 @@ export function getPeriodRange(kind: PeriodKind, cursor: Dayjs): { start: Date; 
 
 export function getPeriodLabel(kind: PeriodKind, cursor: Dayjs): string {
   if (kind === 'monthly') {
-    return cursor.format('YYYY년 M월');
+    return cursor.format(dateFormat('monthYear'));
   }
-  return cursor.format('YYYY년');
+  return cursor.format(dateFormat('year'));
 }
 
 export function isCurrentPeriod(kind: PeriodKind, cursor: Dayjs): boolean {
@@ -77,7 +114,7 @@ export function resolvePeriod(
       return {
         start: m.startOf('month').toDate(),
         end: m.endOf('month').toDate(),
-        label: m.format('YYYY년 M월'),
+        label: m.format(dateFormat('monthYear')),
       };
     }
     case 'last3Months': {
@@ -86,14 +123,14 @@ export function resolvePeriod(
       return {
         start: start.toDate(),
         end: end.toDate(),
-        label: `${start.format('YYYY년 M월')} ~ ${end.format('YYYY년 M월')}`,
+        label: `${start.format(dateFormat('monthYear'))} ~ ${end.format(dateFormat('monthYear'))}`,
       };
     }
     case 'thisYear': {
       return {
         start: now.startOf('year').toDate(),
         end: now.endOf('year').toDate(),
-        label: now.format('YYYY년'),
+        label: now.format(dateFormat('year')),
       };
     }
     case 'custom': {
@@ -107,7 +144,7 @@ export function resolvePeriod(
       return {
         start: start.toDate(),
         end: end.toDate(),
-        label: `${start.format('YYYY. M. D.')} ~ ${end.format('YYYY. M. D.')}`,
+        label: `${start.format(dateFormat('shortDate'))} ~ ${end.format(dateFormat('shortDate'))}`,
       };
     }
   }

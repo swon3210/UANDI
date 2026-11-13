@@ -1,4 +1,7 @@
+'use client';
+
 import { Check, Loader2 } from 'lucide-react';
+import { useTranslations } from 'use-intl';
 import { cn } from '../../lib/utils';
 
 export type InviteCodeHintStatus = 'idle' | 'loading' | 'found' | 'unavailable';
@@ -18,6 +21,7 @@ export type InviteCodeHintProps = {
  * 연결하기를 눌렀을 때 에러 메시지로 알려 준다.
  */
 export function InviteCodeHint({ status, inviterName, className }: InviteCodeHintProps) {
+  const t = useTranslations('ui.onboarding');
   if (status === 'idle' || status === 'unavailable') return null;
 
   if (status === 'loading') {
@@ -27,7 +31,7 @@ export function InviteCodeHint({ status, inviterName, className }: InviteCodeHin
         className={cn('flex items-center gap-1.5 text-sm text-muted-foreground', className)}
       >
         <Loader2 size={14} className="animate-spin" aria-hidden />
-        초대 코드를 확인하는 중…
+        {t('checkingCode')}
       </p>
     );
   }
@@ -39,7 +43,7 @@ export function InviteCodeHint({ status, inviterName, className }: InviteCodeHin
       className={cn('flex items-center gap-1.5 text-sm font-medium text-sage-600', className)}
     >
       <Check size={14} aria-hidden />
-      {name ? `${name}님의 초대예요` : '초대 코드를 확인했어요'}
+      {name ? t('inviteFrom', { name }) : t('codeConfirmed')}
     </p>
   );
 }

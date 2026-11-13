@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
 import {
   Header,
@@ -18,6 +19,8 @@ import { useAiPreferences, useSaveAiPreferences } from '@/hooks/useAiPreferences
 
 export default function AiSettingsPage() {
   const router = useRouter();
+  const t = useTranslations('settings.aiPage');
+  const tCommon = useTranslations('common');
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
 
@@ -35,17 +38,20 @@ export default function AiSettingsPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="ai-settings-header"
-        title="AI 설정"
+        title={t('title')}
         leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로가기">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label={tCommon('back')}
+          >
             <ArrowLeft size={20} />
           </Button>
         }
       />
       <main className="max-w-md mx-auto w-full px-4 pt-6 pb-12">
-        <p className="mb-6 text-sm text-muted-foreground">
-          가계부 AI가 쓰는 프롬프트를 우리 커플에 맞게 조정해요. 끈 기능은 기본 동작을 사용해요.
-        </p>
+        <p className="mb-6 text-sm text-muted-foreground">{t('intro')}</p>
         {preferences ? (
           // 데이터가 채워진 뒤 key 로 마운트 → 초기값을 로컬 상태로 시드(useEffect 없이).
           <AiPreferencesEditor
@@ -55,7 +61,7 @@ export default function AiSettingsPage() {
             categories={categoryNames}
           />
         ) : (
-          <p className="pt-10 text-center text-sm text-muted-foreground">불러오는 중...</p>
+          <p className="pt-10 text-center text-sm text-muted-foreground">{t('loading')}</p>
         )}
       </main>
     </div>
@@ -71,6 +77,7 @@ function AiPreferencesEditor({
   initialPreferences: AiPreferences;
   categories: string[];
 }) {
+  const t = useTranslations('settings.aiPage');
   const [prefs, setPrefs] = useState<AiPreferences>(initialPreferences);
   const saveMutation = useSaveAiPreferences(coupleId);
   const isSaving = saveMutation.isPending;
@@ -95,9 +102,7 @@ function AiPreferencesEditor({
         disabled={isSaving}
       />
 
-      <p className="text-xs text-muted-foreground">
-        맞춤 설정은 저장한 다음부터 적용돼요. AI 기능은 하루 최대 50회까지 사용할 수 있어요.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('note')}</p>
 
       <div className="flex items-center gap-2">
         <Button
@@ -107,7 +112,7 @@ function AiPreferencesEditor({
           onClick={() => saveMutation.mutate(prefs)}
           disabled={isSaving}
         >
-          {isSaving ? '저장 중...' : '저장'}
+          {isSaving ? t('saving') : t('save')}
         </Button>
         <Button
           type="button"
@@ -116,7 +121,7 @@ function AiPreferencesEditor({
           onClick={() => setPrefs(DEFAULT_AI_PREFERENCES)}
           disabled={isSaving}
         >
-          기본값으로
+          {t('reset')}
         </Button>
       </div>
     </div>

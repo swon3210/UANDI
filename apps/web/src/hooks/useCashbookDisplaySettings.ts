@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   getCashbookDisplaySettings,
   updateCashbookDisplaySettings,
@@ -17,6 +18,7 @@ export function useCashbookDisplaySettings(userId: string | null) {
 }
 
 export function useUpdateCashbookDisplaySettings(userId: string | null) {
+  const t = useTranslations('cashbook.toasts');
   const qc = useQueryClient();
 
   return useMutation({
@@ -24,10 +26,10 @@ export function useUpdateCashbookDisplaySettings(userId: string | null) {
       updateCashbookDisplaySettings(userId!, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [QUERY_KEY, userId] });
-      toast.success('배경 설정이 저장되었습니다.');
+      toast.success(t('displaySaved'));
     },
     onError: () => {
-      toast.error('배경 설정 저장에 실패했습니다.');
+      toast.error(t('displaySaveFailed'));
     },
   });
 }

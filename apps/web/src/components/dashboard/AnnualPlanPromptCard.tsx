@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Target, X } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 
@@ -33,6 +34,7 @@ export function AnnualPlanPromptCard({
   className,
   'data-testid': testId = 'annual-plan-prompt',
 }: AnnualPlanPromptCardProps) {
+  const t = useTranslations('dashboard.planPrompt');
   const isResume = variant === 'resume';
   const done = progress?.done ?? 0;
 
@@ -50,7 +52,7 @@ export function AnnualPlanPromptCard({
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="예산 권유 닫기"
+          aria-label={t('dismiss')}
           data-testid="annual-plan-prompt-dismiss"
           className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
@@ -64,31 +66,28 @@ export function AnnualPlanPromptCard({
         <div className="min-w-0 flex-1">
           {isResume ? (
             <>
-              <p className="text-base font-semibold text-foreground">예산 이어서 세우기</p>
+              <p className="text-base font-semibold text-foreground">{t('resumeTitle')}</p>
               <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-                {done > 0
-                  ? `${done}개 항목을 적었어요. 이어서 적으면 완성돼요`
-                  : '시작만 해 뒀어요. 이어서 적으면 완성돼요'}
+                {done > 0 ? t('resumeProgress', { done }) : t('resumeStarted')}
               </p>
               <Button asChild size="sm" className="mt-3">
                 <Link href={href} data-testid="annual-plan-prompt-resume">
-                  이어서 하기
+                  {t('resume')}
                 </Link>
               </Button>
             </>
           ) : (
             <>
               <p className="text-base font-semibold text-foreground">
-                올해 예산 세우기{' '}
-                <span className="text-xs font-normal text-muted-foreground">· 약 5분</span>
+                {t('startTitle')}{' '}
+                <span className="text-xs font-normal text-muted-foreground">{t('duration')}</span>
               </p>
               <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-                {year}년 월급·고정 지출 몇 개만 적으면 남는 돈이 보여요. 나중에 가계부 설정에서도 할
-                수 있어요
+                {t('startDescription', { year })}
               </p>
               <Button asChild size="sm" className="mt-3">
                 <Link href={href} data-testid="annual-plan-prompt-start">
-                  시작하기
+                  {t('start')}
                 </Link>
               </Button>
             </>

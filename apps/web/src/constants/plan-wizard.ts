@@ -31,36 +31,9 @@ export const QUICK_MODE_SUBGROUPS = new Set<CategorySubGroup>([
   'variable_common',
 ]);
 
-export const WIZARD_MODE_LABEL: Record<WizardMode, { title: string; description: string }> = {
-  quick: {
-    title: '핵심만 빠르게',
-    description: '월급·고정 지출·함께 쓰는 변동 지출만 월 평균으로. 약 5분',
-  },
-  full: {
-    title: '전체 항목 꼼꼼히',
-    description: '모든 카테고리를 월별로 조정하면서. 약 20분',
-  },
-};
+// 모드 제목·설명은 messages/{locale}/cashbook.json 의 wizard.intro.modes 에 있다.
 
 export const WIZARD_GROUP_ORDER = ['income', 'expense'] as const;
 export type WizardGroup = (typeof WIZARD_GROUP_ORDER)[number];
 
-export const WIZARD_GROUP_LABEL: Record<WizardGroup, string> = {
-  income: '수입',
-  expense: '지출',
-};
-
-export const MONTH_LABELS = [
-  '1월',
-  '2월',
-  '3월',
-  '4월',
-  '5월',
-  '6월',
-  '7월',
-  '8월',
-  '9월',
-  '10월',
-  '11월',
-  '12월',
-];
+// 그룹(수입/지출) 라벨은 useCategoryLabels().group, 월 라벨은 useMonthLabels() 로 만든다.

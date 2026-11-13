@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -23,15 +24,13 @@ export function AccountDeleteConfirmDialog({
   onCancel,
   isPending,
 }: AccountDeleteConfirmDialogProps) {
+  const t = useTranslations('settings.deleteAccount');
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent data-testid="delete-account-dialog">
         <DialogHeader>
-          <DialogTitle>회원탈퇴</DialogTitle>
-          <DialogDescription>
-            탈퇴하면 계정이 영구 삭제됩니다. 커플 공간의 데이터는 파트너에게 유지됩니다. 이 작업은
-            되돌릴 수 없습니다.
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button
@@ -40,7 +39,7 @@ export function AccountDeleteConfirmDialog({
             disabled={isPending}
             data-testid="delete-account-cancel"
           >
-            취소
+            {t('cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -48,7 +47,7 @@ export function AccountDeleteConfirmDialog({
             disabled={isPending}
             data-testid="delete-account-confirm"
           >
-            {isPending ? '처리 중...' : '탈퇴하기'}
+            {isPending ? t('pending') : t('confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

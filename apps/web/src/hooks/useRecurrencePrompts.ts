@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { formatRecurrence } from '@uandi/cashbook-core/utils/recurrence';
+import { useFormatRecurrence, useRecurrenceLabels } from '@/i18n/cashbook-labels';
 import { useCashbookCategories } from './useCashbookCategories';
 import { useCashbookEntriesInRange } from './useCashbook';
 import { usePredictionsInRange } from './usePredictions';
@@ -25,16 +25,19 @@ export function useRecurrencePrompts(
   // 같은 쿼리키라 useCashbook/useDayPredictions와 React Query 캐시를 공유(중복 페치 없음).
   const { data: entries } = useCashbookEntriesInRange(coupleId, range.start, range.end);
   const { data: predictions } = usePredictionsInRange(coupleId, range.start, range.end);
+  const recurrenceLabels = useRecurrenceLabels();
+  const formatRecurrence = useFormatRecurrence();
 
   return useMemo(() => {
     const map = new Map<string, PredictionPromptView[]>();
     if (!categories) return map;
 
     const rangeEnd = dayjs(range.end);
-    const occurrences = buildRecurrenceOccurrences(categories, {
-      from: dayjs().startOf('day'),
-      months: 1,
-    }).filter((o) => !dayjs(o.date).isAfter(rangeEnd));
+    const occurrences = buildRecurrenceOccurrences(
+      categories,
+      { from: dayjs().startOf('day'), months: 1 },
+      recurrenceLabels
+    ).filter((o) => !dayjs(o.date).isAfter(rangeEnd));
     if (occurrences.length === 0) return map;
 
     // G1: 같은 달 실거래 / G2: 같은 달 활성 예측 doc → 그 달 발생분 제외.
@@ -75,5 +78,5 @@ export function useRecurrencePrompts(
     }
 
     return map;
-  }, [categories, entries, predictions, range.end]);
+  }, [categories, entries, predictions, range.end, recurrenceLabels, formatRecurrence]);
 }

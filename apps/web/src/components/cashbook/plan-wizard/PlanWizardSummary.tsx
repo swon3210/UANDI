@@ -1,8 +1,9 @@
 'use client';
 
+import { useMonthLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@uandi/ui';
-import { MONTH_LABELS } from '@/constants/plan-wizard';
 import { formatCurrencyMan } from '@/utils/currency';
 import type { AnnualPlanItem } from '@/types';
 
@@ -14,6 +15,10 @@ type PlanWizardSummaryProps = {
 };
 
 export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProps) {
+  const t = useTranslations('cashbook.wizard.summary');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
+  const monthLabels = useMonthLabels();
   const monthlyByGroup = computeMonthlyByGroup(items);
   const totals = {
     income: monthlyByGroup.income.reduce((s, v) => s + v, 0),
@@ -27,27 +32,31 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
       <header>
         <div className="flex items-center gap-1.5 text-[12px] font-medium text-coral-500">
           <Sparkles size={14} />
-          <span>{year}년 예산 완성</span>
+          <span>{t('eyebrow', { year })}</span>
         </div>
         <h1 className="mt-1 text-[20px] font-bold leading-tight text-stone-900">
-          {saving ? '저장 중...' : '예산 계획이 준비됐어요'}
+          {saving ? t('saving') : t('ready')}
         </h1>
         <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
-          연간 잉여{' '}
-          <strong className="font-semibold text-stone-700">{formatCurrencyMan(surplus)}원</strong>
-          으로 한 해를 시작합니다.
+          {t.rich('surplusIntro', {
+            amount: won(formatCurrencyMan(surplus)),
+            strong: (chunks) => <strong className="font-semibold text-stone-700">{chunks}</strong>,
+          })}
         </p>
       </header>
 
       <section className="grid grid-cols-2 gap-2">
-        <SummaryStat label="연간 수입" amount={totals.income} tone="income" />
-        <SummaryStat label="연간 지출" amount={totals.expense} tone="expense" />
+        <SummaryStat label={t('annualIncome')} amount={totals.income} tone="income" />
+        <SummaryStat label={t('annualExpense')} amount={totals.expense} tone="expense" />
       </section>
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4">
-        <h2 className="text-[13px] font-semibold text-stone-900">월별 합계</h2>
+        <h2 className="text-[13px] font-semibold text-stone-900">{t('monthlyTitle')}</h2>
         <p className="mt-0.5 text-[11px] text-stone-500">
-          가장 많이 지출이 잡힌 달은 <strong>{MONTH_LABELS[peakMonthIdx]}</strong>이에요.
+          {t.rich('peakMonth', {
+            month: monthLabels[peakMonthIdx],
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
         <div className="mt-3 space-y-1.5">
           {Array.from({ length: 12 }).map((_, m) => (
@@ -57,14 +66,13 @@ export function PlanWizardSummary({ year, items, saving }: PlanWizardSummaryProp
               income={monthlyByGroup.income[m]}
               expense={monthlyByGroup.expense[m]}
               isPeak={m === peakMonthIdx}
+              monthLabel={monthLabels[m]}
             />
           ))}
         </div>
       </section>
 
-      <p className="text-center text-[12px] text-stone-400">
-        완료를 누르면 수정 이력에 기록되고 메인 페이지로 돌아갑니다.
-      </p>
+      <p className="text-center text-[12px] text-stone-400">{t('footer')}</p>
     </div>
   );
 }
@@ -91,15 +99,16 @@ function SummaryStat({
 }
 
 function MonthRow({
-  monthIdx,
   income,
   expense,
   isPeak,
+  monthLabel,
 }: {
   monthIdx: number;
   income: number;
   expense: number;
   isPeak: boolean;
+  monthLabel: string;
 }) {
   const monthSurplus = income - expense;
   return (
@@ -109,7 +118,7 @@ function MonthRow({
         isPeak ? 'bg-coral-50' : 'bg-stone-50'
       )}
     >
-      <span className="w-9 shrink-0 font-semibold text-stone-700">{MONTH_LABELS[monthIdx]}</span>
+      <span className="w-9 shrink-0 font-semibold text-stone-700">{monthLabel}</span>
       <span className="flex-1 text-right text-sage-600">+{formatCurrencyMan(income)}</span>
       <span className="flex-1 text-right text-coral-600">-{formatCurrencyMan(expense)}</span>
       <span

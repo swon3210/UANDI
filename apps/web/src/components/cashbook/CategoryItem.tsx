@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,6 +29,7 @@ export function CategoryItem({
   onAddChild,
   children,
 }: CategoryItemProps) {
+  const t = useTranslations('cashbook.categories');
   return (
     <div data-testid={`category-item-${category.name}`} className="flex flex-col gap-2 px-2 py-3">
       <div className="flex items-center justify-between">
@@ -62,19 +64,21 @@ export function CategoryItem({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              aria-label="더보기"
+              aria-label={t('more')}
               data-testid={`category-item-${category.name}-menu`}
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(category)}>편집</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(category)}>{t('edit')}</DropdownMenuItem>
             {onAddChild && (
-              <DropdownMenuItem onClick={() => onAddChild(category)}>하위 추가</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddChild(category)}>
+                {t('addChild')}
+              </DropdownMenuItem>
             )}
             <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
-              삭제
+              {t('delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

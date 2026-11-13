@@ -1,11 +1,9 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { Checkbox, Input, cn } from '@uandi/ui';
-import {
-  GROUP_LABELS,
-  SUB_GROUPS_BY_GROUP,
-  SUB_GROUP_SHORT_LABELS,
-} from '@/constants/default-categories';
+import { SUB_GROUPS_BY_GROUP } from '@/constants/default-categories';
 import type { CategorySubGroup } from '@/types';
 import { CategoryIcon } from './CategoryIcon';
 import type { SuggestedCategoryDraft } from './import-types';
@@ -31,6 +29,8 @@ export function SuggestedCategoryCard({
   color = '#908B85',
   className,
 }: SuggestedCategoryCardProps) {
+  const t = useTranslations('cashbook.suggested');
+  const labels = useCategoryLabels();
   const subGroups = SUB_GROUPS_BY_GROUP[draft.group];
   const inputId = `suggested-category-name-${draft.originalName}`;
 
@@ -47,7 +47,7 @@ export function SuggestedCategoryCard({
         <Checkbox
           checked={draft.included}
           onCheckedChange={(checked) => onChange({ ...draft, included: checked === true })}
-          aria-label={`${draft.name || draft.originalName} 포함`}
+          aria-label={t('include', { name: draft.name || draft.originalName })}
         />
         <span
           aria-hidden
@@ -61,7 +61,7 @@ export function SuggestedCategoryCard({
             {draft.name || draft.originalName}
           </p>
           <p className="text-xs text-muted-foreground">
-            {GROUP_LABELS[draft.group]} · {draft.entryCount}건
+            {t('groupCount', { group: labels.group(draft.group), count: draft.entryCount })}
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function SuggestedCategoryCard({
       <div className={cn('mt-3 space-y-2', !draft.included && 'pointer-events-none')}>
         <div>
           <label htmlFor={inputId} className="sr-only">
-            카테고리 이름
+            {t('name')}
           </label>
           <Input
             id={inputId}
@@ -78,7 +78,7 @@ export function SuggestedCategoryCard({
             disabled={!draft.included}
             aria-invalid={Boolean(error)}
             onChange={(e) => onChange({ ...draft, name: e.target.value })}
-            placeholder="카테고리 이름"
+            placeholder={t('name')}
           />
           {error ? (
             <p role="alert" className="mt-1 text-xs text-destructive">
@@ -86,7 +86,7 @@ export function SuggestedCategoryCard({
             </p>
           ) : null}
         </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="구분">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('subGroup')}>
           {subGroups.map((sg: CategorySubGroup) => {
             const active = sg === draft.subGroup;
             return (
@@ -104,7 +104,7 @@ export function SuggestedCategoryCard({
                     : 'border-border bg-background text-muted-foreground hover:bg-accent'
                 )}
               >
-                {SUB_GROUP_SHORT_LABELS[sg]}
+                {labels.subGroupShort(sg)}
               </button>
             );
           })}

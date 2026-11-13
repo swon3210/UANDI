@@ -61,7 +61,9 @@ export type AiPreferences = {
   parseEntries: ParseEntriesPrefs;
 };
 
-// ── 옵션 메타(라벨/설명) ──
+// ── 옵션 값 목록 ──
+// 라벨/설명은 messages/{locale}/ui.json 의 `aiPrefs.{tone|focus|length|stance}.{value}` 에 있다.
+// 프레젠테이션 컴포넌트가 useTranslations('ui.aiPrefs') 로 읽어 OptionGroup 에 넘긴다.
 
 export type AiPreferenceOption<T extends string> = {
   value: T;
@@ -69,28 +71,13 @@ export type AiPreferenceOption<T extends string> = {
   description: string;
 };
 
-export const AI_TONE_OPTIONS: AiPreferenceOption<AiTone>[] = [
-  { value: 'friendly', label: '친근하게', description: '다정하고 격려하는 말투' },
-  { value: 'concise', label: '간결하게', description: '핵심만 짧고 담백하게' },
-  { value: 'strict', label: '엄격하게', description: '냉정하게 문제점 위주로 짚기' },
-];
-
-export const AI_FOCUS_OPTIONS: AiPreferenceOption<AiFocus>[] = [
-  { value: 'saving', label: '절약 중심', description: '아낄 수 있는 지출을 먼저' },
-  { value: 'investment', label: '자산 형성', description: '저축·투자 여력을 먼저' },
-  { value: 'balanced', label: '균형', description: '수입·지출을 고르게' },
-];
-
-export const AI_LENGTH_OPTIONS: AiPreferenceOption<AiLength>[] = [
-  { value: 'short', label: '짧게', description: '요점만 3~4줄' },
-  { value: 'normal', label: '보통', description: '기본 분량' },
-  { value: 'detailed', label: '자세히', description: '항목별 근거까지 자세히' },
-];
-
-export const AI_PREDICTION_STANCE_OPTIONS: AiPreferenceOption<PredictionStance>[] = [
-  { value: 'conservative', label: '보수적', description: '적게, 낮은 확신으로 예측' },
-  { value: 'standard', label: '표준', description: '평소 패턴 그대로' },
-  { value: 'aggressive', label: '적극적', description: '더 많이, 높은 확신으로 예측' },
+export const AI_TONE_VALUES: AiTone[] = ['friendly', 'concise', 'strict'];
+export const AI_FOCUS_VALUES: AiFocus[] = ['saving', 'investment', 'balanced'];
+export const AI_LENGTH_VALUES: AiLength[] = ['short', 'normal', 'detailed'];
+export const AI_PREDICTION_STANCE_VALUES: PredictionStance[] = [
+  'conservative',
+  'standard',
+  'aggressive',
 ];
 
 // ── 입력 캡(UI maxLength / 서버 검증 공유) ──

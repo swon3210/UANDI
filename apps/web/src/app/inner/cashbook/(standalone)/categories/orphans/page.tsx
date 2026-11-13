@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Header, Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
@@ -13,6 +14,7 @@ import { RemapCategorySheet } from '@/components/cashbook/RemapCategorySheet';
 import { BackButton } from '@/components/shell/BackButton';
 
 export default function CashbookOrphansPage() {
+  const t = useTranslations('cashbook.orphans');
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
@@ -53,7 +55,7 @@ export default function CashbookOrphansPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="orphans-header"
-        title="미분류 내역 정리"
+        title={t('title')}
         leftSlot={
           <BackButton fallbackHref="/inner/cashbook/categories" data-testid="header-left" />
         }
@@ -61,9 +63,11 @@ export default function CashbookOrphansPage() {
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">최근 {monthsLoaded}개월</span>
+          <span className="text-xs text-muted-foreground">
+            {t('recentMonths', { months: monthsLoaded })}
+          </span>
           <span className="text-sm font-medium" data-testid="orphans-total-count">
-            총 {totalCount}건
+            {t('total', { count: totalCount })}
           </span>
         </div>
 
@@ -75,8 +79,8 @@ export default function CashbookOrphansPage() {
         ) : groups.length === 0 ? (
           <EmptyState
             icon={<Inbox size={48} className="text-muted-foreground" />}
-            title="미분류 내역이 없어요"
-            description="모든 내역이 현재 카테고리와 매칭되어 있어요."
+            title={t('emptyTitle')}
+            description={t('emptyDescription')}
           />
         ) : (
           <div className="space-y-3">
@@ -98,7 +102,7 @@ export default function CashbookOrphansPage() {
             data-testid="orphans-load-more"
             onClick={() => fetchMoreMonths(1)}
           >
-            더 이전 달도 보기
+            {t('loadMore')}
           </Button>
         </div>
       </main>

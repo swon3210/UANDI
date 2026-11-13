@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Cell, Pie, PieChart } from 'recharts';
 import { ChevronRight, PieChart as PieChartIcon } from 'lucide-react';
 import {
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export function CategoryDonutChart({ data, expandable, onSelect }: Props) {
+  const t = useTranslations('dashboard');
   const canExpand = (name: string) => Boolean(onSelect && expandable?.has(name));
   const total = data.reduce((sum, d) => sum + d.amount, 0);
 
@@ -28,8 +30,8 @@ export function CategoryDonutChart({ data, expandable, onSelect }: Props) {
       <div data-testid="category-donut">
         <EmptyState
           icon={<PieChartIcon size={32} />}
-          title="카테고리 내역이 없어요"
-          description="다른 그룹을 선택하거나 기간을 바꿔보세요"
+          title={t('donut.emptyTitle')}
+          description={t('donut.emptyDescription')}
         />
       </div>
     );
@@ -94,7 +96,7 @@ export function CategoryDonutChart({ data, expandable, onSelect }: Props) {
               />
               <span className="truncate text-muted-foreground">{slice.category}</span>
               <span className="ml-auto font-mono tabular-nums">
-                {formatCurrencyMan(slice.amount, { manDecimals: 1 })}원
+                {t('won', { amount: formatCurrencyMan(slice.amount, { manDecimals: 1 }) })}
               </span>
             </>
           );
@@ -105,7 +107,7 @@ export function CategoryDonutChart({ data, expandable, onSelect }: Props) {
                 <button
                   type="button"
                   onClick={() => onSelect?.(slice.category)}
-                  aria-label={`${slice.category} 하위 카테고리 보기`}
+                  aria-label={t('donut.expand', { category: slice.category })}
                   className="-mx-1 flex w-[calc(100%+0.5rem)] items-center gap-1.5 rounded px-1 text-left hover:bg-accent"
                 >
                   {content}

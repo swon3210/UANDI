@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   getAnnualPlan,
   createAnnualPlan,
@@ -62,6 +63,7 @@ export function useAnnualPlanRevisions(coupleId: string | null, planId: string |
 // ── Mutations ──
 
 export function useCreateAnnualPlan(coupleId: string | null) {
+  const t = useTranslations('cashbook.goals.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ year, createdBy }: { year: number; createdBy: string }) =>
@@ -70,21 +72,23 @@ export function useCreateAnnualPlan(coupleId: string | null) {
       trackEvent('annual_plan_created');
       qc.invalidateQueries({ queryKey: [PLAN_KEY, coupleId, variables.year] });
     },
-    onError: () => toast.error('연간 계획 생성에 실패했어요.'),
+    onError: () => toast.error(t('createFailed')),
   });
 }
 
 export function useUpsertPlanItem(coupleId: string | null, planId: string | null) {
+  const t = useTranslations('cashbook.goals.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: Omit<AnnualPlanItem, 'id'> }) =>
       upsertPlanItem(coupleId!, planId!, itemId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
-    onError: () => toast.error('항목 저장에 실패했어요.'),
+    onError: () => toast.error(t('itemSaveFailed')),
   });
 }
 
 export function useUpdatePlanItemAmount(coupleId: string | null, planId: string | null) {
+  const t = useTranslations('cashbook.goals.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -100,20 +104,22 @@ export function useUpdatePlanItemAmount(coupleId: string | null, planId: string 
       };
     }) => updatePlanItemAmount(coupleId!, planId!, itemId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
-    onError: () => toast.error('금액 수정에 실패했어요.'),
+    onError: () => toast.error(t('amountFailed')),
   });
 }
 
 export function useDeletePlanItem(coupleId: string | null, planId: string | null) {
+  const t = useTranslations('cashbook.goals.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (itemId: string) => deletePlanItem(coupleId!, planId!, itemId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] }),
-    onError: () => toast.error('항목 삭제에 실패했어요.'),
+    onError: () => toast.error(t('itemDeleteFailed')),
   });
 }
 
 export function useBulkUpdatePlanItems(coupleId: string | null, planId: string | null) {
+  const t = useTranslations('cashbook.goals.toasts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -132,7 +138,7 @@ export function useBulkUpdatePlanItems(coupleId: string | null, planId: string |
       qc.invalidateQueries({ queryKey: [ITEMS_KEY, coupleId, planId] });
       qc.invalidateQueries({ queryKey: [REVISIONS_KEY, coupleId, planId] });
     },
-    onError: () => toast.error('일괄 수정 저장에 실패했어요.'),
+    onError: () => toast.error(t('bulkFailed')),
   });
 }
 

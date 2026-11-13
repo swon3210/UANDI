@@ -1,13 +1,11 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { FolderOpen, Plus } from 'lucide-react';
 import { EmptyState, Skeleton, Button } from '@uandi/ui';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
-import {
-  SUB_GROUPS_BY_GROUP,
-  SUB_GROUP_LABELS,
-  GROUP_LABELS,
-} from '@/constants/default-categories';
+import { SUB_GROUPS_BY_GROUP } from '@/constants/default-categories';
 import { CategoryItem } from './CategoryItem';
 import { CategoryChildChip } from './CategoryChildChip';
 
@@ -48,6 +46,8 @@ export function CategoryList({
   onDelete,
   onAddChild,
 }: CategoryListProps) {
+  const t = useTranslations('cashbook.categories');
+  const labels = useCategoryLabels();
   const subGroups = SUB_GROUPS_BY_GROUP[group];
 
   if (isLoading) {
@@ -58,8 +58,8 @@ export function CategoryList({
     return (
       <EmptyState
         icon={<FolderOpen size={48} className="text-muted-foreground" />}
-        title={`${GROUP_LABELS[group]} 카테고리가 없습니다`}
-        description="아래 버튼으로 카테고리를 추가해보세요"
+        title={t('emptyTitle', { group: labels.group(group) })}
+        description={t('emptyDescription')}
       />
     );
   }
@@ -86,7 +86,7 @@ export function CategoryList({
               data-testid={`subgroup-header-${subGroup}`}
               className="mb-1 px-2 text-xs font-medium tracking-wide text-muted-foreground"
             >
-              {SUB_GROUP_LABELS[subGroup as CategorySubGroup]}
+              {labels.subGroup(subGroup as CategorySubGroup)}
             </div>
             <div className="rounded-xl bg-card border border-border divide-y divide-border">
               {parentItems.map((parent) => {
@@ -118,7 +118,7 @@ export function CategoryList({
                         onClick={() => onAddChild(parent)}
                       >
                         <Plus size={12} />
-                        하위 추가
+                        {t('addChild')}
                       </Button>
                     </div>
                   </CategoryItem>

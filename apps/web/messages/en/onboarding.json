@@ -1,0 +1,35 @@
+{
+  "partnerFallback": "your partner",
+  "preparing": "Setting up your budget",
+  "tagline": "The joy of saving together",
+  "create": {
+    "title": "I'm starting fresh",
+    "description": "Create a new space and invite your partner",
+    "ariaLabel": "Create a new couple space",
+    "creating": "Creating your space…"
+  },
+  "join": {
+    "title": "I have an invite code",
+    "description": "Join with the 6-character code your partner sent",
+    "ariaLabel": "Enter invite code",
+    "enterCode": "Enter your invite code",
+    "connect": "Connect"
+  },
+  "back": "Back",
+  "invite": {
+    "title": "Invite your partner",
+    "description": "Send the code or link to your partner"
+  },
+  "errors": {
+    "INVITE_CODE_NOT_FOUND": "That invite code doesn't exist",
+    "INVITE_CODE_EXPIRED": "This invite code has expired. Ask your partner for a new one",
+    "COUPLE_ALREADY_FULL": "This couple is already connected",
+    "CANNOT_JOIN_OWN_COUPLE": "This is your own code. Share it with your partner",
+    "unknown": "Something went wrong. Please try again"
+  },
+  "share": {
+    "title": "Malang Budget invitation",
+    "text": "Join me on Malang Budget, a budget for the two of us. Invite code: {code}",
+    "copied": "Invite link copied"
+  }
+}

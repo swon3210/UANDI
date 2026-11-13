@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Sparkles, BookOpen } from 'lucide-react';
@@ -20,6 +21,7 @@ import type { CashbookEntryType } from '@/types';
  * 인증 세션은 WebView 간 쿠키/IndexedDB 공유로 메인 앱에서 그대로 이어진다.
  */
 export default function OverlayQuickAddPage() {
+  const t = useTranslations('cashbook.quickAdd');
   const status = useAtomValue(authStatusAtom);
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
@@ -38,8 +40,8 @@ export default function OverlayQuickAddPage() {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-2 p-6 text-center">
         <Sparkles className="text-primary" size={28} />
-        <p className="text-sm font-medium">말랑 가계부에 로그인하면 빠른 추가를 쓸 수 있어요</p>
-        <p className="text-xs text-muted-foreground">앱에서 로그인한 뒤 다시 시도해주세요</p>
+        <p className="text-sm font-medium">{t('loginRequired')}</p>
+        <p className="text-xs text-muted-foreground">{t('loginHint')}</p>
       </main>
     );
   }
@@ -65,7 +67,7 @@ export default function OverlayQuickAddPage() {
     <main className="flex min-h-screen flex-col p-4">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles size={18} className="text-primary" />
-        <h1 className="text-base font-semibold">빠른 추가</h1>
+        <h1 className="text-base font-semibold">{t('title')}</h1>
       </div>
 
       <AiParseInput
@@ -106,9 +108,7 @@ export default function OverlayQuickAddPage() {
         }}
       />
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        자연어로 입력하거나 영수증 사진·이용내역서 PDF를 첨부하면 AI가 내역을 정리해드려요.
-      </p>
+      <p className="mt-3 text-xs text-muted-foreground">{t('hint')}</p>
 
       {/* 하단: 말랑 가계부 앱을 열어 전체 내역 페이지로 이동(오버레이 WebView가 uandi:// 스킴을 가로챈다). */}
       <Button
@@ -119,7 +119,7 @@ export default function OverlayQuickAddPage() {
         }}
       >
         <BookOpen size={16} />
-        앱에서 내역 보기
+        {t('openApp')}
       </Button>
     </main>
   );

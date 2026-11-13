@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { House } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import { CASHBOOK_ROOT } from './BackButton';
@@ -20,11 +21,12 @@ export function HomeButton({
   href = CASHBOOK_ROOT,
   'data-testid': testId = 'header-home',
 }: HomeButtonProps) {
+  const t = useTranslations('shell');
   return (
     <Button asChild variant="ghost" size="sm" className="h-8 gap-1 px-2 text-stone-600">
       <Link href={href} replace data-testid={testId}>
         <House size={16} aria-hidden />
-        홈으로
+        {t('home')}
       </Link>
     </Button>
   );

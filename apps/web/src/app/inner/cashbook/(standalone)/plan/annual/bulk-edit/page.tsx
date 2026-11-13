@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,6 +26,7 @@ import type { AnnualPlanItem, CashbookCategory } from '@/types';
 const ANNUAL_MAIN = '/inner/cashbook/plan/annual';
 
 export default function AnnualPlanBulkEditPage() {
+  const t = useTranslations('cashbook.bulkEdit');
   const router = useRouter();
 
   const user = useAtomValue(userAtom);
@@ -41,9 +43,7 @@ export default function AnnualPlanBulkEditPage() {
 
   // 카테고리는 있는데 item 이 없는 경우(위저드 이후 추가된 카테고리 등) 백필을 기다린다.
   const hasMissingItems =
-    !!categories &&
-    !!items &&
-    categories.some((c) => !items.some((it) => it.categoryId === c.id));
+    !!categories && !!items && categories.some((c) => !items.some((it) => it.categoryId === c.id));
 
   const isLoading =
     planPending || catPending || !plan || !categories || !items || itemsPending || hasMissingItems;
@@ -91,7 +91,7 @@ export default function AnnualPlanBulkEditPage() {
       saving={finalizeMutation.isPending}
       onSave={async ({ updates, revision }) => {
         await finalizeMutation.mutateAsync({ updates, revision });
-        toast.success('월별 예산을 저장했어요');
+        toast.success(t('saved'));
         router.replace(ANNUAL_MAIN);
       }}
       onExit={() => router.push(ANNUAL_MAIN)}
@@ -124,6 +124,7 @@ function BulkEditPageInner({
   onSave,
   onExit,
 }: InnerProps) {
+  const t = useTranslations('cashbook.bulkEdit');
   const categoryById = useMemo(() => {
     const map = new Map<string, CashbookCategory>();
     for (const c of categories) map.set(c.id, c);
@@ -254,17 +255,15 @@ function BulkEditPageInner({
           <button
             type="button"
             onClick={onExit}
-            aria-label="뒤로"
+            aria-label={t('back')}
             data-testid="bulk-edit-exit"
             className="flex h-9 w-9 items-center justify-center rounded-full text-stone-700 transition-colors hover:bg-stone-100"
           >
             <ChevronLeft size={20} />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-semibold text-stone-900">월별 일괄 수정</div>
-            <div className="truncate text-[11px] text-stone-500">
-              {year}년 · 카테고리 × 월별 금액 한 번에 조정
-            </div>
+            <div className="truncate text-[15px] font-semibold text-stone-900">{t('title')}</div>
+            <div className="truncate text-[11px] text-stone-500">{t('subtitle', { year })}</div>
           </div>
         </div>
       </header>

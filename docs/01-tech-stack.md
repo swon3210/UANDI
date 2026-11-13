@@ -34,6 +34,7 @@
 | 폼            | React Hook Form + Zod | —      | shadcn Form과 통합, 유효성 검사                    |
 | 날짜 처리     | dayjs                 | v1     | 경량 날짜 유틸리티                                 |
 | 오버레이 UI   | overlay-kit           | v1     | Modal, Bottom Sheet, Snackbar 선언적 관리          |
+| 국제화        | next-intl (라우팅 없음) | 4.x    | 쿠키/Accept-Language 로 로케일 결정, ko/en 메시지 — `docs/10-i18n.md` |
 
 ## 백엔드 (Firebase)
 
@@ -342,3 +343,4 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 - **임포트 순서**: 1) React/Next 2) 외부 라이브러리 3) `@uandi/ui` 4) 내부 경로 (`@/`)
 - **폼**: React Hook Form + Zod + shadcn `<Form>` 컴포넌트 조합으로 통일
 - **에러 처리**: Firebase 에러는 각 훅 내부에서 처리, UI에는 사용자 친화적 메시지만
+- **UI 문자열**: 한글을 컴포넌트에 직접 쓰지 않고 `apps/web/messages/{ko,en}` + `useTranslations()` 로 읽는다. `pnpm i18n:check` 가 하드코딩 증가와 ko/en 키 불일치를 막는다 (`docs/10-i18n.md`)

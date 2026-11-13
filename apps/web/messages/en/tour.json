@@ -1,0 +1,33 @@
+{
+  "skip": "Skip",
+  "viewEntries": "View entries",
+  "firstEntry": "Add first entry",
+  "lookAround": "I'll look around",
+  "prev": "Back",
+  "next": "Next",
+  "addButtonHint": "The <b>Add entry</b> button<br></br>in the bottom-right corner",
+  "examples": {
+    "receipt": "Receipt photo",
+    "sentence": "\"Lunch $10\""
+  },
+  "welcome": {
+    "title": "A budget you keep together",
+    "withPartner": "You and {name} see the same budget.",
+    "withoutPartner": "Invite your partner and you'll share one budget.",
+    "shared": "Whoever adds an entry, you both see it right away."
+  },
+  "firstEntrySlide": {
+    "title": "Shall we add your first entry?",
+    "description": "Tap the + button in the bottom-right corner.\nA receipt photo or a sentence like 'Lunch $10' is enough; the rest fills in automatically."
+  },
+  "entriesReady": {
+    "title": "Your entries are in",
+    "description": "You can find the imported entries on the Entries screen.\nFrom now on, add new ones with the + button in the bottom-right corner."
+  },
+  "later": {
+    "title": "Budget and forecasts can come later",
+    "description": "Set the year's budget from the card on Home.\nCash flow forecasts get more accurate as entries build up.",
+    "hasEntries": "For now, browsing the imported entries is plenty.",
+    "noEntries": "For now, a single first entry is plenty."
+  }
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Smartphone } from 'lucide-react';
 import { useAtomValue } from 'jotai';
@@ -18,13 +19,14 @@ import { MascotLoader } from '@/components/MascotLoader';
 import { sendTestPush } from '@/services/test-push';
 import { BackButton } from '@/components/shell/BackButton';
 
-function reportFcmResult(result: FcmEnableState) {
+type NotiT = ReturnType<typeof useTranslations<'cashbook.notifications'>>;
+function reportFcmResult(result: FcmEnableState, t: NotiT) {
   if (result === 'denied') {
-    toast.error('브라우저 알림 권한이 거부되어 푸시 알림을 받을 수 없어요.');
+    toast.error(t('denied'));
   } else if (result === 'unsupported') {
-    toast.error('이 브라우저에서는 푸시 알림을 지원하지 않아요.');
+    toast.error(t('unsupported'));
   } else if (result === 'error') {
-    toast.error('푸시 알림 등록에 실패했어요. 잠시 후 다시 시도해주세요.');
+    toast.error(t('registerFailed'));
   }
 }
 
@@ -47,6 +49,7 @@ const DEFAULT_VALUES = {
 };
 
 export default function NotificationSettingsPage() {
+  const t = useTranslations('cashbook.notifications');
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
   const coupleId = user?.coupleId ?? '';
@@ -76,15 +79,13 @@ export default function NotificationSettingsPage() {
       const result = await sendTestPush();
       if (result.successCount > 0) {
         toast.success(
-          `테스트 푸시를 발송했어요 (성공 ${result.successCount}, 실패 ${result.failureCount})`
+          t('testSent', { success: result.successCount, failure: result.failureCount })
         );
       } else {
-        toast.error(
-          `발송에 모두 실패했어요. 첫 실패 사유: ${result.failures[0]?.error ?? '알 수 없음'}`
-        );
+        toast.error(t('testAllFailed', { reason: result.failures[0]?.error ?? t('unknown') }));
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : '테스트 푸시 발송에 실패했어요.';
+      const message = e instanceof Error ? e.message : t('testFailed');
       toast.error(message);
     } finally {
       setTestPushSending(false);
@@ -135,7 +136,7 @@ export default function NotificationSettingsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
-        title="알림 설정"
+        title={t('title')}
         data-testid="notification-settings-header"
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
       />
@@ -156,7 +157,7 @@ export default function NotificationSettingsPage() {
                 onSuccess: async () => {
                   if (data.budgetWarning.enabled || data.recordReminder.enabled) {
                     const result = await enableFcm();
-                    reportFcmResult(result);
+                    reportFcmResult(result, t);
                   }
                 },
               }
@@ -168,10 +169,8 @@ export default function NotificationSettingsPage() {
         <Separator className="my-6" />
 
         <section className="space-y-2" data-testid="install-pwa-section">
-          <h3 className="text-base font-semibold">모바일에서 백그라운드 알림 받기</h3>
-          <p className="text-sm text-muted-foreground">
-            홈 화면에 추가해야 브라우저가 꺼져 있어도 푸시 알림이 도달해요.
-          </p>
+          <h3 className="text-base font-semibold">{t('pwaTitle')}</h3>
+          <p className="text-sm text-muted-foreground">{t('pwaDescription')}</p>
           <Button
             type="button"
             variant="outline"
@@ -179,17 +178,16 @@ export default function NotificationSettingsPage() {
             onClick={handleOpenInstallGuide}
             data-testid="open-install-pwa-guide-button"
           >
-            <Smartphone size={16} className="mr-2" />홈 화면에 추가하는 방법 보기
+            <Smartphone size={16} className="mr-2" />
+            {t('pwaHow')}
           </Button>
         </section>
 
         <Separator className="my-6" />
 
         <section className="space-y-2 pb-12" data-testid="test-push-section">
-          <h3 className="text-base font-semibold">알림 동작 확인</h3>
-          <p className="text-sm text-muted-foreground">
-            등록된 디바이스로 테스트 푸시를 1건 발송해 셋업이 정상인지 확인할 수 있어요.
-          </p>
+          <h3 className="text-base font-semibold">{t('testTitle')}</h3>
+          <p className="text-sm text-muted-foreground">{t('testDescription')}</p>
           <Button
             type="button"
             variant="outline"
@@ -198,7 +196,7 @@ export default function NotificationSettingsPage() {
             disabled={testPushSending}
             data-testid="send-test-push-button"
           >
-            {testPushSending ? '발송 중…' : '테스트 푸시 보내기'}
+            {testPushSending ? t('testSending') : t('testSend')}
           </Button>
         </section>
       </main>

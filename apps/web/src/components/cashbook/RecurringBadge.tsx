@@ -2,13 +2,15 @@
 
 import { CalendarClock } from 'lucide-react';
 import { Badge } from '@uandi/ui';
-import { formatRecurrence, type RecurringSchedule } from '@uandi/cashbook-core';
+import type { RecurringSchedule } from '@uandi/cashbook-core';
+import { useFormatRecurrence } from '@/i18n/cashbook-labels';
 
 type RecurringBadgeProps = {
   schedule?: RecurringSchedule | null;
 };
 
 export function RecurringBadge({ schedule }: RecurringBadgeProps) {
+  const formatRecurrence = useFormatRecurrence();
   if (!schedule || !schedule.enabled) return null;
 
   return (

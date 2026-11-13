@@ -1,13 +1,10 @@
 'use client';
 
+import { useTranslations } from 'use-intl';
 import { OptionGroup } from './OptionGroup';
 import { PreferenceSection } from './PreferenceSection';
-import {
-  AI_FOCUS_OPTIONS,
-  AI_LENGTH_OPTIONS,
-  AI_TONE_OPTIONS,
-  type AnalyzeSpendingPrefs,
-} from './aiPreferences';
+import type { AnalyzeSpendingPrefs } from './aiPreferences';
+import { useAiFocusOptions, useAiLengthOptions, useAiToneOptions } from './useAiPreferenceOptions';
 
 export type AnalyzeSpendingPreferencesProps = {
   value: AnalyzeSpendingPrefs;
@@ -24,10 +21,15 @@ export function AnalyzeSpendingPreferences({
   onChange,
   disabled,
 }: AnalyzeSpendingPreferencesProps) {
+  const t = useTranslations('ui.aiPrefs.analyze');
+  const tone = useAiToneOptions();
+  const focus = useAiFocusOptions();
+  const length = useAiLengthOptions();
+
   return (
     <PreferenceSection
-      title="지출 분석 맞춤화"
-      description="월 지출 분석 보고서의 말투와 방향을 우리 커플에 맞게 바꿔요."
+      title={t('title')}
+      description={t('description')}
       enabled={value.enabled}
       onEnabledChange={(enabled) => onChange({ ...value, enabled })}
       enabledTestId="ai-analyze-enabled"
@@ -35,24 +37,24 @@ export function AnalyzeSpendingPreferences({
     >
       <OptionGroup
         testIdPrefix="ai-analyze-tone"
-        legend="말투"
-        options={AI_TONE_OPTIONS}
+        legend={tone.legend}
+        options={tone.options}
         value={value.tone}
         onValueChange={(tone) => onChange({ ...value, tone })}
         disabled={disabled}
       />
       <OptionGroup
         testIdPrefix="ai-analyze-focus"
-        legend="분석 관점"
-        options={AI_FOCUS_OPTIONS}
+        legend={focus.legend}
+        options={focus.options}
         value={value.focus}
         onValueChange={(focus) => onChange({ ...value, focus })}
         disabled={disabled}
       />
       <OptionGroup
         testIdPrefix="ai-analyze-length"
-        legend="분량"
-        options={AI_LENGTH_OPTIONS}
+        legend={length.legend}
+        options={length.options}
         value={value.length}
         onValueChange={(length) => onChange({ ...value, length })}
         disabled={disabled}

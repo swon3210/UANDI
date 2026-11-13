@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { X, History } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 import { formatAmount } from '@/utils/currency';
@@ -28,6 +29,7 @@ export function PredictionRetroBanner({
   onReject,
   onDismiss,
 }: PredictionRetroBannerProps) {
+  const t = useTranslations('cashbook.prediction');
   if (items.length === 0) return null;
 
   return (
@@ -39,14 +41,14 @@ export function PredictionRetroBanner({
     >
       <div className="flex items-center gap-2">
         <History size={16} className="shrink-0 text-amber-600" aria-hidden />
-        <p className="flex-1 text-sm font-semibold">지난 예측, 실제로 일어났나요?</p>
+        <p className="flex-1 text-sm font-semibold">{t('retroTitle')}</p>
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="-mr-1 -mt-0.5 h-7 w-7 shrink-0 text-current hover:bg-amber-100"
           onClick={onDismiss}
-          aria-label="회고 알림 닫기"
+          aria-label={t('retroDismiss')}
           data-testid="retro-dismiss"
         >
           <X size={15} />
@@ -79,7 +81,7 @@ export function PredictionRetroBanner({
               onClick={() => onConfirm(item)}
               data-testid="retro-confirm"
             >
-              네
+              {t('yes')}
             </Button>
             <Button
               size="sm"
@@ -88,7 +90,7 @@ export function PredictionRetroBanner({
               onClick={() => onReject(item)}
               data-testid="retro-reject"
             >
-              아니오
+              {t('no')}
             </Button>
           </div>
         ))}

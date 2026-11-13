@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Button, cn } from '@uandi/ui';
 import { RotateCcw } from 'lucide-react';
 import { CategoryHeader } from './RegularAvgInput';
@@ -22,6 +23,9 @@ export function RegularGridAdjust({
   monthlyAmounts,
   onChange,
 }: RegularGridAdjustProps) {
+  const t = useTranslations('cashbook.wizard.adjust');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   const annual = monthlyAmounts.reduce((s, v) => s + v, 0);
   const baseAnnual = baseAmount * 12;
   const diff = annual - baseAnnual;
@@ -32,14 +36,14 @@ export function RegularGridAdjust({
 
   return (
     <div className="space-y-5" data-testid="regular-grid-adjust">
-      <CategoryHeader category={category} caption="정기 항목 · 2단계" />
+      <CategoryHeader category={category} caption={t('caption')} />
 
       <section className="rounded-2xl border border-stone-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[12px] text-stone-500">월 평균</div>
+            <div className="text-[12px] text-stone-500">{t('monthlyAvg')}</div>
             <div className="text-[15px] font-semibold tabular-nums text-stone-800">
-              {formatCurrencyMan(baseAmount)}원
+              {won(formatCurrencyMan(baseAmount))}
             </div>
           </div>
           <Button
@@ -51,12 +55,10 @@ export function RegularGridAdjust({
             data-testid="regular-grid-reset"
           >
             <RotateCcw size={14} />
-            평균으로 초기화
+            {t('resetToAvg')}
           </Button>
         </div>
-        <p className="mt-2 text-[12px] leading-relaxed text-stone-500">
-          12개월이 평균값으로 자동 채워졌어요. 특정 달만 다르게 두려면 셀을 직접 수정하세요.
-        </p>
+        <p className="mt-2 text-[12px] leading-relaxed text-stone-500">{t('description')}</p>
       </section>
 
       <MonthlyGrid
@@ -69,12 +71,12 @@ export function RegularGridAdjust({
 
       <section className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
         <div className="flex items-baseline justify-between">
-          <span className="text-[12px] font-medium text-coral-700">연간 합계</span>
+          <span className="text-[12px] font-medium text-coral-700">{t('annualTotal')}</span>
           <span
             className="text-[18px] font-bold tabular-nums text-coral-700"
             data-testid="regular-grid-annual"
           >
-            {formatCurrencyMan(annual)}원
+            {won(formatCurrencyMan(annual))}
           </span>
         </div>
         {diff !== 0 && (
@@ -84,8 +86,7 @@ export function RegularGridAdjust({
               diff > 0 ? 'text-sage-500' : 'text-coral-500'
             )}
           >
-            평균 대비 {diff > 0 ? '+' : ''}
-            {formatCurrencyMan(diff)}원
+            {t('vsAvg', { sign: diff > 0 ? '+' : '', amount: won(formatCurrencyMan(diff)) })}
           </div>
         )}
       </section>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
@@ -123,6 +124,9 @@ function filterFromParams(params: ReadonlyURLSearchParams): CashbookFilterState 
 }
 
 export default function CashbookPage() {
+  const t = useTranslations('cashbook');
+  const tRec = useTranslations('cashbook.recurrence');
+  const monthlyDay = (day: number) => tRec('monthlyDay', { day });
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? '';
@@ -257,7 +261,11 @@ export default function CashbookPage() {
       if (existing) existing.promptViews.push(...views);
       else map.set(key, { date: dayjs(key).toDate(), entries: [], promptViews: views });
     };
-    for (const [key, preds] of promptsByDate) pushViews(key, preds.map(toPromptView));
+    for (const [key, preds] of promptsByDate)
+      pushViews(
+        key,
+        preds.map((p) => toPromptView(p, monthlyDay))
+      );
     for (const [key, views] of recurrencePromptsByDate) pushViews(key, views);
     const dir = filter.sort === 'latest' ? -1 : 1;
     return [...map.values()].sort((a, b) => (a.date.getTime() - b.date.getTime()) * dir);
@@ -381,7 +389,7 @@ export default function CashbookPage() {
           categories={categories ?? []}
           coupleId={coupleId}
           createdBy={uid}
-          title="수정 후 추가"
+          title={t('history.editThenAdd')}
           prefill={{
             type: p.type,
             amount: p.amount,
@@ -413,22 +421,22 @@ export default function CashbookPage() {
   const listEmptyState = isFilterActive ? (
     <EmptyState
       icon={<BookOpen size={48} className="text-muted-foreground" />}
-      title="조건에 맞는 내역이 없어요"
-      description="다른 필터를 시도해보세요"
+      title={t('history.noMatchTitle')}
+      description={t('history.noMatchDescription')}
       action={
         <Button variant="outline" onClick={handleAllFiltersReset}>
-          필터 초기화
+          {t('history.resetFilters')}
         </Button>
       }
     />
   ) : (
     <EmptyState
       icon={<BookOpen size={48} className="text-muted-foreground" />}
-      title="아직 내역이 없어요"
-      description="가계부를 시작해보세요"
+      title={t('history.emptyTitle')}
+      description={t('history.emptyDescription')}
       action={
         <Button onClick={() => handleAdd()} data-testid="empty-add-entry-button">
-          추가하기
+          {t('history.add')}
         </Button>
       }
     />
@@ -441,7 +449,7 @@ export default function CashbookPage() {
         <Button asChild variant="outline" size="sm" className="gap-1.5">
           <Link href="/inner/cashbook/cashflow" data-testid="history-cashflow-link">
             <CalendarRange size={15} aria-hidden />
-            예상금액 조회하기
+            {t('history.cashflowLink')}
           </Link>
         </Button>
       </div>
@@ -480,7 +488,9 @@ export default function CashbookPage() {
                 data-testid="filter-result-summary"
                 className="mt-1.5 flex items-center justify-between rounded-md bg-muted/60 px-3 py-1.5 text-xs"
               >
-                <span className="text-muted-foreground">필터 결과 {filteredEntries.length}건</span>
+                <span className="text-muted-foreground">
+                  {t('history.filterResult', { count: filteredEntries.length })}
+                </span>
                 <span className="flex items-center gap-2 tabular-nums">
                   {filterSummary.income > 0 && (
                     <span className="text-income">

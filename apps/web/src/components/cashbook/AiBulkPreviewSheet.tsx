@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -88,6 +89,7 @@ function AiBulkPreviewSheetBody({
   onClose,
   fullScreen,
 }: AiBulkPreviewSheetBodyProps) {
+  const t = useTranslations('cashbook.parsed');
   const [entries, setEntries] = useState<ParsedEntryCardData[]>(initialAnnotatedEntries);
 
   const duplicateCount = entries.filter((e) => e.duplicate).length;
@@ -167,7 +169,7 @@ function AiBulkPreviewSheetBody({
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2">
           <Sparkles size={16} className="text-primary" />
-          AI 파싱 결과 확인
+          {t('title')}
         </SheetTitle>
       </SheetHeader>
 
@@ -178,15 +180,10 @@ function AiBulkPreviewSheetBody({
             className="mb-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"
           >
             <AlertCircle size={14} className="mt-0.5 shrink-0" />
-            <span>
-              기존 내역과 중복으로 보이는 {duplicateCount}건은 추가에서 제외했어요. 필요하면 우측
-              스위치를 켜서 추가할 수 있어요.
-            </span>
+            <span>{t('duplicateNotice', { count: duplicateCount })}</span>
           </div>
         )}
-        <p className="mb-3 text-xs text-muted-foreground">
-          항목을 탭하면 상세 편집이 가능하고, 우측 스위치로 추가 여부를 정할 수 있어요.
-        </p>
+        <p className="mb-3 text-xs text-muted-foreground">{t('hint')}</p>
         <div className="space-y-2">
           {entries.map((entry, index) => (
             <ParsedEntryCard
@@ -201,7 +198,7 @@ function AiBulkPreviewSheetBody({
 
       <div className="flex gap-2 border-t border-border pt-3">
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          취소
+          {t('cancel')}
         </Button>
         <Button
           type="button"
@@ -210,7 +207,7 @@ function AiBulkPreviewSheetBody({
           onClick={handleConfirm}
           disabled={selectedCount === 0}
         >
-          {selectedCount}건 추가
+          {t('addCount', { count: selectedCount })}
         </Button>
       </div>
     </SheetContent>

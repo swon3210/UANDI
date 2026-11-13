@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Cropper, { type Area } from 'react-easy-crop';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 import {
@@ -29,6 +30,7 @@ export function ProfileAvatarCropper({
   onCancel,
   onCropped,
 }: ProfileAvatarCropperProps) {
+  const t = useTranslations('settings.cropper');
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [areaPixels, setAreaPixels] = useState<Area | null>(null);
@@ -53,10 +55,8 @@ export function ProfileAvatarCropper({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent data-testid="avatar-cropper" className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>사진 편집</DialogTitle>
-          <DialogDescription className="sr-only">
-            프로필 사진을 정사각형으로 자릅니다. 드래그로 위치를, 슬라이더로 확대를 조절하세요.
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('description')}</DialogDescription>
         </DialogHeader>
 
         <div className="relative h-64 w-full overflow-hidden rounded-lg bg-neutral-900">
@@ -82,7 +82,7 @@ export function ProfileAvatarCropper({
             max={3}
             step={0.01}
             onValueChange={([z]) => setZoom(z)}
-            aria-label="확대"
+            aria-label={t('zoom')}
             className="flex-1"
           />
           <ZoomIn size={18} className="shrink-0 text-muted-foreground" aria-hidden />
@@ -95,7 +95,7 @@ export function ProfileAvatarCropper({
             className="w-full"
             data-testid="avatar-crop-apply"
           >
-            {processing ? '처리 중...' : '적용'}
+            {processing ? t('processing') : t('apply')}
           </Button>
           <Button
             variant="outline"
@@ -104,7 +104,7 @@ export function ProfileAvatarCropper({
             className="w-full"
             data-testid="avatar-crop-cancel"
           >
-            취소
+            {t('cancel')}
           </Button>
         </div>
       </DialogContent>

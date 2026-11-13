@@ -1,0 +1,29 @@
+{
+  "title": "Add to Home Screen",
+  "description": "Runs like an app and can receive background push notifications.",
+  "installed": "Installed",
+  "alreadyInstalled": "Already added to your Home Screen",
+  "alreadyInstalledHint": "Background push notifications are delivered normally.",
+  "mobileOnlyNote": "On mobile browsers, background push (with the browser closed) only arrives when the app is installed on the Home Screen.",
+  "ios": {
+    "minVersion": "iOS 16.4 or later",
+    "step1": "Tap the <chip>Share</chip> button at the bottom of Safari",
+    "step2": "Scroll down the menu and choose <chip>Add to Home Screen</chip>",
+    "step3": "Tap <strong>Add</strong> in the top-right corner and the Malang Budget icon appears on your Home Screen",
+    "step4": "Open the app from the Malang Budget icon on your Home Screen, then tap <strong>Turn on notifications</strong> in notification settings"
+  },
+  "android": {
+    "promptHint": "Tap the button below to open the Add to Home Screen dialog.",
+    "installing": "Installing…",
+    "install": "Add to Home Screen",
+    "step1": "Tap the ⋮ menu in the top-right corner of Chrome",
+    "step2": "Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>",
+    "step3": "Open the app from the Malang Budget icon on your Home Screen, then turn on notifications"
+  },
+  "desktop": {
+    "badge": "Desktop",
+    "install": "Install app on desktop",
+    "mobileOnly": "Background push only matters on mobile. Please open this page on a mobile device."
+  },
+  "unknown": "Couldn't detect your browser. Please try again on a mobile device."
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'use-intl';
 import { cn } from '../../lib/utils';
 import { Button } from '../../components/button';
 
@@ -31,6 +32,7 @@ export function CoupleConnectedState({
   isStarting = false,
   className,
 }: CoupleConnectedStateProps) {
+  const t = useTranslations('ui.onboarding');
   return (
     <div
       data-testid="couple-connected"
@@ -57,10 +59,10 @@ export function CoupleConnectedState({
         />
       </div>
       <h2 className="mt-6 text-xl font-semibold leading-snug text-foreground">
-        {partnerName}님과 연결됐어요!
+        {t('connectedTitle', { name: partnerName })}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        이제 둘이 함께 가계부를 채워갈 수 있어요
+        {t('connectedDescription')}
       </p>
       <Button
         className="mt-8 w-full max-w-sm"
@@ -69,7 +71,7 @@ export function CoupleConnectedState({
         disabled={isStarting}
         data-testid="connected-start"
       >
-        시작하기
+        {t('start')}
       </Button>
     </div>
   );

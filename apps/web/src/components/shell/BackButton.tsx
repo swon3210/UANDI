@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import { hasInAppPrevious, markNextAsRoot } from '@/lib/nav-history';
@@ -29,6 +30,7 @@ export function BackButton({
   'data-testid': testId = 'header-back',
 }: BackButtonProps) {
   const router = useRouter();
+  const t = useTranslations('shell');
 
   const handleBack = () => {
     if (hasInAppPrevious()) {
@@ -44,7 +46,7 @@ export function BackButton({
       variant="ghost"
       size="icon"
       className="h-8 w-8"
-      aria-label="뒤로 가기"
+      aria-label={t('goBack')}
       data-testid={testId}
       onClick={handleBack}
     >

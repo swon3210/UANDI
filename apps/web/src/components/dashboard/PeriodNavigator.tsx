@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@uandi/ui';
 
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function PeriodNavigator({ label, canGoNext, onPrev, onNext, onLabelClick }: Props) {
+  const t = useTranslations('dashboard.period');
   return (
     <div
       data-testid="period-navigator"
@@ -21,7 +23,7 @@ export function PeriodNavigator({ label, canGoNext, onPrev, onNext, onLabelClick
         size="icon"
         onClick={onPrev}
         data-testid="period-prev"
-        aria-label="이전 기간"
+        aria-label={t('prev')}
       >
         <ChevronLeft size={18} />
       </Button>
@@ -30,7 +32,7 @@ export function PeriodNavigator({ label, canGoNext, onPrev, onNext, onLabelClick
         onClick={onLabelClick}
         disabled={!onLabelClick}
         data-testid="period-nav-label"
-        aria-label={`${label}, 기간 직접 선택`}
+        aria-label={t('pickLabel', { label })}
         className="flex-1 text-sm font-medium disabled:opacity-100"
       >
         {label}
@@ -41,7 +43,7 @@ export function PeriodNavigator({ label, canGoNext, onPrev, onNext, onLabelClick
         onClick={onNext}
         disabled={!canGoNext}
         data-testid="period-next"
-        aria-label="다음 기간"
+        aria-label={t('next')}
       >
         <ChevronRight size={18} />
       </Button>

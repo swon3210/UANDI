@@ -1,9 +1,10 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import { AlertTriangle } from 'lucide-react';
 import { Switch } from '@uandi/ui';
-import { GROUP_LABELS } from '@uandi/cashbook-core';
 import type { CashbookEntryType } from '@/types';
 import { formatAmount } from '@/utils/currency';
 import type { DuplicateMatch } from '@/utils/cashbook-duplicate';
@@ -26,6 +27,8 @@ type ParsedEntryCardProps = {
 };
 
 export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntryCardProps) {
+  const t = useTranslations('cashbook.parsed');
+  const labels = useCategoryLabels();
   const lowConfidence = entry.confidence < 0.7;
   const isDuplicate = !!entry.duplicate;
   const isUnselected = !entry.selected;
@@ -51,7 +54,7 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
         }`}
       >
         <span className="shrink-0 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
-          {GROUP_LABELS[entry.type]}
+          {labels.group(entry.type)}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -61,19 +64,19 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
                 data-testid="parsed-entry-duplicate-badge"
                 className="shrink-0 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
               >
-                중복 의심 · {dayjs(entry.duplicate!.existingDate).format('M/D')}
+                {t('duplicate', { date: dayjs(entry.duplicate!.existingDate).format('M/D') })}
               </span>
             )}
             {!isDuplicate && lowConfidence && (
               <AlertTriangle
                 size={14}
                 className="shrink-0 text-amber-500"
-                aria-label="낮은 신뢰도"
+                aria-label={t('lowConfidence')}
               />
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">
-            {entry.description || '메모 없음'} · {entry.date}
+            {entry.description || t('noMemo')} · {entry.date}
           </p>
         </div>
         <span
@@ -86,7 +89,7 @@ export function ParsedEntryCard({ entry, onClick, onToggleSelected }: ParsedEntr
       </button>
       <Switch
         data-testid="parsed-entry-toggle"
-        aria-label={entry.selected ? '추가에서 제외' : '추가에 포함'}
+        aria-label={entry.selected ? t('exclude') : t('include')}
         checked={entry.selected}
         onCheckedChange={(v) => onToggleSelected(v)}
         className="shrink-0"

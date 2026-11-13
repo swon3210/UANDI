@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   Button,
   DropdownMenu,
@@ -19,6 +20,7 @@ type CategoryChildChipProps = {
 };
 
 export function CategoryChildChip({ category, onEdit, onDelete }: CategoryChildChipProps) {
+  const t = useTranslations('cashbook.categories');
   return (
     <div
       data-testid={`category-child-${category.name}`}
@@ -38,16 +40,16 @@ export function CategoryChildChip({ category, onEdit, onDelete }: CategoryChildC
             variant="ghost"
             size="icon"
             className="h-5 w-5"
-            aria-label="더보기"
+            aria-label={t('more')}
             data-testid={`category-child-${category.name}-menu`}
           >
             <MoreVertical className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onEdit(category)}>편집</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onEdit(category)}>{t('edit')}</DropdownMenuItem>
           <DropdownMenuItem className="text-destructive" onClick={() => onDelete(category)}>
-            삭제
+            {t('delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,5 +1,7 @@
 'use client';
 
+import { dateFormat } from '@/utils/date';
+import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
 import { Wallet, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
@@ -27,12 +29,13 @@ export function CashflowBaselineCard({
   initialDate,
   onEdit,
 }: CashflowBaselineCardProps) {
+  const t = useTranslations('cashbook.cashflow.baseline');
   return (
     <button
       type="button"
       onClick={onEdit}
       data-testid="cashflow-baseline-card"
-      aria-label="최초 현금 수정"
+      aria-label={t('edit')}
       className="flex w-full flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent/40"
     >
       <div className="flex w-full items-center gap-3">
@@ -44,7 +47,7 @@ export function CashflowBaselineCard({
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-muted-foreground">오늘 기준 예상 현금</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('todayCash')}</p>
           <p
             className="mt-0.5 text-xl font-bold tabular-nums text-foreground"
             data-testid="cashflow-baseline-amount"
@@ -55,16 +58,18 @@ export function CashflowBaselineCard({
             className="mt-1 text-[11px] leading-snug text-muted-foreground"
             data-testid="cashflow-baseline-initial"
           >
-            최초 현금{' '}
+            {t('initial')}
             <span className="font-medium text-foreground">{formatCurrency(initialCash)}</span>
-            {initialDate ? ` · ${dayjs(initialDate).format('YYYY.M.D')} 기준` : ''}에서 기록을 더해
-            계산했어요.
+            {initialDate
+              ? t('asOf', { date: dayjs(initialDate).format(dateFormat('dotDate')) })
+              : ''}
+            {t('computed')}
           </p>
         </div>
 
         <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
           <Pencil size={11} aria-hidden />
-          수정
+          {t('editShort')}
         </span>
       </div>
     </button>

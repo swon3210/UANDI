@@ -5,8 +5,7 @@ export type GoalCategoryKey = 'income' | 'expense';
 export type GoalCategoryTheme = {
   key: GoalCategoryKey;
   group: CategoryGroup;
-  label: string;
-  goalLabel: string;
+  /** 표시 라벨은 cashbook.goals.{key}.label / goalLabel 메시지에서 읽는다 */
   emoji: string;
   /** 카테고리 메인 컬러 (텍스트, 진행률 바) */
   accentClass: string;
@@ -27,8 +26,6 @@ export const GOAL_CATEGORIES: GoalCategoryTheme[] = [
   {
     key: 'income',
     group: 'income',
-    label: '수입',
-    goalLabel: '연간 수입 목표',
     emoji: '💰',
     accentClass: 'text-sage-400',
     accentBgClass: 'bg-sage-400',
@@ -41,8 +38,6 @@ export const GOAL_CATEGORIES: GoalCategoryTheme[] = [
   {
     key: 'expense',
     group: 'expense',
-    label: '지출',
-    goalLabel: '연간 지출 한도',
     emoji: '🛒',
     accentClass: 'text-coral-500',
     accentBgClass: 'bg-coral-500',

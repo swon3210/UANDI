@@ -3,7 +3,8 @@
 import { Check } from 'lucide-react';
 import { cn } from '@uandi/ui';
 import type { CashbookEntryType } from '@/types';
-import { TYPE_LABELS, TYPE_ORDER } from './entry-filter.utils';
+import { TYPE_ORDER } from './entry-filter.utils';
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 
 type TypeFilterChipsProps = {
   /** 선택된 타입들. 빈 배열 = 전체(무필터). */
@@ -16,6 +17,7 @@ type TypeFilterChipsProps = {
  * 빈 배열이면 전체를 의미하므로 별도 '전체' 칩은 두지 않는다.
  */
 export function TypeFilterChips({ value, onToggle }: TypeFilterChipsProps) {
+  const labels = useCategoryLabels();
   return (
     <div className="flex flex-wrap gap-1.5" data-testid="filter-type-chips">
       {TYPE_ORDER.map((type) => {
@@ -34,7 +36,7 @@ export function TypeFilterChips({ value, onToggle }: TypeFilterChipsProps) {
                 : 'border-border bg-secondary text-foreground hover:bg-accent'
             )}
           >
-            {TYPE_LABELS[type]}
+            {labels.group(type)}
             {selected && <Check size={14} aria-hidden />}
           </button>
         );

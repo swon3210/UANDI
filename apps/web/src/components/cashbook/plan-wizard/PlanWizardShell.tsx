@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, X } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 
@@ -32,11 +33,12 @@ export function PlanWizardShell({
   onSkip,
   prevDisabled,
   nextDisabled,
-  nextLabel = '다음',
-  prevLabel = '이전',
+  nextLabel,
+  prevLabel,
   hideFooter = false,
   children,
 }: PlanWizardShellProps) {
+  const t = useTranslations('cashbook.wizard.shell');
   const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
 
   return (
@@ -47,7 +49,7 @@ export function PlanWizardShell({
             type="button"
             onClick={onPrev}
             disabled={prevDisabled || !onPrev}
-            aria-label="이전"
+            aria-label={prevLabel ?? t('prev')}
             data-testid="wizard-back"
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-full text-stone-700',
@@ -64,7 +66,7 @@ export function PlanWizardShell({
             type="button"
             onClick={onExit}
             disabled={!onExit}
-            aria-label="위저드 종료"
+            aria-label={t('exit')}
             data-testid="wizard-exit"
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-full text-stone-500',
@@ -106,7 +108,7 @@ export function PlanWizardShell({
                   className="h-8 text-stone-500"
                   data-testid="wizard-skip"
                 >
-                  이 항목은 건너뛰기
+                  {t('skipItem')}
                 </Button>
               </div>
             ) : null}
@@ -119,7 +121,7 @@ export function PlanWizardShell({
                 className="min-w-[88px]"
                 data-testid="wizard-prev"
               >
-                {prevLabel}
+                {prevLabel ?? t('prev')}
               </Button>
               <Button
                 type="button"
@@ -128,7 +130,7 @@ export function PlanWizardShell({
                 className="flex-1"
                 data-testid="wizard-next"
               >
-                {nextLabel}
+                {nextLabel ?? t('next')}
               </Button>
             </div>
           </div>

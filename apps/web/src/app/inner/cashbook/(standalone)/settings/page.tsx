@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useAtomValue } from 'jotai';
 import { ChevronRight } from 'lucide-react';
@@ -16,6 +17,7 @@ import { FloatingBubbleToggle } from '@/components/cashbook/FloatingBubbleToggle
 import { BackButton } from '@/components/shell/BackButton';
 
 export default function CashbookSettingsPage() {
+  const t = useTranslations('cashbook.settings');
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
 
@@ -25,17 +27,17 @@ export default function CashbookSettingsPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header title="가계부 설정" leftSlot={<BackButton />} />
+      <Header title={t('title')} leftSlot={<BackButton />} />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         <section className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">관리</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t('manage')}</h2>
           <Link
             href="/inner/cashbook/plan/annual"
             data-testid="settings-link-annual-plan"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
-            경제 목표
+            {t('goals')}
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
           <Link
@@ -43,7 +45,7 @@ export default function CashbookSettingsPage() {
             data-testid="settings-link-categories"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
-            카테고리 설정
+            {t('categories')}
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
           <Link
@@ -51,7 +53,7 @@ export default function CashbookSettingsPage() {
             data-testid="settings-link-notifications"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
-            알림 설정
+            {t('notifications')}
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
           {/* 모바일 네이티브(안드로이드)에서만 보인다 — 그 외엔 null. */}
@@ -61,7 +63,7 @@ export default function CashbookSettingsPage() {
         <Separator className="my-6" />
 
         <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">배경 이미지</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t('background')}</h2>
           {uid && (
             <BackgroundImageUploader
               userId={uid}

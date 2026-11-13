@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Check, X, Pencil } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 import { formatAmount } from '@/utils/currency';
@@ -25,12 +26,6 @@ export type PredictionPromptView = {
   kind?: 'recurrence';
 };
 
-const SOURCE_LABEL: Record<PredictionSource, string> = {
-  calendar: '캘린더',
-  auto: '자동감지',
-  llm: 'AI 예측',
-};
-
 type PredictionPromptBoxProps = {
   prompt: PredictionPromptView;
   onConfirm?: () => void; // ✓ 추가 (doc 기반만)
@@ -45,8 +40,9 @@ export function PredictionPromptBox({
   onReject,
   onEdit,
 }: PredictionPromptBoxProps) {
+  const t = useTranslations('cashbook.prediction');
   const isRecurrence = prompt.kind === 'recurrence';
-  const sourceLabel = isRecurrence ? '정기' : SOURCE_LABEL[prompt.source];
+  const sourceLabel = t(`source.${isRecurrence ? 'recurrence' : prompt.source}`);
 
   return (
     <div
@@ -89,7 +85,7 @@ export function PredictionPromptBox({
         <div className="flex gap-2">
           <Button size="sm" className="flex-1" onClick={onConfirm} data-testid="prediction-confirm">
             <Check size={14} className="mr-1" />
-            추가
+            {t('add')}
           </Button>
           <Button
             size="sm"
@@ -99,17 +95,17 @@ export function PredictionPromptBox({
             data-testid="prediction-edit"
           >
             <Pencil size={14} className="mr-1" />
-            수정 후 추가
+            {t('editThenAdd')}
           </Button>
           <Button
             size="sm"
             variant="ghost"
             onClick={onReject}
             data-testid="prediction-reject"
-            aria-label="아니오"
+            aria-label={t('no')}
           >
             <X size={14} className="mr-1" />
-            아니오
+            {t('no')}
           </Button>
         </div>
       )}

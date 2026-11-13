@@ -1,8 +1,9 @@
 'use client';
 
+import { useMonthLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { cn } from '@uandi/ui';
-import { MONTH_LABELS } from '@/constants/plan-wizard';
 import { formatCurrencyMan } from '@/utils/currency';
 
 type MonthlyGridProps = {
@@ -31,12 +32,14 @@ export function MonthlyGrid({
   className,
   inputTestIdPrefix,
 }: MonthlyGridProps) {
+  const monthLabels = useMonthLabels();
   return (
     <div className={cn('grid gap-2', columnsClassName, className)}>
       {values.map((value, idx) => {
         const changed = highlightChanged && baseline ? baseline[idx] !== value : false;
         return (
           <MonthCell
+            monthLabel={monthLabels[idx]}
             key={idx}
             month={idx + 1}
             value={value}
@@ -64,7 +67,17 @@ type MonthCellProps = {
   onChange: (next: number) => void;
 };
 
-function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthCellProps) {
+function MonthCell({
+  month,
+  monthLabel,
+  value,
+  disabled,
+  changed,
+  testId,
+  onChange,
+}: MonthCellProps & { monthLabel: string }) {
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
   /** focus 중에만 사용하는 draft. null = unfocused (formatted prop 직접 표시) */
   const [draft, setDraft] = useState<string | null>(null);
   const focused = draft !== null;
@@ -78,11 +91,11 @@ function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthC
         disabled && 'opacity-60'
       )}
     >
-      <span className="text-[11px] font-medium text-stone-500">{MONTH_LABELS[month - 1]}</span>
+      <span className="text-[11px] font-medium text-stone-500">{monthLabel}</span>
       <input
         type="text"
         inputMode="numeric"
-        aria-label={MONTH_LABELS[month - 1]}
+        aria-label={monthLabel}
         disabled={disabled}
         value={display}
         data-testid={testId}
@@ -101,7 +114,9 @@ function MonthCell({ month, value, disabled, changed, testId, onChange }: MonthC
         placeholder="0"
       />
       {value > 0 && !focused && (
-        <span className="text-right text-[10px] text-stone-400">{formatCurrencyMan(value)}원</span>
+        <span className="text-right text-[10px] text-stone-400">
+          {won(formatCurrencyMan(value))}
+        </span>
       )}
     </label>
   );

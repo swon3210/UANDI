@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,15 +31,14 @@ import { AccountDeleteConfirmDialog } from '@/components/settings/AccountDeleteC
 
 const NAME_MAX = 20;
 
-const formSchema = z.object({
-  displayName: z
-    .string()
-    .trim()
-    .min(1, '이름을 입력해주세요')
-    .max(NAME_MAX, `이름은 ${NAME_MAX}자까지 가능해요`),
-});
+/** 폼 스키마 — 에러 문구는 로케일에 따라 달라 훅 안에서 만든다. */
+function buildFormSchema(messages: { required: string; tooLong: string }) {
+  return z.object({
+    displayName: z.string().trim().min(1, messages.required).max(NAME_MAX, messages.tooLong),
+  });
+}
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 // 사진 draft — '완료'를 눌러야 실제 업로드/삭제된다.
 type PhotoDraft =
@@ -49,6 +49,8 @@ type PhotoDraft =
 export default function ProfileEditPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const t = useTranslations('settings.profile');
+  const tCommon = useTranslations('common');
 
   if (!user) return null;
 
@@ -56,9 +58,14 @@ export default function ProfileEditPage() {
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="profile-edit-header"
-        title="프로필 편집"
+        title={t('title')}
         leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로가기">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label={tCommon('back')}
+          >
             <ArrowLeft size={20} />
           </Button>
         }
@@ -74,6 +81,7 @@ export default function ProfileEditPage() {
 
 /** 회원탈퇴 — 설정 첫 화면이 아니라 프로필 편집 맨 아래에 둔다(첫 주 사용자에게 먼저 보이지 않게). */
 function DeleteAccountSection({ user }: { user: User }) {
+  const t = useTranslations('settings.deleteAccount');
   const deleteAccountMutation = useDeleteAccount();
 
   const handleDeleteAccount = async () => {
@@ -105,13 +113,18 @@ function DeleteAccountSection({ user }: { user: User }) {
         onClick={handleDeleteAccount}
         data-testid="delete-account-button"
       >
-        회원탈퇴
+        {t('button')}
       </Button>
     </div>
   );
 }
 
 function ProfileEditor({ user }: { user: User }) {
+  const t = useTranslations('settings.profile');
+  const formSchema = buildFormSchema({
+    required: t('nameRequired'),
+    tooLong: t('nameTooLong', { max: NAME_MAX }),
+  });
   const updateProfile = useUpdateProfile();
   const [photoDraft, setPhotoDraft] = useState<PhotoDraft>({ kind: 'unchanged' });
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -182,7 +195,7 @@ function ProfileEditor({ user }: { user: User }) {
       setPhotoDraft({ kind: 'unchanged' });
       form.reset({ displayName });
     } catch {
-      toast.error('저장에 실패했어요. 다시 시도해주세요.');
+      toast.error(t('saveFailed'));
     } finally {
       setUploadProgress(null);
     }
@@ -210,12 +223,12 @@ function ProfileEditor({ user }: { user: User }) {
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>이름</FormLabel>
+                  <FormLabel>{t('nameLabel')}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       data-testid="profile-name-input"
-                      placeholder="이름을 입력하세요"
+                      placeholder={t('namePlaceholder')}
                       maxLength={NAME_MAX}
                     />
                   </FormControl>
@@ -235,7 +248,7 @@ function ProfileEditor({ user }: { user: User }) {
               data-testid="profile-complete"
               disabled={completeDisabled}
             >
-              {saving ? '저장하는 중...' : '완료'}
+              {saving ? t('saving') : t('complete')}
             </Button>
           </div>
         </div>

@@ -1,9 +1,11 @@
 'use client';
 
+import { useTranslations } from 'use-intl';
 import { cn } from '../../lib/utils';
 import { OptionGroup } from './OptionGroup';
 import { PreferenceSection } from './PreferenceSection';
-import { AI_PREDICTION_STANCE_OPTIONS, type CashflowPredictionPrefs } from './aiPreferences';
+import type { CashflowPredictionPrefs } from './aiPreferences';
+import { useAiStanceOptions } from './useAiPreferenceOptions';
 
 export type CashflowPredictionPreferencesProps = {
   value: CashflowPredictionPrefs;
@@ -24,6 +26,8 @@ export function CashflowPredictionPreferences({
   categories,
   disabled,
 }: CashflowPredictionPreferencesProps) {
+  const t = useTranslations('ui.aiPrefs.predict');
+  const stance = useAiStanceOptions();
   const excluded = new Set(value.excludedCategories);
 
   const toggleExcluded = (category: string) => {
@@ -35,8 +39,8 @@ export function CashflowPredictionPreferences({
 
   return (
     <PreferenceSection
-      title="현금흐름 예측 맞춤화"
-      description="캘린더의 'AI 예상 내역' 추정 방식을 조정해요."
+      title={t('title')}
+      description={t('description')}
       enabled={value.enabled}
       onEnabledChange={(enabled) => onChange({ ...value, enabled })}
       enabledTestId="ai-predict-enabled"
@@ -44,17 +48,17 @@ export function CashflowPredictionPreferences({
     >
       <OptionGroup
         testIdPrefix="ai-predict-stance"
-        legend="예측 성향"
-        options={AI_PREDICTION_STANCE_OPTIONS}
+        legend={stance.legend}
+        options={stance.options}
         value={value.stance}
         onValueChange={(stance) => onChange({ ...value, stance })}
         disabled={disabled}
       />
 
       <fieldset className="space-y-2" disabled={disabled}>
-        <legend className="text-sm font-medium">예측에서 제외할 카테고리</legend>
+        <legend className="text-sm font-medium">{t('excludeLegend')}</legend>
         {categories.length === 0 ? (
-          <p className="text-xs text-muted-foreground">등록된 카테고리가 없어요.</p>
+          <p className="text-xs text-muted-foreground">{t('noCategories')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => {
@@ -79,9 +83,7 @@ export function CashflowPredictionPreferences({
             })}
           </div>
         )}
-        <p className="text-xs text-muted-foreground">
-          선택한 카테고리는 예측 목록에 나타나지 않아요.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('excludeHint')}</p>
       </fieldset>
     </PreferenceSection>
   );

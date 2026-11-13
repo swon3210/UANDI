@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import {
   Badge,
@@ -35,19 +36,18 @@ export function CashbookFilterBar({
   onNextMonth,
   onOpen,
 }: CashbookFilterBarProps) {
+  const t = useTranslations('cashbook.filterBar');
   const isMonthMode = period.mode === 'month';
   // month 모드에서는 연도를 상단 표시 전용 섹션으로 분리하고 스테퍼에는 '월'만 노출한다.
   // 좁은 화면에서 라벨이 차지하는 가로폭을 줄여 정렬/필터 컨트롤과의 줄바꿈 충돌을 방지한다.
-  const yearLabel = period.mode === 'month' ? `${period.year}년` : null;
-  const monthLabel = period.mode === 'month' ? `${period.month + 1}월` : periodLabel;
+  const yearLabel = period.mode === 'month' ? t('year', { year: period.year }) : null;
+  const monthLabel =
+    period.mode === 'month' ? t('month', { month: period.month + 1 }) : periodLabel;
 
   return (
     <div data-testid="cashbook-filter-bar" className="flex flex-col gap-1.5">
       {yearLabel && (
-        <span
-          data-testid="cashbook-year-label"
-          className="text-base font-semibold"
-        >
+        <span data-testid="cashbook-year-label" className="text-base font-semibold">
           {yearLabel}
         </span>
       )}
@@ -60,7 +60,7 @@ export function CashbookFilterBar({
               variant="ghost"
               size="icon"
               data-testid="cashbook-prev-month"
-              aria-label="이전 달"
+              aria-label={t('prevMonth')}
               onClick={onPrevMonth}
               className="h-8 w-8"
             >
@@ -77,7 +77,7 @@ export function CashbookFilterBar({
               variant="ghost"
               size="icon"
               data-testid="cashbook-next-month"
-              aria-label="다음 달"
+              aria-label={t('nextMonth')}
               onClick={onNextMonth}
               disabled={!canGoNext}
               className="h-8 w-8"
@@ -100,16 +100,16 @@ export function CashbookFilterBar({
           <Select value={sort} onValueChange={(v) => onSortChange(v as EntrySort)}>
             <SelectTrigger
               className="h-9 w-[116px]"
-              aria-label="정렬"
+              aria-label={t('sort')}
               data-testid="cashbook-sort-select"
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="latest">최신순</SelectItem>
-              <SelectItem value="oldest">오래된순</SelectItem>
-              <SelectItem value="amountDesc">높은 금액순</SelectItem>
-              <SelectItem value="amountAsc">낮은 금액순</SelectItem>
+              <SelectItem value="latest">{t('latest')}</SelectItem>
+              <SelectItem value="oldest">{t('oldest')}</SelectItem>
+              <SelectItem value="amountDesc">{t('amountDesc')}</SelectItem>
+              <SelectItem value="amountAsc">{t('amountAsc')}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -118,7 +118,7 @@ export function CashbookFilterBar({
             variant="outline"
             size="sm"
             data-testid="cashbook-filter-trigger"
-            aria-label="필터"
+            aria-label={t('filter')}
             onClick={onOpen}
             className="gap-1.5"
           >

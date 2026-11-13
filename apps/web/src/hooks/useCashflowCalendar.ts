@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
+import { useRecurrenceLabels } from '@/i18n/cashbook-labels';
 import { useCashflowSettings } from './useCashflowSettings';
 import { useCashbookEntriesInRange } from './useCashbook';
 import { useActivePredictions } from './usePredictions';
@@ -114,15 +115,17 @@ export function useCashflowCalendar(
     return balance;
   }, [settings, accumEntries]);
 
+  const recurrenceLabels = useRecurrenceLabels();
   const cards = useMemo<CashflowCardData[]>(() => {
     const paydays = settings?.paydays ?? [];
 
     // Phase 2: 카드 경계 = recurrence 발생일(체크포인트) + 레거시 결제일(있으면) 병합.
     // 둘 다 없으면 주 단위 폴백. (수동 결제일 입력 UI는 폐지됐고, 기존 데이터는 경계로만 잔존.)
-    const occurrences = buildRecurrenceOccurrences(categories ?? [], {
-      from,
-      months: CASHFLOW_HORIZON_MONTHS,
-    });
+    const occurrences = buildRecurrenceOccurrences(
+      categories ?? [],
+      { from, months: CASHFLOW_HORIZON_MONTHS },
+      recurrenceLabels
+    );
     const recurB = recurrenceBoundaries(occurrences);
     const paydayB =
       paydays.length > 0
@@ -200,6 +203,7 @@ export function useCashflowCalendar(
     from,
     llmPredictions,
     startingBalance,
+    recurrenceLabels,
   ]);
 
   return {

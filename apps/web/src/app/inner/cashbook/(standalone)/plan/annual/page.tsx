@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Suspense, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
@@ -29,6 +30,7 @@ export default function AnnualPlanPage() {
 }
 
 function AnnualPlanContent() {
+  const t = useTranslations('cashbook.goals');
   const router = useRouter();
   // 대시보드 권유 카드 → 위저드를 거쳐 왔으면 ←가 위저드 단계로 돌아가므로 "홈으로"를 함께 둔다
   const fromOnboarding = parseWizardEntry(useSearchParams().get(WIZARD_ENTRY_PARAM)) !== null;
@@ -93,7 +95,7 @@ function AnnualPlanContent() {
     <div className="flex min-h-screen flex-col bg-stone-50">
       <Header
         data-testid="annual-plan-header"
-        title={`${year}년 경제 목표`}
+        title={t('pageTitle', { year })}
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
         rightSlot={
           <div className="flex items-center gap-1">
@@ -102,7 +104,7 @@ function AnnualPlanContent() {
               <button
                 type="button"
                 onClick={handleBulkEdit}
-                aria-label="월별 일괄 수정"
+                aria-label={t('bulkEdit')}
                 data-testid="annual-plan-bulk-edit"
                 className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
               >
@@ -112,7 +114,7 @@ function AnnualPlanContent() {
             <button
               type="button"
               onClick={handleRedo}
-              aria-label="처음부터 다시 세우기"
+              aria-label={t('redo')}
               data-testid="annual-plan-redo"
               className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100"
             >

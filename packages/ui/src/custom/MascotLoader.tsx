@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'use-intl';
 import { cn } from '@uandi/ui/lib/utils';
 
 export type MascotLoaderProps = {
@@ -25,16 +28,18 @@ const DOT_COUNT = 3;
  */
 export function MascotLoader({
   src,
-  label = '로딩 중',
+  label,
   caption,
   imageSize = 96,
   fullScreen = false,
   className,
 }: MascotLoaderProps) {
+  const t = useTranslations('ui');
+  const statusLabel = label ?? t('loading');
   const loader = (
     <div
       role="status"
-      aria-label={label}
+      aria-label={statusLabel}
       className={cn('flex flex-col items-center gap-4', !fullScreen && className)}
     >
       {/* 정적 마스코트 (장식 — 의미는 role=status 라벨이 전달) */}

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { Tabs, TabsList, TabsTrigger } from '@uandi/ui';
 import type { PeriodKind } from '@/utils/date';
 
@@ -6,12 +7,10 @@ type Props = {
   onChange: (value: PeriodKind) => void;
 };
 
-const OPTIONS: Array<{ value: PeriodKind; label: string }> = [
-  { value: 'monthly', label: '월간' },
-  { value: 'yearly', label: '연간' },
-];
+const OPTIONS: PeriodKind[] = ['monthly', 'yearly'];
 
 export function PeriodSelector({ value, onChange }: Props) {
+  const t = useTranslations('dashboard.period');
   return (
     <Tabs
       value={value}
@@ -20,8 +19,8 @@ export function PeriodSelector({ value, onChange }: Props) {
     >
       <TabsList className="grid w-full grid-cols-2">
         {OPTIONS.map((opt) => (
-          <TabsTrigger key={opt.value} value={opt.value}>
-            {opt.label}
+          <TabsTrigger key={opt} value={opt}>
+            {t(opt)}
           </TabsTrigger>
         ))}
       </TabsList>

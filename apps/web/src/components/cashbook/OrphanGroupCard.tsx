@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@uandi/ui';
 import { Tag, Check } from 'lucide-react';
@@ -14,6 +15,7 @@ type OrphanGroupCardProps = {
 };
 
 export function OrphanGroupCard({ name, entries, onRemap }: OrphanGroupCardProps) {
+  const t = useTranslations('cashbook.orphans');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const toggle = (id: string) =>
@@ -46,10 +48,12 @@ export function OrphanGroupCard({ name, entries, onRemap }: OrphanGroupCardProps
         <div className="flex min-w-0 items-center gap-2">
           <Tag size={16} className="shrink-0 text-muted-foreground" />
           <span className="truncate font-medium">{name}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">{entries.length}건</span>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {t('count', { count: entries.length })}
+          </span>
         </div>
         <Button type="button" size="sm" data-testid="orphan-group-remap" onClick={handleRemap}>
-          재매칭
+          {t('remap')}
         </Button>
       </div>
 
@@ -104,10 +108,10 @@ export function OrphanGroupCard({ name, entries, onRemap }: OrphanGroupCardProps
           data-testid="orphan-group-select-all"
           onClick={toggleAll}
         >
-          {allSelected ? '선택 해제' : '전체 선택'}
+          {allSelected ? t('deselectAll') : t('selectAll')}
         </button>
         <span className="text-xs text-muted-foreground">
-          {selectedCount > 0 ? `${selectedCount}건 선택` : '전체 적용'}
+          {selectedCount > 0 ? t('selectedCount', { count: selectedCount }) : t('applyAll')}
         </span>
       </div>
     </div>

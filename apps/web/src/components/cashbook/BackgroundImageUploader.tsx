@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { Button, Progress } from '@uandi/ui';
@@ -18,6 +19,7 @@ export function BackgroundImageUploader({
   onUploaded,
   onRemoved,
 }: BackgroundImageUploaderProps) {
+  const t = useTranslations('cashbook.notifications.background');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,7 +62,7 @@ export function BackgroundImageUploader({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={currentImageUrl}
-            alt="가계부 배경"
+            alt={t('alt')}
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/30">
@@ -71,7 +73,7 @@ export function BackgroundImageUploader({
               disabled={isUploading || isDeleting}
             >
               <ImagePlus size={16} className="mr-1" />
-              변경
+              {t('change')}
             </Button>
             <Button
               variant="destructive"
@@ -80,7 +82,7 @@ export function BackgroundImageUploader({
               disabled={isUploading || isDeleting}
             >
               <Trash2 size={16} className="mr-1" />
-              삭제
+              {t('remove')}
             </Button>
           </div>
         </div>
@@ -92,7 +94,7 @@ export function BackgroundImageUploader({
           disabled={isUploading}
         >
           <ImagePlus size={32} />
-          <span className="text-sm">배경 이미지 선택</span>
+          <span className="text-sm">{t('select')}</span>
         </button>
       )}
 
@@ -100,7 +102,7 @@ export function BackgroundImageUploader({
         <div className="space-y-1">
           <Progress value={uploadProgress} className="h-2" />
           <p className="text-xs text-muted-foreground text-center">
-            업로드 중... {uploadProgress}%
+            {t('uploading', { progress: uploadProgress })}
           </p>
         </div>
       )}

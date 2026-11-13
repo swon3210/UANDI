@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import type { CashbookCategory, CashbookEntry } from '@/types';
 import { EntryCard } from '@/components/cashbook/EntryCard';
@@ -33,6 +34,7 @@ export function RecentEntriesCard({
   onSelect,
   className,
 }: RecentEntriesCardProps) {
+  const t = useTranslations('dashboard');
   // Storybook의 firebase 목 Timestamp에는 toMillis가 없어 toDate()로 비교한다
   const recent = [...entries]
     .sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime())
@@ -50,13 +52,13 @@ export function RecentEntriesCard({
         .join(' ')}
     >
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs text-muted-foreground">최근 내역</h3>
+        <h3 className="text-xs text-muted-foreground">{t('recentEntries')}</h3>
         <Link
           href={historyHref}
           data-testid="recent-entries-all"
           className="flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          전체 보기
+          {t('viewAll')}
           <ChevronRight size={14} aria-hidden />
         </Link>
       </div>

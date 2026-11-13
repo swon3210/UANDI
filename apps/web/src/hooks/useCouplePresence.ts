@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { setMyCoupleMessage, subscribeToCouplePresence, touchPresence } from '@/services/presence';
 import type { CouplePresenceDoc } from '@/types';
 
@@ -68,13 +69,14 @@ export function useCouplePresence(coupleId: string | null): {
  * 내 한마디 저장. presence는 onSnapshot으로 실시간 반영되므로 쿼리 무효화는 필요 없다.
  */
 export function useSetCoupleMessage(coupleId: string | null, uid: string | null) {
+  const t = useTranslations('cashbook.misc');
   return useMutation({
     mutationFn: (message: string) => setMyCoupleMessage(coupleId!, uid!, message),
     onSuccess: () => {
-      toast.success('한마디를 남겼어요 🐹');
+      toast.success(t('messageSaved'));
     },
     onError: () => {
-      toast.error('저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      toast.error(t('messageSaveFailed'));
     },
   });
 }

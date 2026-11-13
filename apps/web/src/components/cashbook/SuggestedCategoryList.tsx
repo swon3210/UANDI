@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Badge } from '@uandi/ui';
 import { COLOR_PRESETS } from '@/constants/default-categories';
 import { SuggestedCategoryCard } from './SuggestedCategoryCard';
@@ -31,11 +32,12 @@ export function SuggestedCategoryList({
   onChange,
   colorOffset = 0,
 }: SuggestedCategoryListProps) {
+  const t = useTranslations('cashbook.suggested');
   return (
     <div className="space-y-6">
       <section className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground">
-          새로 제안된 카테고리{' '}
+          {t('newTitle')}{' '}
           <span className="font-normal text-muted-foreground">({drafts.length})</span>
         </h3>
         {drafts.length === 0 ? (
@@ -43,7 +45,7 @@ export function SuggestedCategoryList({
             data-testid="suggested-category-empty"
             className="rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground"
           >
-            기본 카테고리로 충분해요. 새로 만들 카테고리가 없어요
+            {t('noneNeeded')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -63,7 +65,7 @@ export function SuggestedCategoryList({
       {usedCategories.length > 0 ? (
         <section className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground">
-            쓰인 기본 카테고리{' '}
+            {t('usedTitle')}{' '}
             <span className="font-normal text-muted-foreground">({usedCategories.length})</span>
           </h3>
           <div className="flex flex-wrap gap-1.5">

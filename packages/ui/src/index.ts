@@ -85,10 +85,10 @@ export type { ParseEntriesPreferencesProps } from './custom/settings/ParseEntrie
 export { ProfileAvatarUploader } from './custom/settings/ProfileAvatarUploader';
 export type { ProfileAvatarUploaderProps } from './custom/settings/ProfileAvatarUploader';
 export {
-  AI_TONE_OPTIONS,
-  AI_FOCUS_OPTIONS,
-  AI_LENGTH_OPTIONS,
-  AI_PREDICTION_STANCE_OPTIONS,
+  AI_TONE_VALUES,
+  AI_FOCUS_VALUES,
+  AI_LENGTH_VALUES,
+  AI_PREDICTION_STANCE_VALUES,
   MAX_CATEGORY_RULES,
   MAX_RULE_MATCH_LEN,
   MAX_TRANSFER_KEYWORDS,

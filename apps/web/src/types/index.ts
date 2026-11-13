@@ -1,4 +1,5 @@
 import type { Timestamp } from 'firebase/firestore';
+import type { Locale } from '@/lib/locale';
 
 // ── 가계부 관련 타입: @uandi/cashbook-core에서 re-export ──
 export type {
@@ -25,6 +26,11 @@ export type User = {
   createdAt: Timestamp;
   /** 앱을 연 플랫폼별 마지막 사용 시각(어드민 사용자 현황용, 기기·플랫폼별 하루 1회 갱신). 구버전 문서엔 없다 */
   clientPlatforms?: Partial<Record<FcmTokenPlatform, Timestamp>>;
+  /**
+   * 설정에서 고른 표시 언어('ko' | 'en'). 서버(AI 라우트·Cloud Functions 푸시)가 읽는 단일 소스.
+   * 없으면 쿠키/Accept-Language 로 정한다(docs/10-i18n.md). 구버전 문서엔 없다
+   */
+  locale?: Locale;
 };
 
 export type Couple = {

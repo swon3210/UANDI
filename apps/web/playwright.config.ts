@@ -23,8 +23,9 @@ function loadEnvFile(filePath: string): Record<string, string> {
 
 const testEnv = loadEnvFile('.env.test');
 
-// E2E 전용 포트 — 수동 dev 서버(3000)와 충돌 방지
-const E2E_PORT = 3100;
+// E2E 전용 포트 — 수동 dev 서버(3000)와 충돌 방지.
+// 워크트리 여러 개가 같은 머신에서 돌 때는 E2E_PORT 로 바꿔 다른 워크트리의 서버를 재사용하지 않게 한다.
+const E2E_PORT = Number(process.env.E2E_PORT ?? 3100);
 
 export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
@@ -36,6 +37,9 @@ export default defineConfig({
   ...(isHeaded && { timeout: 60000 }),
   use: {
     baseURL: `http://localhost:${E2E_PORT}`,
+    // 브라우저 Accept-Language·navigator.language 를 한국어로 고정한다.
+    // 앱이 쿠키가 없으면 Accept-Language 로 언어를 고르므로(docs/10-i18n.md), 없으면 Chromium 기본(en-US)로 영어가 뜬다.
+    locale: 'ko-KR',
     trace: 'on-first-retry',
     ...(isHeaded && {
       launchOptions: { slowMo: 1000 },
@@ -62,9 +66,7 @@ export default defineConfig({
     timeout: 30000,
     env: {
       ...Object.fromEntries(
-        Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] != null
-        )
+        Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] != null)
       ),
       ...testEnv,
     },

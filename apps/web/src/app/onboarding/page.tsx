@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Loader2, ChevronLeft, Home, Mail } from 'lucide-react';
 import { MascotLoader } from '@/components/MascotLoader';
@@ -35,17 +36,25 @@ import { getUserDocumentWithRetry } from '@/services/user';
 
 type Step = 'select' | 'create_pending' | 'join' | 'connected';
 
-const JOIN_ERROR_MESSAGES: Record<string, string> = {
-  INVITE_CODE_NOT_FOUND: '존재하지 않는 초대 코드예요',
-  INVITE_CODE_EXPIRED: '초대 코드가 만료됐어요. 상대방에게 새 코드를 요청해 주세요',
-  COUPLE_ALREADY_FULL: '이미 연결된 커플이에요',
-  CANNOT_JOIN_OWN_COUPLE: '내가 만든 코드예요. 상대방에게 공유해 주세요',
-};
-
-const PARTNER_FALLBACK_NAME = '짝꿍';
+/** joinCoupleByInviteCode 가 던지는 에러 코드 → onboarding.errors 메시지 키 */
+const JOIN_ERROR_CODES = [
+  'INVITE_CODE_NOT_FOUND',
+  'INVITE_CODE_EXPIRED',
+  'COUPLE_ALREADY_FULL',
+  'CANNOT_JOIN_OWN_COUPLE',
+] as const;
+type JoinErrorCode = (typeof JOIN_ERROR_CODES)[number];
+const isJoinErrorCode = (code: string): code is JoinErrorCode =>
+  (JOIN_ERROR_CODES as readonly string[]).includes(code);
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useTranslations('onboarding');
+  const PARTNER_FALLBACK_NAME = t('partnerFallback');
+  const shareLabels = {
+    title: t('share.title'),
+    copied: t('share.copied'),
+  };
   const authStatus = useAtomValue(authStatusAtom);
   const user = useAtomValue(userAtom);
   const setUser = useSetAtom(userAtom);
@@ -148,7 +157,7 @@ export default function OnboardingPage() {
 
   // 커플이 생긴 직후(가져오기 화면으로 넘어가는 중)에는 문구 없는 스피너 대신 마스코트 + 안내
   if (authStatus === 'authenticated_with_couple') {
-    return <MascotLoader fullScreen caption="가계부를 준비하고 있어요" />;
+    return <MascotLoader fullScreen caption={t('preparing')} />;
   }
   if (authStatus === 'loading' || authStatus === 'unauthenticated') {
     return (
@@ -162,14 +171,14 @@ export default function OnboardingPage() {
   if (step === 'select') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <Logo variant="full" className="mb-2 h-10 w-auto" aria-label="말랑 가계부" />
-        <p className="mb-10 text-muted-foreground">함께 모아가는 즐거움</p>
+        <Logo variant="full" className="mb-2 h-10 w-auto" />
+        <p className="mb-10 text-muted-foreground">{t('tagline')}</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
           <OnboardingChoiceCard
             icon={<Home size={22} />}
-            title="처음 시작해요"
-            description="새 공간을 만들고 짝꿍을 초대해요"
-            ariaLabel="새 커플 공간 만들기"
+            title={t('create.title')}
+            description={t('create.description')}
+            ariaLabel={t('create.ariaLabel')}
             testId="choice-create"
             onClick={async () => {
               if (!user || isLoading) return;
@@ -187,9 +196,9 @@ export default function OnboardingPage() {
           />
           <OnboardingChoiceCard
             icon={<Mail size={22} />}
-            title="초대 코드를 받았어요"
-            description="짝꿍이 보낸 6자리 코드로 합류해요"
-            ariaLabel="초대 코드 입력하기"
+            title={t('join.title')}
+            description={t('join.description')}
+            ariaLabel={t('join.ariaLabel')}
             testId="choice-join"
             onClick={() => setStep('join')}
           />
@@ -197,7 +206,7 @@ export default function OnboardingPage() {
         {isLoading ? (
           <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="animate-spin" size={14} />
-            공간을 만드는 중…
+            {t('create.creating')}
           </p>
         ) : null}
       </main>
@@ -219,18 +228,23 @@ export default function OnboardingPage() {
           onClick={() => setStep('select')}
         >
           <ChevronLeft size={16} />
-          뒤로
+          {t('back')}
         </button>
         <div className="flex flex-1 flex-col items-center justify-center">
-          <h2 className="mb-2 text-xl font-semibold">짝꿍을 초대해요</h2>
+          <h2 className="mb-2 text-xl font-semibold">{t('invite.title')}</h2>
           <p className="mb-8 text-center text-sm text-muted-foreground">
-            코드나 링크를 짝꿍에게 보내 주세요
+            {t('invite.description')}
           </p>
           <InviteCodePanel
             code={inviteCode}
             copied={copied}
             onCopy={handleCopy}
-            onShare={() => shareInviteLink(inviteCode, copyToClipboard)}
+            onShare={() =>
+              shareInviteLink(inviteCode, copyToClipboard, {
+                ...shareLabels,
+                text: t('share.text', { code: inviteCode }),
+              })
+            }
             onStart={() => enterApp(coupleId, 'import')}
             className="w-full"
           />
@@ -268,7 +282,7 @@ export default function OnboardingPage() {
       setStep('connected');
     } catch (err) {
       const code = err instanceof Error ? err.message : 'UNKNOWN';
-      setJoinError(JOIN_ERROR_MESSAGES[code] ?? '오류가 발생했어요. 다시 시도해 주세요');
+      setJoinError(t(`errors.${isJoinErrorCode(code) ? code : 'unknown'}`));
     } finally {
       setIsLoading(false);
     }
@@ -287,10 +301,10 @@ export default function OnboardingPage() {
         }}
       >
         <ChevronLeft size={16} />
-        뒤로
+        {t('back')}
       </button>
       <div className="flex flex-1 flex-col items-center justify-center">
-        <h2 className="mb-8 text-xl font-semibold">초대 코드를 입력하세요</h2>
+        <h2 className="mb-8 text-xl font-semibold">{t('join.enterCode')}</h2>
         <InputOTP
           maxLength={6}
           value={otpValue}
@@ -327,7 +341,7 @@ export default function OnboardingPage() {
           disabled={otpValue.length < 6 || isLoading}
         >
           {isLoading ? <Loader2 className="animate-spin" size={16} /> : null}
-          연결하기
+          {t('join.connect')}
         </Button>
       </div>
     </main>

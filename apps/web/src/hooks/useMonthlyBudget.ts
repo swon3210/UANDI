@@ -1,12 +1,8 @@
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { getComputedMonthlyBudget } from '@/services/monthly-budget';
-import type {
-  CashbookEntry,
-  CashbookCategory,
-  CategoryGroup,
-  MonthlyBudgetItem,
-} from '@/types';
+import type { CashbookEntry, CashbookCategory, CategoryGroup, MonthlyBudgetItem } from '@/types';
 
 const QUERY_KEY = 'monthlyBudget';
 
@@ -67,6 +63,8 @@ export function useCategoryBudgetSummaries(
   /** 집계 대상 그룹. */
   groups: CategoryGroup[] = DEFAULT_SUMMARY_GROUPS
 ): CategoryBudgetSummary[] {
+  const t = useTranslations('cashbook.misc');
+  const otherLabel = t('otherCategory');
   return useMemo(() => {
     if (!budgetItems || !entries || !categories) return [];
 
@@ -89,7 +87,7 @@ export function useCategoryBudgetSummaries(
 
       return {
         categoryId: b.categoryId,
-        categoryName: cat?.name ?? '기타',
+        categoryName: cat?.name ?? otherLabel,
         icon: cat?.icon ?? 'question',
         budgetAmount: b.budgetAmount,
         actualAmount,
@@ -98,5 +96,5 @@ export function useCategoryBudgetSummaries(
         margin: b.budgetAmount - actualAmount,
       };
     });
-  }, [budgetItems, entries, categories, groups]);
+  }, [budgetItems, entries, categories, groups, otherLabel]);
 }

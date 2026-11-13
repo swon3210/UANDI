@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@uandi/ui';
 import { formatCurrencyMan } from '@/utils/currency';
@@ -24,6 +25,10 @@ export function GoalCategoryCard({
   itemCount,
   onSelect,
 }: GoalCategoryCardProps) {
+  const t = useTranslations('cashbook.goals');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
+  const label = t(`${theme.key}.label`);
   const pct = goal > 0 && actual != null ? Math.round((actual / goal) * 100) : 0;
   const showProgress = actual != null && goal > 0;
 
@@ -44,19 +49,21 @@ export function GoalCategoryCard({
             {theme.emoji}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[15px] font-semibold text-stone-900">{theme.label}</div>
-            <div className="mt-0.5 truncate text-xs text-stone-400">{theme.goalLabel}</div>
+            <div className="text-[15px] font-semibold text-stone-900">{label}</div>
+            <div className="mt-0.5 truncate text-xs text-stone-400">
+              {t(`${theme.key}.goalLabel`)}
+            </div>
           </div>
           <div className="text-right">
             <div
               className={cn('text-[18px] font-bold tabular-nums', theme.accentClass)}
               data-testid={`goal-card-${theme.key}-amount`}
             >
-              {formatCurrencyMan(goal)}원
+              {won(formatCurrencyMan(goal))}
             </div>
             {actual != null && (
               <div className="mt-0.5 text-[11px] text-stone-400">
-                현재 {formatCurrencyMan(actual)}원
+                {t('current', { amount: won(formatCurrencyMan(actual)) })}
               </div>
             )}
           </div>
@@ -71,7 +78,7 @@ export function GoalCategoryCard({
               />
             </div>
             <div className="mt-1.5 flex justify-between text-[11px] text-stone-400">
-              <span>달성 {pct}%</span>
+              <span>{t('achieved', { pct })}</span>
             </div>
           </div>
         )}
@@ -80,7 +87,7 @@ export function GoalCategoryCard({
       <button
         type="button"
         onClick={onSelect}
-        aria-label={`${theme.label} 예산 항목 설정`}
+        aria-label={t('setItems', { label })}
         className={cn(
           'flex w-full items-center justify-between border-t px-4 py-3 transition-[filter] hover:brightness-[0.97]',
           theme.softBgClass,
@@ -88,9 +95,11 @@ export function GoalCategoryCard({
         )}
         data-testid={`goal-card-${theme.key}-cta`}
       >
-        <span className={cn('text-[13px] font-semibold', theme.accentClass)}>예산 항목 설정</span>
+        <span className={cn('text-[13px] font-semibold', theme.accentClass)}>
+          {t('setItemsShort')}
+        </span>
         <span className={cn('flex items-center gap-1 text-xs', theme.accentClass)}>
-          <span className="opacity-70">{itemCount}개 항목</span>
+          <span className="opacity-70">{t('itemCount', { count: itemCount })}</span>
           <ChevronRight size={15} />
         </span>
       </button>

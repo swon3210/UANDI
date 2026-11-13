@@ -1,0 +1,24 @@
+{
+  "features": {
+    "record": "Track income and spending together",
+    "autoInput": "Auto-fill from receipt photos or a quick sentence",
+    "plan": "Sketch the year's budget and cash flow ahead"
+  },
+  "inviteBanner": {
+    "title": "You came from an invite link",
+    "description": "Sign in and you'll be connected right away · code <code></code>"
+  },
+  "mascotAlt": "Malang mascots keeping a budget together",
+  "headline": "A budget<br></br>for the two of you",
+  "subheadline": "Track and plan your life as newlyweds, together",
+  "signingIn": "Signing in...",
+  "googleLogin": "Continue with Google",
+  "appleLogin": "Continue with Apple",
+  "privacyConsent": "By signing in you agree to our <link>Privacy Policy</link>.",
+  "privacyPolicy": "Privacy Policy",
+  "errors": {
+    "popupBlocked": "The pop-up was blocked. Please allow pop-ups in your browser settings.",
+    "network": "A network error occurred. Please check your connection.",
+    "unknown": "Something went wrong while signing in. Please try again."
+  }
+}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
@@ -29,9 +31,9 @@ import {
   type CashflowSettingsFormValue,
 } from '@/components/cashbook/CashflowSettingsForm';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
-import { SUB_GROUP_LABELS, recurrenceSubGroupFor } from '@/constants/default-categories';
+import { recurrenceSubGroupFor } from '@/constants/default-categories';
 import { buildRecurrencePayload } from '@/utils/recurrence-form';
-import { formatDay } from '@/utils/date';
+import { dateFormat, formatDay } from '@/utils/date';
 import type { CashbookCategory } from '@/types';
 import { BackButton } from '@/components/shell/BackButton';
 
@@ -84,6 +86,9 @@ function MoveSuggestionSheetContent({
   sortOrder: number;
   onClose: () => void;
 }) {
+  const tCf = useTranslations('cashbook.cashflow');
+  const tForm = useTranslations('cashbook.categoryForm');
+  const labels = useCategoryLabels();
   const moveMutation = useMoveRecurrenceToNewCategory(coupleId);
   const targetSubGroup = recurrenceSubGroupFor(suggestion.type);
 
@@ -91,12 +96,15 @@ function MoveSuggestionSheetContent({
     <CategoryForm
       group={suggestion.type}
       lockedSubGroup={targetSubGroup}
-      title={`${SUB_GROUP_LABELS[targetSubGroup]} 카테고리 만들기`}
+      title={tForm('makeTitle', { subGroup: labels.subGroup(targetSubGroup) })}
       takenNames={takenNames}
       initialValues={{
         icon: source?.icon,
         color: source?.color,
-        description: `'${suggestion.categoryName}'에서 ${suggestion.scheduleLabel} 반복되던 항목`,
+        description: tCf('movedDescription', {
+          name: suggestion.categoryName,
+          schedule: suggestion.scheduleLabel,
+        }),
         recurrence: {
           enabled: true,
           kind: 'dayOfMonth',
@@ -124,6 +132,7 @@ function MoveSuggestionSheetContent({
 }
 
 export default function CashflowCalendarPage() {
+  const t = useTranslations('cashbook.cashflow');
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
 
@@ -213,7 +222,7 @@ export default function CashflowCalendarPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header title="현금흐름" leftSlot={<BackButton fallbackHref="/inner/cashbook/history" />} />
+      <Header title={t('title')} leftSlot={<BackButton fallbackHref="/inner/cashbook/history" />} />
 
       <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-20">
         {isLoading ? (
@@ -225,11 +234,11 @@ export default function CashflowCalendarPage() {
         ) : !isConfigured ? (
           <EmptyState
             icon={<CalendarRange size={48} className="text-muted-foreground" />}
-            title="현금흐름을 보려면 설정이 필요해요"
-            description="기준 날짜에 가지고 있던 현금(최초 현금)을 넣으면, 그 뒤로 기록한 수입·지출을 더해 오늘 잔액과 앞으로의 날짜별 남는 돈을 예측해 드려요"
+            title={t('setupTitle')}
+            description={t('setupDescription')}
             action={
               <Button onClick={openSettings} data-testid="cashflow-setup-button">
-                최초 현금 설정하기
+                {t('setup')}
               </Button>
             }
           />
@@ -267,19 +276,19 @@ export default function CashflowCalendarPage() {
               <div className="min-w-0">
                 <p className="flex items-center gap-1 text-xs font-medium text-coral-600">
                   <Sparkles size={13} aria-hidden />
-                  AI 예상 내역
+                  {t('aiTitle')}
                 </p>
                 <p
                   className="mt-0.5 text-[11px] text-muted-foreground"
                   data-testid="cashflow-predict-status"
                 >
                   {isPending
-                    ? 'AI가 예상 내역을 불러오는 중…'
+                    ? t('aiLoading')
                     : hasRun
                       ? predictions.length > 0
-                        ? `${predictions.length}건이 현금흐름에 반영됐어요${ranAt ? ` · ${dayjs(ranAt).format('M월 D일 HH:mm')} 기준` : ''}`
-                        : '예상할 만한 패턴을 찾지 못했어요'
-                      : '곧 예상 내역을 불러올게요'}
+                        ? `${t('aiApplied', { count: predictions.length })}${ranAt ? t('aiAsOf', { time: dayjs(ranAt).format(dateFormat('monthDayTime')) }) : ''}`
+                        : t('aiNone')
+                      : t('aiSoon')}
                 </p>
               </div>
               <Button
@@ -295,7 +304,7 @@ export default function CashflowCalendarPage() {
                 ) : (
                   <RefreshCw size={14} className="mr-1" />
                 )}
-                갱신
+                {t('refresh')}
               </Button>
             </div>
 
@@ -305,10 +314,10 @@ export default function CashflowCalendarPage() {
             >
               <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
               <p>
-                <span className="text-coral-500">◇</span> 표시는 아직 확정되지 않은 예측이에요. 직접
-                등록한 <b className="font-medium text-foreground">정기 발생</b>과 과거 소비·수입
-                패턴을 분석한 <b className="font-medium text-foreground">AI 추론</b>으로 계산해요.
-                각 항목을 펼치면 어떤 근거로 잡혔는지 볼 수 있어요.
+                {t.rich('guide', {
+                  mark: (chunks) => <span className="text-coral-500">{chunks}</span>,
+                  b: (chunks) => <b className="font-medium text-foreground">{chunks}</b>,
+                })}
               </p>
             </div>
 

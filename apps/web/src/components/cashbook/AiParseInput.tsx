@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { overlay } from 'overlay-kit';
@@ -83,8 +84,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
  */
 const MAX_PAYLOAD_CHARS = 4_000_000;
 
-const WRONG_PASSWORD_MESSAGE = '비밀번호가 맞지 않아요. 다시 입력해주세요.';
-
 function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -97,6 +96,7 @@ export function AiParseInput({
   onEmptySubmit,
   textareaClassName,
 }: AiParseInputProps) {
+  const t = useTranslations('cashbook.aiParse');
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
@@ -132,7 +132,7 @@ export function AiParseInput({
       images.reduce((sum, img) => sum + img.dataUrl.length, 0) +
       pdfs.reduce((sum, pdf) => sum + pdf.pages.reduce((s, p) => s + p.length, 0), 0);
     if (payloadChars > MAX_PAYLOAD_CHARS) {
-      toast.error('첨부 용량이 너무 커요. 이미지 수나 PDF 페이지를 줄여주세요');
+      toast.error(t('payloadTooLarge'));
       return;
     }
     // 영속 저장이 필요한 경우(월 결산): 제출 시점에 첨부 이미지를 업로드한다
@@ -166,7 +166,7 @@ export function AiParseInput({
         return { id: newId(), kind: 'pdf', name: file.name, pages };
       } catch (err) {
         if (err instanceof PdfPasswordError) {
-          errorMessage = err.reason === 'incorrect' ? WRONG_PASSWORD_MESSAGE : undefined;
+          errorMessage = err.reason === 'incorrect' ? t('wrongPassword') : undefined;
           const entered = await overlay.openAsync<string | null>(({ isOpen, close, unmount }) => {
             const finish = (value: string | null) => {
               close(value);
@@ -189,7 +189,11 @@ export function AiParseInput({
         }
         if (err instanceof PdfTooManyPagesError) {
           toast.error(
-            `PDF는 한 번에 총 ${MAX_PDF_PAGES_PER_REQUEST}페이지까지 분석할 수 있어요 (${file.name}: ${err.pageCount}페이지)`
+            t('pdfTooManyPages', {
+              max: MAX_PDF_PAGES_PER_REQUEST,
+              name: file.name,
+              pages: err.pageCount,
+            })
           );
           return null;
         }
@@ -205,22 +209,20 @@ export function AiParseInput({
     const selected = Array.from(fileList);
     const remainingSlots = MAX_ATTACHMENTS - attachments.length;
     if (remainingSlots <= 0) {
-      toast.error(`첨부는 최대 ${MAX_ATTACHMENTS}개까지 할 수 있어요`);
+      toast.error(t('maxAttachments', { max: MAX_ATTACHMENTS }));
       e.target.value = '';
       return;
     }
 
     const accepted = selected.slice(0, remainingSlots);
     if (selected.length > remainingSlots) {
-      toast.warning(
-        `첨부는 최대 ${MAX_ATTACHMENTS}개까지 할 수 있어요. 앞 ${remainingSlots}개만 추가했어요`
-      );
+      toast.warning(t('maxAttachmentsPartial', { max: MAX_ATTACHMENTS, added: remainingSlots }));
     }
 
     const oversized = accepted.filter((f) => f.size > MAX_FILE_SIZE);
     const sized = accepted.filter((f) => f.size <= MAX_FILE_SIZE);
     if (oversized.length > 0) {
-      toast.error(`10MB를 초과하는 파일은 추가할 수 없어요 (${oversized.length}개 제외)`);
+      toast.error(t('oversized', { count: oversized.length }));
     }
 
     const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
@@ -228,7 +230,7 @@ export function AiParseInput({
     let pdfFiles = sized.filter(isPdf);
     const remainingPdfSlots = MAX_PDF_FILES - pdfs.length;
     if (pdfFiles.length > remainingPdfSlots) {
-      toast.warning(`PDF는 최대 ${MAX_PDF_FILES}개까지 첨부할 수 있어요`);
+      toast.warning(t('maxPdfs', { max: MAX_PDF_FILES }));
       pdfFiles = pdfFiles.slice(0, Math.max(remainingPdfSlots, 0));
     }
 
@@ -258,7 +260,7 @@ export function AiParseInput({
       setAttachments((prev) => [...prev, ...encodedImages, ...renderedPdfs]);
     } catch (err) {
       console.error('[AiParseInput] 첨부 처리 실패:', err);
-      toast.error('첨부 파일을 처리하는 중 오류가 생겼어요');
+      toast.error(t('attachFailed'));
     } finally {
       setIsProcessingFiles(false);
       e.target.value = '';
@@ -293,7 +295,7 @@ export function AiParseInput({
                 key={attachment.id}
                 kind="pdf"
                 name={attachment.name}
-                caption={`${attachment.pages.length}페이지`}
+                caption={t('pages', { count: attachment.pages.length })}
                 index={index}
                 onRemove={() => handleRemoveAttachment(attachment.id)}
               />
@@ -312,7 +314,7 @@ export function AiParseInput({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={'예: 점심 김밥 5천원\n어제 택시 15000원'}
+          placeholder={t('placeholder')}
           className={cn(
             'min-h-[100px] max-h-40 resize-none border-0 bg-transparent pb-12 pl-9 pr-3 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0',
             textareaClassName
@@ -335,7 +337,7 @@ export function AiParseInput({
             data-testid="ai-parse-attach"
             variant="ghost"
             size="icon"
-            aria-label="영수증·PDF 첨부"
+            aria-label={t('attach')}
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
             disabled={
               mutation.isPending || isProcessingFiles || attachments.length >= MAX_ATTACHMENTS
@@ -354,7 +356,7 @@ export function AiParseInput({
             className="h-8 w-8 rounded-full"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            aria-label={isEmptyAddMode ? '직접 입력' : 'AI 파싱'}
+            aria-label={isEmptyAddMode ? t('manualInput') : t('parse')}
           >
             {mutation.isPending ? (
               <Loader2 size={16} className="animate-spin" />
@@ -367,9 +369,7 @@ export function AiParseInput({
         </div>
       </div>
       {mutation.error && (
-        <p className="text-xs text-destructive">
-          {mutation.error.message || 'AI 파싱에 실패했습니다'}
-        </p>
+        <p className="text-xs text-destructive">{mutation.error.message || t('failed')}</p>
       )}
     </div>
   );

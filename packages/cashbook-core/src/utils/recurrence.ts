@@ -118,23 +118,54 @@ export function shouldFireOn(schedule: RecurringSchedule, today: Dayjs): boolean
   });
 }
 
+/** `formatRecurrence` 가 쓰는 표시 라벨. 로케일은 호출 측(web 의 useRecurrenceLabels)이 정한다. */
+export type RecurrenceLabels = {
+  /** 발생 간격(개월) → "매월" / "격월" / "Every 3 months" */
+  interval: (intervalMonths: number) => string;
+  /** 주차(1~5, -1=마지막) → "둘째" / "2nd" */
+  week: (week: number) => string;
+  /** 요일(1=월 … 7=일) → "수요일" / "Wednesday" */
+  weekday: (weekday: number) => string;
+  /** "{interval} {day}일" / "{interval} on day {day}" */
+  dayOfMonth: (intervalLabel: string, day: number) => string;
+  /** "{week} 주 {weekday}" / "{week} {weekday}" */
+  nthWeekday: (weekLabel: string, weekdayLabel: string) => string;
+  /** " · 3일 전" / " · 3 days before" */
+  leadDays: (leadDays: number) => string;
+};
+
+/** 한국어 기본 라벨 (테스트·로케일 없는 호출용). web 은 useRecurrenceLabels 로 로케일 라벨을 넘긴다. */
+export const KO_RECURRENCE_LABELS: RecurrenceLabels = {
+  interval: (n) => INTERVAL_LABELS[n] ?? `${n}개월마다`,
+  week: (w) => WEEK_LABELS[String(w)] ?? '',
+  weekday: (d) => WEEKDAY_LABELS[d] ?? '',
+  dayOfMonth: (intervalLabel, day) => `${intervalLabel} ${day}일`,
+  nthWeekday: (weekLabel, weekdayLabel) => `${weekLabel} 주 ${weekdayLabel}`.trim(),
+  leadDays: (n) => ` · ${n}일 전`,
+};
+
 /** 사람이 읽을 수 있는 발생 주기 설명 ("매월 25일", "격월 25일", "분기마다 둘째 주 수요일 · 3일 전") */
-export function formatRecurrence(schedule: RecurringSchedule): string {
+export function formatRecurrence(
+  schedule: RecurringSchedule,
+  labels: RecurrenceLabels = KO_RECURRENCE_LABELS
+): string {
   const interval = schedule.intervalMonths ?? 1;
-  const intervalLabel = INTERVAL_LABELS[interval] ?? `${interval}개월마다`;
+  const intervalLabel = labels.interval(interval);
   let base = '';
   if (schedule.kind === 'dayOfMonth') {
-    base = schedule.dayOfMonth ? `${intervalLabel} ${schedule.dayOfMonth}일` : intervalLabel;
+    base = schedule.dayOfMonth
+      ? labels.dayOfMonth(intervalLabel, schedule.dayOfMonth)
+      : intervalLabel;
   } else {
-    const weekLabel = schedule.week != null ? WEEK_LABELS[String(schedule.week)] : '';
-    const weekdayLabel = schedule.weekday ? WEEKDAY_LABELS[schedule.weekday] : '';
+    const weekLabel = schedule.week != null ? labels.week(schedule.week) : '';
+    const weekdayLabel = schedule.weekday ? labels.weekday(schedule.weekday) : '';
     // 매월이면 접두 라벨을 생략("둘째 주 수요일"), 격월 이상만 접두를 붙인다("격월 둘째 주 수요일").
-    const cadence = `${weekLabel} 주 ${weekdayLabel}`.trim();
+    const cadence = labels.nthWeekday(weekLabel, weekdayLabel).trim();
     base = interval > 1 ? `${intervalLabel} ${cadence}`.trim() : cadence;
   }
 
   const leadDays = schedule.leadDays ?? 0;
-  if (leadDays > 0) base += ` · ${leadDays}일 전`;
+  if (leadDays > 0) base += labels.leadDays(leadDays);
   return base;
 }
 

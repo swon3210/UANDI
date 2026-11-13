@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { Fab } from '@uandi/ui';
@@ -17,6 +18,7 @@ import { isChromelessRoute } from '@/components/shell/chromeless-routes';
  * 풀스크린(chromeless) 편집 화면(설정·카테고리·위저드 등)에서는 숨긴다.
  */
 export function CashbookFab() {
+  const t = useTranslations('cashbook.history');
   const pathname = usePathname();
 
   if (isChromelessRoute(pathname)) return null;
@@ -24,7 +26,7 @@ export function CashbookFab() {
   return (
     <Fab
       icon={<Plus size={24} aria-hidden />}
-      label="내역 추가"
+      label={t('fab')}
       data-testid="cashbook-fab"
       onClick={() => window.dispatchEvent(new Event('uandi:quick-add'))}
     />

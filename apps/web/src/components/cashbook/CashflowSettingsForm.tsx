@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,19 +24,23 @@ import { AuthorAvatar } from './AuthorAvatar';
 import { formatCurrency } from '@/utils/currency';
 import type { CashflowMember } from '@/utils/cashflow';
 
-const schema = z.object({
-  initialDate: z.string().min(1, '기준 날짜를 선택해주세요'),
-  // uid → 금액. 각 멤버의 최초 현금(0 이상). 빈 값은 0으로 본다.
-  cash: z.record(
-    z.string(),
-    z
-      .number({ error: '금액을 입력해주세요' })
-      .min(0, '0 이상이어야 해요')
-      .int('금액은 원 단위 정수로 입력해주세요')
-  ),
-});
+type SettingsMessages = {
+  dateRequired: string;
+  amountRequired: string;
+  min: string;
+  integer: string;
+};
+const buildSchema = (msg: SettingsMessages) =>
+  z.object({
+    initialDate: z.string().min(1, msg.dateRequired),
+    // uid → 금액. 각 멤버의 최초 현금(0 이상). 빈 값은 0으로 본다.
+    cash: z.record(
+      z.string(),
+      z.number({ error: msg.amountRequired }).min(0, msg.min).int(msg.integer)
+    ),
+  });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export type CashflowSettingsFormValue = {
   initialCashByUid: Record<string, number>;
@@ -62,6 +67,13 @@ export function CashflowSettingsForm({
   onSubmit,
   onClose,
 }: CashflowSettingsFormProps) {
+  const t = useTranslations('cashbook.cashflow.settings');
+  const schema = buildSchema({
+    dateRequired: t('dateRequired'),
+    amountRequired: t('amountRequired'),
+    min: t('min'),
+    integer: t('integer'),
+  });
   const defaultCash = useMemo(() => {
     const out: Record<string, number> = {};
     for (const m of members) {
@@ -96,7 +108,7 @@ export function CashflowSettingsForm({
       data-testid="cashflow-settings-sheet"
     >
       <SheetHeader>
-        <SheetTitle>최초 현금 설정</SheetTitle>
+        <SheetTitle>{t('title')}</SheetTitle>
       </SheetHeader>
 
       <Form {...form}>
@@ -109,14 +121,11 @@ export function CashflowSettingsForm({
             name="initialDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>기준 날짜</FormLabel>
+                <FormLabel>{t('date')}</FormLabel>
                 <FormControl>
                   <Input type="date" data-testid="cashflow-initial-date" {...field} />
                 </FormControl>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  이 날 각자 가지고 있던 현금을 기준으로, 이후 기록을 작성자별로 더해 각자 오늘
-                  잔액을 계산해요.
-                </p>
+                <p className="text-xs leading-5 text-muted-foreground">{t('dateHint')}</p>
                 <FormMessage />
               </FormItem>
             )}
@@ -124,7 +133,7 @@ export function CashflowSettingsForm({
 
           <div className="space-y-3">
             {/* 섹션 제목 — FormField 밖이라 shadcn FormLabel(useFormField 의존) 대신 일반 라벨. */}
-            <p className="text-sm font-medium leading-none">사람별 최초 현금 (기준 날짜 기준)</p>
+            <p className="text-sm font-medium leading-none">{t('perPerson')}</p>
             {members.map((m, i) => (
               <FormField
                 key={m.uid}
@@ -152,7 +161,7 @@ export function CashflowSettingsForm({
                             onChange={(e) => field.onChange(e.target.valueAsNumber)}
                           />
                           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                            원
+                            {t('won')}
                           </span>
                         </div>
                       </div>
@@ -168,7 +177,7 @@ export function CashflowSettingsForm({
                 className="flex items-center justify-between border-t border-border/60 pt-2 text-sm"
                 data-testid="cashflow-cash-total"
               >
-                <span className="text-muted-foreground">합계</span>
+                <span className="text-muted-foreground">{t('total')}</span>
                 <span className="font-bold tabular-nums text-foreground">
                   {formatCurrency(total)}
                 </span>
@@ -176,9 +185,9 @@ export function CashflowSettingsForm({
             )}
 
             <p className="text-xs leading-5 text-muted-foreground">
-              기준 날짜의 각자 보유 현금을{' '}
-              <span className="font-medium text-foreground">한 번만</span> 넣으면, 이후 가계부에
-              기록한 수입·지출을 작성자별로 더해 각자 오늘 잔액과 앞으로의 현금흐름을 예측해요.
+              {t.rich('hint', {
+                strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </p>
           </div>
 
@@ -189,14 +198,14 @@ export function CashflowSettingsForm({
           >
             <Lightbulb size={15} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
             <p className="leading-5">
-              월세·관리비·정기 급여 같은 <span className="font-semibold">고정 지출·수입</span>은
-              카테고리의 <span className="font-semibold">정기 발생</span>에서 발생일과 예상 금액을
-              설정하면 이 캘린더에 자동으로 표시돼요.
+              {t.rich('tip', {
+                strong: (chunks) => <span className="font-semibold">{chunks}</span>,
+              })}
             </p>
           </div>
 
           <Button type="submit" className="w-full" data-testid="cashflow-settings-save">
-            저장
+            {t('save')}
           </Button>
         </form>
       </Form>

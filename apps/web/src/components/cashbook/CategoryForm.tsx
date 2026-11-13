@@ -1,5 +1,7 @@
 'use client';
 
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,8 +28,6 @@ import { Lock } from 'lucide-react';
 import type { CashbookCategory, CategoryGroup, CategorySubGroup } from '@/types';
 import {
   SUB_GROUPS_BY_GROUP,
-  SUB_GROUP_LABELS,
-  SUB_GROUP_SHORT_LABELS,
   RECURRENCE_SUBGROUPS,
   COLOR_PRESETS,
 } from '@/constants/default-categories';
@@ -37,64 +37,73 @@ import { CategoryIcon } from './CategoryIcon';
 import { ExampleTagInput, ExampleChipList, EXAMPLES_MAX } from './ExampleTagInput';
 import { RecurringScheduleFields } from './RecurringScheduleFields';
 
-const recurrenceSchema = z
-  .object({
-    enabled: z.boolean(),
-    kind: z.enum(['dayOfMonth', 'nthWeekday']),
-    dayOfMonth: z.number().min(1).max(31).optional(),
-    week: z.number().optional(),
-    weekday: z.number().min(1).max(7).optional(),
-    leadDays: z.number().min(0).max(7).optional(),
-    expectedAmount: z
-      .number()
-      .int('금액은 원 단위 정수로 입력해주세요')
-      .min(0)
-      .nullable()
-      .optional(),
-    intervalMonths: z.number().optional(),
-    anchorMonth: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (!val.enabled) return;
-    if (val.kind === 'dayOfMonth') {
-      if (val.dayOfMonth == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '며칠에 발생하는지 입력해주세요',
-          path: ['dayOfMonth'],
-        });
+/** 로케일별 폼 에러 문구 (cashbook.categoryForm) */
+type CategoryFormMessages = {
+  amountInteger: string;
+  dayRequired: string;
+  weekRequired: string;
+  weekdayRequired: string;
+  nameRequired: string;
+  iconRequired: string;
+  subGroupRequired: string;
+  descriptionTooLong: string;
+  tooManyExamples: string;
+  duplicateName: string;
+};
+
+const buildRecurrenceSchema = (msg: CategoryFormMessages) =>
+  z
+    .object({
+      enabled: z.boolean(),
+      kind: z.enum(['dayOfMonth', 'nthWeekday']),
+      dayOfMonth: z.number().min(1).max(31).optional(),
+      week: z.number().optional(),
+      weekday: z.number().min(1).max(7).optional(),
+      leadDays: z.number().min(0).max(7).optional(),
+      expectedAmount: z.number().int(msg.amountInteger).min(0).nullable().optional(),
+      intervalMonths: z.number().optional(),
+      anchorMonth: z.string().optional(),
+    })
+    .superRefine((val, ctx) => {
+      if (!val.enabled) return;
+      if (val.kind === 'dayOfMonth') {
+        if (val.dayOfMonth == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: msg.dayRequired,
+            path: ['dayOfMonth'],
+          });
+        }
+      } else {
+        if (val.week == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: msg.weekRequired,
+            path: ['week'],
+          });
+        }
+        if (val.weekday == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: msg.weekdayRequired,
+            path: ['weekday'],
+          });
+        }
       }
-    } else {
-      if (val.week == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '몇째 주인지 선택해주세요',
-          path: ['week'],
-        });
-      }
-      if (val.weekday == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: '요일을 선택해주세요',
-          path: ['weekday'],
-        });
-      }
-    }
+    });
+
+const buildSchema = (msg: CategoryFormMessages) =>
+  z.object({
+    name: z.string().min(1, msg.nameRequired),
+    icon: z.string().min(1, msg.iconRequired),
+    color: z.string().min(1),
+    subGroup: z.string().min(1, msg.subGroupRequired),
+    description: z.string().max(140, msg.descriptionTooLong),
+    examples: z.array(z.string().min(1).max(20)).max(EXAMPLES_MAX, msg.tooManyExamples),
+    recurrence: buildRecurrenceSchema(msg),
   });
 
-const schema = z.object({
-  name: z.string().min(1, '카테고리 이름을 입력해주세요'),
-  icon: z.string().min(1, '아이콘을 선택해주세요'),
-  color: z.string().min(1),
-  subGroup: z.string().min(1, '구분을 선택해주세요'),
-  description: z.string().max(140, '설명은 140자 이내로 입력해주세요'),
-  examples: z
-    .array(z.string().min(1).max(20))
-    .max(EXAMPLES_MAX, `예시는 ${EXAMPLES_MAX}개까지 입력할 수 있어요`),
-  recurrence: recurrenceSchema,
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 /** 추가 모드에서 폼을 미리 채울 값(정기 발생 제안 → 새 고정 카테고리 만들기 등). */
 export type CategoryFormInitialValues = Partial<
@@ -134,6 +143,24 @@ export function CategoryForm({
   onSubmit,
   onClose,
 }: CategoryFormProps) {
+  const t = useTranslations('cashbook.categoryForm');
+  const labels = useCategoryLabels();
+  // 에러 문구·스키마는 로케일(t)이 바뀔 때만 다시 만든다.
+  const { msg, schema } = useMemo(() => {
+    const msg: CategoryFormMessages = {
+      amountInteger: t('amountInteger'),
+      dayRequired: t('dayRequired'),
+      weekRequired: t('weekRequired'),
+      weekdayRequired: t('weekdayRequired'),
+      nameRequired: t('nameRequired'),
+      iconRequired: t('iconRequired'),
+      subGroupRequired: t('subGroupRequired'),
+      descriptionTooLong: t('descriptionTooLong'),
+      tooManyExamples: t('tooManyExamples', { max: EXAMPLES_MAX }),
+      duplicateName: t('duplicateName'),
+    };
+    return { msg, schema: buildSchema(msg) };
+  }, [t]);
   const subGroups = SUB_GROUPS_BY_GROUP[group];
   const isChildMode = !!parentCategory;
   const lockedSubGroup = parentCategory?.subGroup ?? lockedSubGroupProp;
@@ -150,12 +177,12 @@ export function CategoryForm({
         if (takenNames?.some((n) => n === name && n !== editingName)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: '이미 같은 이름의 카테고리가 있어요',
+            message: msg.duplicateName,
             path: ['name'],
           });
         }
       }),
-    [takenNames, editingName]
+    [schema, msg.duplicateName, takenNames, editingName]
   );
 
   const form = useForm<FormValues>({
@@ -205,11 +232,7 @@ export function CategoryForm({
       <SheetHeader>
         <SheetTitle>
           {title ??
-            (editingCategory
-              ? '카테고리 편집'
-              : isChildMode
-                ? '하위 카테고리 추가'
-                : '카테고리 추가')}
+            (editingCategory ? t('editTitle') : isChildMode ? t('addChildTitle') : t('addTitle'))}
         </SheetTitle>
       </SheetHeader>
 
@@ -220,7 +243,7 @@ export function CategoryForm({
         >
           {isChildMode && parentCategory && (
             <div className="flex flex-col gap-1.5">
-              <Label>부모 카테고리</Label>
+              <Label>{t('parent')}</Label>
               <div
                 data-testid="locked-parent"
                 className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
@@ -236,7 +259,7 @@ export function CategoryForm({
                 </span>
                 <span className="text-foreground">{parentCategory.name}</span>
                 <Badge variant="secondary" className="font-normal">
-                  {SUB_GROUP_SHORT_LABELS[parentCategory.subGroup]}
+                  {labels.subGroupShort(parentCategory.subGroup)}
                 </Badge>
                 <Lock size={12} className="ml-auto" />
               </div>
@@ -248,9 +271,12 @@ export function CategoryForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>이름</FormLabel>
+                <FormLabel>{t('name')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={isChildMode ? '예: 외식' : '예: 정기급여'} {...field} />
+                  <Input
+                    placeholder={isChildMode ? t('namePlaceholderChild') : t('namePlaceholder')}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -262,9 +288,9 @@ export function CategoryForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>설명 (선택)</FormLabel>
+                <FormLabel>{t('description')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="이 카테고리에 어떤 항목이 들어가나요?" {...field} />
+                  <Input placeholder={t('descriptionPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -276,7 +302,7 @@ export function CategoryForm({
             name="examples"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>예시 항목 (선택)</FormLabel>
+                <FormLabel>{t('examples')}</FormLabel>
                 <ExampleChipList
                   value={field.value}
                   onRemove={(v) => field.onChange(field.value.filter((x) => x !== v))}
@@ -298,7 +324,7 @@ export function CategoryForm({
             name="icon"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>아이콘</FormLabel>
+                <FormLabel>{t('icon')}</FormLabel>
                 <FormControl>
                   <IconPicker value={field.value} onChange={field.onChange} />
                 </FormControl>
@@ -313,7 +339,7 @@ export function CategoryForm({
               name="color"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>색상</FormLabel>
+                  <FormLabel>{t('color')}</FormLabel>
                   <FormControl>
                     <ColorPicker value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -325,12 +351,12 @@ export function CategoryForm({
 
           {!isChildMode && lockedSubGroupProp && (
             <div className="flex flex-col gap-1.5">
-              <Label>구분</Label>
+              <Label>{t('subGroup')}</Label>
               <div
                 data-testid="locked-subgroup"
                 className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
               >
-                <span className="text-foreground">{SUB_GROUP_LABELS[lockedSubGroupProp]}</span>
+                <span className="text-foreground">{labels.subGroup(lockedSubGroupProp)}</span>
                 <Lock size={12} className="ml-auto" />
               </div>
             </div>
@@ -342,7 +368,7 @@ export function CategoryForm({
               name="subGroup"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>구분</FormLabel>
+                  <FormLabel>{t('subGroup')}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       value={field.value}
@@ -360,7 +386,7 @@ export function CategoryForm({
                                 : 'bg-secondary border-border hover:bg-accent'
                             }`}
                           >
-                            {SUB_GROUP_LABELS[sg as CategorySubGroup]}
+                            {labels.subGroup(sg as CategorySubGroup)}
                           </Label>
                         </div>
                       ))}
@@ -399,7 +425,7 @@ export function CategoryForm({
             className="w-full"
             disabled={isSubmitting || form.formState.isSubmitting}
           >
-            {isSubmitting || form.formState.isSubmitting ? '저장 중...' : '저장'}
+            {isSubmitting || form.formState.isSubmitting ? t('saving') : t('save')}
           </Button>
         </form>
       </Form>

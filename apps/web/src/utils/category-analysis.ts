@@ -69,30 +69,34 @@ export function parseCategoryAnalysisParams(
   };
 }
 
-const GROUP_NAME: Record<CategoryGroup, string> = { expense: '지출', income: '수입' };
-const SUB_GROUP_PREFIX: Record<SubGroupFilter, string> = {
-  all: '',
-  fixed: '고정 ',
-  variable: '변동 ',
+/** 범위 이름 라벨 — 로케일은 호출 측(useTranslations('dashboard'))이 정한다 */
+export type AnalysisScopeLabels = {
+  /** "전체 변동 지출" / "All variable spending" */
+  all: (group: CategoryGroup, subGroup: SubGroupFilter) => string;
+  /** "선택한 카테고리 N개" */
+  selectedCount: (count: number) => string;
 };
 
 /**
  * 분석 범위 이름. `title`은 화면 제목(카테고리 1개면 그 이름, 여러 개면 `선택한 카테고리 N개`),
  * `scope`는 AI에 넘기는 이름(카테고리 이름들). 고른 게 없으면 둘 다 `전체 변동 지출` 같은 범위.
  */
-export function analysisScopeName(params: CategoryAnalysisParams): {
+export function analysisScopeName(
+  params: CategoryAnalysisParams,
+  labels: AnalysisScopeLabels
+): {
   title: string;
   scope: string;
 } {
   if (params.categories.length === 0) {
-    const all = `전체 ${SUB_GROUP_PREFIX[params.subGroup]}${GROUP_NAME[params.group]}`;
+    const all = labels.all(params.group, params.subGroup);
     return { title: all, scope: all };
   }
   return {
     title:
       params.categories.length === 1
         ? params.categories[0]
-        : `선택한 카테고리 ${params.categories.length}개`,
+        : labels.selectedCount(params.categories.length),
     scope: params.categories.join('·'),
   };
 }

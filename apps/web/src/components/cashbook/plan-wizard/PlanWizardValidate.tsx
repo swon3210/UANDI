@@ -1,9 +1,10 @@
 'use client';
 
+import { useMonthLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { cn } from '@uandi/ui';
 import { formatCurrencyMan } from '@/utils/currency';
-import { MONTH_LABELS } from '@/constants/plan-wizard';
 import type { AnnualPlanValidation } from '@/services/annual-plan';
 
 type PlanWizardValidateProps = {
@@ -11,6 +12,10 @@ type PlanWizardValidateProps = {
 };
 
 export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
+  const t = useTranslations('cashbook.wizard.validate');
+  const tDash = useTranslations('dashboard');
+  const won = (amount: string) => tDash('won', { amount });
+  const monthLabels = useMonthLabels();
   const { ok, deficit, totals, monthly, deficitMonths } = validation;
   const surplus = totals.income - totals.expense;
   const annualOk = deficit <= 0;
@@ -20,15 +25,11 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
   return (
     <div className="space-y-5" data-testid="wizard-validate">
       <header>
-        <div className="text-[12px] font-medium text-stone-500">4단계 · 검증</div>
+        <div className="text-[12px] font-medium text-stone-500">{t('step')}</div>
         <h1 className="mt-1 text-[20px] font-bold leading-tight text-stone-900">
-          수입이 지출을
-          <br />
-          감당할 수 있는지 확인해요
+          {t.rich('headline', { br: () => <br /> })}
         </h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
-          연간 합계도, 매달 들어오는 돈도 지출 이상일 때만 다음 단계로 넘어갈 수 있어요.
-        </p>
+        <p className="mt-2 text-[13px] leading-relaxed text-stone-500">{t('description')}</p>
       </header>
 
       <section
@@ -46,7 +47,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
           )}
           <div className="min-w-0">
             <div className={cn('text-[15px] font-bold', ok ? 'text-sage-700' : 'text-coral-700')}>
-              {ok ? '검증 통과' : monthlyOnlyIssue ? '적자가 나는 달이 있어요' : '예산이 부족해요'}
+              {ok ? t('ok') : monthlyOnlyIssue ? t('monthlyIssue') : t('short')}
             </div>
             <div
               className={cn(
@@ -55,21 +56,34 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
               )}
             >
               {ok
-                ? `수입에서 지출을 빼고 ${formatCurrencyMan(surplus)}원이 남아요.`
+                ? t('okDetail', { amount: won(formatCurrencyMan(surplus)) })
                 : monthlyOnlyIssue
-                  ? `연간 합계는 흑자지만 ${deficitMonths.length}개월은 나가는 돈이 더 많아요.`
-                  : `지출 합계가 수입보다 ${formatCurrencyMan(deficit)}원 더 많아요.`}
+                  ? t('monthlyDetail', { count: deficitMonths.length })
+                  : t('shortDetail', { amount: won(formatCurrencyMan(deficit)) })}
             </div>
           </div>
         </div>
       </section>
 
       <section className="space-y-2">
-        <TotalRow label="연간 수입" amount={totals.income} sign="+" tone="income" />
-        <TotalRow label="연간 지출" amount={totals.expense} sign="-" tone="expense" />
+        <TotalRow
+          label={t('annualIncome')}
+          amount={totals.income}
+          sign="+"
+          tone="income"
+          won={won}
+        />
+        <TotalRow
+          label={t('annualExpense')}
+          amount={totals.expense}
+          sign="-"
+          tone="expense"
+          won={won}
+        />
         <div className="my-1.5 h-px bg-stone-200" />
         <TotalRow
-          label={ok ? '잉여' : '부족'}
+          label={ok ? t('surplus') : t('deficit')}
+          won={won}
           amount={ok ? surplus : deficit}
           sign={ok ? '+' : '-'}
           tone={ok ? 'surplus' : 'deficit'}
@@ -82,7 +96,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
           className="rounded-2xl border border-coral-200 bg-coral-50/60 p-4"
           data-testid="wizard-validate-deficit-months"
         >
-          <div className="text-[12px] font-semibold text-coral-700">적자가 나는 달</div>
+          <div className="text-[12px] font-semibold text-coral-700">{t('deficitMonths')}</div>
           <div className="mt-2 space-y-1.5">
             {deficitMonths.map((m) => (
               <div
@@ -90,9 +104,9 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
                 className="flex items-baseline justify-between text-[12px]"
                 data-testid={`validate-deficit-month-${m}`}
               >
-                <span className="text-stone-700">{MONTH_LABELS[m]}</span>
+                <span className="text-stone-700">{monthLabels[m]}</span>
                 <span className="tabular-nums font-semibold text-coral-700">
-                  -{formatCurrencyMan(-monthly[m].surplus)}원
+                  -{won(formatCurrencyMan(-monthly[m].surplus))}
                 </span>
               </div>
             ))}
@@ -102,9 +116,7 @@ export function PlanWizardValidate({ validation }: PlanWizardValidateProps) {
 
       {!ok && (
         <p className="text-center text-[12px] leading-relaxed text-stone-500">
-          이전 단계로 돌아가 지출 항목을 줄이거나
-          <br />
-          수입 항목을 늘려보세요.
+          {t.rich('advice', { br: () => <br /> })}
         </p>
       )}
     </div>
@@ -119,12 +131,14 @@ function TotalRow({
   sign,
   tone,
   emphasized,
+  won,
 }: {
   label: string;
   amount: number;
   sign: '+' | '-';
   tone: Tone;
   emphasized?: boolean;
+  won: (amount: string) => string;
 }) {
   const colorClass = {
     income: 'text-sage-600',
@@ -154,7 +168,7 @@ function TotalRow({
         )}
       >
         {sign}
-        {formatCurrencyMan(amount)}원
+        {won(formatCurrencyMan(amount))}
       </span>
     </div>
   );

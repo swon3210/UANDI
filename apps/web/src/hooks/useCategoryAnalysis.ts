@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   experimental_streamedQuery as streamedQuery,
   useQuery,
@@ -206,15 +207,16 @@ export function useCategoryAnalysisData(
 }
 
 /** 비교 대상 라벨 (예: 평소, 2026년 9월) */
-export function compareTargetLabel(compare: PageParams['compare']): string {
-  return compare === 'median' ? '평소' : getPeriodLabel('monthly', compare);
+export function compareTargetLabel(compare: PageParams['compare'], usualLabel: string): string {
+  return compare === 'median' ? usualLabel : getPeriodLabel('monthly', compare);
 }
 
 /** 페이지 데이터 → AI 요청 바디. `scope`는 분석 범위 이름(예: 식비·교통, 전체 변동 지출) */
 export function toCategoryAnalysisRequest(
   params: PageParams,
   data: CategoryAnalysisData,
-  scope: string
+  scope: string,
+  labels: { usual: string; usualWithWindow: string }
 ): CategoryAnalysisParams {
   const history = data.points
     .filter((p) => !p.isCurrent)
@@ -241,8 +243,8 @@ export function toCategoryAnalysisRequest(
     compare: {
       label:
         params.compare === 'median'
-          ? `평소(최근 ${MEDIAN_WINDOW_MONTHS}개월 중위값)`
-          : compareTargetLabel(params.compare),
+          ? labels.usualWithWindow
+          : compareTargetLabel(params.compare, labels.usual),
       amount: data.compareAmount,
     },
     current: { amount: data.currentAmount, count: data.entries.length, entries },
@@ -263,6 +265,11 @@ export function useCategoryAnalysisReport(
   data: CategoryAnalysisData | null,
   scope: string
 ) {
+  const t = useTranslations('cashbook.analysis');
+  const usualLabels = {
+    usual: t('usual'),
+    usualWithWindow: t('usualWithWindow', { months: MEDIAN_WINDOW_MONTHS }),
+  };
   const enabled = !!coupleId && params !== null && data !== null;
   const queryKey: QueryKey = [
     'categoryAnalysis',
@@ -276,7 +283,8 @@ export function useCategoryAnalysisReport(
   return useQuery({
     queryKey,
     queryFn: streamedQuery({
-      streamFn: () => streamCategoryAnalysis(toCategoryAnalysisRequest(params!, data!, scope)),
+      streamFn: () =>
+        streamCategoryAnalysis(toCategoryAnalysisRequest(params!, data!, scope, usualLabels)),
       reducer: (acc: string, chunk: string) => acc + chunk,
       initialValue: '',
     }),

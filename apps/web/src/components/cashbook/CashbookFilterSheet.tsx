@@ -1,19 +1,11 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { overlay } from 'overlay-kit';
 import { ChevronRight, Search, Tag, X } from 'lucide-react';
-import {
-  Button,
-  cn,
-  Input,
-  Label,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@uandi/ui';
+import { Button, cn, Input, Label, Sheet, SheetContent, SheetHeader, SheetTitle } from '@uandi/ui';
 import type { CashbookCategory, CashbookEntryType } from '@/types';
 import {
   createDefaultFilterState,
@@ -35,12 +27,12 @@ type CashbookFilterSheetProps = {
   onClose: () => void;
 };
 
-const PERIOD_PRESETS: { value: PeriodPreset; label: string }[] = [
-  { value: 'thisMonth', label: '이번 달' },
-  { value: 'lastMonth', label: '지난달' },
-  { value: 'last3Months', label: '최근 3개월' },
-  { value: 'thisYear', label: '올해' },
-  { value: 'custom', label: '직접 선택' },
+const PERIOD_PRESETS: PeriodPreset[] = [
+  'thisMonth',
+  'lastMonth',
+  'last3Months',
+  'thisYear',
+  'custom',
 ];
 
 /** 현재 기간 상태에 대응하는 프리셋 버튼을 찾는다(스테퍼로 이동한 임의의 달이면 null). */
@@ -62,6 +54,7 @@ export function CashbookFilterSheet({
   onApply,
   onClose,
 }: CashbookFilterSheetProps) {
+  const t = useTranslations('cashbook.filterSheet');
   const [draft, setDraft] = useState<CashbookFilterState>(initial);
 
   const custom = draft.period.mode === 'custom' ? draft.period : null;
@@ -163,13 +156,13 @@ export function CashbookFilterSheet({
       data-testid="cashbook-filter-sheet"
     >
       <SheetHeader>
-        <SheetTitle>필터</SheetTitle>
+        <SheetTitle>{t('title')}</SheetTitle>
       </SheetHeader>
 
       <div className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-1 py-4">
         {/* 키워드 */}
         <div className="space-y-2">
-          <Label>키워드</Label>
+          <Label>{t('keyword')}</Label>
           <div className="relative">
             <Search
               size={16}
@@ -179,8 +172,8 @@ export function CashbookFilterSheet({
               type="text"
               value={draft.keyword}
               onChange={(e) => setDraft((d) => ({ ...d, keyword: e.target.value }))}
-              placeholder="메모·카테고리 검색"
-              aria-label="키워드 검색"
+              placeholder={t('keywordPlaceholder')}
+              aria-label={t('keywordAria')}
               data-testid="filter-keyword-input"
               className="pl-9"
             />
@@ -190,11 +183,12 @@ export function CashbookFilterSheet({
         {/* 기간 */}
         <div className="space-y-2">
           <div className="flex items-baseline justify-between">
-            <Label>기간</Label>
+            <Label>{t('period')}</Label>
             <span className="text-xs text-muted-foreground">{periodLabel}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {PERIOD_PRESETS.map(({ value, label }) => {
+            {PERIOD_PRESETS.map((value) => {
+              const label = t(`presets.${value}`);
               const selected = activePreset === value;
               return (
                 <Button
@@ -217,7 +211,7 @@ export function CashbookFilterSheet({
                 type="date"
                 value={custom.start}
                 onChange={(e) => updateCustom({ start: e.target.value })}
-                aria-label="시작일"
+                aria-label={t('startDate')}
                 data-testid="filter-period-start"
               />
               <span className="text-muted-foreground">~</span>
@@ -225,25 +219,23 @@ export function CashbookFilterSheet({
                 type="date"
                 value={custom.end}
                 onChange={(e) => updateCustom({ end: e.target.value })}
-                aria-label="종료일"
+                aria-label={t('endDate')}
                 data-testid="filter-period-end"
               />
             </div>
           )}
-          {customInvalid && (
-            <p className="text-xs text-destructive">종료일이 시작일보다 빠를 수 없어요</p>
-          )}
+          {customInvalid && <p className="text-xs text-destructive">{t('invalidRange')}</p>}
         </div>
 
         {/* 타입 (다중 선택) */}
         <div className="space-y-2">
-          <Label>타입</Label>
+          <Label>{t('type')}</Label>
           <TypeFilterChips value={draft.selectedTypes} onToggle={toggleType} />
         </div>
 
         {/* 카테고리 (전용 시트에서 다중 선택) */}
         <div className="space-y-2">
-          <Label>카테고리</Label>
+          <Label>{t('category')}</Label>
           <Button
             type="button"
             variant="outline"
@@ -255,8 +247,8 @@ export function CashbookFilterSheet({
             <span className="flex items-center gap-2">
               <Tag size={16} className="text-muted-foreground" />
               {draft.selectedCategoryNames.length > 0
-                ? `${draft.selectedCategoryNames.length}개 선택`
-                : '카테고리 선택'}
+                ? t('selectedCount', { count: draft.selectedCategoryNames.length })
+                : t('selectCategory')}
             </span>
             <ChevronRight size={16} className="text-muted-foreground" />
           </Button>
@@ -274,7 +266,7 @@ export function CashbookFilterSheet({
                     {name}
                     <button
                       type="button"
-                      aria-label={`${name} 제거`}
+                      aria-label={t('remove', { name })}
                       onClick={() => removeCategory(name)}
                       className={cn(
                         'flex h-4 w-4 items-center justify-center rounded-full',
@@ -293,7 +285,7 @@ export function CashbookFilterSheet({
         {/* 추가한 사람 (다중 선택, 커플 2인일 때만) */}
         {members.length >= 2 && (
           <div className="space-y-2">
-            <Label>추가한 사람</Label>
+            <Label>{t('creator')}</Label>
             <CreatorFilterChips
               members={members}
               value={draft.selectedCreatorUids}
@@ -311,7 +303,7 @@ export function CashbookFilterSheet({
           data-testid="filter-reset"
           onClick={handleReset}
         >
-          초기화
+          {t('reset')}
         </Button>
         <Button
           type="button"
@@ -320,7 +312,7 @@ export function CashbookFilterSheet({
           onClick={handleApply}
           disabled={applyDisabled}
         >
-          적용
+          {t('apply')}
         </Button>
       </div>
     </SheetContent>

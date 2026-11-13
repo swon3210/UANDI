@@ -1,17 +1,17 @@
 'use client';
 
+import { useMonthLabels } from '@/i18n/cashbook-labels';
+import { useTranslations } from 'next-intl';
+import { useCategoryLabels } from '@/i18n/cashbook-labels';
 import { useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import {
-  GROUP_LABELS,
-  SUB_GROUP_LABELS,
   type CashbookCategory,
   type CategoryGroup,
   type CategorySubGroup,
 } from '@uandi/cashbook-core';
 import { cn } from '@uandi/ui';
 import { CategoryIcon } from '@/components/cashbook/CategoryIcon';
-import { MONTH_LABELS } from '@/constants/plan-wizard';
 import { formatCurrencyMan } from '@/utils/currency';
 
 export type BulkEditRow = {
@@ -38,6 +38,8 @@ const GROUP_TONE: Record<CategoryGroup, string> = {
 };
 
 export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProps) {
+  const t = useTranslations('cashbook.bulkEdit');
+  const monthLabels = useMonthLabels();
   const sections = buildSections(rows);
 
   return (
@@ -52,9 +54,9 @@ export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProp
               scope="col"
               className="sticky left-0 top-0 z-30 h-10 min-w-[160px] border-b border-r border-stone-200 bg-stone-50 px-3 text-left text-[11px] font-semibold text-stone-500"
             >
-              카테고리
+              {t('category')}
             </th>
-            {MONTH_LABELS.map((label) => (
+            {monthLabels.map((label) => (
               <th
                 key={label}
                 scope="col"
@@ -67,7 +69,7 @@ export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProp
               scope="col"
               className="sticky right-0 top-0 z-30 h-10 min-w-[112px] border-b border-l border-stone-200 bg-stone-50 px-2 text-right text-[11px] font-semibold text-stone-500"
             >
-              변동
+              {t('delta')}
             </th>
           </tr>
         </thead>
@@ -83,7 +85,7 @@ export function BulkEditGrid({ rows, onChangeRow, onResetRow }: BulkEditGridProp
           {rows.length === 0 && (
             <tr>
               <td colSpan={14} className="px-4 py-10 text-center text-[12px] text-stone-400">
-                수정할 카테고리가 없어요.
+                {t('empty')}
               </td>
             </tr>
           )}
@@ -102,6 +104,7 @@ function SectionBlock({
   onChangeRow: (itemId: string, monthlyAmounts: number[]) => void;
   onResetRow: (itemId: string) => void;
 }) {
+  const labels = useCategoryLabels();
   return (
     <>
       <tr aria-hidden>
@@ -112,7 +115,7 @@ function SectionBlock({
               GROUP_TONE[section.group]
             )}
           >
-            {GROUP_LABELS[section.group]}
+            {labels.group(section.group)}
           </div>
         </td>
       </tr>
@@ -140,12 +143,13 @@ function SubGroupBlock({
   onChangeRow: (itemId: string, monthlyAmounts: number[]) => void;
   onResetRow: (itemId: string) => void;
 }) {
+  const labels = useCategoryLabels();
   return (
     <>
       <tr aria-hidden>
         <td colSpan={14} className="border-b border-stone-100 bg-stone-50/60 p-0">
           <div className="sticky left-0 z-10 inline-flex items-center px-3 py-1 text-[10.5px] font-medium uppercase tracking-wide text-stone-500">
-            {SUB_GROUP_LABELS[subGroup]}
+            {labels.subGroup(subGroup)}
           </div>
         </td>
       </tr>
@@ -170,6 +174,7 @@ function BulkEditRowView({
   onChange: (values: number[]) => void;
   onReset: () => void;
 }) {
+  const t = useTranslations('cashbook.bulkEdit');
   const total = sum(row.monthlyAmounts);
   const baselineTotal = sum(row.baseline);
   const delta = total - baselineTotal;
@@ -240,7 +245,7 @@ function BulkEditRowView({
             type="button"
             onClick={onReset}
             disabled={!dirty}
-            aria-label="이 행 되돌리기"
+            aria-label={t('resetRow')}
             data-testid={`bulk-edit-row-reset-${row.itemId}`}
             className="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
           >

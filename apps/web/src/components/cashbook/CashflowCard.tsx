@@ -1,5 +1,7 @@
 'use client';
 
+import { dateFormat } from '@/utils/date';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { ChevronDown, CalendarRange } from 'lucide-react';
@@ -42,6 +44,7 @@ function groupByDate(
  * 날짜를 큰 블록으로 끌어올려 어느 날 기준인지 한눈에 보이게 한다.
  */
 export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: CashflowCardProps) {
+  const t = useTranslations('cashbook.cashflow.card');
   const [open, setOpen] = useState(defaultOpen);
   // 결제일 카드는 subLabel(단일 날짜)을 갖고, 주 단위 폴백은 갖지 않는다.
   // (paydayType은 리프레이밍으로 UI에서 제거돼 비어 있을 수 있으므로 기준으로 쓰지 않는다.)
@@ -68,7 +71,7 @@ export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: 
               aria-hidden
             >
               <span className="text-[10px] font-medium text-stone-500">
-                {dayjs(card.endDate).format('M')}월
+                {dayjs(card.endDate).format(dateFormat('monthShort'))}
               </span>
               <span className="text-xl font-bold leading-tight text-stone-800">
                 {dayjs(card.endDate).format('D')}
@@ -98,7 +101,7 @@ export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: 
 
           <div className="flex items-center gap-1">
             <div className="text-right">
-              <p className="text-[11px] leading-none text-muted-foreground">남는 돈</p>
+              <p className="text-[11px] leading-none text-muted-foreground">{t('remaining')}</p>
               <p
                 data-testid="cashflow-card-balance"
                 className={cn(
@@ -123,14 +126,14 @@ export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: 
         {/* 들어올 / 나갈 돈 — 2열 */}
         <div className="grid grid-cols-2 border-t border-border/60 text-sm">
           <div className="flex items-center justify-center gap-1.5 border-r border-border/60 py-2.5">
-            <span className="text-xs text-muted-foreground">들어올</span>
+            <span className="text-xs text-muted-foreground">{t('inflow')}</span>
             <span className="font-semibold tabular-nums text-income">
               {card.inflow > 0 ? '+' : ''}
               {formatCurrency(card.inflow)}
             </span>
           </div>
           <div className="flex items-center justify-center gap-1.5 py-2.5">
-            <span className="text-xs text-muted-foreground">나갈</span>
+            <span className="text-xs text-muted-foreground">{t('outflow')}</span>
             <span className="font-semibold tabular-nums text-expense">
               {card.outflow > 0 ? '-' : ''}
               {formatCurrency(card.outflow)}
@@ -141,12 +144,12 @@ export function CashflowCard({ card, defaultOpen = false, onDeletePrediction }: 
         <CollapsibleContent>
           <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
             {card.transactions.length === 0 ? (
-              <p className="py-1 text-sm text-muted-foreground">이 날짜까지 잡힌 거래가 없어요</p>
+              <p className="py-1 text-sm text-muted-foreground">{t('noTransactions')}</p>
             ) : (
               groupByDate(card.transactions).map((g) => (
                 <div key={g.key} data-testid="cashflow-day-group">
                   <p className="mb-1 border-b border-border/50 pb-1 text-xs font-semibold text-foreground/80">
-                    {dayjs(g.date).format('M월 D일 (dd)')}
+                    {dayjs(g.date).format(dateFormat('monthDayWeekdayShort'))}
                   </p>
                   <div className="space-y-0.5">
                     {g.items.map((t) => (

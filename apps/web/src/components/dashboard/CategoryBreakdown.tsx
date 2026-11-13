@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@uandi/ui';
 import type { CategoryTreeSlice } from '@/hooks/useDashboardData';
@@ -18,6 +19,7 @@ type Props = {
  * 기간·그룹이 바뀌면 부모가 key로 리셋해 다시 상위 화면으로 돌아온다.
  */
 export function CategoryBreakdown({ data }: Props) {
+  const t = useTranslations('dashboard');
   const [drilled, setDrilled] = useState<string | null>(null);
   const parent = drilled ? data.find((s) => s.category === drilled) : undefined;
 
@@ -34,7 +36,7 @@ export function CategoryBreakdown({ data }: Props) {
           <ChevronLeft size={14} />
           <span className="font-semibold">{parent.category}</span>
           <span className="ml-1 tabular-nums text-muted-foreground">
-            {formatCurrencyMan(parent.amount, { manDecimals: 1 })}원
+            {t('won', { amount: formatCurrencyMan(parent.amount, { manDecimals: 1 }) })}
           </span>
         </Button>
         <CategoryDonutChart data={parent.children} />

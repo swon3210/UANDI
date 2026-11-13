@@ -1,0 +1,83 @@
+{
+  "close": "닫기",
+  "loading": "로딩 중",
+  "sidebar": {
+    "title": "메뉴",
+    "description": "공간과 페이지로 이동합니다",
+    "nav": "주요 메뉴"
+  },
+  "onboarding": {
+    "connectedTitle": "{name}님과 연결됐어요!",
+    "connectedDescription": "이제 둘이 함께 가계부를 채워갈 수 있어요",
+    "start": "시작하기",
+    "checkingCode": "초대 코드를 확인하는 중…",
+    "inviteFrom": "{name}님의 초대예요",
+    "codeConfirmed": "초대 코드를 확인했어요",
+    "copied": "복사됨",
+    "copyCode": "코드 복사",
+    "shareLink": "링크 공유",
+    "expires": "코드는 48시간 후 만료돼요",
+    "waiting": "짝꿍이 입력하면 여기서 바로 알려드릴게요",
+    "startAlone": "먼저 시작하기",
+    "startHint": "짝꿍은 나중에 합류해도 돼요"
+  },
+  "avatar": {
+    "change": "사진 변경",
+    "add": "사진 등록",
+    "remove": "삭제",
+    "uploading": "업로드 중... {progress}%"
+  },
+  "aiPrefs": {
+    "tone": {
+      "legend": "말투",
+      "friendly": { "label": "친근하게", "description": "다정하고 격려하는 말투" },
+      "concise": { "label": "간결하게", "description": "핵심만 짧고 담백하게" },
+      "strict": { "label": "엄격하게", "description": "냉정하게 문제점 위주로 짚기" }
+    },
+    "focus": {
+      "legend": "분석 관점",
+      "saving": { "label": "절약 중심", "description": "아낄 수 있는 지출을 먼저" },
+      "investment": { "label": "자산 형성", "description": "저축·투자 여력을 먼저" },
+      "balanced": { "label": "균형", "description": "수입·지출을 고르게" }
+    },
+    "length": {
+      "legend": "분량",
+      "short": { "label": "짧게", "description": "요점만 3~4줄" },
+      "normal": { "label": "보통", "description": "기본 분량" },
+      "detailed": { "label": "자세히", "description": "항목별 근거까지 자세히" }
+    },
+    "stance": {
+      "legend": "예측 성향",
+      "conservative": { "label": "보수적", "description": "적게, 낮은 확신으로 예측" },
+      "standard": { "label": "표준", "description": "평소 패턴 그대로" },
+      "aggressive": { "label": "적극적", "description": "더 많이, 높은 확신으로 예측" }
+    },
+    "analyze": {
+      "title": "지출 분석 맞춤화",
+      "description": "월 지출 분석 보고서의 말투와 방향을 우리 커플에 맞게 바꿔요."
+    },
+    "predict": {
+      "title": "현금흐름 예측 맞춤화",
+      "description": "캘린더의 'AI 예상 내역' 추정 방식을 조정해요.",
+      "excludeLegend": "예측에서 제외할 카테고리",
+      "noCategories": "등록된 카테고리가 없어요.",
+      "excludeHint": "선택한 카테고리는 예측 목록에 나타나지 않아요."
+    },
+    "parse": {
+      "title": "거래 파싱 맞춤화",
+      "description": "영수증·내역을 자동 분류할 때 우리만의 규칙을 먼저 적용해요.",
+      "rulesLegend": "가맹점·키워드 → 카테고리",
+      "needCategories": "먼저 가계부 카테고리를 만들면 규칙을 추가할 수 있어요.",
+      "matchPlaceholder": "예: 스타벅스",
+      "categoryPlaceholder": "카테고리",
+      "removeRule": "규칙 삭제",
+      "addRule": "규칙 추가",
+      "maxRules": "규칙은 최대 {max}개까지 추가할 수 있어요.",
+      "transferLegend": "이체로 볼 키워드",
+      "transferHint": "이 키워드가 들어간 계좌 거래는 소비가 아닌 이체로 표시해 확인 대상에 넣어요.",
+      "transferPlaceholder": "예: 홍길동, 토스",
+      "add": "추가",
+      "removeKeyword": "{keyword} 삭제"
+    }
+  }
+}

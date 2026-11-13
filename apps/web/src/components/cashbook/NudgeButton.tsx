@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import { Hand } from 'lucide-react';
@@ -29,6 +30,7 @@ function NudgeSheetContent({
   openedAtMs: number;
   onClose: () => void;
 }) {
+  const t = useTranslations('cashbook.nudge');
   const { data: latest } = useLatestNudge(coupleId, fromUid, toUid);
   const sendMutation = useSendNudge(coupleId, fromUid, toUid);
 
@@ -36,9 +38,7 @@ function NudgeSheetContent({
   const remainingMs = nudgeCooldownRemainingMs(latest ?? null, openedAtMs);
   const isCoolingDown = remainingMs > 0;
   const remainingMin = Math.ceil(remainingMs / 60000);
-  const cooldownReason = isCoolingDown
-    ? `방금 요청을 보냈어요. 약 ${remainingMin}분 후 다시 보낼 수 있어요.`
-    : undefined;
+  const cooldownReason = isCoolingDown ? t('cooldown', { minutes: remainingMin }) : undefined;
 
   return (
     <NudgeComposer
@@ -60,6 +60,7 @@ function NudgeSheetContent({
  * 커플이 연결된(멤버 2명) 경우에만 노출한다.
  */
 export function NudgeButton() {
+  const t = useTranslations('cashbook.nudge');
   const user = useAtomValue(userAtom);
   const coupleId = user?.coupleId ?? null;
   const uid = user?.uid ?? null;
@@ -70,7 +71,7 @@ export function NudgeButton() {
   // 커플 미연결 또는 파트너 없음 → 노출하지 않음
   if (!coupleId || !uid || !partner) return null;
 
-  const partnerName = partner.displayName?.trim() || '파트너';
+  const partnerName = partner.displayName?.trim() || t('partnerFallback');
 
   const handleClick = () => {
     // 이벤트 핸들러에서 현재 시각을 캡처(렌더 중 Date.now() 호출 회피).
@@ -101,7 +102,7 @@ export function NudgeButton() {
       data-testid="nudge-button"
     >
       <Hand size={16} className="mr-2" />
-      {partnerName}님 콕 찌르기
+      {t('button', { name: partnerName })}
     </Button>
   );
 }
