@@ -4,19 +4,36 @@ import { getDoc, doc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase/config';
 import type { Couple, User } from '@/types';
 
+/**
+ * 짝꿍 문서를 못 읽을 때(상대 users.coupleId가 어긋나 규칙에 걸리는 등) 쓰는 자리표시.
+ * memberUids에 있는 사람은 화면에서 "짝꿍"으로라도 보여야 하므로 목록에서 빼지 않는다.
+ * displayName이 비어 있어 표시 측은 기본 이름('짝꿍' 등)으로 대체한다.
+ */
+function unreadableMember(uid: string, coupleId: string, couple: Couple): User {
+  return { uid, email: '', displayName: '', photoURL: null, coupleId, createdAt: couple.createdAt };
+}
+
 async function getCoupleMembers(coupleId: string): Promise<User[]> {
   const coupleSnap = await getDoc(doc(getDb(), 'couples', coupleId));
   if (!coupleSnap.exists()) return [];
 
   const couple = coupleSnap.data() as Couple;
+  // 한 명을 못 읽어도 전체가 실패하지 않게 멤버별로 따로 처리한다
   const members = await Promise.all(
     couple.memberUids.map(async (uid) => {
-      const userSnap = await getDoc(doc(getDb(), 'users', uid));
-      return userSnap.exists() ? (userSnap.data() as User) : null;
+      try {
+        const userSnap = await getDoc(doc(getDb(), 'users', uid));
+        return userSnap.exists()
+          ? (userSnap.data() as User)
+          : unreadableMember(uid, coupleId, couple);
+      } catch (e) {
+        console.error('[useCoupleMembers] 멤버 문서 읽기 실패:', uid, e);
+        return unreadableMember(uid, coupleId, couple);
+      }
     })
   );
 
-  return members.filter((m): m is User => m !== null);
+  return members;
 }
 
 export function useCoupleMembers(coupleId: string | null) {

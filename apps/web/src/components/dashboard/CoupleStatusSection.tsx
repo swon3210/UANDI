@@ -140,7 +140,7 @@ export function CoupleStatusSection() {
 
   usePresenceHeartbeat(coupleId, uid);
   const { presence, nowMs } = useCouplePresence(coupleId);
-  const { data: members, isLoading } = useCoupleMembers(coupleId);
+  const { data: members, isLoading, isError } = useCoupleMembers(coupleId);
 
   const meUser = members?.find((m) => m.uid === uid) ?? null;
   const partnerUser = members?.find((m) => m.uid !== uid) ?? null;
@@ -161,6 +161,10 @@ export function CoupleStatusSection() {
   });
 
   if (!coupleId || !uid) return null;
+
+  // 커플 문서 자체를 못 읽으면(내 coupleId가 어긋난 경우 등) 무한 스켈레톤 대신 카드를 숨긴다.
+  // 짝꿍 문서만 못 읽는 경우는 useCoupleMembers가 자리표시 멤버로 채워 연결 카드가 그려진다.
+  if (isError) return null;
 
   if (isLoading || !members) {
     return <CoupleStatusCard state="loading" />;
