@@ -23,6 +23,7 @@ import {
   type SidebarLinkProps,
   type Space,
 } from '@uandi/ui';
+import { isDisabledRoute } from '@/lib/disabled-features';
 import { isIosNative } from '@/lib/native';
 
 /**
@@ -59,15 +60,22 @@ const SECTIONS: SidebarSection[] = [
 ];
 
 /**
- * 노출할 사이드바 섹션. iOS 네이티브(App Store 심사 대응)에서는 "우리집 > 가계부" 하나만
- * 남기고 갤러리 항목·재테크 섹션·커뮤니티 섹션을 숨긴다. Android/웹 브라우저는 전체 노출.
+ * 노출할 사이드바 섹션.
+ * - 막아 둔 기능(재테크·커뮤니티, lib/disabled-features.ts)의 항목과 빈 섹션은 숨긴다.
+ * - iOS 네이티브(App Store 심사 대응)에서는 "우리집 > 가계부" 하나만 남긴다.
  */
 function visibleSections(): SidebarSection[] {
-  if (!isIosNative()) return SECTIONS;
-  return SECTIONS.filter((s) => s.id === 'inner').map((s) => ({
+  const enabled = SECTIONS.map((s) => ({
     ...s,
-    items: s.items.filter((i) => i.id === 'cashbook'),
-  }));
+    items: s.items.filter((i) => !isDisabledRoute(i.href)),
+  })).filter((s) => s.items.length > 0);
+  if (!isIosNative()) return enabled;
+  return enabled
+    .filter((s) => s.id === 'inner')
+    .map((s) => ({
+      ...s,
+      items: s.items.filter((i) => i.id === 'cashbook'),
+    }));
 }
 
 /** 현재 경로에서 공간 톤(coral/indigo/violet)을 결정. */

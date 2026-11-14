@@ -1,6 +1,9 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 
+// 재테크 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '재테크 기능 접근 차단 중');
+
 const MOCK_BASE_RATES: Record<string, number> = {
   USD: 1380,
   EUR: 1480,

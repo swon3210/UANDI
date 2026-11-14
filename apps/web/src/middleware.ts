@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ADMIN_HOST, isAdminHost } from '@/lib/admin/admin-host';
+import { DISABLED_ROUTE_FALLBACK, isDisabledRoute } from '@/lib/disabled-features';
 
 // AuthInit.tsx에서 로그인/로그아웃 시 설정하는 쿠키
 // 값: 'with_couple' | 'no_couple' | (없음 = 미인증 또는 첫 방문)
@@ -28,6 +29,12 @@ export function middleware(request: NextRequest) {
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       return NextResponse.rewrite(new URL('/_not-found-admin', request.url));
     }
+  }
+
+  // 관리하지 않는 기능(재테크·커뮤니티)은 가계부로 보낸다.
+  // 미인증이면 가계부(보호 경로)에서 다시 홈으로 리다이렉트된다.
+  if (isDisabledRoute(pathname)) {
+    return NextResponse.redirect(new URL(DISABLED_ROUTE_FALLBACK, request.url));
   }
 
   // 쿠키 없음 = 미인증 또는 첫 방문

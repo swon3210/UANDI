@@ -4,6 +4,9 @@ import { CommunityPage } from '../page-objects/CommunityPage';
 import { CommunityAdminPage } from '../page-objects/CommunityAdminPage';
 import { seedCommunitySource } from '../helpers/emulator';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 // 회귀 방지: 크롤러가 og:image를 enclosure 하나로만 해석해 네이버 등에서 미리보기가
 // 비던 버그. 이제 (A) RSS media/본문 img → (B) 원문 HTML og:image 폴백 순으로 해석한다.
 test.describe('커뮤니티 OG 이미지 추출 (크롤 → 승인 → 피드)', () => {

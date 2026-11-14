@@ -64,7 +64,7 @@ export function CTA() {
           style={{ boxShadow: '0 4px 24px hsl(4 74% 69% / 0.35)' }}
         >
           <GoogleIcon size={20} />
-          구글로 시작하기
+          Google로 시작하기
         </a>
         <p className="mt-4 text-[12px] text-stone-400">
           무료 · 광고 없음 · 웹 &amp; 모바일 앱 · 완전 프라이빗

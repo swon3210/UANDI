@@ -3,6 +3,9 @@ import { test } from '../fixtures/auth.fixture';
 import { CommunityPage } from '../page-objects/CommunityPage';
 import { AppSidebarPage } from '../page-objects/AppSidebarPage';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 test.describe('커뮤니티 셸·네비게이션', () => {
   test('사이드바의 커뮤니티(피드)를 누르면 /community로 이동한다', async ({ authedPage }) => {
     const nav = new AppSidebarPage(authedPage);

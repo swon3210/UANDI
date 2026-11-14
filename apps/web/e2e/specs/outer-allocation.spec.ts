@@ -3,6 +3,9 @@ import { test } from '../fixtures/auth.fixture';
 import { seedAssetAllocation } from '../helpers/emulator';
 import { AssetAllocationPage } from '../page-objects/AssetAllocationPage';
 
+// 재테크 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '재테크 기능 접근 차단 중');
+
 test.describe('재테크 자산 배분 비율 (예적금/주식/부동산/코인/외환)', () => {
   test('대시보드의 자산 배분 카드를 누르면 /outer/allocation 으로 이동한다', async ({
     authedPage,

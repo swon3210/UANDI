@@ -3,6 +3,9 @@ import { test } from '../fixtures/auth.fixture';
 import { CommunityPage } from '../page-objects/CommunityPage';
 import { seedCommunityPost } from '../helpers/emulator';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 // 1x1 투명 PNG (84 bytes) — Playwright setInputFiles로 메모리에서 첨부
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
@@ -196,7 +199,9 @@ test.describe('커뮤니티 글쓰기·삭제·상세', () => {
       expect([200, 404]).toContain(response?.status() ?? 404);
       await expect(authedPage.getByTestId('community-post-detail')).toHaveCount(0);
       // Next 기본 404 UI 또는 한글 안내가 노출
-      await expect(authedPage.locator('body')).toContainText(/404|찾을 수 없|This page could not be found/);
+      await expect(authedPage.locator('body')).toContainText(
+        /404|찾을 수 없|This page could not be found/
+      );
     });
   });
 });

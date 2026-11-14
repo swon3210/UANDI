@@ -8,7 +8,7 @@ import { AppSidebarPage } from '../page-objects/AppSidebarPage';
  * 가계부의 루트(/inner/cashbook)는 대시보드를 렌더한다.
  */
 test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
-  test('햄버거를 누르면 사이드바가 열리고 4개 목적지(가계부/갤러리/재테크/커뮤니티)가 보인다', async ({
+  test('햄버거를 누르면 사이드바가 열리고 가계부/갤러리만 보인다(재테크/커뮤니티는 숨김)', async ({
     authedPage,
   }) => {
     const nav = new AppSidebarPage(authedPage);
@@ -16,8 +16,10 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await nav.open();
     await expect(nav.linkCashbook).toBeVisible();
     await expect(nav.linkPhotos).toBeVisible();
-    await expect(nav.linkOuter).toBeVisible();
-    await expect(nav.linkCommunity).toBeVisible();
+    await expect(nav.linkOuter).toHaveCount(0);
+    await expect(nav.linkCommunity).toHaveCount(0);
+    await expect(nav.sidebar.getByText('재테크')).toHaveCount(0);
+    await expect(nav.sidebar.getByText('커뮤니티')).toHaveCount(0);
   });
 
   test('로그인 후 가계부 루트(대시보드)로 진입하고 사이드바에서 가계부가 활성화된다', async ({
@@ -42,16 +44,6 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await expect(nav.linkPhotos).toHaveAttribute('aria-current', 'page');
     await expect(nav.linkCashbook).not.toHaveAttribute('aria-current', 'page');
 
-    await nav.linkOuter.click();
-    await authedPage.waitForURL(/\/outer$/, { timeout: 60000 });
-    await nav.open();
-    await expect(nav.linkOuter).toHaveAttribute('aria-current', 'page');
-
-    await nav.linkCommunity.click();
-    await authedPage.waitForURL(/\/community$/, { timeout: 60000 });
-    await nav.open();
-    await expect(nav.linkCommunity).toHaveAttribute('aria-current', 'page');
-
     await nav.linkCashbook.click();
     await authedPage.waitForURL(/\/inner\/cashbook$/, { timeout: 60000 });
     await nav.open();
@@ -73,22 +65,6 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await expect(nav.sidebar).toHaveCount(0);
   });
 
-  test('재테크로 진입하면 indigo 톤(data-space=outer)이 적용된다', async ({ authedPage }) => {
-    const nav = new AppSidebarPage(authedPage);
-    await nav.open();
-    await nav.linkOuter.click();
-    await authedPage.waitForURL(/\/outer$/, { timeout: 60000 });
-    await expect(nav.spaceRoot('outer')).toBeVisible();
-  });
-
-  test('커뮤니티로 진입하면 violet 톤(data-space=community)이 적용된다', async ({ authedPage }) => {
-    const nav = new AppSidebarPage(authedPage);
-    await nav.open();
-    await nav.linkCommunity.click();
-    await authedPage.waitForURL(/\/community$/, { timeout: 60000 });
-    await expect(nav.spaceRoot('community')).toBeVisible();
-  });
-
   test('전역 하단탭(app-nav)은 더 이상 존재하지 않는다', async ({ authedPage }) => {
     await expect(authedPage.getByTestId('app-nav')).toHaveCount(0);
   });
@@ -102,9 +78,7 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await expect(nav.trigger).toHaveCount(0);
   });
 
-  test('모든 목적지(가계부/갤러리/재테크/커뮤니티)에서 프로필 메뉴가 보인다', async ({
-    authedPage,
-  }) => {
+  test('모든 목적지(가계부/갤러리)에서 프로필 메뉴가 보인다', async ({ authedPage }) => {
     const nav = new AppSidebarPage(authedPage);
     const profile = authedPage.getByTestId('profile-menu-trigger');
 
@@ -114,16 +88,6 @@ test.describe('전역 사이드바 네비게이션 (AppSidebar)', () => {
     await nav.open();
     await nav.linkPhotos.click();
     await authedPage.waitForURL(/\/inner\/photos$/, { timeout: 60000 });
-    await expect(profile).toBeVisible();
-
-    await nav.open();
-    await nav.linkOuter.click();
-    await authedPage.waitForURL(/\/outer$/, { timeout: 60000 });
-    await expect(profile).toBeVisible();
-
-    await nav.open();
-    await nav.linkCommunity.click();
-    await authedPage.waitForURL(/\/community$/, { timeout: 60000 });
     await expect(profile).toBeVisible();
   });
 });
