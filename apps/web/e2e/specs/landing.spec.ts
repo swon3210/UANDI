@@ -40,6 +40,16 @@ test.describe('랜딩 & 로그인', () => {
     await landing.goto();
     await expect(landing.loginButton).toBeVisible();
     await expect(landing.loginButton).toHaveText('구글로 시작하기');
+    await expect(landing.loginButton.getByTestId('google-icon')).toBeVisible();
+  });
+
+  test('개인정보처리방침 링크는 하나만 표시된다', async ({ page }) => {
+    await clearEmulatorData();
+    const landing = new LandingPage(page);
+    await landing.goto();
+    const privacyLinks = page.getByRole('link', { name: '개인정보처리방침' });
+    await expect(privacyLinks).toHaveCount(1);
+    await expect(privacyLinks).toHaveAttribute('href', '/privacy');
   });
 
   test('랜딩에 마스코트와 가계부 소개 문구, 기능 3줄이 표시된다', async ({ page }) => {
