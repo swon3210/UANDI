@@ -293,6 +293,14 @@ export default function OnboardingPage() {
         <h2 className="mb-8 text-xl font-semibold">초대 코드를 입력하세요</h2>
         <InputOTP
           maxLength={6}
+          // input-otp 기본값은 inputMode="numeric"이라 모바일에서 숫자 키패드만 뜬다.
+          // 초대 코드는 영숫자(A-Z0-9)이므로 텍스트 키보드 + 영숫자 패턴으로 명시한다.
+          inputMode="text"
+          pattern="^[a-zA-Z0-9]+$"
+          autoCapitalize="characters"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           value={otpValue}
           onChange={(val) => {
             const next = val.toUpperCase();

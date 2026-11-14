@@ -106,6 +106,18 @@ test.describe('온보딩', () => {
       await expect(onboarding.inviteHint).toBeHidden();
     });
 
+    test('영문이 섞인 코드를 입력할 수 있다(숫자 키패드 전용이 아니다)', async ({
+      noCoupleAuthedPage,
+    }) => {
+      const onboarding = new OnboardingPage(noCoupleAuthedPage);
+      await onboarding.joinCoupleButton.click();
+      const otpInput = noCoupleAuthedPage.locator('[data-input-otp]');
+      // 모바일에서 문자 키보드가 뜨도록 inputmode가 numeric이 아니어야 한다
+      await expect(otpInput).toHaveAttribute('inputmode', 'text');
+      await otpInput.pressSequentially('ab12cd');
+      await expect(otpInput).toHaveValue('AB12CD');
+    });
+
     test('6자리를 입력하면 초대한 사람 이름 힌트가 표시된다', async ({ noCoupleAuthedPage }) => {
       const uid2 = await createTestUser('inviter@test.com', 'testpassword123');
       await seedUserDocument(uid2, 'inviter@test.com', null, { displayName: '진성' });
