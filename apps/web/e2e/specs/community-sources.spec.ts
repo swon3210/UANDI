@@ -3,6 +3,9 @@ import { test } from '../fixtures/auth.fixture';
 import { CommunityAdminPage } from '../page-objects/CommunityAdminPage';
 import { seedCommunitySource } from '../helpers/emulator';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 test.describe('커뮤니티 크롤 소스 관리 (/community/admin · 소스 관리)', () => {
   test('admin은 소스 관리 탭을 본다', async ({ adminAuthedContext }) => {
     const { page } = adminAuthedContext;
@@ -172,7 +175,9 @@ test.describe('커뮤니티 크롤 소스 관리 (/community/admin · 소스 관
     const form = page.getByTestId('source-form');
     await expect(form).toBeVisible();
     // RSS link 태그가 있는 픽스처 블로그 페이지 링크를 넣고 자동 탐지
-    await form.getByTestId('source-discover-input').fill(`${baseURL}/test-fixtures/sample-blog.html`);
+    await form
+      .getByTestId('source-discover-input')
+      .fill(`${baseURL}/test-fixtures/sample-blog.html`);
     await form.getByTestId('source-discover-btn').click();
 
     // 피드 URL이 자동으로 채워짐 (sample-feed.xml) + 출처명도 피드 제목으로 채워짐

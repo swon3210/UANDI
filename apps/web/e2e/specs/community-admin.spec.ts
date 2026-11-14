@@ -4,6 +4,9 @@ import { CommunityPage } from '../page-objects/CommunityPage';
 import { CommunityAdminPage } from '../page-objects/CommunityAdminPage';
 import { seedCommunityPost } from '../helpers/emulator';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 test.describe('커뮤니티 모더레이션 (/community/admin)', () => {
   test('비admin이 /community/admin에 접근하면 /community로 리다이렉트된다', async ({
     authedPage,

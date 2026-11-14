@@ -3,6 +3,9 @@ import { test } from '../fixtures/auth.fixture';
 import { CommunityPage } from '../page-objects/CommunityPage';
 import { seedCommunityPost } from '../helpers/emulator';
 
+// 커뮤니티 기능은 접근을 막아 둔 상태(src/lib/disabled-features.ts). 다시 열 때 이 줄을 지운다.
+test.skip(true, '커뮤니티 기능 접근 차단 중');
+
 test.describe('커뮤니티 피드 — 읽기', () => {
   test('승인된 user 글이 카드에 작성자명과 본문이 함께 표시된다', async ({ authedContext }) => {
     const { page, uid, coupleId } = authedContext;
