@@ -31,8 +31,10 @@
   ├─ [세션 없음] ──────────────────→ 랜딩 페이지
   │                                   └─ "Google로 시작하기" 클릭
   │                                       └─ Firebase Google 로그인
-  │                                           ├─ 신규 유저: users/{uid} 문서 생성
-  │                                           └─ 기존 유저: 그대로
+  │                                           ├─ 신규 유저: users/{uid} 문서 생성 (없을 때만, 트랜잭션)
+  │                                           ├─ 기존 유저: 그대로
+  │                                           └─ 문서 읽기 실패(오프라인 등): 재시도 후에도 실패하면
+  │                                              문서를 만들지 않고 재시도 화면(auth-load-error)
   │
   ├─ [로그인 O, coupleId 없음] ────→ /onboarding
   │                                   ├─ [새 커플 만들기]
@@ -95,8 +97,11 @@ export const couplesCol: CollectionReference<Couple>;
 ### `services/user.ts` — 유저 서비스
 
 ```ts
-createUserDocument(uid: string, data: Omit<User, 'uid'>): Promise<void>
+// 문서가 없을 때만 만든다(트랜잭션). 이미 있으면 덮어쓰지 않고 기존 문서를 돌려준다.
+createUserDocumentIfAbsent(uid: string, data: Omit<User, 'uid' | 'createdAt'>): Promise<{ user: User; created: boolean }>
 getUserDocument(uid: string): Promise<User | null>
+// 내 문서 읽기 — 실패 시 재시도, 끝내 실패하면 throw (null = "문서 없음"과 구분)
+getOwnUserDocumentWithRetry(uid: string): Promise<User | null>
 ```
 
 ### `services/couple.ts` — 커플 서비스
@@ -161,3 +166,14 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 
 - 회원탈퇴 버튼(`delete-account-button`)은 **프로필 편집 페이지(`/settings/profile`) 맨 아래**에 둔다. 설정 첫 화면(`/settings`)에는 두지 않는다(2026-11 걷기: 첫 주 사용자가 설정에 들어가자마자 빨간 "회원탈퇴"를 보는 건 어색하다).
 - 확인 다이얼로그(`delete-account-dialog`)·탈퇴 후 랜딩 리다이렉트·커플 데이터 보존 규칙은 그대로다.
+
+## 사용자 문서 덮어쓰기 금지 (2026-11 사고)
+
+로그인 시 `getUserDocument`가 오프라인 등으로 실패했는데 이를 "문서 없음"으로 취급해
+`setDoc`으로 새 문서를 만들면, 기존 문서가 `coupleId: null`로 통째로 덮어써져 커플 연결이 끊긴다.
+(실제 사고: 짝꿍 화면의 커플 카드가 스켈레톤에 멈추고, 본인은 온보딩으로 보내져 빈 커플을 새로 만듦)
+
+- AuthInit은 읽기 실패를 재시도하고, 끝내 실패하면 **문서를 만들지 않고** 재시도 화면을 띄운다.
+- 생성은 `createUserDocumentIfAbsent`(트랜잭션 get → 없을 때만 set)로만 한다.
+- `sign_up` 이벤트는 실제로 문서를 새로 만들었을 때만 보낸다.
+
