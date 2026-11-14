@@ -109,7 +109,7 @@ export function LandingPage() {
             ) : (
               <>
                 <GoogleIcon />
-                구글로 시작하기
+                Google로 시작하기
               </>
             )}
           </Button>

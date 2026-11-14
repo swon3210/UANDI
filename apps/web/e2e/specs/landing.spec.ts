@@ -32,14 +32,14 @@ async function userDocExists(uid: string): Promise<boolean> {
 }
 
 test.describe('랜딩 & 로그인', () => {
-  test('비로그인 상태로 / 접근 시 랜딩 페이지와 구글로 시작하기 버튼이 표시된다', async ({
+  test('비로그인 상태로 / 접근 시 랜딩 페이지와 Google로 시작하기 버튼이 표시된다', async ({
     page,
   }) => {
     await clearEmulatorData();
     const landing = new LandingPage(page);
     await landing.goto();
     await expect(landing.loginButton).toBeVisible();
-    await expect(landing.loginButton).toHaveText('구글로 시작하기');
+    await expect(landing.loginButton).toHaveText('Google로 시작하기');
     await expect(landing.loginButton.getByTestId('google-icon')).toBeVisible();
   });
 
@@ -97,7 +97,7 @@ test.describe('랜딩 & 로그인', () => {
     await expect(landing.errorMessage).toContainText('네트워크 오류');
   });
 
-  test('구글로 시작하기 클릭 후 버튼이 비활성화되고 로딩 상태가 표시된다', async ({ page }) => {
+  test('Google로 시작하기 클릭 후 버튼이 비활성화되고 로딩 상태가 표시된다', async ({ page }) => {
     await clearEmulatorData();
     const landing = new LandingPage(page);
     await landing.goto();
