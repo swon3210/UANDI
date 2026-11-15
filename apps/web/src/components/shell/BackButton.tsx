@@ -8,6 +8,19 @@ import { hasInAppPrevious, markNextAsRoot } from '@/lib/nav-history';
 /** 가계부 서비스의 루트(대시보드). 모든 하위 페이지의 뒤로가기는 결국 여기로 수렴한다. */
 export const CASHBOOK_ROOT = '/inner/cashbook';
 
+/**
+ * BackButton과 같은 규칙으로 돌아간다 — 앱 안에서 왔으면 router.back(), 아니면 부모 경로로 replace.
+ * 제출 완료 후 자동으로 이전 화면으로 돌아갈 때도 쓴다.
+ */
+export function goBackOrReplace(router: ReturnType<typeof useRouter>, fallbackHref: string) {
+  if (hasInAppPrevious()) {
+    router.back();
+    return;
+  }
+  markNextAsRoot();
+  router.replace(fallbackHref);
+}
+
 type BackButtonProps = {
   /**
    * 앱 내 이전 기록이 없을 때(딥링크·알림·새로고침 직후 직접 진입) 이동할 부모 경로.
@@ -30,14 +43,7 @@ export function BackButton({
 }: BackButtonProps) {
   const router = useRouter();
 
-  const handleBack = () => {
-    if (hasInAppPrevious()) {
-      router.back();
-      return;
-    }
-    markNextAsRoot();
-    router.replace(fallbackHref);
-  };
+  const handleBack = () => goBackOrReplace(router, fallbackHref);
 
   return (
     <Button

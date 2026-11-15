@@ -14,6 +14,11 @@ export function recordPath(path: string) {
   currentPath = path;
 }
 
+/** 직전 앱 내 경로. 새로고침·딥링크 직후면 null. (의견 보내기의 자동 첨부 정보) */
+export function getPreviousPath() {
+  return previousPath;
+}
+
 /** 직전 기록이 앱 안의 페이지면 true — router.back()으로 돌아가도 앱을 벗어나지 않는다. */
 export function hasInAppPrevious() {
   return previousPath !== null;

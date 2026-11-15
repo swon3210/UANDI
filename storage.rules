@@ -33,6 +33,16 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // 의견 보내기 스크린샷 — 본인 경로에 생성만. 조회는 어드민 API가 발급한 서명 URL로만.
+    // 명세: docs/pages/07-feedback.md
+    match /feedback/{uid}/{fileName} {
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow read, update, delete: if false;
+    }
+
     // 커뮤니티 유저 글 이미지 (전역 공유 — 읽기는 모든 로그인 유저, 쓰기는 본인만)
     // 명세: docs/pages/community/community-feed.md
     match /communityImages/{uid}/{allPaths=**} {

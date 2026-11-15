@@ -82,6 +82,22 @@ export { CashflowPredictionPreferences } from './custom/settings/CashflowPredict
 export type { CashflowPredictionPreferencesProps } from './custom/settings/CashflowPredictionPreferences';
 export { ParseEntriesPreferences } from './custom/settings/ParseEntriesPreferences';
 export type { ParseEntriesPreferencesProps } from './custom/settings/ParseEntriesPreferences';
+// 의견 보내기 — 피드백·버그 제보 폼 (docs/pages/07-feedback.md)
+export {
+  FeedbackForm,
+  FEEDBACK_MIN_CONTENT,
+  FEEDBACK_MAX_CONTENT,
+  FEEDBACK_MAX_SCREENSHOT_BYTES,
+} from './custom/settings/FeedbackForm';
+export type { FeedbackFormProps, FeedbackFormSubmit } from './custom/settings/FeedbackForm';
+export {
+  FeedbackTypeSelector,
+  FEEDBACK_TYPE_OPTIONS,
+} from './custom/settings/FeedbackTypeSelector';
+export type {
+  FeedbackType,
+  FeedbackTypeSelectorProps,
+} from './custom/settings/FeedbackTypeSelector';
 export { ProfileAvatarUploader } from './custom/settings/ProfileAvatarUploader';
 export type { ProfileAvatarUploaderProps } from './custom/settings/ProfileAvatarUploader';
 export {

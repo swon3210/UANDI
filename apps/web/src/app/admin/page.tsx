@@ -1,16 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { LogIn, LogOut, RefreshCw, ShieldOff } from 'lucide-react';
-import { Button, EmptyState, Header } from '@uandi/ui';
+import { Button, EmptyState, Header, Tabs, TabsContent, TabsList, TabsTrigger } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
+import { AdminFeedbackPanel } from '@/components/admin/AdminFeedbackPanel';
 import { AdminSummaryCards } from '@/components/admin/AdminSummaryCards';
 import { AdminUserTable } from '@/components/admin/AdminUserTable';
+import { useAdminFeedback } from '@/hooks/useAdminFeedback';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { signInWithGoogle, signOut } from '@/lib/firebase/auth';
 import { AdminForbiddenError } from '@/services/admin';
+import type { AdminFeedbackFilter } from '@/services/admin-feedback';
 import { authStatusAtom, userAtom } from '@/stores/auth.store';
 
 async function handleSignIn() {
@@ -30,6 +34,12 @@ export default function AdminUsersPage() {
   const user = useAtomValue(userAtom);
   const signedIn = status === 'authenticated_with_couple' || status === 'authenticated_no_couple';
   const { data, error, isLoading, isFetching, refetch } = useAdminUsers(user?.uid ?? null);
+  const [feedbackFilter, setFeedbackFilter] = useState<AdminFeedbackFilter>({
+    type: 'all',
+    status: 'all',
+  });
+  const feedback = useAdminFeedback(data ? (user?.uid ?? null) : null, feedbackFilter);
+  const newFeedbackCount = feedback.data?.pages[0]?.newCount ?? 0;
 
   const header = (
     <Header
@@ -42,10 +52,16 @@ export default function AdminUsersPage() {
                 variant="ghost"
                 size="icon"
                 aria-label="새로고침"
-                onClick={() => void refetch()}
-                disabled={isFetching}
+                onClick={() => {
+                  void refetch();
+                  void feedback.refetch();
+                }}
+                disabled={isFetching || feedback.isFetching}
               >
-                <RefreshCw size={18} className={isFetching ? 'animate-spin' : undefined} />
+                <RefreshCw
+                  size={18}
+                  className={isFetching || feedback.isFetching ? 'animate-spin' : undefined}
+                />
               </Button>
             ) : null}
             <Button
@@ -110,14 +126,31 @@ export default function AdminUsersPage() {
         {error ? (
           <p className="text-sm text-destructive">{error.message}</p>
         ) : data ? (
-          <>
-            <AdminSummaryCards users={data.users} />
-            <AdminUserTable users={data.users} />
-            <p className="text-xs text-muted-foreground">
-              {dayjs(data.generatedAt).format('YYYY.MM.DD HH:mm')} 기준 · 가계부 내용은 표시하지
-              않고 건수만 보여줘요
-            </p>
-          </>
+          <Tabs defaultValue="users">
+            <TabsList>
+              <TabsTrigger value="users" data-testid="admin-tab-users">
+                사용자
+              </TabsTrigger>
+              <TabsTrigger value="feedback" data-testid="admin-tab-feedback">
+                피드백{newFeedbackCount > 0 ? ` (신규 ${newFeedbackCount})` : ''}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="users" className="space-y-4">
+              <AdminSummaryCards users={data.users} />
+              <AdminUserTable users={data.users} />
+              <p className="text-xs text-muted-foreground">
+                {dayjs(data.generatedAt).format('YYYY.MM.DD HH:mm')} 기준 · 가계부 내용은 표시하지
+                않고 건수만 보여줘요
+              </p>
+            </TabsContent>
+            <TabsContent value="feedback">
+              <AdminFeedbackPanel
+                query={feedback}
+                filter={feedbackFilter}
+                onFilterChange={setFeedbackFilter}
+              />
+            </TabsContent>
+          </Tabs>
         ) : null}
       </main>
     </div>

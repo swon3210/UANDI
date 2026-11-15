@@ -48,6 +48,32 @@ service cloud.firestore {
       }
     }
 
+    // ── 의견 보내기 (전역 운영 데이터 — docs/pages/07-feedback.md) ──
+    // 클라이언트는 본인 명의로 '신규' 상태 생성만. 조회·상태 변경은 어드민 API(Admin SDK)만.
+    match /feedback/{feedbackId} {
+      allow create: if isAuthed()
+        && request.resource.data.keys().hasOnly([
+          'uid', 'coupleId', 'type', 'content', 'contactEmail', 'screenshotPath',
+          'context', 'status', 'createdAt', 'statusUpdatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'new'
+        && request.resource.data.statusUpdatedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.type in ['bug', 'idea', 'other']
+        && request.resource.data.content is string
+        && request.resource.data.content.size() >= 10
+        && request.resource.data.content.size() <= 2000
+        && (request.resource.data.contactEmail == null
+          || (request.resource.data.contactEmail is string
+            && request.resource.data.contactEmail.size() <= 254))
+        && (request.resource.data.screenshotPath == null
+          || (request.resource.data.screenshotPath is string
+            && request.resource.data.screenshotPath.matches('feedback/' + request.auth.uid + '/[^/]+')))
+        && request.resource.data.context is map;
+      allow read, update, delete: if false;
+    }
+
     // ── 커뮤니티 (전역 공유 — couples/ 격리 예외) ────────────────
     // 명세: docs/pages/community/community-feed.md
     // - 모든 로그인 유저가 승인된 글만 읽기 가능

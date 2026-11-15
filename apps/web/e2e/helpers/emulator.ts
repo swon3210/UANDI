@@ -1309,3 +1309,167 @@ export async function writeOwnUserDocAsUser(
   );
   return res.status;
 }
+
+// ── 의견 보내기(feedback) — docs/pages/07-feedback.md ─────────────────
+
+export type EmulatorFeedback = {
+  id: string;
+  uid: string;
+  type: string;
+  content: string;
+  contactEmail: string | null;
+  screenshotPath: string | null;
+  status: string;
+  platform: string | null;
+};
+
+/** feedback 컬렉션을 owner 권한으로 전부 읽는다(테스트 검증용). */
+export async function listFeedback(): Promise<EmulatorFeedback[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/feedback?pageSize=300`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const data = (await res.json()) as { documents?: RestDoc[] };
+  return (data.documents ?? []).map((d) => {
+    const f = d.fields ?? {};
+    const ctx = (f.context?.mapValue as { fields?: Record<string, Record<string, unknown>> })
+      ?.fields;
+    return {
+      id: d.name.split('/').pop() as string,
+      uid: restValue(f.uid) as string,
+      type: restValue(f.type) as string,
+      content: restValue(f.content) as string,
+      contactEmail: (restValue(f.contactEmail) as string | null) ?? null,
+      screenshotPath: (restValue(f.screenshotPath) as string | null) ?? null,
+      status: restValue(f.status) as string,
+      platform: (restValue(ctx?.platform) as string | undefined) ?? null,
+    };
+  });
+}
+
+/** 어드민 화면 검증용 피드백 문서를 owner 권한으로 심는다. */
+export async function seedFeedback(
+  feedbackId: string,
+  data: {
+    uid: string;
+    type: 'bug' | 'idea' | 'other';
+    content: string;
+    createdAt: Date;
+    contactEmail?: string | null;
+    status?: 'new' | 'checked' | 'resolved';
+  }
+): Promise<void> {
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/feedback/${feedbackId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          uid: { stringValue: data.uid },
+          coupleId: { nullValue: null },
+          type: { stringValue: data.type },
+          content: { stringValue: data.content },
+          contactEmail: data.contactEmail
+            ? { stringValue: data.contactEmail }
+            : { nullValue: null },
+          screenshotPath: { nullValue: null },
+          context: {
+            mapValue: {
+              fields: {
+                platform: { stringValue: 'web' },
+                userAgent: { stringValue: 'Mozilla/5.0 (E2E)' },
+                appVersion: { nullValue: null },
+                previousPath: { stringValue: '/inner/cashbook' },
+                viewport: { stringValue: '390x844' },
+              },
+            },
+          },
+          status: { stringValue: data.status ?? 'new' },
+          createdAt: { timestampValue: data.createdAt.toISOString() },
+          statusUpdatedAt: { nullValue: null },
+        },
+      }),
+    }
+  );
+}
+
+async function idTokenOf(email: string, password: string): Promise<string> {
+  const res = await fetch(
+    `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-api-key`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    }
+  );
+  return ((await res.json()) as { idToken: string }).idToken;
+}
+
+/**
+ * 일반 유저 권한으로 feedback 문서를 만든다 — 보안 규칙 검증용. HTTP 상태 코드를 돌려준다.
+ * createdAt은 서버 시각(request.time)이어야 하므로 commit + transform으로 보낸다.
+ */
+export async function createFeedbackAsUser(
+  email: string,
+  password: string,
+  feedbackId: string,
+  data: { uid: string; status: string }
+): Promise<number> {
+  const idToken = await idTokenOf(email, password);
+  const name = `projects/${PROJECT_ID}/databases/(default)/documents/feedback/${feedbackId}`;
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents:commit`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({
+        writes: [
+          {
+            update: {
+              name,
+              fields: {
+                uid: { stringValue: data.uid },
+                coupleId: { nullValue: null },
+                type: { stringValue: 'bug' },
+                content: { stringValue: '규칙 검증용 피드백 내용입니다' },
+                contactEmail: { nullValue: null },
+                screenshotPath: { nullValue: null },
+                context: {
+                  mapValue: {
+                    fields: {
+                      platform: { stringValue: 'web' },
+                      userAgent: { stringValue: 'E2E' },
+                      appVersion: { nullValue: null },
+                      previousPath: { nullValue: null },
+                      viewport: { stringValue: '390x844' },
+                    },
+                  },
+                },
+                status: { stringValue: data.status },
+                statusUpdatedAt: { nullValue: null },
+              },
+            },
+            updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }],
+            currentDocument: { exists: false },
+          },
+        ],
+      }),
+    }
+  );
+  return res.status;
+}
+
+/** 일반 유저 권한으로 feedback 문서를 읽는다 — 보안 규칙 검증용. HTTP 상태 코드를 돌려준다. */
+export async function readFeedbackAsUser(
+  email: string,
+  password: string,
+  feedbackId: string
+): Promise<number> {
+  const idToken = await idTokenOf(email, password);
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/feedback/${feedbackId}`,
+    { headers: { Authorization: `Bearer ${idToken}` } }
+  );
+  return res.status;
+}

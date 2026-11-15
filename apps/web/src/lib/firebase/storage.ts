@@ -139,6 +139,24 @@ export async function deleteCommunityImage({
   await deleteObject(ref(getStorage(), storagePath));
 }
 
+// ── 의견 보내기 스크린샷 (docs/pages/07-feedback.md) ──
+
+/** 스크린샷을 올리고 Storage 경로를 돌려준다. 규칙상 읽기가 막혀 있어 다운로드 URL은 받지 않는다. */
+export async function uploadFeedbackScreenshot({
+  uid,
+  feedbackId,
+  file,
+}: {
+  uid: string;
+  feedbackId: string;
+  file: File;
+}): Promise<string> {
+  const ext = file.type.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+  const storagePath = `feedback/${uid}/${feedbackId}.${ext}`;
+  await uploadBytes(ref(getStorage(), storagePath), file, { contentType: file.type });
+  return storagePath;
+}
+
 // ── 프로필 사진 (아바타) ──
 
 type ProfilePhotoUploadOptions = {

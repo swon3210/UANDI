@@ -27,6 +27,7 @@ type AnalyticsEvents = {
   couple_joined: undefined;
   entries_added: { source: EntriesAddedSource; count: number };
   annual_plan_created: undefined;
+  feedback_submit: { type: 'bug' | 'idea' | 'other' };
 };
 
 let analyticsPromise: Promise<Analytics | null> | null = null;
