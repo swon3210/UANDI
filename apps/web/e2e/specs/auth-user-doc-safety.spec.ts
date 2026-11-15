@@ -6,6 +6,7 @@ import {
   getUserCoupleId,
   seedCoupleWithTwoMembers,
   seedUserDocument,
+  writeOwnUserDocAsUser,
 } from '../helpers/emulator';
 
 const EMAIL_1 = 'user1@test.com';
@@ -77,5 +78,30 @@ test.describe('커플 카드 — 짝꿍 문서를 못 읽을 때', () => {
     await expect(card).toBeVisible({ timeout: 15000 });
     await expect(card).toContainText('짝꿍');
     await expect(page.getByTestId('couple-status-loading')).toHaveCount(0);
+  });
+});
+
+base.describe('보안 규칙 — users.coupleId 되돌리기 차단', () => {
+  base('연결된 coupleId를 null로 바꾸는 쓰기는 거부하고, 다른 필드 수정은 허용한다', async () => {
+    await clearEmulatorData();
+    const uid1 = await createTestUser(EMAIL_1, PASSWORD);
+    const uid2 = await createTestUser(EMAIL_2, PASSWORD);
+    const coupleId = await seedCoupleWithTwoMembers(uid1, uid2);
+    await seedUserDocument(uid1, EMAIL_1, coupleId);
+
+    // 부분 업데이트로 null
+    expect(await writeOwnUserDocAsUser(EMAIL_1, PASSWORD, uid1, null)).toBe(403);
+    // 문서 통째 교체(merge 없는 setDoc)로 null — 이번 사고 경로
+    expect(await writeOwnUserDocAsUser(EMAIL_1, PASSWORD, uid1, null, { replace: true })).toBe(403);
+    expect(await getUserCoupleId(uid1)).toBe(coupleId);
+
+    // coupleId를 유지하는 교체는 허용
+    expect(await writeOwnUserDocAsUser(EMAIL_1, PASSWORD, uid1, coupleId, { replace: true })).toBe(
+      200
+    );
+
+    // 커플이 없던 유저는 coupleId를 새로 기록할 수 있다(합류 흐름)
+    await seedUserDocument(uid2, EMAIL_2, null);
+    expect(await writeOwnUserDocAsUser(EMAIL_2, PASSWORD, uid2, coupleId)).toBe(200);
   });
 });
