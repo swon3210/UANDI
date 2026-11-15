@@ -345,3 +345,30 @@ export type CommunitySource = {
   lastCrawledAt: Timestamp | null; // 마지막 수집 시각 (운영 가시성)
   lastError: string | null; // 마지막 크롤 에러 메시지 (운영 가시성)
 };
+
+// ── 의견 보내기 (전역 운영 데이터 — 클라이언트는 create만, 조회·상태 변경은 어드민 API) ──
+// 저장 경로: feedback/{feedbackId}  (docs/pages/07-feedback.md)
+export type FeedbackType = 'bug' | 'idea' | 'other';
+export type FeedbackStatus = 'new' | 'checked' | 'resolved';
+
+export type FeedbackContext = {
+  platform: 'web' | 'android' | 'ios';
+  userAgent: string;
+  appVersion: string | null;
+  previousPath: string | null;
+  viewport: string;
+};
+
+export type Feedback = {
+  id: string;
+  uid: string;
+  coupleId: string | null;
+  type: FeedbackType;
+  content: string; // 10~2000자
+  contactEmail: string | null;
+  screenshotPath: string | null; // Storage feedback/{uid}/{feedbackId}.{ext}
+  context: FeedbackContext;
+  status: FeedbackStatus; // 생성 시 항상 'new'
+  createdAt: Timestamp;
+  statusUpdatedAt: Timestamp | null;
+};

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-const EFFECTIVE_DATE = '2026년 11월 11일';
+const EFFECTIVE_DATE = '2026년 11월 15일';
 const CONTACT_EMAIL = 'swon3210@gmail.com';
 const OPERATOR_NAME = '이송원';
 
@@ -79,6 +79,11 @@ export default function PrivacyPolicyPage() {
               삭제됩니다(아래 3조·6조 참고).
             </li>
             <li>
+              <strong>의견 보내기</strong>: 이용자가 「의견 보내기」로 제출한 의견·오류 내용,
+              답장받을 이메일(선택), 첨부한 스크린샷(선택), 제출 시점의 기기·앱 정보(이용 환경,
+              브라우저 정보, 앱 버전, 화면 크기, 직전에 보던 화면 경로)
+            </li>
+            <li>
               <strong>푸시 알림 토큰</strong>: 푸시 알림 수신 동의 시 발급되는 기기 식별 토큰(FCM
               토큰)
             </li>
@@ -95,10 +100,10 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>서비스 이용 기록</strong>: 방문한 화면, 주요 기능 사용 여부(가입, 커플 연결,
-              가계부 내역 추가 건수와 추가 경로, 연간 목표 생성), 이용 환경(웹·Android·iOS), 서비스
-              내부 회원 식별자(uid), 분석용 쿠키·기기 식별자 — Google Analytics를 통해 수집합니다.
-              가계부 금액·메모·카테고리 이름, 사진, 이메일·이름 등은 분석 목적으로 전송하지
-              않습니다.
+              가계부 내역 추가 건수와 추가 경로, 연간 목표 생성, 의견 보내기 제출과 그 유형), 이용
+              환경(웹·Android·iOS), 서비스 내부 회원 식별자(uid), 분석용 쿠키·기기 식별자 — Google
+              Analytics를 통해 수집합니다. 가계부 금액·메모·카테고리 이름, 사진, 이메일·이름 등은
+              분석 목적으로 전송하지 않습니다.
             </li>
           </ul>
 
@@ -114,7 +119,7 @@ export default function PrivacyPolicyPage() {
             <li>푸시 알림 발송 (이용자가 동의한 경우에 한함)</li>
             <li>서비스 운영 및 오류 대응, 보안 위협 대응</li>
             <li>서비스 이용 통계 분석 및 기능 개선</li>
-            <li>이용자 문의 응대</li>
+            <li>이용자 문의 응대, 의견 보내기로 접수된 오류 확인 및 서비스 개선</li>
           </ul>
 
           <h2 className="mt-8 text-lg font-semibold">3. 개인정보의 보유 및 이용기간</h2>
@@ -126,6 +131,11 @@ export default function PrivacyPolicyPage() {
               자동으로 삭제되며, 이용자가 직접 삭제하거나 회원 탈퇴 시에도 함께 파기됩니다.
               인식(OCR)으로 추출된 가계부 내역(텍스트)은 이용자가 저장을 확정한 경우에 한해 일반
               가계부 정보로 보관됩니다.
+            </li>
+            <li>
+              <strong>의견 보내기 기록</strong>(내용·답장 이메일·스크린샷·기기 정보)은 문의 처리와
+              오류 확인을 위해 접수일로부터 1년간 보관한 뒤 파기하며, 회원 탈퇴 시에도 같은 기간
+              보관합니다.
             </li>
             <li>
               회원 탈퇴 시 이용자의 계정 정보는 지체 없이 파기합니다. 단, 커플로 연결된 상대방이

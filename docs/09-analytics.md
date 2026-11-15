@@ -33,14 +33,15 @@ Firebase 프로젝트에 연결된 GA4 속성 하나로 웹·앱(WebView) 데이
 
 ## 이벤트
 
-| 이벤트                | 파라미터                                   | 시점                                      |
-| --------------------- | ------------------------------------------ | ----------------------------------------- |
-| `page_view`           | `page_location`, `page_path` (정리된 경로) | 경로가 바뀔 때                            |
-| `sign_up`             | `method`: `google` \| `apple` \| `other`   | 처음 로그인해 사용자 문서를 만들 때       |
-| `couple_created`      | —                                          | 온보딩 「처음 시작해요」로 공간 생성 성공 |
-| `couple_joined`       | —                                          | 초대 코드로 합류 성공                     |
-| `entries_added`       | `source`, `count`                          | 가계부 내역 저장 성공                     |
-| `annual_plan_created` | —                                          | 연간 목표(플랜) 생성 성공                 |
+| 이벤트                | 파라미터                                   | 시점                                              |
+| --------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `page_view`           | `page_location`, `page_path` (정리된 경로) | 경로가 바뀔 때                                    |
+| `sign_up`             | `method`: `google` \| `apple` \| `other`   | 처음 로그인해 사용자 문서를 만들 때               |
+| `couple_created`      | —                                          | 온보딩 「처음 시작해요」로 공간 생성 성공         |
+| `couple_joined`       | —                                          | 초대 코드로 합류 성공                             |
+| `entries_added`       | `source`, `count`                          | 가계부 내역 저장 성공                             |
+| `annual_plan_created` | —                                          | 연간 목표(플랜) 생성 성공                         |
+| `feedback_submit`     | `type`: `bug` \| `idea` \| `other`         | 의견 보내기 제출 성공 (내용·이메일은 보내지 않음) |
 
 `entries_added.source`
 

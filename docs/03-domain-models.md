@@ -30,6 +30,7 @@ couples/{coupleId}
       ├── forexHoldings/{currency}        (v1.1)
       ├── positions/{positionId}          (v1.1)
       └── savings/{accountId}             (v1.1)
+feedback/{feedbackId}                     (운영 — 의견 보내기, 클라이언트는 create만)
 ```
 
 > **v1 시점**: 환테크 화면은 차트·전망 표시만 하므로 실제 재테크 컬렉션은 도입되지 않습니다. `meta/outerSummary`와 `sideHustles/*` 컬렉션은 v1.1에서 본격 사용되며, 보안 규칙만 v1에 선제 적용해 둡니다.
@@ -473,6 +474,40 @@ type CommunitySource = {
 
 ---
 
+## 의견 보내기 (운영 데이터 — 커플 격리 예외)
+
+사용자가 보낸 피드백·버그 제보. 최상위 `feedback/{feedbackId}`에 저장하고, 클라이언트는 **생성만** 한다.
+조회·상태 변경은 어드민 API(Admin SDK)만 한다. 화면·필드 상세는 `docs/pages/07-feedback.md`.
+
+### Feedback
+
+```ts
+type FeedbackType = 'bug' | 'idea' | 'other';
+type FeedbackStatus = 'new' | 'checked' | 'resolved';
+
+type Feedback = {
+  id: string;
+  uid: string;
+  coupleId: string | null;
+  type: FeedbackType;
+  content: string; // 10~2000자
+  contactEmail: string | null;
+  screenshotPath: string | null; // Storage feedback/{uid}/{feedbackId}.{ext}
+  context: {
+    platform: 'web' | 'android' | 'ios';
+    userAgent: string;
+    appVersion: string | null;
+    previousPath: string | null;
+    viewport: string;
+  };
+  status: FeedbackStatus; // 생성 시 항상 'new'
+  createdAt: Timestamp;
+  statusUpdatedAt: Timestamp | null;
+};
+```
+
+---
+
 ## Firestore 보안 규칙 명세
 
 > 실제 rules 파일 작성 시 이 명세를 기반으로 합니다.
@@ -493,6 +528,7 @@ type CommunitySource = {
 | `communityPosts/{postId}/reports/{uid}`   | 클라이언트 read 불가(누적은 `reportCount`로만 노출)                                                                                                                                                                     | `create` 본인 uid 문서만(중복 신고는 같은 doc — rule이 update를 deny). update/delete는 차단                                                                                                                                                                                                                                                                                                                             |
 | `admins/{uid}`                            | 본인 uid 문서만(가드용)                                                                                                                                                                                                 | 콘솔/Admin SDK만                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `communitySources/{id}` _(전역)_          | admin만(`admins/{uid}` 존재)                                                                                                                                                                                            | 클라이언트 전면 차단 — 추가/수정/삭제·크롤 갱신은 `/api/community/sources` + `runCrawl`(Admin SDK)만                                                                                                                                                                                                                                                                                                                    |
+| `feedback/{feedbackId}` _(전역)_          | 클라이언트 read 불가 — `/api/admin/feedback`(Admin SDK)만                                                                                                                                                               | `create`만: 본인 uid + `status='new'` + `statusUpdatedAt=null` + `createdAt=request.time` + type enum + content 10~2000자 + `screenshotPath`는 null 또는 `feedback/{auth.uid}/…` + 키 `hasOnly`. update/delete 차단(상태 변경은 어드민 API)                                                                                                                                                                             |
 
 ---
 
@@ -513,3 +549,6 @@ type CommunitySource = {
 | communityPosts     | `status ASC`, `publishedAt DESC`                      | 피드(승인 글 최신순)                                               |
 | communityPosts     | `status ASC`, `createdAt DESC`                        | admin 승인 대기 큐                                                 |
 | communityPosts     | `status ASC`, `reportCount DESC`                      | admin 신고 검토 (`status='published' AND reportCount >= 1`)        |
+| feedback           | `type ASC`, `createdAt DESC`                          | 어드민 유형 필터                                                   |
+| feedback           | `status ASC`, `createdAt DESC`                        | 어드민 상태 필터·신규 개수                                         |
+| feedback           | `type ASC`, `status ASC`, `createdAt DESC`            | 어드민 유형+상태 필터                                              |

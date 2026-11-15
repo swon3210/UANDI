@@ -65,6 +65,14 @@ export default function SettingsPage() {
             AI 설정
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
+          <Link
+            href="/settings/feedback"
+            data-testid="settings-feedback"
+            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
+          >
+            의견 보내기
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
         </div>
       </main>
     </div>
