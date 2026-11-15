@@ -1272,3 +1272,40 @@ export async function listAnnualPlans(coupleId: string): Promise<{ id: string; y
   const docs = await listCoupleSubcollection(coupleId, 'annualPlans');
   return docs.map((d) => ({ id: String(d.id), year: Number(d.year) }));
 }
+
+// 일반 유저 권한(ID 토큰)으로 users 문서를 쓴다 — 보안 규칙 검증용. HTTP 상태 코드를 돌려준다.
+export async function writeOwnUserDocAsUser(
+  email: string,
+  password: string,
+  uid: string,
+  coupleId: string | null,
+  { replace = false }: { replace?: boolean } = {}
+): Promise<number> {
+  const signIn = await fetch(
+    `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake-api-key`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    }
+  );
+  const { idToken } = (await signIn.json()) as { idToken: string };
+  // replace=true면 updateMask 없이 문서 전체를 바꾼다(setDoc merge 없음과 같은 효과)
+  const mask = replace ? '' : '?updateMask.fieldPaths=coupleId';
+  const fields = replace
+    ? {
+        uid: { stringValue: uid },
+        email: { stringValue: email },
+        coupleId: coupleId ? { stringValue: coupleId } : { nullValue: null },
+      }
+    : { coupleId: coupleId ? { stringValue: coupleId } : { nullValue: null } };
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}${mask}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ fields }),
+    }
+  );
+  return res.status;
+}

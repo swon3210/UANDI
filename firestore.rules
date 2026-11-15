@@ -32,10 +32,18 @@ service cloud.firestore {
         request.auth.uid == uid ||
         (resource.data.coupleId != null && isCoupleMember(resource.data.coupleId))
       );
-      allow write: if isAuthed() && request.auth.uid == uid;
+      allow create, delete: if isAuthed() && request.auth.uid == uid;
+      // 연결된 coupleId를 null로 되돌리거나 지우는 업데이트는 막는다(2026-11 덮어쓰기 사고).
+      // 클라이언트에 커플 해제 기능은 없고, 탈퇴는 문서 자체를 delete 한다.
+      allow update: if isAuthed() && request.auth.uid == uid && (
+        resource.data.get('coupleId', null) == null ||
+        request.resource.data.get('coupleId', null) != null
+      );
 
-      // users/{uid}/fcmTokens 등 본인 하위 (상대에게 비공개)
-      match /{document=**} {
+      // users/{uid}/fcmTokens 등 본인 하위 (상대에게 비공개).
+      // rules v2의 /{document=**}는 0단계도 매치해 users/{uid} 자체에 write를 열어 버리므로
+      // 최소 한 단계(하위 컬렉션)부터만 매치한다.
+      match /{subcollection}/{document=**} {
         allow read, write: if isAuthed() && request.auth.uid == uid;
       }
     }
