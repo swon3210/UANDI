@@ -52,6 +52,14 @@ GA4(`docs/09-analytics.md`)에는 이메일·이름을 보낼 수 없으므로, 
 - 기록 도입 전 사용자는 푸시 토큰(`users/{uid}/fcmTokens`)의 `platform`으로 보완한다(시각 없음).
   둘 다 없으면 `-`.
 
+## 피드백 탭
+
+화면을 `Tabs`로 나눠 「사용자」 | 「피드백 (신규 n)」. 사용자가 「의견 보내기」(`/settings/feedback`)로 보낸 `feedback` 문서를 본다.
+API(`GET /api/admin/feedback`, `PATCH /api/admin/feedback/{id}`)·카드 구성·필터·테스트는 `docs/pages/07-feedback.md` 「어드민」 참고.
+
+- 같은 `verifyAdminEmail` 접근 제어를 쓴다. 클라이언트는 `feedback`을 직접 읽을 수 없다(규칙 차단).
+- 비용: 화면을 열 때 목록 20건 + 신규 `count()` 1회 + 작성자 조회. 「더 보기」마다 20건.
+
 ## 비용
 
 - 사용자 N명 기준: Auth `listUsers` 1회, `users` 문서 일괄 조회 1회, 사용자별 `count()` 1회 + fcmTokens 조회 1회,

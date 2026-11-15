@@ -94,6 +94,11 @@
 /community/[id]              → 유저 글 상세
 /community/new               → 글쓰기 (bottom sheet)
 /community/admin             → 모더레이션 (admin 전용)
+
+# 공통
+/settings                    → 설정 (프로필·가계부 설정·AI 설정)
+/settings/feedback           → 의견 보내기 (피드백·버그 제보)
+/admin                       → 운영자 어드민 (사용자 현황·피드백)
 ```
 
 > **커뮤니티**는 우리집·재테크와 달리 커플 단위로 격리되지 않는 **전역 공유 공간**이다. 데이터는 최상위 `communityPosts/*`에 저장되고 모든 로그인 유저에게 공개된다. 정의·경계는 `08-spaces.md`, 페이지 명세는 `pages/community/community-feed.md` 참고.
