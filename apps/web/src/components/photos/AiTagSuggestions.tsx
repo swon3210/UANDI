@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -29,11 +30,12 @@ export function AiTagSuggestions({
   suggestFn,
   onTagsSelected,
 }: AiTagSuggestionsProps) {
+  const t = useTranslations('photos');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!imageFile) throw new Error('이미지를 선택해주세요');
+      if (!imageFile) throw new Error(t('aiTags.imageRequired'));
       const base64 = await fileToBase64(imageFile);
       return suggestFn(base64, existingTags);
     },
@@ -71,7 +73,7 @@ export function AiTagSuggestions({
         ) : (
           <Sparkles size={14} />
         )}
-        AI 태그 제안
+        {t('aiTags.suggest')}
       </Button>
 
       {suggestions.length > 0 && (
@@ -95,9 +97,7 @@ export function AiTagSuggestions({
       )}
 
       {mutation.error && (
-        <p className="text-xs text-destructive">
-          {mutation.error.message || '태그 제안에 실패했습니다'}
-        </p>
+        <p className="text-xs text-destructive">{mutation.error.message || t('aiTags.failed')}</p>
       )}
     </div>
   );

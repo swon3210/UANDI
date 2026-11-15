@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { X, Type, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@uandi/ui';
@@ -30,6 +31,7 @@ export function SlideshowOverlay({
   onEdit,
   onDelete,
 }: SlideshowOverlayProps) {
+  const t = useTranslations('photos');
   return (
     <div
       data-testid="slideshow-overlay"
@@ -44,7 +46,7 @@ export function SlideshowOverlay({
           size="icon"
           className="text-white hover:bg-white/20"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t('slideshow.close')}
           data-testid="slideshow-close-btn"
         >
           <X size={24} />
@@ -55,7 +57,7 @@ export function SlideshowOverlay({
             size="icon"
             className={`text-white hover:bg-white/20 ${showCaption ? 'bg-white/20' : ''}`}
             onClick={onToggleCaption}
-            aria-label="캡션 토글"
+            aria-label={t('slideshow.captionToggle')}
             data-testid="slideshow-caption-toggle"
           >
             <Type size={20} />
@@ -66,7 +68,7 @@ export function SlideshowOverlay({
               size="icon"
               className="text-white hover:bg-white/20"
               onClick={onEdit}
-              aria-label="편집"
+              aria-label={t('slideshow.edit')}
               data-testid="slideshow-edit-btn"
             >
               <Pencil size={20} />
@@ -78,7 +80,7 @@ export function SlideshowOverlay({
               size="icon"
               className="text-white hover:bg-white/20"
               onClick={onDelete}
-              aria-label="삭제"
+              aria-label={t('slideshow.delete')}
               data-testid="slideshow-delete-btn"
             >
               <Trash2 size={20} />

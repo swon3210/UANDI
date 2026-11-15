@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { Button } from '@uandi/ui';
 
@@ -10,6 +11,7 @@ type SelectionModeBarProps = {
 };
 
 export function SelectionModeBar({ selectedCount, onClose, onMove }: SelectionModeBarProps) {
+  const t = useTranslations('photos');
   return (
     <header
       className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background px-2"
@@ -20,13 +22,13 @@ export function SelectionModeBar({ selectedCount, onClose, onMove }: SelectionMo
           variant="ghost"
           size="icon"
           onClick={onClose}
-          aria-label="선택 모드 닫기"
+          aria-label={t('selection.close')}
           data-testid="exit-select-mode"
         >
           <X size={20} />
         </Button>
         <span className="text-base font-medium" data-testid="selection-count">
-          {selectedCount}장 선택
+          {t('selection.count', { count: selectedCount })}
         </span>
       </div>
       <Button
@@ -36,7 +38,7 @@ export function SelectionModeBar({ selectedCount, onClose, onMove }: SelectionMo
         onClick={onMove}
         data-testid="move-photos-btn"
       >
-        이동
+        {t('selection.move')}
       </Button>
     </header>
   );

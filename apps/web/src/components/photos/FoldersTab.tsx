@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import { FolderPlus } from 'lucide-react';
@@ -14,6 +15,7 @@ type FoldersTabProps = {
 };
 
 export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
+  const t = useTranslations('photos');
   const { data, isLoading } = useFolders(coupleId);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,21 +72,22 @@ export function FoldersTab({ coupleId, onCreateFolder }: FoldersTabProps) {
           data-testid="create-folder-btn"
           className="w-full justify-center"
         >
-          <FolderPlus size={16} className="mr-1.5" />새 폴더
+          <FolderPlus size={16} className="mr-1.5" />
+          {t('folder.new')}
         </Button>
       </div>
       {folders.length === 0 ? (
         isSearching ? (
           <EmptyState
             icon="🔍"
-            title="검색 결과가 없어요"
-            description="다른 키워드로 검색해보세요"
+            title={t('empty.searchTitle')}
+            description={t('empty.searchDescription')}
           />
         ) : (
           <EmptyState
             icon="📁"
-            title="폴더를 만들어 사진을 정리해보세요"
-            description="위 ‘새 폴더’ 버튼으로 여행·일상 등 주제별로 분류할 수 있어요"
+            title={t('empty.foldersTitle')}
+            description={t('empty.foldersDescription')}
           />
         )
       ) : (

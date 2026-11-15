@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useRef, useCallback } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,14 +28,15 @@ import { FolderCombobox } from '@/components/photos/FolderCombobox';
 import { suggestPhotoTags } from '@/services/ai';
 import type { Folder } from '@/types';
 
-const uploadSchema = z.object({
-  folderId: z.string().min(1, '폴더를 선택해주세요'),
-  takenAt: z.string().min(1),
-  tags: z.array(z.string()),
-  caption: z.string(),
-});
+const buildUploadSchema = (folderRequired: string) =>
+  z.object({
+    folderId: z.string().min(1, folderRequired),
+    takenAt: z.string().min(1),
+    tags: z.array(z.string()),
+    caption: z.string(),
+  });
 
-type UploadFormValues = z.infer<typeof uploadSchema>;
+type UploadFormValues = z.infer<ReturnType<typeof buildUploadSchema>>;
 
 type SelectedFile = {
   file: File;
@@ -65,13 +67,14 @@ export function PhotoUploadSheet({
   onCreateFolder,
   onSubmit,
 }: PhotoUploadSheetProps) {
+  const t = useTranslations('photos');
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<ProgressInfo>({ percent: 0, current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<UploadFormValues>({
-    resolver: zodResolver(uploadSchema),
+    resolver: zodResolver(buildUploadSchema(t('uploadSheet.folderRequired'))),
     defaultValues: {
       folderId: defaultFolderId ?? '',
       takenAt: dayjs().format('YYYY-MM-DD'),
@@ -122,7 +125,7 @@ export function PhotoUploadSheet({
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto">
       <SheetHeader>
-        <SheetTitle>사진 추가</SheetTitle>
+        <SheetTitle>{t('uploadSheet.title')}</SheetTitle>
       </SheetHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 px-1 pb-4">
@@ -134,7 +137,7 @@ export function PhotoUploadSheet({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={sf.previewUrl}
-                    alt={`선택된 사진 ${i + 1}`}
+                    alt={t('uploadSheet.selectedAlt', { index: i + 1 })}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover rounded-md"
@@ -144,7 +147,7 @@ export function PhotoUploadSheet({
                     onClick={() => removeFile(i)}
                     disabled={isUploading}
                     className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5"
-                    aria-label={`사진 ${i + 1} 제거`}
+                    aria-label={t('uploadSheet.remove', { index: i + 1 })}
                   >
                     <X size={14} />
                   </button>
@@ -161,7 +164,7 @@ export function PhotoUploadSheet({
             <div className="flex items-center gap-2 py-3 text-muted-foreground">
               <ImagePlus size={selectedFiles.length > 0 ? 20 : 32} />
               <span className="text-sm">
-                {selectedFiles.length > 0 ? '사진 추가하기' : '사진 선택하기'}
+                {selectedFiles.length > 0 ? t('uploadSheet.addMore') : t('uploadSheet.select')}
               </span>
             </div>
             <input
@@ -171,7 +174,7 @@ export function PhotoUploadSheet({
               multiple
               onChange={handleFileSelect}
               className="hidden"
-              aria-label="사진 파일 선택"
+              aria-label={t('uploadSheet.fileInput')}
             />
           </div>
 
@@ -182,7 +185,7 @@ export function PhotoUploadSheet({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  폴더 <span className="text-destructive">*</span>
+                  {t('uploadSheet.folder')} <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <FolderCombobox
@@ -204,9 +207,14 @@ export function PhotoUploadSheet({
             name="takenAt"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>촬영일</FormLabel>
+                <FormLabel>{t('uploadSheet.takenAt')}</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} aria-label="촬영일" disabled={isUploading} />
+                  <Input
+                    type="date"
+                    {...field}
+                    aria-label={t('uploadSheet.takenAt')}
+                    disabled={isUploading}
+                  />
                 </FormControl>
               </FormItem>
             )}
@@ -218,7 +226,7 @@ export function PhotoUploadSheet({
             name="tags"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>태그</FormLabel>
+                <FormLabel>{t('uploadSheet.tags')}</FormLabel>
                 <FormControl>
                   <TagInput
                     value={field.value}
@@ -246,12 +254,12 @@ export function PhotoUploadSheet({
             name="caption"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>캡션 (선택)</FormLabel>
+                <FormLabel>{t('uploadSheet.caption')}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="이 순간을 기록해요"
+                    placeholder={t('uploadSheet.captionPlaceholder')}
                     {...field}
-                    aria-label="캡션"
+                    aria-label={t('uploadSheet.captionAria')}
                     disabled={isUploading}
                   />
                 </FormControl>
@@ -264,7 +272,11 @@ export function PhotoUploadSheet({
             <div className="space-y-1">
               <Progress value={progress.percent} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
-                {progress.current}/{progress.total}장 업로드 중... {progress.percent}%
+                {t('uploadSheet.progress', {
+                  current: progress.current,
+                  total: progress.total,
+                  percent: progress.percent,
+                })}
               </p>
             </div>
           )}
@@ -278,12 +290,12 @@ export function PhotoUploadSheet({
             {isUploading ? (
               <>
                 <Loader2 size={16} className="mr-2 animate-spin" />
-                업로드 중...
+                {t('uploadSheet.uploading')}
               </>
             ) : selectedFiles.length > 0 ? (
-              `${selectedFiles.length}장 업로드`
+              t('uploadSheet.uploadCount', { count: selectedFiles.length })
             ) : (
-              '업로드'
+              t('uploadSheet.upload')
             )}
           </Button>
         </form>

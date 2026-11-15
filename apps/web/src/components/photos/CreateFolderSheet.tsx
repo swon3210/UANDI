@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { SheetContent, SheetHeader, SheetTitle, SheetDescription, Input, Button } from '@uandi/ui';
 
@@ -9,6 +10,7 @@ type CreateFolderSheetProps = {
 };
 
 export function CreateFolderSheet({ onSubmit, isPending }: CreateFolderSheetProps) {
+  const t = useTranslations('photos');
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -20,17 +22,17 @@ export function CreateFolderSheet({ onSubmit, isPending }: CreateFolderSheetProp
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh]">
       <SheetHeader>
-        <SheetTitle>새 폴더</SheetTitle>
-        <SheetDescription className="sr-only">새 폴더를 만듭니다</SheetDescription>
+        <SheetTitle>{t('folder.new')}</SheetTitle>
+        <SheetDescription className="sr-only">{t('folder.newDescription')}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
           <label htmlFor="folder-name" className="text-sm font-medium">
-            폴더 이름
+            {t('folder.nameLabel')}
           </label>
           <Input
             id="folder-name"
-            placeholder="예: 제주도 여행"
+            placeholder={t('folder.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
@@ -38,7 +40,7 @@ export function CreateFolderSheet({ onSubmit, isPending }: CreateFolderSheetProp
           />
         </div>
         <Button type="submit" className="w-full" disabled={!name.trim() || isPending}>
-          {isPending ? '만드는 중...' : '만들기'}
+          {isPending ? t('folder.creating') : t('folder.create')}
         </Button>
       </form>
     </SheetContent>

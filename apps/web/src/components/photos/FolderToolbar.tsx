@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Search } from 'lucide-react';
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@uandi/ui';
 
@@ -24,10 +25,14 @@ export function FolderToolbar({
   onSortByChange,
   searchTestId = 'folder-search-input',
   sortTestId = 'folder-sort-select',
-  searchPlaceholder = '폴더 검색',
-  searchAriaLabel = '폴더 검색',
-  sortAriaLabel = '폴더 정렬',
+  searchPlaceholder: searchPlaceholderProp,
+  searchAriaLabel: searchAriaLabelProp,
+  sortAriaLabel: sortAriaLabelProp,
 }: FolderToolbarProps) {
+  const t = useTranslations('photos.toolbar');
+  const searchPlaceholder = searchPlaceholderProp ?? t('search');
+  const searchAriaLabel = searchAriaLabelProp ?? t('search');
+  const sortAriaLabel = sortAriaLabelProp ?? t('sort');
   return (
     <div className="flex items-center gap-2 px-4 py-2">
       <div className="relative flex-1 min-w-0">
@@ -54,9 +59,9 @@ export function FolderToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="latest">최신순</SelectItem>
-          <SelectItem value="oldest">오래된순</SelectItem>
-          <SelectItem value="name">글자순</SelectItem>
+          <SelectItem value="latest">{t('latest')}</SelectItem>
+          <SelectItem value="oldest">{t('oldest')}</SelectItem>
+          <SelectItem value="name">{t('name')}</SelectItem>
         </SelectContent>
       </Select>
     </div>

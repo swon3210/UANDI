@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { Folder } from '@/types';
@@ -10,14 +11,15 @@ type FolderBreadcrumbProps = {
 };
 
 export function FolderBreadcrumb({ ancestors, current }: FolderBreadcrumbProps) {
+  const t = useTranslations('photos');
   return (
     <nav
-      aria-label="폴더 경로"
+      aria-label={t('folder.breadcrumb')}
       data-testid="folder-breadcrumb"
       className="flex items-center gap-1 overflow-x-auto px-4 py-2 text-sm text-muted-foreground"
     >
       <Link href="/inner/photos?tab=folders" className="shrink-0 hover:text-foreground">
-        사진
+        {t('folder.breadcrumbRoot')}
       </Link>
       {ancestors.map((folder) => (
         <span key={folder.id} className="flex items-center gap-1">

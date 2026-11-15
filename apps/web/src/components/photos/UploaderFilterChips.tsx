@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Badge } from '@uandi/ui';
 import { cn } from '@uandi/ui';
 
@@ -10,13 +11,14 @@ type UploaderFilterChipsProps = {
   onChange: (filter: UploaderFilter) => void;
 };
 
-const FILTERS: { key: UploaderFilter; label: string; testId: string }[] = [
-  { key: 'all', label: '전체', testId: 'filter-all' },
-  { key: 'me', label: '나', testId: 'filter-me' },
-  { key: 'partner', label: '연인', testId: 'filter-partner' },
+const FILTERS: { key: UploaderFilter; testId: string }[] = [
+  { key: 'all', testId: 'filter-all' },
+  { key: 'me', testId: 'filter-me' },
+  { key: 'partner', testId: 'filter-partner' },
 ];
 
 export function UploaderFilterChips({ value, onChange }: UploaderFilterChipsProps) {
+  const t = useTranslations('photos');
   return (
     <div className="flex gap-2 px-4 py-2" data-testid="uploader-filter-chips">
       {FILTERS.map((f) => (
@@ -30,7 +32,7 @@ export function UploaderFilterChips({ value, onChange }: UploaderFilterChipsProp
           onClick={() => onChange(f.key)}
           data-testid={f.testId}
         >
-          {f.label}
+          {t(`uploader.${f.key}`)}
         </Badge>
       ))}
     </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import { EmptyState, Skeleton } from '@uandi/ui';
@@ -18,6 +19,7 @@ export function SubFolderSection({
   isLoading,
   subfolderCountByParent,
 }: SubFolderSectionProps) {
+  const t = useTranslations('photos');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const debouncedQuery = useDebounce(searchQuery, 200);
@@ -45,9 +47,9 @@ export function SubFolderSection({
     <section
       data-testid="subfolder-section"
       className="px-4 pt-3 pb-1 space-y-2"
-      aria-label="하위 폴더"
+      aria-label={t('folder.sub')}
     >
-      <h2 className="text-sm font-medium text-muted-foreground">하위 폴더</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('folder.sub')}</h2>
       {hasSubFolders && (
         <FolderToolbar
           searchQuery={searchQuery}
@@ -56,9 +58,9 @@ export function SubFolderSection({
           onSortByChange={setSortBy}
           searchTestId="subfolder-search-input"
           sortTestId="subfolder-sort-select"
-          searchPlaceholder="하위 폴더 검색"
-          searchAriaLabel="하위 폴더 검색"
-          sortAriaLabel="하위 폴더 정렬"
+          searchPlaceholder={t('folder.subSearch')}
+          searchAriaLabel={t('folder.subSearch')}
+          sortAriaLabel={t('folder.subSort')}
         />
       )}
       {isLoading ? (
@@ -71,8 +73,8 @@ export function SubFolderSection({
         isSearching ? (
           <EmptyState
             icon="🔍"
-            title="검색 결과가 없어요"
-            description="다른 키워드로 검색해보세요"
+            title={t('empty.searchTitle')}
+            description={t('empty.searchDescription')}
           />
         ) : null
       ) : (

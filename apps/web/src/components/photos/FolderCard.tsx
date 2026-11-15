@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { FolderOpen, Folders } from 'lucide-react';
 import { Skeleton } from '@uandi/ui';
@@ -12,6 +13,7 @@ type FolderCardProps = {
 };
 
 export function FolderCard({ folder, subfolderCount = 0 }: FolderCardProps) {
+  const t = useTranslations('photos');
   const { data: stat, isLoading } = useFolderStat(folder.coupleId, folder.id);
   const hasSubfolders = subfolderCount > 0;
 
@@ -35,7 +37,7 @@ export function FolderCard({ folder, subfolderCount = 0 }: FolderCardProps) {
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
               <p className="text-sm font-semibold text-white">{folder.name}</p>
-              <p className="text-xs text-white/80">{stat?.count ?? 0}장</p>
+              <p className="text-xs text-white/80">{t('count', { count: stat?.count ?? 0 })}</p>
             </div>
           </>
         ) : (
@@ -54,7 +56,9 @@ export function FolderCard({ folder, subfolderCount = 0 }: FolderCardProps) {
             <div className="text-center">
               <p className="text-sm font-semibold text-foreground line-clamp-1">{folder.name}</p>
               <p className="text-xs text-muted-foreground">
-                {hasSubfolders ? `하위 폴더 ${subfolderCount}개` : `${stat?.count ?? 0}장`}
+                {hasSubfolders
+                  ? t('folder.subfolderCount', { count: subfolderCount })
+                  : t('count', { count: stat?.count ?? 0 })}
               </p>
             </div>
           </div>

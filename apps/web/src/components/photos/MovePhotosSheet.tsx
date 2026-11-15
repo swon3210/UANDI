@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import {
   SheetContent,
@@ -25,6 +26,7 @@ export function MovePhotosSheet({
   selectedCount,
   onMove,
 }: MovePhotosSheetProps) {
+  const t = useTranslations('photos');
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
   const availableFolders = folders.filter((f) => f.id !== currentFolderId);
   const folderMap = useMemo(() => {
@@ -36,7 +38,7 @@ export function MovePhotosSheet({
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh]">
       <SheetHeader>
-        <SheetTitle>이동할 폴더 선택</SheetTitle>
+        <SheetTitle>{t('move.title')}</SheetTitle>
       </SheetHeader>
       <div className="py-4">
         <RadioGroup
@@ -74,7 +76,7 @@ export function MovePhotosSheet({
           onClick={() => targetFolderId && onMove(targetFolderId)}
           data-testid="confirm-move-btn"
         >
-          이동 ({selectedCount}장)
+          {t('move.submit', { count: selectedCount })}
         </Button>
       </div>
     </SheetContent>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ImagePlus } from 'lucide-react';
@@ -37,6 +38,7 @@ function AllPhotosTab({
   coupleId: string;
   uploaderAvatars?: Record<string, string | null>;
 }) {
+  const t = useTranslations('photos');
   const router = useRouter();
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useInfinitePhotos(coupleId);
@@ -57,9 +59,9 @@ function AllPhotosTab({
     return (
       <EmptyState
         icon="📷"
-        title="아직 사진이 없어요"
-        description="소중한 순간을 함께 기록해보세요"
-        action={<Button disabled>첫 사진 올리기</Button>}
+        title={t('empty.allTitle')}
+        description={t('empty.allDescription')}
+        action={<Button disabled>{t('empty.firstUpload')}</Button>}
       />
     );
   }
@@ -86,6 +88,7 @@ function AllPhotosTab({
 }
 
 function TagsTab({ coupleId }: { coupleId: string }) {
+  const t = useTranslations('photos');
   const { data: stats, isLoading, error } = usePhotoStats(coupleId);
   const tags = stats?.tags;
 
@@ -102,18 +105,16 @@ function TagsTab({ coupleId }: { coupleId: string }) {
   if (error) {
     return (
       <div className="p-4">
-        <p className="text-sm text-destructive">태그를 불러오지 못했어요: {error.message}</p>
+        <p className="text-sm text-destructive">
+          {t('empty.tagsError', { message: error.message })}
+        </p>
       </div>
     );
   }
 
   if (!tags || tags.length === 0) {
     return (
-      <EmptyState
-        icon="🏷️"
-        title="사진에 태그를 추가해보세요"
-        description="태그로 사진을 쉽게 찾을 수 있어요"
-      />
+      <EmptyState icon="🏷️" title={t('empty.tagsTitle')} description={t('empty.tagsDescription')} />
     );
   }
 
@@ -131,6 +132,7 @@ function TagsTab({ coupleId }: { coupleId: string }) {
 }
 
 export function PhotosGallery() {
+  const t = useTranslations('photos');
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
   const searchParams = useSearchParams();
@@ -199,7 +201,7 @@ export function PhotosGallery() {
               close();
               setTimeout(unmount, 300);
             } catch {
-              toast.error('사진 업로드에 실패했어요. 다시 시도해주세요.');
+              toast.error(t('uploadFailed'));
               throw new Error('upload failed');
             }
           }}
@@ -210,18 +212,18 @@ export function PhotosGallery() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader title="갤러리" />
+      <PageHeader title={t('title')} />
       <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
           <TabsList className="w-full rounded-none bg-background h-11">
             <TabsTrigger value="all" className="flex-1" data-testid="tab-all">
-              전체
+              {t('tabs.all')}
             </TabsTrigger>
             <TabsTrigger value="folders" className="flex-1" data-testid="tab-folders">
-              폴더
+              {t('tabs.folders')}
             </TabsTrigger>
             <TabsTrigger value="tags" className="flex-1" data-testid="tab-tags">
-              태그
+              {t('tabs.tags')}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="flex-1 mt-0">
@@ -237,7 +239,7 @@ export function PhotosGallery() {
       </div>
       <Fab
         icon={<ImagePlus size={22} />}
-        label="사진 업로드"
+        label={t('upload')}
         onClick={handleUpload}
         data-auth-ready={!!user && !!coupleId ? 'true' : 'false'}
       />

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Header, EmptyState, Button, Skeleton } from '@uandi/ui';
@@ -12,6 +13,7 @@ import { UploaderFilterChips, type UploaderFilter } from '@/components/photos/Up
 import { useMemo, useState } from 'react';
 
 export default function TagDetailPage() {
+  const t = useTranslations('photos');
   const params = useParams<{ tagName: string }>();
   const router = useRouter();
   const { user } = useAuth();
@@ -44,7 +46,7 @@ export default function TagDetailPage() {
       <Header
         title={`#${tagName}`}
         leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label={t('back')}>
             <ArrowLeft size={20} />
           </Button>
         }
@@ -57,8 +59,8 @@ export default function TagDetailPage() {
           ) : filteredPhotos.length === 0 ? (
             <EmptyState
               icon="🏷️"
-              title={`#${tagName} 태그가 있는 사진이 없어요`}
-              description="다른 태그를 찾아보세요"
+              title={t('empty.tagTitle', { tag: tagName })}
+              description={t('empty.tagDescription')}
             />
           ) : (
             <>

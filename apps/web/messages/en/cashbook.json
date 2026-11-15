@@ -314,9 +314,9 @@
     "dismissAria": "Dismiss suggestion",
     "keep": "Keep",
     "dismiss": "Dismiss",
-    "removed": "Turned off {noun} for '{name}'",
-    "registered": "Marked '{name}' as {noun}",
-    "moved": "Created the {target} category '{name}' and moved {count} entries",
+    "removed": "Turned off {noun} for ''{name}''",
+    "registered": "Marked ''{name}'' as {noun}",
+    "moved": "Created the {target} category ''{name}'' and moved {count} entries",
     "moveFailed": "Couldn't create the category. Please try again."
   },
   "settings": {
@@ -529,7 +529,7 @@
   },
   "cashflow": {
     "title": "Cash flow",
-    "movedDescription": "Repeating item moved from '{name}' ({schedule})",
+    "movedDescription": "Repeating item moved from ''{name}'' ({schedule})",
     "setupTitle": "Set up to see your cash flow",
     "setupDescription": "Enter the cash you had on a starting date, and we'll add every entry since then to forecast today's balance and what's left on upcoming dates",
     "setup": "Set starting cash",
@@ -561,7 +561,7 @@
     },
     "negative": {
       "title": "Low balance warning",
-      "body": "On <label>{label}</label>{sub} the balance drops to <amount>{balance}</amount>",
+      "body": "On <em>{label}</em>{sub} the balance drops to <amount>{balance}</amount>",
       "dismiss": "Dismiss"
     },
     "settings": {

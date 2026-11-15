@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { Skeleton, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
 import type { Photo } from '@/types';
@@ -28,6 +29,7 @@ export function PhotoGrid({
   onToggleSelect,
   onPhotoClick,
 }: PhotoGridProps) {
+  const t = useTranslations('photos');
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0.5">
@@ -52,7 +54,7 @@ export function PhotoGrid({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photo.thumbnailUrl ?? photo.storageUrl}
-              alt={photo.caption || '사진'}
+              alt={photo.caption || t('photoAlt')}
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover"
             />

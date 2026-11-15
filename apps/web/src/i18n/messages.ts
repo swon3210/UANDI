@@ -19,6 +19,7 @@ export const MESSAGE_NAMESPACES = [
   'ui',
   'dashboard',
   'cashbook',
+  'photos',
 ] as const;
 export type MessageNamespace = (typeof MESSAGE_NAMESPACES)[number];
 

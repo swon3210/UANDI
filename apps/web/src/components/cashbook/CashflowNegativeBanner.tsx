@@ -44,7 +44,7 @@ export function CashflowNegativeBanner({
             label,
             sub: subLabel ? ` (${subLabel})` : '',
             balance: formatCurrency(balance),
-            label_: (chunks) => chunks,
+            em: (chunks) => <span className="font-medium">{chunks}</span>,
             amount: (chunks) => <span className="font-semibold tabular-nums">{chunks}</span>,
           })}
         </p>

@@ -314,9 +314,9 @@
     "dismissAria": "제안 취소",
     "keep": "유지",
     "dismiss": "취소",
-    "removed": "'{name}' 항목의 {noun} 등록을 해제했어요",
-    "registered": "'{name}' 항목을 {noun}에 등록했어요",
-    "moved": "'{name}' {target} 카테고리를 만들고 내역 {count}건을 옮겼어요",
+    "removed": "''{name}'' 항목의 {noun} 등록을 해제했어요",
+    "registered": "''{name}'' 항목을 {noun}에 등록했어요",
+    "moved": "''{name}'' {target} 카테고리를 만들고 내역 {count}건을 옮겼어요",
     "moveFailed": "카테고리를 만들지 못했어요. 다시 시도해주세요."
   },
   "settings": {
@@ -529,7 +529,7 @@
   },
   "cashflow": {
     "title": "현금흐름",
-    "movedDescription": "'{name}'에서 {schedule} 반복되던 항목",
+    "movedDescription": "''{name}''에서 {schedule} 반복되던 항목",
     "setupTitle": "현금흐름을 보려면 설정이 필요해요",
     "setupDescription": "기준 날짜에 가지고 있던 현금(최초 현금)을 넣으면, 그 뒤로 기록한 수입·지출을 더해 오늘 잔액과 앞으로의 날짜별 남는 돈을 예측해 드려요",
     "setup": "최초 현금 설정하기",
@@ -561,7 +561,7 @@
     },
     "negative": {
       "title": "잔액 부족 주의",
-      "body": "<label>{label}</label>{sub}에 잔액이 <amount>{balance}</amount>으로 부족해요",
+      "body": "<em>{label}</em>{sub}에 잔액이 <amount>{balance}</amount>으로 부족해요",
       "dismiss": "알림 닫기"
     },
     "settings": {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { SheetContent, SheetHeader, SheetTitle, SheetDescription, Button } from '@uandi/ui';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -9,16 +10,17 @@ type FolderMenuSheetProps = {
 };
 
 export function FolderMenuSheet({ onRename, onDelete }: FolderMenuSheetProps) {
+  const t = useTranslations('photos');
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh]">
       <SheetHeader>
-        <SheetTitle>폴더 관리</SheetTitle>
-        <SheetDescription className="sr-only">폴더 관리 메뉴</SheetDescription>
+        <SheetTitle>{t('folder.menuTitle')}</SheetTitle>
+        <SheetDescription className="sr-only">{t('folder.menuDescription')}</SheetDescription>
       </SheetHeader>
       <div className="mt-4 space-y-2">
         <Button variant="ghost" className="w-full justify-start gap-3" onClick={onRename}>
           <Pencil size={20} />
-          이름 변경
+          {t('folder.rename')}
         </Button>
         <Button
           variant="ghost"
@@ -26,7 +28,7 @@ export function FolderMenuSheet({ onRename, onDelete }: FolderMenuSheetProps) {
           onClick={onDelete}
         >
           <Trash2 size={20} />
-          폴더 삭제
+          {t('folder.delete')}
         </Button>
       </div>
     </SheetContent>

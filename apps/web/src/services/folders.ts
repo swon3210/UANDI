@@ -94,11 +94,11 @@ export async function createFolder(
   if (parentFolderId) {
     const parent = await getFolder(coupleId, parentFolderId);
     if (!parent) {
-      throw new Error('상위 폴더를 찾을 수 없어요');
+      throw new Error('FOLDER_PARENT_NOT_FOUND');
     }
     depth = parent.depth + 1;
     if (depth > MAX_FOLDER_DEPTH) {
-      throw new Error('폴더는 최대 5단계까지 만들 수 있어요');
+      throw new Error('FOLDER_MAX_DEPTH');
     }
     path = [...parent.path, parent.id];
   }

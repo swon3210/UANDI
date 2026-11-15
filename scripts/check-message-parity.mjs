@@ -94,6 +94,21 @@ for (const f of baseFiles) {
   }
 }
 
+// ICU 에서 작은따옴표 바로 뒤의 { } # | 는 이스케이프가 돼 인자가 그대로 출력된다.
+// 인자를 따옴표로 감싸려면 '' 를 써야 한다 (예: "''{name}'' 폴더 만들기").
+for (const locale of locales) {
+  for (const f of listFiles(locale)) {
+    const flat = flatten(JSON.parse(readFileSync(join(MESSAGES_DIR, locale, f), 'utf8')));
+    for (const [key, v] of Object.entries(flat)) {
+      if (typeof v === 'string' && /(^|[^'])'[{}#|]/.test(v.replaceAll("''", ''))) {
+        errors.push(
+          `${locale}/${f}: "${key}" 작은따옴표 뒤 {·#·| 는 ICU 이스케이프됩니다. '' 로 쓰세요`
+        );
+      }
+    }
+  }
+}
+
 if (errors.length > 0) {
   console.error(`✗ 메시지 파일 불일치 ${errors.length}건:`);
   for (const e of errors) console.error(`  - ${e}`);

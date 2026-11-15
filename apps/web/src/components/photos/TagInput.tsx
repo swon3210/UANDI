@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Badge } from '@uandi/ui';
@@ -15,8 +16,10 @@ export function TagInput({
   value,
   onChange,
   suggestions = [],
-  placeholder = '태그 입력 후 Enter',
+  placeholder: placeholderProp,
 }: TagInputProps) {
+  const t = useTranslations('photos.tagInput');
+  const placeholder = placeholderProp ?? t('placeholder');
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +67,7 @@ export function TagInput({
               type="button"
               onClick={() => removeTag(tag)}
               className="rounded-full hover:bg-muted p-0.5"
-              aria-label={`${tag} 태그 삭제`}
+              aria-label={t('remove', { tag })}
             >
               <X size={12} />
             </button>
@@ -87,7 +90,7 @@ export function TagInput({
           }
           placeholder={value.length === 0 ? placeholder : ''}
           className="flex-1 min-w-[80px] bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          aria-label="태그"
+          aria-label={t('aria')}
         />
       </div>
       {showSuggestions && filteredSuggestions.length > 0 && (

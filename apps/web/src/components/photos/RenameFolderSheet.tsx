@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { SheetContent, SheetHeader, SheetTitle, SheetDescription, Input, Button } from '@uandi/ui';
 
@@ -10,6 +11,7 @@ type RenameFolderSheetProps = {
 };
 
 export function RenameFolderSheet({ currentName, onSubmit, isPending }: RenameFolderSheetProps) {
+  const t = useTranslations('photos');
   const [name, setName] = useState(currentName);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -21,13 +23,13 @@ export function RenameFolderSheet({ currentName, onSubmit, isPending }: RenameFo
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh]">
       <SheetHeader>
-        <SheetTitle>이름 변경</SheetTitle>
-        <SheetDescription className="sr-only">폴더 이름을 변경합니다</SheetDescription>
+        <SheetTitle>{t('folder.rename')}</SheetTitle>
+        <SheetDescription className="sr-only">{t('folder.renameDescription')}</SheetDescription>
       </SheetHeader>
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
           <label htmlFor="folder-rename" className="text-sm font-medium">
-            폴더 이름
+            {t('folder.nameLabel')}
           </label>
           <Input
             id="folder-rename"
@@ -42,7 +44,7 @@ export function RenameFolderSheet({ currentName, onSubmit, isPending }: RenameFo
           className="w-full"
           disabled={!name.trim() || name.trim() === currentName || isPending}
         >
-          {isPending ? '변경 중...' : '변경하기'}
+          {isPending ? t('folder.renaming') : t('folder.renameSubmit')}
         </Button>
       </form>
     </SheetContent>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import {
   SheetContent,
@@ -29,6 +30,7 @@ export function DeleteFolderConfirmSheet({
   onConfirm,
   onCancel,
 }: DeleteFolderConfirmSheetProps) {
+  const t = useTranslations('photos');
   const showCounts = !!count && (count.folders > 0 || count.photos > 0);
 
   return (
@@ -40,10 +42,13 @@ export function DeleteFolderConfirmSheet({
       <SheetHeader>
         <SheetTitle className="flex items-center gap-2 text-destructive">
           <AlertTriangle size={20} />
-          폴더 삭제
+          {t('folder.delete')}
         </SheetTitle>
         <SheetDescription className="text-left">
-          <span className="font-medium text-foreground">‘{folderName}’</span> 폴더를 삭제할까요?
+          {t.rich('folder.deleteQuestion', {
+            name: folderName,
+            em: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+          })}
         </SheetDescription>
       </SheetHeader>
       <div className="mt-4 rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
@@ -51,18 +56,19 @@ export function DeleteFolderConfirmSheet({
           <Skeleton className="h-5 w-40" />
         ) : showCounts ? (
           <p>
-            이 폴더와{' '}
-            <span className="font-medium text-foreground">하위 폴더 {count!.folders}개</span>,{' '}
-            <span className="font-medium text-foreground">사진 {count!.photos}장</span>이 모두
-            삭제됩니다. 되돌릴 수 없어요.
+            {t.rich('folder.deleteWithCounts', {
+              folders: count!.folders,
+              photos: count!.photos,
+              b: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+            })}
           </p>
         ) : (
-          <p>이 폴더를 삭제합니다. 되돌릴 수 없어요.</p>
+          <p>{t('folder.deleteSimple')}</p>
         )}
       </div>
       <div className="mt-4 flex gap-2">
         <Button variant="outline" className="flex-1" onClick={onCancel} disabled={isDeleting}>
-          취소
+          {t('folder.cancel')}
         </Button>
         <Button
           variant="destructive"
@@ -73,10 +79,10 @@ export function DeleteFolderConfirmSheet({
           {isDeleting ? (
             <>
               <Loader2 size={16} className="mr-2 animate-spin" />
-              삭제 중...
+              {t('folder.deleting')}
             </>
           ) : (
-            '삭제'
+            t('folder.deleteSubmit')
           )}
         </Button>
       </div>

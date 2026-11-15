@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, MoreVertical, CheckSquare, Plus, FolderPlus } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -39,7 +40,17 @@ import { MovePhotosSheet } from '@/components/photos/MovePhotosSheet';
 import { PhotoUploadSheet } from '@/components/photos/PhotoUploadSheet';
 import { useMemo, useState } from 'react';
 
+const FOLDER_ERROR_CODES = ['FOLDER_PARENT_NOT_FOUND', 'FOLDER_MAX_DEPTH'] as const;
+type FolderErrorCode = (typeof FOLDER_ERROR_CODES)[number];
+
 export default function FolderDetailPage() {
+  const t = useTranslations('photos');
+  const folderErrorMessage = (err: unknown, fallback: string) => {
+    const code = err instanceof Error ? err.message : '';
+    return (FOLDER_ERROR_CODES as readonly string[]).includes(code)
+      ? t(`folder.errors.${code as FolderErrorCode}`)
+      : fallback;
+  };
   const params = useParams<{ folderId: string }>();
   const router = useRouter();
   const { user } = useAuth();
@@ -138,7 +149,7 @@ export default function FolderDetailPage() {
             close();
             setTimeout(unmount, 300);
             handleExitSelectMode();
-            toast.success(`${count}장의 사진을 '${targetFolder?.name}'로 이동했어요`);
+            toast.success(t('folder.moved', { count, folder: targetFolder?.name ?? '' }));
           }}
         />
       </Sheet>
@@ -169,7 +180,7 @@ export default function FolderDetailPage() {
               close();
               setTimeout(unmount, 300);
             } catch {
-              toast.error('사진 업로드에 실패했어요. 다시 시도해주세요.');
+              toast.error(t('uploadFailed'));
               throw new Error('upload failed');
             }
           }}
@@ -234,7 +245,7 @@ export default function FolderDetailPage() {
               close();
               setTimeout(unmount, 300);
             } catch (err) {
-              const msg = err instanceof Error ? err.message : '하위 폴더를 만들지 못했어요';
+              const msg = folderErrorMessage(err, t('folder.subCreateFailed'));
               toast.error(msg);
             }
           }}
@@ -259,7 +270,7 @@ export default function FolderDetailPage() {
             setTimeout(unmount, 300);
             router.push('/inner/photos?tab=folders');
           } catch (err) {
-            const msg = err instanceof Error ? err.message : '폴더 삭제에 실패했어요';
+            const msg = folderErrorMessage(err, t('folder.deleteFailed'));
             setDeleteError(msg);
             close();
             setTimeout(unmount, 300);
@@ -283,9 +294,14 @@ export default function FolderDetailPage() {
         />
       ) : (
         <Header
-          title={folderLoading ? '...' : (folder?.name ?? '폴더')}
+          title={folderLoading ? '...' : (folder?.name ?? t('folder.fallbackTitle'))}
           leftSlot={
-            <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              aria-label={t('back')}
+            >
               <ArrowLeft size={20} />
             </Button>
           }
@@ -295,7 +311,7 @@ export default function FolderDetailPage() {
                 variant="ghost"
                 size="icon"
                 onClick={handleUpload}
-                aria-label="사진 업로드"
+                aria-label={t('folder.uploadAria')}
                 data-testid="folder-upload-btn"
                 data-auth-ready={!!user && !!coupleId && !!folder ? 'true' : 'false'}
               >
@@ -305,13 +321,13 @@ export default function FolderDetailPage() {
                 variant="ghost"
                 size="icon"
                 onClick={handleCreateSubFolder}
-                aria-label="새 하위 폴더"
+                aria-label={t('folder.newSub')}
                 data-testid="create-subfolder-btn"
                 disabled={!folder || folder.depth >= MAX_FOLDER_DEPTH}
                 title={
                   folder && folder.depth >= MAX_FOLDER_DEPTH
-                    ? '최대 5단계까지만 만들 수 있어요'
-                    : '새 하위 폴더 만들기'
+                    ? t('folder.maxDepth')
+                    : t('folder.newSubTitle')
                 }
               >
                 <FolderPlus size={20} />
@@ -320,7 +336,7 @@ export default function FolderDetailPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSelectMode(true)}
-                aria-label="선택 모드"
+                aria-label={t('folder.selectMode')}
                 data-testid="select-mode-btn"
               >
                 <CheckSquare size={20} />
@@ -329,7 +345,7 @@ export default function FolderDetailPage() {
                 variant="ghost"
                 size="icon"
                 onClick={handleMenu}
-                aria-label="더보기"
+                aria-label={t('folder.more')}
                 data-testid="folder-menu-btn"
               >
                 <MoreVertical size={20} />
@@ -364,8 +380,8 @@ export default function FolderDetailPage() {
           ) : filteredPhotos.length === 0 ? (
             <EmptyState
               icon="📷"
-              title="이 폴더에 사진이 없어요"
-              description="사진을 업로드해보세요"
+              title={t('empty.folderTitle')}
+              description={t('empty.folderDescription')}
             />
           ) : (
             <>

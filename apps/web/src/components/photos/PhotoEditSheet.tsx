@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -46,6 +47,7 @@ export function PhotoEditSheet({
   isPending,
   onSubmit,
 }: PhotoEditSheetProps) {
+  const t = useTranslations('photos');
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {
@@ -58,7 +60,7 @@ export function PhotoEditSheet({
   return (
     <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto">
       <SheetHeader>
-        <SheetTitle>사진 편집</SheetTitle>
+        <SheetTitle>{t('edit.title')}</SheetTitle>
       </SheetHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1 pb-4">
@@ -68,10 +70,10 @@ export function PhotoEditSheet({
             name="folderId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>폴더</FormLabel>
+                <FormLabel>{t('edit.folder')}</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger aria-label="폴더">
+                    <SelectTrigger aria-label={t('edit.folder')}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -93,7 +95,7 @@ export function PhotoEditSheet({
             name="tags"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>태그</FormLabel>
+                <FormLabel>{t('edit.tags')}</FormLabel>
                 <FormControl>
                   <TagInput
                     value={field.value}
@@ -111,16 +113,16 @@ export function PhotoEditSheet({
             name="caption"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>캡션</FormLabel>
+                <FormLabel>{t('edit.caption')}</FormLabel>
                 <FormControl>
-                  <Textarea {...field} aria-label="캡션" />
+                  <Textarea {...field} aria-label={t('edit.caption')} />
                 </FormControl>
               </FormItem>
             )}
           />
 
           <Button type="submit" className="w-full" disabled={isPending}>
-            저장
+            {t('edit.save')}
           </Button>
         </form>
       </Form>

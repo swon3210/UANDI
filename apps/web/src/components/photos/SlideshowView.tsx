@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { overlay } from 'overlay-kit';
 import {
@@ -38,6 +39,7 @@ export function SlideshowView({
   onClose,
   onLastPhotoNext,
 }: SlideshowViewProps) {
+  const t = useTranslations('photos');
   const { user } = useAuth();
   const coupleId = user?.coupleId ?? null;
 
@@ -168,8 +170,8 @@ export function SlideshowView({
       <Dialog open={isOpen} onOpenChange={(open) => !open && close(false)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>사진 삭제</DialogTitle>
-            <DialogDescription>이 사진을 삭제하면 복구할 수 없어요. 삭제할까요?</DialogDescription>
+            <DialogTitle>{t('slideshow.deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('slideshow.deleteDescription')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
@@ -179,7 +181,7 @@ export function SlideshowView({
                 setTimeout(unmount, 300);
               }}
             >
-              취소
+              {t('slideshow.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -188,7 +190,7 @@ export function SlideshowView({
                 setTimeout(unmount, 300);
               }}
             >
-              삭제
+              {t('slideshow.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -215,7 +217,7 @@ export function SlideshowView({
       setCurrentIndex((idx) => Math.min(idx, next.length - 1));
       return next;
     });
-  }, [currentPhoto, deleteMutation, onClose, resetIdleTimer]);
+  }, [currentPhoto, deleteMutation, onClose, resetIdleTimer, t]);
 
   if (!currentPhoto) return null;
 
@@ -231,7 +233,7 @@ export function SlideshowView({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={currentPhoto.storageUrl}
-          alt={currentPhoto.caption || `사진 ${currentIndex + 1}`}
+          alt={currentPhoto.caption || t('photoAltIndex', { index: currentIndex + 1 })}
           className="absolute inset-0 h-full w-full object-contain"
           data-testid="slideshow-image"
         />

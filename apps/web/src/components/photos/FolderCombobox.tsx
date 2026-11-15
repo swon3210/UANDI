@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useId, useMemo, useState, type UIEvent } from 'react';
 import { ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import {
@@ -36,9 +37,12 @@ export function FolderCombobox({
   onChange,
   onCreateFolder,
   disabled,
-  placeholder = '폴더 선택',
-  ariaLabel = '폴더',
+  placeholder: placeholderProp,
+  ariaLabel: ariaLabelProp,
 }: FolderComboboxProps) {
+  const t = useTranslations('photos.combobox');
+  const placeholder = placeholderProp ?? t('placeholder');
+  const ariaLabel = ariaLabelProp ?? t('aria');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
@@ -152,7 +156,7 @@ export function FolderCombobox({
       >
         <Command shouldFilter={false} disablePointerSelection>
           <CommandInput
-            placeholder="폴더 검색 또는 새로 만들기"
+            placeholder={t('search')}
             value={query}
             onValueChange={handleQueryChange}
             data-testid="folder-combobox-input"
@@ -194,16 +198,14 @@ export function FolderCombobox({
                     className="py-2 text-center text-xs text-muted-foreground"
                     data-testid="folder-combobox-more"
                   >
-                    스크롤해서 더 보기 ({filtered.length - visible.length}개)
+                    {t('more', { count: filtered.length - visible.length })}
                   </div>
                 )}
               </CommandGroup>
             )}
             {showEmptyMessage && (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                {onCreateFolder
-                  ? '폴더 이름을 입력하면 새로 만들 수 있어요'
-                  : '일치하는 폴더가 없어요'}
+                {onCreateFolder ? t('canCreate') : t('noMatch')}
               </div>
             )}
             {showCreateOption && (
@@ -223,7 +225,7 @@ export function FolderCombobox({
                       <Plus size={16} className="mr-2 shrink-0" />
                     )}
                     <span className="truncate">
-                      {isCreating ? '만드는 중…' : `'${trimmed}' 폴더 만들기`}
+                      {isCreating ? t('creating') : t('create', { name: trimmed })}
                     </span>
                   </CommandItem>
                 </CommandGroup>
