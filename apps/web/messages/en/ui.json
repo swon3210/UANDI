@@ -30,24 +30,48 @@
   "aiPrefs": {
     "tone": {
       "legend": "Tone",
-      "friendly": { "label": "Friendly", "description": "Warm and encouraging" },
-      "concise": { "label": "Concise", "description": "Just the essentials, short and plain" },
-      "strict": { "label": "Strict", "description": "Cool-headed, focused on problems" }
+      "friendly": {
+        "label": "Friendly",
+        "description": "Warm and encouraging"
+      },
+      "concise": {
+        "label": "Concise",
+        "description": "Just the essentials, short and plain"
+      },
+      "strict": {
+        "label": "Strict",
+        "description": "Cool-headed, focused on problems"
+      }
     },
     "focus": {
       "legend": "Analysis focus",
-      "saving": { "label": "Saving first", "description": "Spending you could cut comes first" },
+      "saving": {
+        "label": "Saving first",
+        "description": "Spending you could cut comes first"
+      },
       "investment": {
         "label": "Building assets",
         "description": "Room to save and invest comes first"
       },
-      "balanced": { "label": "Balanced", "description": "Income and spending evenly" }
+      "balanced": {
+        "label": "Balanced",
+        "description": "Income and spending evenly"
+      }
     },
     "length": {
       "legend": "Length",
-      "short": { "label": "Short", "description": "Key points in 3–4 lines" },
-      "normal": { "label": "Normal", "description": "Default length" },
-      "detailed": { "label": "Detailed", "description": "Reasoning for every item" }
+      "short": {
+        "label": "Short",
+        "description": "Key points in 3–4 lines"
+      },
+      "normal": {
+        "label": "Normal",
+        "description": "Default length"
+      },
+      "detailed": {
+        "label": "Detailed",
+        "description": "Reasoning for every item"
+      }
     },
     "stance": {
       "legend": "Forecast stance",
@@ -55,8 +79,14 @@
         "label": "Conservative",
         "description": "Fewer predictions, lower confidence"
       },
-      "standard": { "label": "Standard", "description": "Follow your usual pattern" },
-      "aggressive": { "label": "Aggressive", "description": "More predictions, higher confidence" }
+      "standard": {
+        "label": "Standard",
+        "description": "Follow your usual pattern"
+      },
+      "aggressive": {
+        "label": "Aggressive",
+        "description": "More predictions, higher confidence"
+      }
     },
     "analyze": {
       "title": "Spending analysis",
@@ -85,5 +115,21 @@
       "add": "Add",
       "removeKeyword": "Remove {keyword}"
     }
+  },
+  "assets": {
+    "buckets": {
+      "savings": "Savings",
+      "stocks": "Stocks",
+      "realEstate": "Real estate",
+      "crypto": "Crypto",
+      "forex": "Foreign currency"
+    },
+    "ratioAria": "{label} ratio",
+    "total": "Total",
+    "totalWarning": "You can save once everything adds up to 100%.",
+    "save": "Save",
+    "saving": "Saving…",
+    "yearTick": "Y{year}",
+    "yearsLater": "In {year, plural, one {# year} other {# years}}"
   }
 }

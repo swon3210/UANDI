@@ -1,5 +1,6 @@
+import { useTranslations } from 'next-intl';
 import { Badge, cn } from '@uandi/ui';
-import { RECOMMENDATION_LABEL, type ForexRecommendation } from '@uandi/investment-core';
+import type { ForexRecommendation } from '@uandi/investment-core';
 
 type Props = {
   recommendation: ForexRecommendation;
@@ -13,6 +14,7 @@ const VARIANT_CLASS: Record<ForexRecommendation, string> = {
 };
 
 export function BuyRecommendationBadge({ recommendation, className }: Props) {
+  const t = useTranslations('outer.forex.recommendation');
   return (
     <Badge
       data-testid={`recommendation-${recommendation}`}
@@ -23,7 +25,7 @@ export function BuyRecommendationBadge({ recommendation, className }: Props) {
         className
       )}
     >
-      {RECOMMENDATION_LABEL[recommendation]}
+      {t(recommendation)}
     </Badge>
   );
 }

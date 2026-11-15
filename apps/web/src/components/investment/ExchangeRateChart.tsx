@@ -3,12 +3,14 @@
 import { useId, useMemo } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from 'recharts';
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@uandi/ui';
 import {
   type ExchangeRatePoint,
   type SupportedCurrency,
   getDisplayRate,
 } from '@uandi/investment-core';
+import { formatKrwRate } from '@/utils/currency';
 
 type Props = {
   currency: SupportedCurrency;
@@ -28,12 +30,6 @@ function ma(points: ExchangeRatePoint[], window: number): (number | null)[] {
   }
   return result;
 }
-
-const config: ChartConfig = {
-  rate: { label: '환율', color: 'hsl(var(--primary))' },
-  ma5: { label: 'MA5', color: 'hsl(var(--muted-foreground))' },
-  ma20: { label: 'MA20', color: 'hsl(var(--income))' },
-};
 
 const TARGET_DOT_COUNT = 12;
 
@@ -62,7 +58,16 @@ function RateDot({ cx, cy, index, payload }: RateDotProps) {
 }
 
 export function ExchangeRateChart({ currency, points }: Props) {
+  const t = useTranslations('outer.forex');
   const gradientId = useId();
+  const config: ChartConfig = useMemo(
+    () => ({
+      rate: { label: t('chartRate'), color: 'hsl(var(--primary))' },
+      ma5: { label: 'MA5', color: 'hsl(var(--muted-foreground))' },
+      ma20: { label: 'MA20', color: 'hsl(var(--income))' },
+    }),
+    [t]
+  );
   const data = useMemo(() => {
     const ma5 = ma(points, 5);
     const ma20 = ma(points, 20);
@@ -125,7 +130,7 @@ export function ExchangeRateChart({ currency, points }: Props) {
               indicator="dot"
               formatter={(value, name) => (
                 <span className="font-mono tabular-nums">
-                  {String(name)} {typeof value === 'number' ? value.toFixed(2) : value}원
+                  {String(name)} {typeof value === 'number' ? formatKrwRate(value) : value}
                 </span>
               )}
             />

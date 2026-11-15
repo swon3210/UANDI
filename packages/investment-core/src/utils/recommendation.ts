@@ -20,12 +20,14 @@ export function computeRecommendation(indicators: ForexIndicators): ForexRecomme
   return 'hold';
 }
 
+/** AI 프롬프트(한국어)용 라벨. 화면 표시는 web messages `outer.forex.recommendation.*` 를 쓴다. */
 export const RECOMMENDATION_LABEL: Record<ForexRecommendation, string> = {
   buy: '매수 우호',
   sell: '매도 우호',
   hold: '중립',
 };
 
+/** AI 프롬프트(한국어)용 라벨. 화면 표시는 web messages `outer.forex.trend.*` 를 쓴다. */
 export const TREND_LABEL: Record<ForexTrend, string> = {
   up: '상승 추세',
   down: '하락 추세',

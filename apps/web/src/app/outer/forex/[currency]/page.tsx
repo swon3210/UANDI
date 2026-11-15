@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowDown, ArrowLeft, ArrowUp } from 'lucide-react';
 import { Button, Header, Skeleton, cn } from '@uandi/ui';
 import {
@@ -18,8 +19,17 @@ import { ForecastCard } from '@/components/investment/ForecastCard';
 import { IndicatorPanel } from '@/components/investment/IndicatorPanel';
 import { TimeRangeSelector } from '@/components/investment/TimeRangeSelector';
 import { BuyRecommendationBadge } from '@/components/investment/BuyRecommendationBadge';
+import { KrwRate } from '@/components/investment/KrwRate';
+import { formatKrwRate } from '@/utils/currency';
+import { dateFormat } from '@/utils/date';
+
+/** 서비스가 던지는 코드(FOREX_OUTLOOK_FAILED 등). 서버 문구는 Phase 3 전까지 한국어라 en 에서는 일반 문구로 바꾼다. */
+const FOREX_ERROR_CODES = ['FOREX_RATES_FAILED', 'FOREX_OUTLOOK_FAILED'] as const;
 
 export default function ForexDetailPage() {
+  const t = useTranslations('outer.forex');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const router = useRouter();
   const params = useParams<{ currency: string }>();
   const raw = params.currency?.toUpperCase() ?? '';
@@ -56,13 +66,25 @@ export default function ForexDetailPage() {
   const asOf = ratesQuery.data?.asOf;
   const fetchedAt = ratesQuery.data?.fetchedAt;
 
+  const outlookErrorMessage = (error: unknown): string | null => {
+    if (!error) return null;
+    const message = error instanceof Error ? error.message : '';
+    const isCode = (FOREX_ERROR_CODES as readonly string[]).includes(message);
+    return message && !isCode && locale === 'ko' ? message : t('outlookFailed');
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header
         data-testid="forex-detail-header"
         title={`${currency}/KRW`}
         leftSlot={
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            aria-label={tCommon('back')}
+          >
             <ArrowLeft size={20} />
           </Button>
         }
@@ -77,8 +99,12 @@ export default function ForexDetailPage() {
               {meta.flag}
             </span>
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">{meta.label}</span>
-              <span className="text-xs text-muted-foreground">{meta.displayUnit} 기준</span>
+              <span className="text-sm text-muted-foreground">
+                {t(`currencies.${currency}.label`)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('unitBasis', { unit: t(`currencies.${currency}.unit`) })}
+              </span>
             </div>
             <div className="ml-auto">
               {indicators && <BuyRecommendationBadge recommendation={recommendation} />}
@@ -87,11 +113,10 @@ export default function ForexDetailPage() {
           <div className="flex items-end justify-between gap-2">
             {displayLatest !== null ? (
               <div className="text-3xl font-bold tabular-nums leading-none">
-                {displayLatest.toLocaleString('ko-KR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-                <span className="ml-1 text-lg font-medium text-muted-foreground">원</span>
+                <KrwRate
+                  value={displayLatest}
+                  unitClassName="mx-1 text-lg font-medium text-muted-foreground"
+                />
               </div>
             ) : (
               <Skeleton className="h-9 w-40" />
@@ -109,7 +134,7 @@ export default function ForexDetailPage() {
                 {isDown && <ArrowDown size={14} />}
                 <span className="font-medium">
                   {isUp ? '+' : ''}
-                  {diff.toFixed(2)}원 ({isUp ? '+' : ''}
+                  {formatKrwRate(diff)} ({isUp ? '+' : ''}
                   {diffPercent.toFixed(2)}%)
                 </span>
               </div>
@@ -117,10 +142,10 @@ export default function ForexDetailPage() {
           </div>
           {asOf && (
             <p data-testid="forex-detail-as-of" className="text-xs text-muted-foreground">
-              {dayjs(asOf).format('YYYY년 M월 D일')} ECB 종가 기준
+              {t('asOf', { date: dayjs(asOf).format(dateFormat('full')) })}
               {fetchedAt && (
                 <span className="ml-1 text-muted-foreground/70">
-                  · {dayjs(fetchedAt).format('HH:mm')} 갱신
+                  {t('updated', { time: dayjs(fetchedAt).format('HH:mm') })}
                 </span>
               )}
             </p>
@@ -133,7 +158,7 @@ export default function ForexDetailPage() {
             <Skeleton className="aspect-[16/9] w-full rounded-xl" />
           ) : ratesQuery.error ? (
             <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              환율 데이터를 가져오지 못했어요
+              {t('detailLoadFailed')}
             </div>
           ) : (
             <ExchangeRateChart currency={currency} points={ratesQuery.data.points} />
@@ -146,13 +171,7 @@ export default function ForexDetailPage() {
           outlook={outlookQuery.data}
           recommendation={recommendation}
           isLoading={outlookQuery.isFetching}
-          error={
-            outlookQuery.error instanceof Error
-              ? outlookQuery.error.message
-              : outlookQuery.error
-                ? 'AI 분석에 실패했어요'
-                : null
-          }
+          error={outlookErrorMessage(outlookQuery.error)}
           onRefresh={() => outlookQuery.refetch()}
         />
       </main>

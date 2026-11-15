@@ -16,6 +16,7 @@ import koUi from '../../../apps/web/messages/ko/ui.json';
 import koDashboard from '../../../apps/web/messages/ko/dashboard.json';
 import koCashbook from '../../../apps/web/messages/ko/cashbook.json';
 import koPhotos from '../../../apps/web/messages/ko/photos.json';
+import koOuter from '../../../apps/web/messages/ko/outer.json';
 import enCommon from '../../../apps/web/messages/en/common.json';
 import enMetadata from '../../../apps/web/messages/en/metadata.json';
 import enSettings from '../../../apps/web/messages/en/settings.json';
@@ -28,6 +29,7 @@ import enUi from '../../../apps/web/messages/en/ui.json';
 import enDashboard from '../../../apps/web/messages/en/dashboard.json';
 import enCashbook from '../../../apps/web/messages/en/cashbook.json';
 import enPhotos from '../../../apps/web/messages/en/photos.json';
+import enOuter from '../../../apps/web/messages/en/outer.json';
 
 const MESSAGES = {
   ko: {
@@ -43,6 +45,7 @@ const MESSAGES = {
     dashboard: koDashboard,
     cashbook: koCashbook,
     photos: koPhotos,
+    outer: koOuter,
   },
   en: {
     common: enCommon,
@@ -57,6 +60,7 @@ const MESSAGES = {
     dashboard: enDashboard,
     cashbook: enCashbook,
     photos: enPhotos,
+    outer: enOuter,
   },
 } as const;
 

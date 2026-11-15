@@ -57,3 +57,20 @@ export function formatCurrencyMan(n: number, options: { manDecimals?: number } =
   }
   return `${sign}${abs.toLocaleString('ko-KR')}`;
 }
+
+/**
+ * 환율처럼 소수 2자리까지 보여주는 원화 표기.
+ *   ko: "1,394.50원" / en: "₩1,394.50" (음수는 부호를 맨 앞에 붙인다)
+ */
+export function formatKrwRate(value: number): string {
+  const sign = value < 0 ? '-' : '';
+  return `${sign}${coreFormatCurrency(1, getActiveLocale()).replace('1', formatRateNumber(Math.abs(value)))}`;
+}
+
+/** 원화 기호 없이 소수 2자리로 고정한 숫자 표기 (기호를 따로 스타일링할 때) */
+export function formatRateNumber(value: number): string {
+  return value.toLocaleString(INTL_LOCALE_TAGS[getActiveLocale()], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}

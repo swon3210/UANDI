@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { RefreshCcw, Sparkles } from 'lucide-react';
 import { Button, Skeleton } from '@uandi/ui';
 import type { ForexOutlook, ForexRecommendation } from '@uandi/investment-core';
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function ForecastCard({ outlook, recommendation, isLoading, error, onRefresh }: Props) {
+  const t = useTranslations('outer.forex.forecast');
   return (
     <div
       data-testid="forecast-card"
@@ -20,7 +22,7 @@ export function ForecastCard({ outlook, recommendation, isLoading, error, onRefr
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-amber-700">
           <Sparkles size={14} className="text-amber-500" />
-          AI 전망
+          {t('title')}
         </h3>
         <Button
           type="button"
@@ -32,7 +34,7 @@ export function ForecastCard({ outlook, recommendation, isLoading, error, onRefr
           className="h-7 gap-1 px-2 text-xs text-amber-700 hover:bg-amber-100 hover:text-amber-800"
         >
           <RefreshCcw size={12} />
-          다시 분석
+          {t('refresh')}
         </Button>
       </div>
 
@@ -55,7 +57,7 @@ export function ForecastCard({ outlook, recommendation, isLoading, error, onRefr
           <BuyRecommendationBadge recommendation={recommendation} className="self-start" />
           <p className="text-sm leading-relaxed text-foreground/90">{outlook.summary}</p>
           <p className="text-xs text-muted-foreground">
-            신뢰도 {(outlook.confidence * 100).toFixed(0)}%
+            {t('confidence', { percent: (outlook.confidence * 100).toFixed(0) })}
           </p>
         </>
       )}

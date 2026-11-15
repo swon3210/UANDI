@@ -38,7 +38,7 @@ export function useForexOutlook(
   return useQuery({
     queryKey: [OUTLOOK_KEY, currency],
     queryFn: () => {
-      if (!points || !indicators) throw new Error('데이터가 준비되지 않았습니다');
+      if (!points || !indicators) throw new Error('FOREX_DATA_NOT_READY');
       const recent = points.slice(-90);
       return fetchForexOutlook({ currency, points: recent, indicators });
     },

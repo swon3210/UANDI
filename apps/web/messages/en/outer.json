@@ -1,0 +1,145 @@
+{
+  "dashboard": {
+    "title": "Investing",
+    "allocationTitle": "Asset allocation",
+    "allocationDescription": "Set target ratios by asset class",
+    "investmentTitle": "Investments",
+    "investmentDescription": "Track holdings and their value",
+    "savingsTitle": "Savings",
+    "savingsDescription": "Track maturity dates and rates"
+  },
+  "entry": {
+    "title": "Currency exchange",
+    "subtitle": "See {currency} rate trends",
+    "majorCurrencies": "major currencies"
+  },
+  "placeholder": {
+    "goForex": "Go to currency exchange",
+    "goHome": "Home",
+    "investmentTitle": "Investments — coming in v1.1",
+    "investmentDescription": "Record your holdings and their value, and see them added up on the investing dashboard.",
+    "savingsTitle": "Savings tracker — coming in v1.1",
+    "savingsDescription": "Track savings maturity dates and rates at a glance, and see them added up on the investing dashboard."
+  },
+  "buckets": {
+    "savings": "Savings",
+    "stocks": "Stocks",
+    "realEstate": "Real estate",
+    "crypto": "Crypto",
+    "forex": "Foreign currency"
+  },
+  "allocation": {
+    "title": "Asset allocation",
+    "intro": "Set a target for how to split your assets across savings, stocks, real estate, crypto and foreign currency. You can save once everything adds up to 100%.",
+    "saved": "Asset allocation saved.",
+    "saveFailed": "Couldn't save your asset allocation."
+  },
+  "projection": {
+    "title": "Projected assets",
+    "description": "Estimated assets if you contribute every month at these ratios. Actual returns aren't guaranteed.",
+    "result": "Projected assets in {years, plural, one {# year} other {# years}}",
+    "principal": "Contributed",
+    "profit": "Projected gain",
+    "initial": "Starting assets",
+    "monthly": "Monthly contribution",
+    "period": "Investment period",
+    "years": "{years, plural, one {# year} other {# years}}",
+    "annualReturn": "Expected annual return",
+    "annualReturnAria": "{label} expected annual return"
+  },
+  "forex": {
+    "title": "Currency exchange",
+    "intro": "Check recent rate trends and buy/sell signals for major currencies.",
+    "asOf": "ECB closing rate as of {date}",
+    "updated": "· Updated {time}",
+    "loadFailed": "Couldn't load the {currency} rate",
+    "detailLoadFailed": "Couldn't load exchange rate data",
+    "outlookFailed": "AI analysis failed",
+    "unitBasis": "Per {unit}",
+    "chartRate": "Rate",
+    "categories": {
+      "major": "Major",
+      "asia": "Asia",
+      "europe": "Europe",
+      "emerging": "Emerging"
+    },
+    "recommendation": {
+      "buy": "Good to buy",
+      "sell": "Good to sell",
+      "hold": "Neutral"
+    },
+    "ranges": {
+      "1w": "1W",
+      "1m": "1M",
+      "3m": "3M",
+      "6m": "6M",
+      "1y": "1Y",
+      "5y": "5Y"
+    },
+    "trend": {
+      "up": "Uptrend",
+      "down": "Downtrend",
+      "sideways": "Sideways"
+    },
+    "trendDescription": {
+      "up": "The 20-day average has crossed above the 60-day average and is still rising. The won may keep weakening (rate going up), so read both buy and sell signals with care.",
+      "down": "The 20-day average has dropped below the 60-day average and is still falling. The rate may keep going down.",
+      "sideways": "There's no clear direction right now. Mean reversion (buy low, sell high) tends to work relatively well in this phase."
+    },
+    "trendBasis": "The trend combines where MA20 sits relative to MA60 with MA20's 5-day slope.",
+    "trendAria": "Current trend: {trend}",
+    "indicators": {
+      "title": "Indicators",
+      "helpAria": "About {label}",
+      "glossary": "Technical term: {term}",
+      "ma20": {
+        "label": "20-day average",
+        "term": "MA20 — 20-day simple moving average",
+        "description": "The average rate over the last 20 business days. If the current rate is above it, it's relatively expensive in the short term; below it, relatively cheap."
+      },
+      "ma60": {
+        "label": "60-day average",
+        "term": "MA60 — 60-day simple moving average",
+        "description": "The average rate over the last 60 business days. It shows the longer trend. When the 20-day average crosses above the 60-day average, it's read as an uptrend signal."
+      },
+      "rsi14": {
+        "label": "Short-term heat",
+        "term": "RSI(14) — Relative Strength Index (14 days)",
+        "description": "Shows on a 0–100 scale how overbought or oversold the rate has been over the last 14 days. Above 70 means overbought (may fall soon); below 30 means oversold (may rise soon)."
+      },
+      "percentile52w": {
+        "label": "Position in the year",
+        "term": "52-week percentile",
+        "description": "Where the current rate ranks among the last year (about 252 business days) of rates, from 0 to 100%. Below 25% is near the yearly low; above 75% is near the high."
+      },
+      "percentile13w": {
+        "label": "Position in 3 months",
+        "term": "13-week percentile",
+        "description": "Where the current rate ranks among the last 3 months (about 63 business days). It helps spot short-term lows and highs even during long trends. Below 20% is a recent quarterly low; above 80% is a quarterly high."
+      }
+    },
+    "forecast": {
+      "title": "AI outlook",
+      "refresh": "Analyze again",
+      "confidence": "Confidence {percent}%"
+    },
+    "currencies": {
+      "USD": { "label": "US dollar", "unit": "dollar" },
+      "EUR": { "label": "Euro", "unit": "euro" },
+      "GBP": { "label": "British pound", "unit": "pound" },
+      "CHF": { "label": "Swiss franc", "unit": "franc" },
+      "AUD": { "label": "Australian dollar", "unit": "dollar" },
+      "CAD": { "label": "Canadian dollar", "unit": "dollar" },
+      "NZD": { "label": "New Zealand dollar", "unit": "dollar" },
+      "JPY": { "label": "Japanese yen (100 yen)", "unit": "100 yen" },
+      "CNY": { "label": "Chinese yuan", "unit": "yuan" },
+      "HKD": { "label": "Hong Kong dollar", "unit": "dollar" },
+      "SGD": { "label": "Singapore dollar", "unit": "dollar" },
+      "INR": { "label": "Indian rupee", "unit": "rupee" },
+      "THB": { "label": "Thai baht", "unit": "baht" },
+      "IDR": { "label": "Indonesian rupiah (100 rupiah)", "unit": "100 rupiah" },
+      "MYR": { "label": "Malaysian ringgit", "unit": "ringgit" },
+      "PHP": { "label": "Philippine peso", "unit": "peso" }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'use-intl';
 import { Button } from '../../components/button';
 import { Label } from '../../components/label';
 import { Slider } from '../../components/slider';
@@ -23,12 +24,12 @@ export type AssetAllocationEditorProps = {
   className?: string;
 };
 
-const BUCKETS: { key: AssetAllocationBucket; label: string; barClass: string }[] = [
-  { key: 'savings', label: '예적금', barClass: 'bg-emerald-500' },
-  { key: 'stocks', label: '주식', barClass: 'bg-indigo-500' },
-  { key: 'realEstate', label: '부동산', barClass: 'bg-amber-500' },
-  { key: 'crypto', label: '코인', barClass: 'bg-fuchsia-500' },
-  { key: 'forex', label: '외환', barClass: 'bg-sky-500' },
+const BUCKETS: { key: AssetAllocationBucket; barClass: string }[] = [
+  { key: 'savings', barClass: 'bg-emerald-500' },
+  { key: 'stocks', barClass: 'bg-indigo-500' },
+  { key: 'realEstate', barClass: 'bg-amber-500' },
+  { key: 'crypto', barClass: 'bg-fuchsia-500' },
+  { key: 'forex', barClass: 'bg-sky-500' },
 ];
 
 const STEP = 5;
@@ -40,6 +41,7 @@ export function AssetAllocationEditor({
   isSaving = false,
   className,
 }: AssetAllocationEditorProps) {
+  const t = useTranslations('ui.assets');
   const total = BUCKETS.reduce((sum, { key }) => sum + value[key], 0);
   const isValid = total === 100;
 
@@ -65,12 +67,12 @@ export function AssetAllocationEditor({
 
       {/* 버킷별 슬라이더 */}
       <div className="space-y-5">
-        {BUCKETS.map(({ key, label, barClass }) => (
+        {BUCKETS.map(({ key, barClass }) => (
           <div key={key} className="space-y-2" data-testid={`allocation-row-${key}`}>
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2">
                 <span className={cn('h-2.5 w-2.5 rounded-full', barClass)} aria-hidden />
-                {label}
+                {t(`buckets.${key}`)}
               </Label>
               <span
                 className="text-sm font-medium tabular-nums"
@@ -85,7 +87,7 @@ export function AssetAllocationEditor({
               step={STEP}
               value={[value[key]]}
               onValueChange={([v]) => handleSliderChange(key, v)}
-              aria-label={`${label} 비율`}
+              aria-label={t('ratioAria', { label: t(`buckets.${key}`) })}
             />
           </div>
         ))}
@@ -94,7 +96,7 @@ export function AssetAllocationEditor({
       {/* 합계 + 저장 */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">합계</span>
+          <span className="text-muted-foreground">{t('total')}</span>
           <span
             className={cn(
               'font-semibold tabular-nums',
@@ -107,7 +109,7 @@ export function AssetAllocationEditor({
         </div>
         {!isValid && (
           <p className="text-xs text-destructive" data-testid="allocation-total-warning">
-            모든 항목의 합이 100%가 되어야 저장할 수 있어요.
+            {t('totalWarning')}
           </p>
         )}
         {onSave && (
@@ -118,7 +120,7 @@ export function AssetAllocationEditor({
             onClick={onSave}
             data-testid="allocation-save"
           >
-            {isSaving ? '저장 중…' : '저장'}
+            {isSaving ? t('saving') : t('save')}
           </Button>
         )}
       </div>

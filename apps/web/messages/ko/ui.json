@@ -30,27 +30,63 @@
   "aiPrefs": {
     "tone": {
       "legend": "말투",
-      "friendly": { "label": "친근하게", "description": "다정하고 격려하는 말투" },
-      "concise": { "label": "간결하게", "description": "핵심만 짧고 담백하게" },
-      "strict": { "label": "엄격하게", "description": "냉정하게 문제점 위주로 짚기" }
+      "friendly": {
+        "label": "친근하게",
+        "description": "다정하고 격려하는 말투"
+      },
+      "concise": {
+        "label": "간결하게",
+        "description": "핵심만 짧고 담백하게"
+      },
+      "strict": {
+        "label": "엄격하게",
+        "description": "냉정하게 문제점 위주로 짚기"
+      }
     },
     "focus": {
       "legend": "분석 관점",
-      "saving": { "label": "절약 중심", "description": "아낄 수 있는 지출을 먼저" },
-      "investment": { "label": "자산 형성", "description": "저축·투자 여력을 먼저" },
-      "balanced": { "label": "균형", "description": "수입·지출을 고르게" }
+      "saving": {
+        "label": "절약 중심",
+        "description": "아낄 수 있는 지출을 먼저"
+      },
+      "investment": {
+        "label": "자산 형성",
+        "description": "저축·투자 여력을 먼저"
+      },
+      "balanced": {
+        "label": "균형",
+        "description": "수입·지출을 고르게"
+      }
     },
     "length": {
       "legend": "분량",
-      "short": { "label": "짧게", "description": "요점만 3~4줄" },
-      "normal": { "label": "보통", "description": "기본 분량" },
-      "detailed": { "label": "자세히", "description": "항목별 근거까지 자세히" }
+      "short": {
+        "label": "짧게",
+        "description": "요점만 3~4줄"
+      },
+      "normal": {
+        "label": "보통",
+        "description": "기본 분량"
+      },
+      "detailed": {
+        "label": "자세히",
+        "description": "항목별 근거까지 자세히"
+      }
     },
     "stance": {
       "legend": "예측 성향",
-      "conservative": { "label": "보수적", "description": "적게, 낮은 확신으로 예측" },
-      "standard": { "label": "표준", "description": "평소 패턴 그대로" },
-      "aggressive": { "label": "적극적", "description": "더 많이, 높은 확신으로 예측" }
+      "conservative": {
+        "label": "보수적",
+        "description": "적게, 낮은 확신으로 예측"
+      },
+      "standard": {
+        "label": "표준",
+        "description": "평소 패턴 그대로"
+      },
+      "aggressive": {
+        "label": "적극적",
+        "description": "더 많이, 높은 확신으로 예측"
+      }
     },
     "analyze": {
       "title": "지출 분석 맞춤화",
@@ -79,5 +115,21 @@
       "add": "추가",
       "removeKeyword": "{keyword} 삭제"
     }
+  },
+  "assets": {
+    "buckets": {
+      "savings": "예적금",
+      "stocks": "주식",
+      "realEstate": "부동산",
+      "crypto": "코인",
+      "forex": "외환"
+    },
+    "ratioAria": "{label} 비율",
+    "total": "합계",
+    "totalWarning": "모든 항목의 합이 100%가 되어야 저장할 수 있어요.",
+    "save": "저장",
+    "saving": "저장 중…",
+    "yearTick": "{year}년",
+    "yearsLater": "{year}년 후"
   }
 }

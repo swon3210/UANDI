@@ -13,8 +13,8 @@ export async function fetchForexRates(
 ): Promise<ForexRatesPayload> {
   const res = await fetch(`/api/forex/rates?currency=${currency}&range=${range}`);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: '환율 데이터를 가져올 수 없습니다' }));
-    throw new Error(error.error ?? '환율 데이터를 가져올 수 없습니다');
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error ?? 'FOREX_RATES_FAILED');
   }
   return res.json();
 }
@@ -40,8 +40,8 @@ export async function fetchForexOutlook(params: {
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: 'AI 분석에 실패했습니다' }));
-    throw new Error(error.error ?? 'AI 분석에 실패했습니다');
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error ?? 'FOREX_OUTLOOK_FAILED');
   }
 
   return res.json();

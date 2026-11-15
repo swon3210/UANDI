@@ -1,0 +1,145 @@
+{
+  "dashboard": {
+    "title": "재테크",
+    "allocationTitle": "자산 배분",
+    "allocationDescription": "자산군별 목표 비율 설정",
+    "investmentTitle": "투자",
+    "investmentDescription": "종목 보유·평가액 관리",
+    "savingsTitle": "적금",
+    "savingsDescription": "적금 만기·이율 추적"
+  },
+  "entry": {
+    "title": "환테크",
+    "subtitle": "{currency} 환율 추이 보기",
+    "majorCurrencies": "주요 통화"
+  },
+  "placeholder": {
+    "goForex": "환테크로 가기",
+    "goHome": "홈으로",
+    "investmentTitle": "투자 관리 — v1.1에서 만나요",
+    "investmentDescription": "보유 종목과 평가액을 직접 기록하고 재테크 대시보드에서 합산해 볼 수 있어요.",
+    "savingsTitle": "적금 트래커 — v1.1에서 만나요",
+    "savingsDescription": "적금 만기일과 이율을 한눈에 추적하고 재테크 대시보드에서 합산해 볼 수 있어요."
+  },
+  "buckets": {
+    "savings": "예적금",
+    "stocks": "주식",
+    "realEstate": "부동산",
+    "crypto": "코인",
+    "forex": "외환"
+  },
+  "allocation": {
+    "title": "자산 배분",
+    "intro": "예적금·주식·부동산·코인·외환에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 모든 항목의 합이 100%가 되어야 저장할 수 있어요.",
+    "saved": "자산 배분 비율이 저장되었습니다.",
+    "saveFailed": "자산 배분 비율 저장에 실패했습니다."
+  },
+  "projection": {
+    "title": "미래 자산 추이",
+    "description": "설정한 비율대로 매달 납입한다고 가정했을 때의 예상 자산이에요. 실제 수익을 보장하지 않아요.",
+    "result": "{years}년 후 예상 자산",
+    "principal": "납입 원금",
+    "profit": "예상 수익",
+    "initial": "시작 자산",
+    "monthly": "월 납입액",
+    "period": "투자 기간",
+    "years": "{years}년",
+    "annualReturn": "연 기대수익률",
+    "annualReturnAria": "{label} 연 기대수익률"
+  },
+  "forex": {
+    "title": "환테크",
+    "intro": "주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.",
+    "asOf": "{date} ECB 종가 기준",
+    "updated": "· {time} 갱신",
+    "loadFailed": "{currency} 환율을 가져오지 못했어요",
+    "detailLoadFailed": "환율 데이터를 가져오지 못했어요",
+    "outlookFailed": "AI 분석에 실패했어요",
+    "unitBasis": "{unit} 기준",
+    "chartRate": "환율",
+    "categories": {
+      "major": "메이저",
+      "asia": "아시아",
+      "europe": "유럽",
+      "emerging": "신흥"
+    },
+    "recommendation": {
+      "buy": "매수 우호",
+      "sell": "매도 우호",
+      "hold": "중립"
+    },
+    "ranges": {
+      "1w": "1주",
+      "1m": "1개월",
+      "3m": "3개월",
+      "6m": "6개월",
+      "1y": "1년",
+      "5y": "5년"
+    },
+    "trend": {
+      "up": "상승 추세",
+      "down": "하락 추세",
+      "sideways": "횡보"
+    },
+    "trendDescription": {
+      "up": "20일 평균이 60일 평균을 위로 뚫고 기울기도 양수인 상태예요. 원화 약세(환율 상승) 국면이 이어질 가능성이 있어 매도/매수 신호 모두 신중히 해석합니다.",
+      "down": "20일 평균이 60일 평균 아래로 내려갔고 기울기도 음수예요. 환율 하락 국면이 이어질 가능성이 있습니다.",
+      "sideways": "방향성이 뚜렷하지 않은 횡보 구간입니다. 평균회귀(저점 매수·고점 매도)가 비교적 잘 통하는 시기입니다."
+    },
+    "trendBasis": "추세는 MA20/MA60 위치와 MA20의 5일 기울기를 합산해 결정됩니다.",
+    "trendAria": "현재 추세: {trend}",
+    "indicators": {
+      "title": "지표",
+      "helpAria": "{label} 설명",
+      "glossary": "원래 용어: {term}",
+      "ma20": {
+        "label": "20일 평균",
+        "term": "MA20 — 20일 단순 이동평균",
+        "description": "최근 20영업일 환율의 평균이에요. 현재가가 이보다 높으면 단기적으로 비싼 편, 낮으면 싼 편이라는 신호로 봅니다."
+      },
+      "ma60": {
+        "label": "60일 평균",
+        "term": "MA60 — 60일 단순 이동평균",
+        "description": "최근 60영업일 환율의 평균이에요. 더 긴 흐름을 보여주어 추세 판단에 도움이 됩니다. 20일 평균이 60일 평균을 위로 뚫고 올라가면 상승 추세 신호로 해석합니다."
+      },
+      "rsi14": {
+        "label": "단기 과열도",
+        "term": "RSI(14) — 상대강도지수 (14일)",
+        "description": "최근 14일 동안 가격이 얼마나 과열·과매도 상태인지 0~100 사이로 나타내요. 70 이상이면 과열(곧 떨어질 가능성), 30 이하면 과매도(곧 오를 가능성)로 해석합니다."
+      },
+      "percentile52w": {
+        "label": "1년 중 위치",
+        "term": "52주 백분위",
+        "description": "지난 1년간(약 252영업일) 환율을 0~100%로 줄세웠을 때 현재가의 위치예요. 25% 이하면 1년 중 저점에 가깝고, 75% 이상이면 고점에 가깝습니다."
+      },
+      "percentile13w": {
+        "label": "3개월 중 위치",
+        "term": "13주 백분위",
+        "description": "최근 3개월(약 63영업일) 환율 중 현재가의 상대 위치예요. 추세가 길게 이어지는 장에서도 단기 저점/고점을 잡는 데 유용합니다. 20% 이하면 최근 분기 저점, 80% 이상이면 분기 고점으로 봅니다."
+      }
+    },
+    "forecast": {
+      "title": "AI 전망",
+      "refresh": "다시 분석",
+      "confidence": "신뢰도 {percent}%"
+    },
+    "currencies": {
+      "USD": { "label": "미국 달러", "unit": "달러" },
+      "EUR": { "label": "유로", "unit": "유로" },
+      "GBP": { "label": "영국 파운드", "unit": "파운드" },
+      "CHF": { "label": "스위스 프랑", "unit": "프랑" },
+      "AUD": { "label": "호주 달러", "unit": "달러" },
+      "CAD": { "label": "캐나다 달러", "unit": "달러" },
+      "NZD": { "label": "뉴질랜드 달러", "unit": "달러" },
+      "JPY": { "label": "일본 엔(100엔)", "unit": "100엔" },
+      "CNY": { "label": "중국 위안", "unit": "위안" },
+      "HKD": { "label": "홍콩 달러", "unit": "달러" },
+      "SGD": { "label": "싱가포르 달러", "unit": "달러" },
+      "INR": { "label": "인도 루피", "unit": "루피" },
+      "THB": { "label": "태국 바트", "unit": "바트" },
+      "IDR": { "label": "인도네시아 루피아(100루피아)", "unit": "100루피아" },
+      "MYR": { "label": "말레이시아 링깃", "unit": "링깃" },
+      "PHP": { "label": "필리핀 페소", "unit": "페소" }
+    }
+  }
+}

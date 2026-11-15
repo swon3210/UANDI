@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ArrowDown, ArrowRight, ArrowUp, TrendingUp } from 'lucide-react';
 import { cn, Skeleton } from '@uandi/ui';
+import { formatKrwRate } from '@/utils/currency';
 
 type Props = {
   currencyLabel?: string;
@@ -10,6 +12,7 @@ type Props = {
 };
 
 export function InvestmentEntryCard({ currencyLabel, rate, diffPercent, isLoading }: Props) {
+  const t = useTranslations('outer.entry');
   const isUp = (diffPercent ?? 0) > 0;
   const isDown = (diffPercent ?? 0) < 0;
 
@@ -25,9 +28,9 @@ export function InvestmentEntryCard({ currencyLabel, rate, diffPercent, isLoadin
             <TrendingUp size={18} />
           </span>
           <div>
-            <p className="text-base font-semibold">환테크</p>
+            <p className="text-base font-semibold">{t('title')}</p>
             <p className="text-xs text-muted-foreground">
-              {currencyLabel ?? '주요 통화'} 환율 추이 보기
+              {t('subtitle', { currency: currencyLabel ?? t('majorCurrencies') })}
             </p>
           </div>
         </div>
@@ -43,7 +46,7 @@ export function InvestmentEntryCard({ currencyLabel, rate, diffPercent, isLoadin
 
       {!isLoading && rate !== undefined && (
         <div className="mt-3 flex items-baseline gap-2 tabular-nums">
-          <span className="text-base font-semibold">{rate.toFixed(2)}원</span>
+          <span className="text-base font-semibold">{formatKrwRate(rate)}</span>
           {diffPercent !== undefined && (
             <span
               className={cn(

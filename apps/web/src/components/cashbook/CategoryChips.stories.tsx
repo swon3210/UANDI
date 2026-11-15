@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import type { CashbookCategory } from '@/types';
-import { SUB_GROUP_LABELS } from '@/constants/default-categories';
+import { SUB_GROUP_LABELS } from '@uandi/cashbook-core';
 import { CategoryChips } from './CategoryChips';
 
 const ts = Timestamp.fromDate(new Date());

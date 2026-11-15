@@ -2,10 +2,10 @@
 
 import { useQueries } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import { Skeleton } from '@uandi/ui';
 import { PageHeader } from '@/components/shell/PageHeader';
 import {
-  CATEGORY_LABEL,
   SUPPORTED_CURRENCIES,
   computeIndicators,
   computeRecommendation,
@@ -15,8 +15,10 @@ import {
 } from '@uandi/investment-core';
 import { fetchForexRates } from '@/services/forex';
 import { CurrencyCard } from '@/components/investment/CurrencyCard';
+import { dateFormat } from '@/utils/date';
 
 export default function ForexListPage() {
+  const t = useTranslations('outer.forex');
   const queries = useQueries({
     queries: SUPPORTED_CURRENCIES.map((currency) => ({
       queryKey: ['forexRates', currency, '1y'],
@@ -43,18 +45,16 @@ export default function ForexListPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PageHeader title="환테크" data-testid="forex-list-header" />
+      <PageHeader title={t('title')} data-testid="forex-list-header" />
       <main className="mx-auto w-full max-w-md flex-1 space-y-5 px-4 pb-8 pt-4">
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
-            주요 통화의 최근 환율 추이와 매수·매도 신호를 확인하세요.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('intro')}</p>
           {latestAsOf && (
             <p data-testid="forex-list-as-of" className="text-xs text-muted-foreground">
-              {dayjs(latestAsOf).format('YYYY년 M월 D일')} ECB 종가 기준
+              {t('asOf', { date: dayjs(latestAsOf).format(dateFormat('full')) })}
               {latestFetchedAt && (
                 <span className="ml-1 text-muted-foreground/70">
-                  · {dayjs(latestFetchedAt).format('HH:mm')} 갱신
+                  {t('updated', { time: dayjs(latestFetchedAt).format('HH:mm') })}
                 </span>
               )}
             </p>
@@ -63,7 +63,7 @@ export default function ForexListPage() {
         {groups.map(({ category, currencies }) => (
           <section key={category} data-testid={`forex-category-${category}`} className="space-y-2">
             <h2 className="text-sm font-semibold text-muted-foreground">
-              {CATEGORY_LABEL[category]}
+              {t(`categories.${category}`)}
             </h2>
             <div className="grid gap-3">
               {currencies.map((currency) => (
@@ -88,6 +88,7 @@ type Query = {
 };
 
 function ForexListCard({ currency, query }: { currency: SupportedCurrency; query: Query }) {
+  const t = useTranslations('outer.forex');
   if (query.isLoading || !query.data) {
     return <Skeleton data-testid={`forex-skeleton-${currency}`} className="h-[108px] rounded-xl" />;
   }
@@ -95,7 +96,7 @@ function ForexListCard({ currency, query }: { currency: SupportedCurrency; query
   if (query.error) {
     return (
       <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-        {currency} 환율을 가져오지 못했어요
+        {t('loadFailed', { currency })}
       </div>
     );
   }

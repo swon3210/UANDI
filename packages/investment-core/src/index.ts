@@ -16,7 +16,6 @@ export {
   SUPPORTED_CURRENCIES,
   FOREX_RANGES,
   CURRENCY_META,
-  CATEGORY_LABEL,
   CATEGORY_ORDER,
   CURRENCY_CATEGORY,
   getCurrenciesByCategory,
@@ -35,11 +34,7 @@ export {
   computeTrend,
   computeIndicators,
 } from './utils/indicators';
-export {
-  computeRecommendation,
-  RECOMMENDATION_LABEL,
-  TREND_LABEL,
-} from './utils/recommendation';
+export { computeRecommendation, RECOMMENDATION_LABEL, TREND_LABEL } from './utils/recommendation';
 
 // Services
 export { buildFrankfurterRangeUrl, parseFrankfurterRange } from './services/frankfurter';

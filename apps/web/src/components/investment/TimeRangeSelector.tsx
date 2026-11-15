@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { cn } from '@uandi/ui';
 import { FOREX_RANGES, type ForexRange } from '@uandi/investment-core';
 
@@ -6,16 +7,8 @@ type Props = {
   onChange: (range: ForexRange) => void;
 };
 
-const LABEL: Record<ForexRange, string> = {
-  '1w': '1주',
-  '1m': '1개월',
-  '3m': '3개월',
-  '6m': '6개월',
-  '1y': '1년',
-  '5y': '5년',
-};
-
 export function TimeRangeSelector({ value, onChange }: Props) {
+  const t = useTranslations('outer.forex.ranges');
   return (
     <div
       role="tablist"
@@ -39,7 +32,7 @@ export function TimeRangeSelector({ value, onChange }: Props) {
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {LABEL[range]}
+            {t(range)}
           </button>
         );
       })}

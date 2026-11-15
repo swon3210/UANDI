@@ -11,6 +11,7 @@ import type ui from '../../messages/ko/ui.json';
 import type dashboard from '../../messages/ko/dashboard.json';
 import type cashbook from '../../messages/ko/cashbook.json';
 import type photos from '../../messages/ko/photos.json';
+import type outer from '../../messages/ko/outer.json';
 
 /**
  * next-intl 타입 보강 — `useLocale()`/`getLocale()` 이 Locale 유니온을 돌려주고,
@@ -33,6 +34,7 @@ declare module 'next-intl' {
       dashboard: typeof dashboard;
       cashbook: typeof cashbook;
       photos: typeof photos;
+      outer: typeof outer;
     };
   }
 }

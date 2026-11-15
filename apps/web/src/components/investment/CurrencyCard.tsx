@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '@uandi/ui';
 import {
@@ -8,6 +9,7 @@ import {
   getDisplayRate,
 } from '@uandi/investment-core';
 import { BuyRecommendationBadge } from './BuyRecommendationBadge';
+import { KrwRate } from './KrwRate';
 
 type Props = {
   currency: SupportedCurrency;
@@ -17,14 +19,8 @@ type Props = {
   href?: string;
 };
 
-function formatRate(value: number): string {
-  return value.toLocaleString('ko-KR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
 export function CurrencyCard({ currency, rate, prevClose, recommendation, href }: Props) {
+  const t = useTranslations('outer.forex');
   const meta = CURRENCY_META[currency];
   const displayRate = getDisplayRate(rate, currency);
   const displayPrev = prevClose !== null ? getDisplayRate(prevClose, currency) : null;
@@ -48,15 +44,19 @@ export function CurrencyCard({ currency, rate, prevClose, recommendation, href }
           </span>
           <div className="flex flex-col">
             <span className="text-sm font-semibold">{currency}/KRW</span>
-            <span className="text-xs text-muted-foreground">{meta.displayUnit}</span>
+            <span className="text-xs text-muted-foreground">
+              {t(`currencies.${currency}.unit`)}
+            </span>
           </div>
         </div>
         <BuyRecommendationBadge recommendation={recommendation} />
       </div>
       <div className="flex items-end justify-between gap-3">
         <div className="text-2xl font-bold tabular-nums leading-none">
-          {formatRate(displayRate)}
-          <span className="ml-0.5 text-base font-medium text-muted-foreground">원</span>
+          <KrwRate
+            value={displayRate}
+            unitClassName="mx-0.5 text-base font-medium text-muted-foreground"
+          />
         </div>
         {displayPrev !== null && (
           <div

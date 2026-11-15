@@ -2,6 +2,7 @@
 
 import type { ComponentType } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { PieChart, PiggyBank, TrendingUp } from 'lucide-react';
 import { getDisplayRate } from '@uandi/investment-core';
@@ -44,6 +45,7 @@ function PlaceholderCard({ Icon, title, description, href, testId }: Placeholder
 }
 
 export function OuterDashboard() {
+  const t = useTranslations('outer.dashboard');
   const usdQuery = useQuery({
     queryKey: ['forexRates', 'USD', '1m'],
     queryFn: () => fetchForexRates('USD', '1m'),
@@ -62,7 +64,7 @@ export function OuterDashboard() {
 
   return (
     <>
-      <PageHeader title="재테크" data-testid="outer-dashboard-header" />
+      <PageHeader title={t('title')} data-testid="outer-dashboard-header" />
       <main className="mx-auto max-w-md space-y-4 px-4 pb-20 pt-4">
         <InvestmentEntryCard
           currencyLabel="USD"
@@ -80,22 +82,22 @@ export function OuterDashboard() {
               <PieChart size={18} />
             </span>
             <div className="flex-1">
-              <p className="text-base font-semibold">자산 배분</p>
-              <p className="text-xs text-muted-foreground">자산군별 목표 비율 설정</p>
+              <p className="text-base font-semibold">{t('allocationTitle')}</p>
+              <p className="text-xs text-muted-foreground">{t('allocationDescription')}</p>
             </div>
           </div>
         </Link>
         <PlaceholderCard
           Icon={TrendingUp}
-          title="투자"
-          description="종목 보유·평가액 관리"
+          title={t('investmentTitle')}
+          description={t('investmentDescription')}
           href="/outer/investment"
           testId="outer-investment-placeholder"
         />
         <PlaceholderCard
           Icon={PiggyBank}
-          title="적금"
-          description="적금 만기·이율 추적"
+          title={t('savingsTitle')}
+          description={t('savingsDescription')}
           href="/outer/savings"
           testId="outer-savings-placeholder"
         />

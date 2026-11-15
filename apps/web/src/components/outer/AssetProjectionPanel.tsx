@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { AssetGrowthChart, Input, Label, Slider } from '@uandi/ui';
 import {
   projectAssetGrowth,
@@ -15,12 +16,12 @@ type AssetProjectionPanelProps = {
   ratio: Ratio;
 };
 
-const RETURN_FIELDS: { key: AssetBucketKey; label: string; dotClass: string }[] = [
-  { key: 'savings', label: '예적금', dotClass: 'bg-emerald-500' },
-  { key: 'stocks', label: '주식', dotClass: 'bg-indigo-500' },
-  { key: 'realEstate', label: '부동산', dotClass: 'bg-amber-500' },
-  { key: 'crypto', label: '코인', dotClass: 'bg-fuchsia-500' },
-  { key: 'forex', label: '외환', dotClass: 'bg-sky-500' },
+const RETURN_FIELDS: { key: AssetBucketKey; dotClass: string }[] = [
+  { key: 'savings', dotClass: 'bg-emerald-500' },
+  { key: 'stocks', dotClass: 'bg-indigo-500' },
+  { key: 'realEstate', dotClass: 'bg-amber-500' },
+  { key: 'crypto', dotClass: 'bg-fuchsia-500' },
+  { key: 'forex', dotClass: 'bg-sky-500' },
 ];
 
 // 기본 연 기대수익률(%) — 자산군별 보수적 추정치
@@ -42,6 +43,7 @@ function parseAmount(raw: string): number {
 }
 
 export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
+  const t = useTranslations('outer');
   const [initialAssetKrw, setInitialAssetKrw] = useState(0);
   const [monthlyContributionKrw, setMonthlyContributionKrw] = useState(1_000_000);
   const [years, setYears] = useState(10);
@@ -69,25 +71,22 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
   return (
     <section className="space-y-5" data-testid="asset-projection-panel">
       <div>
-        <h2 className="text-base font-semibold">미래 자산 추이</h2>
-        <p className="text-xs text-muted-foreground">
-          설정한 비율대로 매달 납입한다고 가정했을 때의 예상 자산이에요. 실제 수익을 보장하지
-          않아요.
-        </p>
+        <h2 className="text-base font-semibold">{t('projection.title')}</h2>
+        <p className="text-xs text-muted-foreground">{t('projection.description')}</p>
       </div>
 
       {/* 결과 요약 */}
       <div className="rounded-xl border border-border bg-muted/40 p-4">
-        <p className="text-xs text-muted-foreground">{years}년 후 예상 자산</p>
+        <p className="text-xs text-muted-foreground">{t('projection.result', { years })}</p>
         <p className="text-2xl font-bold tabular-nums" data-testid="projection-result">
           {formatKrw(projectedTotal)}
         </p>
         <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
           <span>
-            납입 원금 <span className="tabular-nums">{formatKrw(principal)}</span>
+            {t('projection.principal')} <span className="tabular-nums">{formatKrw(principal)}</span>
           </span>
           <span className="text-emerald-600">
-            예상 수익 <span className="tabular-nums">+{formatKrw(profit)}</span>
+            {t('projection.profit')} <span className="tabular-nums">+{formatKrw(profit)}</span>
           </span>
         </div>
       </div>
@@ -98,7 +97,7 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="projection-initial">시작 자산</Label>
+            <Label htmlFor="projection-initial">{t('projection.initial')}</Label>
             <Input
               id="projection-initial"
               data-testid="projection-input-initial"
@@ -109,7 +108,7 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="projection-monthly">월 납입액</Label>
+            <Label htmlFor="projection-monthly">{t('projection.monthly')}</Label>
             <Input
               id="projection-monthly"
               data-testid="projection-input-monthly"
@@ -123,9 +122,9 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>투자 기간</Label>
+            <Label>{t('projection.period')}</Label>
             <span className="text-sm font-medium tabular-nums" data-testid="projection-years-value">
-              {years}년
+              {t('projection.years', { years })}
             </span>
           </div>
           <Slider
@@ -134,18 +133,20 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
             step={1}
             value={[years]}
             onValueChange={([v]) => setYears(v)}
-            aria-label="투자 기간"
+            aria-label={t('projection.period')}
           />
         </div>
 
         <div className="space-y-3 rounded-lg border border-border p-3">
-          <p className="text-xs font-medium text-muted-foreground">연 기대수익률</p>
-          {RETURN_FIELDS.map(({ key, label, dotClass }) => (
+          <p className="text-xs font-medium text-muted-foreground">
+            {t('projection.annualReturn')}
+          </p>
+          {RETURN_FIELDS.map(({ key, dotClass }) => (
             <div key={key} className="space-y-2" data-testid={`projection-return-row-${key}`}>
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2 text-sm">
                   <span className={`h-2.5 w-2.5 rounded-full ${dotClass}`} aria-hidden />
-                  {label}
+                  {t(`buckets.${key}`)}
                 </Label>
                 <span className="text-sm tabular-nums" data-testid={`projection-return-${key}`}>
                   {returns[key]}%
@@ -157,7 +158,7 @@ export function AssetProjectionPanel({ ratio }: AssetProjectionPanelProps) {
                 step={0.5}
                 value={[returns[key]]}
                 onValueChange={([v]) => setReturns((prev) => ({ ...prev, [key]: v }))}
-                aria-label={`${label} 연 기대수익률`}
+                aria-label={t('projection.annualReturnAria', { label: t(`buckets.${key}`) })}
               />
             </div>
           ))}

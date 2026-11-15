@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAtomValue } from 'jotai';
 import { AssetAllocationEditor, type AssetAllocationValue } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
@@ -17,6 +18,7 @@ type AllocationFormProps = {
 };
 
 function AllocationForm({ initial, isSaving, onSave }: AllocationFormProps) {
+  const t = useTranslations('outer.allocation');
   // 비율은 에디터와 미래 자산 추이 패널이 함께 공유한다 (슬라이더 조정이 그래프에 즉시 반영)
   const [value, setValue] = useState<AssetAllocationValue>(initial);
 
@@ -24,10 +26,7 @@ function AllocationForm({ initial, isSaving, onSave }: AllocationFormProps) {
     <div className="space-y-8">
       <AssetProjectionPanel ratio={value} />
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          예적금·주식·부동산·코인·외환에 자산을 어떤 비율로 나눌지 목표를 정해 보세요. 모든 항목의
-          합이 100%가 되어야 저장할 수 있어요.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('intro')}</p>
         <AssetAllocationEditor
           value={value}
           onChange={setValue}
@@ -40,6 +39,7 @@ function AllocationForm({ initial, isSaving, onSave }: AllocationFormProps) {
 }
 
 export default function OuterAllocationPage() {
+  const t = useTranslations('outer.allocation');
   const user = useAtomValue(userAtom);
   const uid = user?.uid ?? null;
   const coupleId = user?.coupleId ?? null;
@@ -60,7 +60,7 @@ export default function OuterAllocationPage() {
 
   return (
     <>
-      <PageHeader data-testid="outer-allocation-header" title="자산 배분" />
+      <PageHeader data-testid="outer-allocation-header" title={t('title')} />
       <main className="mx-auto max-w-md px-4 pb-20 pt-4">
         {isLoading || !uid || !coupleId ? (
           <MascotLoader fullScreen />

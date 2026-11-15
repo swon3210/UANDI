@@ -49,6 +49,12 @@ test.describe('설정 — 언어', () => {
     await expect(page.getByTestId('categories-header')).toContainText('Categories');
     // 픽스처 커플엔 카테고리가 없어 빈 상태 + 추가 버튼이 영어로 보인다
     await expect(page.getByRole('button', { name: 'Add category' })).toBeVisible();
+
+    // 재테크 자산 배분도 영어다 (Phase 2 5차 추출 범위, packages/ui 에디터 포함)
+    await page.goto('/outer/allocation');
+    await expect(page.getByTestId('outer-allocation-header')).toContainText('Asset allocation');
+    await expect(page.getByTestId('allocation-row-realEstate')).toContainText('Real estate');
+    await expect(page.getByTestId('allocation-save')).toHaveText('Save');
   });
 
   test('쿠키가 지워져도(새 기기) users.locale 로 영어가 복원된다', async ({ authedContext }) => {
