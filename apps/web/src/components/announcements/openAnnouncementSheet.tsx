@@ -5,7 +5,7 @@ import { Sheet } from '@uandi/ui';
 import type { Announcement } from '@/content/announcements';
 import { AnnouncementSheet } from './AnnouncementSheet';
 
-export const ANNOUNCEMENTS_PATH = '/settings/announcements';
+export const ANNOUNCEMENTS_PATH = '/announcements';
 
 type OpenAnnouncementSheetOptions = {
   /** 안 읽은 공지(최신순) */

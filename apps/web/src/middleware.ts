@@ -15,8 +15,15 @@ import { DISABLED_ROUTE_FALLBACK, isDisabledRoute } from '@/lib/disabled-feature
 const AUTH_COOKIE = 'uandi-auth';
 
 // /admin 은 로그인만 요구한다(커플 불필요). 권한은 API가 ADMIN_EMAILS 로 검사한다.
-const PROTECTED_ROUTES = ['/inner', '/outer', '/community', '/settings', '/admin'];
-const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/community', '/settings'];
+const PROTECTED_ROUTES = [
+  '/inner',
+  '/outer',
+  '/community',
+  '/settings',
+  '/announcements',
+  '/admin',
+];
+const COUPLE_REQUIRED_ROUTES = ['/inner', '/outer', '/community', '/settings', '/announcements'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
