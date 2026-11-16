@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ADMIN_HOST, isAdminHost } from '@/lib/admin/admin-host';
+import {
+  APP_CLIENT_COOKIE,
+  GET_APP_PATH,
+  isAppGateEnabled,
+  isAppRequest,
+  isGateExemptPath,
+} from '@/lib/app-gate';
 import { DISABLED_ROUTE_FALLBACK, isDisabledRoute } from '@/lib/disabled-features';
 
 // AuthInit.tsx에서 로그인/로그아웃 시 설정하는 쿠키
@@ -28,6 +35,22 @@ export function middleware(request: NextRequest) {
     // 서비스 도메인에는 어드민이 없는 것처럼 404(존재하지 않는 경로로 rewrite → not-found)
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       return NextResponse.rewrite(new URL('/_not-found-admin', request.url));
+    }
+  }
+
+  // 앱 전용 게이트: 일반 브라우저는 앱 설치 안내로 보낸다(docs/pages/08-get-app.md).
+  // 어드민 도메인은 위에서 이미 반환됐으므로 영향받지 않는다.
+  if (isAppGateEnabled() && !isGateExemptPath(pathname)) {
+    const isApp = isAppRequest({
+      pathname,
+      userAgent: request.headers.get('user-agent'),
+      appCookie: request.cookies.get(APP_CLIENT_COOKIE)?.value,
+    });
+    if (!isApp) {
+      const url = new URL(GET_APP_PATH, request.url);
+      const next = `${pathname}${request.nextUrl.search}`;
+      if (next !== '/') url.searchParams.set('next', next);
+      return NextResponse.redirect(url);
     }
   }
 

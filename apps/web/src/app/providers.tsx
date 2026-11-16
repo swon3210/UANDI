@@ -17,6 +17,7 @@ import { OverlayBackButtonHandler } from '@/components/OverlayBackButtonHandler'
 import { NavigationTracker } from '@/components/NavigationTracker';
 import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 import { ClientPlatformTracker } from '@/components/ClientPlatformTracker';
+import { AppClientCookieSync } from '@/components/AppClientCookieSync';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => createQueryClient());
@@ -37,6 +38,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <NavigationTracker />
             <AnalyticsTracker />
             <ClientPlatformTracker />
+            <AppClientCookieSync />
             {children}
             <Toaster />
           </OverlayProvider>

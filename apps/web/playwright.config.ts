@@ -23,6 +23,11 @@ function loadEnvFile(filePath: string): Record<string, string> {
 
 const testEnv = loadEnvFile('.env.test');
 
+// 앱 전용 게이트(docs/pages/08-get-app.md)를 켠 채로 테스트한다. 모든 테스트는 기본적으로
+// 앱(WebView) 요청으로 보이도록 UA 에 앱 표식을 붙이고, 게이트 자체를 검증하는 spec(app-gate)만
+// test.use({ userAgent }) 로 일반 브라우저 UA 를 쓴다. 표식 문자열은 src/lib/app-gate.ts 와 같아야 한다.
+const withAppMarker = (userAgent: string) => `${userAgent} UANDI-App/e2e`;
+
 // E2E 전용 포트 — 수동 dev 서버(3000)와 충돌 방지
 const E2E_PORT = 3100;
 
@@ -48,11 +53,17 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        userAgent: withAppMarker(devices['Desktop Chrome'].userAgent),
+      },
     },
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        userAgent: withAppMarker(devices['Pixel 5'].userAgent),
+      },
     },
   ],
   webServer: {
@@ -67,6 +78,7 @@ export default defineConfig({
         )
       ),
       ...testEnv,
+      APP_ONLY_GATE: 'on',
     },
   },
 });

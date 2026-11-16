@@ -22,6 +22,15 @@ export function isIosNative(): boolean {
 }
 
 /**
+ * 현재 웹이 네이티브 앱(RN WebView) 안에서 렌더링되는지 여부.
+ * iOS 는 UA 가 일반 Safari 와 같아 브리지 존재로만 판단할 수 있다.
+ */
+export function isNativeApp(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.__UANDI_NATIVE__ != null || window.ReactNativeWebView != null;
+}
+
+/**
  * 현재 웹이 어느 클라이언트에서 렌더링되는지(사용 분석의 client_platform 속성용).
  * 안드로이드는 FCM 토큰이 없으면 platform 이 주입되지 않을 수 있어 RN WebView 존재 + UA 로 보완한다.
  * 플로팅 버블(/overlay/quick-add)은 브리지 없는 순수 Android WebView라 UA 의 `wv` 토큰으로 판별한다.
