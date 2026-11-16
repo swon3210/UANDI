@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { useAuth } from '@/hooks/useAuth';
 import { useCoupleMembers } from '@/hooks/useCoupleMembers';
+import { useAnnouncementAutoOpen } from '@/hooks/useAnnouncementAutoOpen';
 import { useCashbookEntryAutoOpen } from '@/hooks/useCashbookEntryAutoOpen';
 import { useHasAnyEntries } from '@/hooks/useHasAnyEntries';
 import { useAnnualPlan, useAnnualPlanItems, useAnnualPlanRevisions } from '@/hooks/useAnnualPlan';
@@ -47,6 +48,8 @@ export function Dashboard() {
     [partnerName, hasEntries]
   );
   useCashbookEntryAutoOpen(coupleId ?? null, tourContext);
+  // 안 읽은 공지 시트 1회(투어를 이미 본 방문에만 — docs/pages/08-announcements.md)
+  useAnnouncementAutoOpen();
 
   if (!coupleId) return null;
 

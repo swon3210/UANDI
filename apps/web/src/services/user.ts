@@ -56,6 +56,11 @@ export async function updateUserDocument(uid: string, data: Partial<User>): Prom
   await updateDoc(doc(getDb(), 'users', uid), data);
 }
 
+/** 마지막으로 본 공지 id를 기록한다(docs/pages/08-announcements.md). */
+export async function markAnnouncementSeen(uid: string, announcementId: string): Promise<void> {
+  await updateDoc(doc(getDb(), 'users', uid), { lastSeenAnnouncementId: announcementId });
+}
+
 /**
  * 앱을 연 플랫폼의 마지막 사용 시각을 users/{uid}.clientPlatforms 에 남긴다(어드민 사용자 현황용).
  * 같은 기기·플랫폼에서는 하루 한 번만 쓴다. 실패해도 앱 사용에는 영향이 없다(best-effort).

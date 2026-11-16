@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSsrSafeLocalStorage } from './useSsrSafeLocalStorage';
 import { openServiceTour } from '@/components/tutorial/openServiceTour';
 
-const TOUR_SEEN_KEY = 'moa:tour:v1';
+/** 투어를 본 적 있는지 기록하는 localStorage 키(공지 시트가 투어와 겹치지 않게 확인할 때도 쓴다) */
+export const TOUR_SEEN_KEY = 'moa:tour:v1';
 /** 대시보드가 한 번 그려진 뒤 투어를 띄우기까지의 지연. 커플 카드·빈 화면을 먼저 보게 한다. */
 export const TOUR_OPEN_DELAY_MS = 1500;
 

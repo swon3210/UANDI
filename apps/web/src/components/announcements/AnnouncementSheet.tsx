@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   Button,
   Separator,
@@ -28,6 +29,7 @@ export function AnnouncementSheet({
   onLinkClick,
   onSeeAll,
 }: AnnouncementSheetProps) {
+  const confirmRef = useRef<HTMLButtonElement>(null);
   const visible = announcements.slice(0, ANNOUNCEMENT_SHEET_MAX);
   const hasMore = announcements.length > ANNOUNCEMENT_SHEET_MAX;
 
@@ -36,6 +38,11 @@ export function AnnouncementSheet({
       side="bottom"
       className="rounded-t-[20px] max-h-[90vh] flex flex-col"
       data-testid="announcement-sheet"
+      // 첫 번째 바로 가기 버튼이 자동 포커스로 강조돼 보이지 않도록 「확인」에 포커스를 준다
+      onOpenAutoFocus={(event) => {
+        event.preventDefault();
+        confirmRef.current?.focus();
+      }}
     >
       <SheetHeader>
         <SheetTitle>새 소식</SheetTitle>
@@ -65,7 +72,12 @@ export function AnnouncementSheet({
       </div>
 
       <SheetFooter className="pt-2">
-        <Button className="w-full" data-testid="announcement-confirm" onClick={onConfirm}>
+        <Button
+          ref={confirmRef}
+          className="w-full"
+          data-testid="announcement-confirm"
+          onClick={onConfirm}
+        >
           확인
         </Button>
       </SheetFooter>

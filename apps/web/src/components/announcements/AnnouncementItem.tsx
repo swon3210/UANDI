@@ -36,10 +36,13 @@ export function AnnouncementItem({ announcement, onLinkClick }: AnnouncementItem
           {formatAnnouncementDate(date)}
         </time>
       </div>
-      <h3 className="text-base font-semibold leading-snug" data-testid="announcement-title">
+      <h3
+        className="break-keep text-base font-semibold leading-snug"
+        data-testid="announcement-title"
+      >
         {title}
       </h3>
-      <p className="whitespace-pre-line text-sm text-muted-foreground">{body}</p>
+      <p className="whitespace-pre-line break-keep text-sm text-muted-foreground">{body}</p>
       {link ? (
         <Button
           variant="outline"
