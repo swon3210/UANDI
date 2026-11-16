@@ -67,6 +67,12 @@ test.describe('앱 전용 게이트 — 일반 브라우저', () => {
     await expect
       .poll(() => page.evaluate(() => (window as any).__auth.currentUser === null))
       .toBe(true);
+    // 로드 도중 로그아웃돼도 "계정 정보를 불러오지 못했어요" 오버레이가 남지 않는다.
+    // (사용자 문서 읽기 재시도가 끝나는 시간 ≈ 3초를 넘겨서 확인)
+    await page.waitForTimeout(5000);
+    await expect(page.getByTestId('auth-load-error')).toHaveCount(0);
+    await expect(page.getByTestId('app-install-landing')).toBeVisible();
+
     const cookies = await page.context().cookies();
     expect(cookies.find((c) => c.name === 'uandi-auth')).toBeUndefined();
   });
