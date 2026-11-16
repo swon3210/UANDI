@@ -23,6 +23,13 @@ export type Announcement = {
 /** 최신순(배열 앞이 최신) */
 export const ANNOUNCEMENTS: Announcement[] = [
   {
+    id: '2026-11-invite-code-input-fix',
+    date: '2026-11-16',
+    kind: 'fixed',
+    title: '초대 코드에 영문을 입력할 수 없던 문제를 고쳤어요',
+    body: '초대 코드 입력칸에 숫자 키패드만 떠서, 영문이 섞인 코드를 넣을 수 없었어요.\n이제 영문과 숫자를 모두 입력할 수 있어요. 짝꿍이 코드를 넣지 못해 연결을 미뤄 두셨다면 다시 시도해 주세요.',
+  },
+  {
     id: '2026-11-feedback',
     date: '2026-11-15',
     kind: 'new',
