@@ -10,8 +10,6 @@ import { ANNOUNCEMENTS } from '@/content/announcements';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkAnnouncementSeen } from '@/hooks/useMarkAnnouncementSeen';
 
-const PARENT = '/settings';
-
 /** 공지사항 — 골라 올린 변경 소식 전체 목록(docs/pages/09-announcements.md). */
 export default function AnnouncementsPage() {
   const router = useRouter();
@@ -32,11 +30,7 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="flex min-h-screen flex-col" data-testid="announcements-page">
-      <Header
-        title="공지사항"
-        data-testid="announcements-header"
-        leftSlot={<BackButton fallbackHref={PARENT} />}
-      />
+      <Header title="공지사항" data-testid="announcements-header" leftSlot={<BackButton />} />
       <main className="mx-auto w-full max-w-md px-4 pb-10 pt-6">
         {ANNOUNCEMENTS.length === 0 ? (
           <EmptyState

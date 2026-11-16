@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
+import { AppSidebarPage } from '../page-objects/AppSidebarPage';
 import { getUserLastSeenAnnouncementId, patchUserAnnouncementFields } from '../helpers/emulator';
 import { ANNOUNCEMENTS } from '../../src/content/announcements';
 
@@ -105,13 +106,21 @@ test.describe('공지사항', () => {
     });
   });
 
-  test.describe('공지사항 목록 (/settings/announcements)', () => {
-    test('설정에서 들어가 모든 공지를 최신순으로 보고, ←로 설정에 돌아온다', async ({
+  test.describe('공지사항 목록 (/announcements)', () => {
+    test('사이드바 footer에서 들어가 모든 공지를 최신순으로 보고, ←로 대시보드에 돌아온다', async ({
       authedPage,
     }) => {
-      await authedPage.goto('/settings');
-      await authedPage.getByTestId('settings-announcements').click();
-      await authedPage.waitForURL('**/settings/announcements');
+      const nav = new AppSidebarPage(authedPage);
+      await nav.open();
+      // 의견 보내기 위에 공지사항이 있다
+      const footerLinks = nav.sidebar.locator(
+        '[data-testid="sidebar-announcements-link"], [data-testid="sidebar-feedback-link"]'
+      );
+      await expect(footerLinks).toHaveText(['공지사항', '의견 보내기']);
+
+      await nav.sidebar.getByTestId('sidebar-announcements-link').click();
+      await authedPage.waitForURL('**/announcements');
+      await expect(nav.sidebar).toBeHidden();
 
       const pageRoot = authedPage.getByTestId('announcements-page');
       await expect(pageRoot).toBeVisible();
@@ -121,14 +130,27 @@ test.describe('공지사항', () => {
       );
 
       await authedPage.getByTestId('header-back').click();
-      await authedPage.waitForURL(/\/settings$/);
+      await authedPage.waitForURL(/\/inner\/cashbook$/);
+    });
+
+    test('설정 화면에는 공지사항 행이 없다', async ({ authedPage }) => {
+      await authedPage.goto('/settings');
+      await expect(authedPage.getByTestId('settings-feedback')).toBeVisible();
+      await expect(authedPage.getByTestId('settings-announcements')).toHaveCount(0);
+    });
+
+    test('바로 들어오면 ←가 대시보드로 간다', async ({ authedPage }) => {
+      await authedPage.goto('/announcements');
+      await expect(authedPage.getByTestId('announcements-page')).toBeVisible();
+      await authedPage.getByTestId('header-back').click();
+      await authedPage.waitForURL(/\/inner\/cashbook$/);
     });
 
     test('목록을 본 뒤에는 대시보드에서 공지 시트가 뜨지 않는다', async ({ authedContext }) => {
       const { page, uid } = authedContext;
       await patchUserAnnouncementFields(uid, { createdAt: LONG_AGO });
 
-      await page.goto('/settings/announcements');
+      await page.goto('/announcements');
       await expect(page.getByTestId('announcements-page')).toBeVisible();
       await expect.poll(() => getUserLastSeenAnnouncementId(uid)).toBe(latest.id);
 

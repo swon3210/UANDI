@@ -15,7 +15,6 @@ import {
   PiggyBank,
   Users,
   MessageCircle,
-  MessageSquareText,
 } from 'lucide-react';
 import {
   AppSidebar,
@@ -25,6 +24,7 @@ import {
   type Space,
 } from '@uandi/ui';
 import { isDisabledRoute } from '@/lib/disabled-features';
+import { SidebarFooterLinks } from './SidebarFooterLinks';
 import { isIosNative } from '@/lib/native';
 
 /**
@@ -114,17 +114,7 @@ export function AppSidebarTrigger() {
           space={spaceFromPath(pathname)}
           LinkComponent={SidebarLink}
           onNavigate={dismiss}
-          footer={
-            <Link
-              href="/settings/feedback"
-              data-testid="sidebar-feedback-link"
-              onClick={dismiss}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <MessageSquareText size={16} aria-hidden />
-              의견 보내기
-            </Link>
-          }
+          footer={<SidebarFooterLinks onNavigate={dismiss} />}
         />
       );
     });

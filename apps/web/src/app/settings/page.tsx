@@ -66,14 +66,6 @@ export default function SettingsPage() {
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
           <Link
-            href="/settings/announcements"
-            data-testid="settings-announcements"
-            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
-          >
-            공지사항
-            <ChevronRight size={18} className="text-muted-foreground" />
-          </Link>
-          <Link
             href="/settings/feedback"
             data-testid="settings-feedback"
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"

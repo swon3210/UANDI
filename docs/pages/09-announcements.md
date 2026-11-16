@@ -1,4 +1,4 @@
-# 공지사항 — 골라 올린 변경 소식 (`/settings/announcements`)
+# 공지사항 — 골라 올린 변경 소식 (`/announcements`)
 
 새 기능, 사라진 기능, 많은 사람이 겪은 버그 수정처럼 **사용자가 꼭 알아야 할 변경만** 골라서 앱 안에서 알린다.
 모든 변경 이력(changelog)을 보여주는 화면이 아니다. 레포 파일에 적은 항목만 사용자에게 보인다.
@@ -9,7 +9,7 @@
 | -------------------------------------------------------- | --------------------------------------------------- |
 | 레포 파일(`announcements.ts`)에 직접 적은 공지           | Firestore·어드민에서 공지 작성/수정                 |
 | 대시보드 진입 시 안 읽은 공지 바텀시트 1회               | 배포 없이 띄우는 긴급 공지(장애·점검) 배너          |
-| 설정 → 「공지사항」 지난 공지 목록                       | 사이드바·헤더의 안 읽음 표시(빨간 점)               |
+| 사이드바 footer 「공지사항」 → 지난 공지 목록            | 사이드바·☰ 버튼의 안 읽음 표시(빨간 점)            |
 | 사용자별 읽음 상태(`users/{uid}.lastSeenAnnouncementId`) | 팝업 없이 목록에만 남기는 공지(`silent`), GA 이벤트 |
 
 ## 무엇을 공지로 올리나
@@ -110,7 +110,7 @@ type User = {
   - 배지(`kind` 있을 때) + 날짜(`YYYY.MM.DD`, Caption)
   - 제목(Subtitle), 본문(`text-sm`, `whitespace-pre-line`)
   - `link`가 있으면 `Button variant="outline" size="sm"` — 누르면 시트를 닫고 `href`로 이동
-- 안 읽은 공지가 3개보다 많으면 아래에 「지난 공지 모두 보기」(`ghost`) → `/settings/announcements`
+- 안 읽은 공지가 3개보다 많으면 아래에 「지난 공지 모두 보기」(`ghost`) → `/announcements`
 - 하단 「확인」(`default`, 전체 폭) → 닫기
 
 ### 읽음 기록
@@ -120,16 +120,22 @@ type User = {
 - 저장 후 `userAtom`도 같은 값으로 갱신한다(다시 렌더해도 시트를 재판정하지 않도록).
 - 저장 실패는 조용히 무시한다(다음 진입에 다시 뜰 뿐). 토스트 없음.
 
-## 화면 2 — 공지사항 목록 (`/settings/announcements`)
+## 화면 2 — 공지사항 목록 (`/announcements`)
 
 ### 진입점
 
-- 설정 첫 화면(`/settings`) 목록에 「공지사항」 행 — 「의견 보내기」 **위**.
+- **사이드바 footer**(`AppSidebar`의 `footer` 슬롯) 「공지사항」 링크 — 「의견 보내기」 **위**, 아이콘 `Megaphone`,
+  `data-testid="sidebar-announcements-link"`. 누르면 사이드바를 닫고 이동한다.
+  - 섹션이 아니라 footer에 두는 이유: 사이드바 섹션은 공간(우리집/재테크/커뮤니티) 단위이고,
+    iOS 네이티브에서는 섹션을 「가계부」 하나만 남기지만 footer는 그대로 보인다.
+  - 공지사항(서비스 → 사용자)과 의견 보내기(사용자 → 서비스)를 한 묶음으로 둔다.
 - 공지 시트의 「지난 공지 모두 보기」.
+- 설정(`/settings`) 목록에는 두지 않는다.
 
 ### 화면
 
-- 헤더: 제목 「공지사항」, 좌측 `BackButton`(`fallbackHref="/settings"`).
+- 헤더: 제목 「공지사항」, 좌측 `BackButton`(`fallbackHref` 생략 → 대시보드). 사이드바에서 들어오므로 트리상 부모는 대시보드다.
+- 라우트 보호: 미들웨어의 로그인·커플 연결 필요 경로에 `/announcements`를 추가한다(사이드바는 커플 연결 후에만 열린다).
 - `ANNOUNCEMENTS` 전체를 최신순으로 카드 목록(`rounded-xl border border-border bg-card p-4`, 간격 `space-y-3`).
   카드 내용은 시트 항목과 같다(배지·날짜·제목·본문·링크 버튼). 같은 프레젠테이션 컴포넌트(`AnnouncementItem`)를 쓴다.
 - 공지가 0개면 `EmptyState`(아이콘 `Megaphone`, 「아직 공지가 없어요」).
@@ -165,10 +171,13 @@ Storybook: `AnnouncementItem`(배지별, 링크 유무, 긴 본문), `Announceme
 - `lastSeenAnnouncementId` = 최신 id → 시트가 열리지 않는다.
 - 안 읽은 공지의 링크 버튼 → 시트가 닫히고 해당 경로로 이동한다.
 - 투어를 아직 안 본 사용자(`seedTourSeen: false`) → 투어만 열리고 공지 시트는 열리지 않는다.
-- 설정 → 「공지사항」 → 모든 공지가 최신순으로 보이고, ←로 설정에 돌아온다. 목록을 본 뒤 대시보드에 가면 시트가 열리지 않는다.
+- 사이드바 footer 「공지사항」 → 모든 공지가 최신순으로 보이고, ←로 대시보드에 돌아온다. 설정 화면에는 「공지사항」 행이 없다.
+- 목록을 본 뒤 대시보드에 가면 시트가 열리지 않는다.
+- 공지가 3개를 넘을 때의 「지난 공지 모두 보기」는 Storybook으로 확인한다(실제 공지가 2개라 E2E 대상 아님).
 
 ## 기존 화면·문서 변경
 
-- `/settings`: 「공지사항」 행 추가(「의견 보내기」 위).
+- 사이드바 footer: 「공지사항」 링크 추가(「의견 보내기」 위). (2026-11: 설정 목록 → 사이드바로 이동, 경로 `/settings/announcements` → `/announcements`)
+- `middleware.ts`: 보호·커플 필요 경로에 `/announcements` 추가.
 - `docs/03-domain-models.md`: `User.lastSeenAnnouncementId` 추가.
 - `docs/00-overview.md`: 페이지 구성·명세 파일 목록에 추가.
