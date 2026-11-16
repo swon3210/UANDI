@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Smartphone } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useAtomValue } from 'jotai';
-import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
-import { Header, Button, Separator } from '@uandi/ui';
+import { Header } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import {
   useNotificationSettings,
@@ -13,9 +11,7 @@ import {
 } from '@/hooks/useNotificationSettings';
 import { useFcmToken, type FcmEnableState } from '@/hooks/useFcmToken';
 import { NotificationSettingsForm } from '@/components/cashbook/NotificationSettingsForm';
-import { InstallPwaBanner } from '@/components/InstallPwaBanner';
 import { MascotLoader } from '@/components/MascotLoader';
-import { sendTestPush } from '@/services/test-push';
 import { BackButton } from '@/components/shell/BackButton';
 
 function reportFcmResult(result: FcmEnableState) {
@@ -57,42 +53,6 @@ export default function NotificationSettingsPage() {
   const { data: settings, isPending } = useNotificationSettings(uid);
   const updateMutation = useUpdateNotificationSettings(uid);
   const { enable: enableFcm } = useFcmToken();
-  const [testPushSending, setTestPushSending] = useState(false);
-
-  const handleOpenInstallGuide = () => {
-    overlay.open(({ isOpen, close, unmount }) => (
-      <InstallPwaBanner
-        open={isOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            close();
-            setTimeout(unmount, 300);
-          }
-        }}
-      />
-    ));
-  };
-
-  const handleSendTestPush = async () => {
-    setTestPushSending(true);
-    try {
-      const result = await sendTestPush();
-      if (result.successCount > 0) {
-        toast.success(
-          `테스트 푸시를 발송했어요 (성공 ${result.successCount}, 실패 ${result.failureCount})`
-        );
-      } else {
-        toast.error(
-          `발송에 모두 실패했어요. 첫 실패 사유: ${result.failures[0]?.error ?? '알 수 없음'}`
-        );
-      }
-    } catch (e) {
-      const message = e instanceof Error ? e.message : '테스트 푸시 발송에 실패했어요.';
-      toast.error(message);
-    } finally {
-      setTestPushSending(false);
-    }
-  };
 
   const shouldAutoEnable =
     !!settings && (settings.budgetWarning.enabled || settings.recordReminder.enabled);
@@ -147,7 +107,7 @@ export default function NotificationSettingsPage() {
         leftSlot={<BackButton fallbackHref="/inner/cashbook/settings" />}
       />
 
-      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4">
+      <main className="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-12">
         <NotificationSettingsForm
           defaultValues={formValues}
           onSave={(data) =>
@@ -172,43 +132,6 @@ export default function NotificationSettingsPage() {
           }
           isSaving={updateMutation.isPending}
         />
-
-        <Separator className="my-6" />
-
-        <section className="space-y-2" data-testid="install-pwa-section">
-          <h3 className="text-base font-semibold">모바일에서 백그라운드 알림 받기</h3>
-          <p className="text-sm text-muted-foreground">
-            홈 화면에 추가해야 브라우저가 꺼져 있어도 푸시 알림이 도달해요.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleOpenInstallGuide}
-            data-testid="open-install-pwa-guide-button"
-          >
-            <Smartphone size={16} className="mr-2" />홈 화면에 추가하는 방법 보기
-          </Button>
-        </section>
-
-        <Separator className="my-6" />
-
-        <section className="space-y-2 pb-12" data-testid="test-push-section">
-          <h3 className="text-base font-semibold">알림 동작 확인</h3>
-          <p className="text-sm text-muted-foreground">
-            등록된 디바이스로 테스트 푸시를 1건 발송해 셋업이 정상인지 확인할 수 있어요.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleSendTestPush}
-            disabled={testPushSending}
-            data-testid="send-test-push-button"
-          >
-            {testPushSending ? '발송 중…' : '테스트 푸시 보내기'}
-          </Button>
-        </section>
       </main>
     </div>
   );
