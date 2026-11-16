@@ -137,6 +137,7 @@ type User = {
 ### 화면
 
 - 헤더: 제목 「공지사항」, 좌측 `BackButton`(`fallbackHref` 생략 → 대시보드). 사이드바에서 들어오므로 트리상 부모는 대시보드다.
+  공지 푸시로 들어온 경우(`?from=push`)는 ←가 항상 대시보드로 간다(`docs/pages/10-announcement-push.md`).
 - 라우트 보호: 미들웨어의 로그인·커플 연결 필요 경로에 `/announcements`를 추가한다(사이드바는 커플 연결 후에만 열린다).
 - `ANNOUNCEMENTS` 전체를 최신순으로 카드 목록(`rounded-xl border border-border bg-card p-4`, 간격 `space-y-3`).
   카드 내용은 시트 항목과 같다(배지·날짜·제목·본문·링크 버튼). 같은 프레젠테이션 컴포넌트(`AnnouncementItem`)를 쓴다.

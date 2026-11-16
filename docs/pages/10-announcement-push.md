@@ -75,12 +75,19 @@
     body: announcement.body.split('\n')[0], // 본문 첫 줄
   },
   data: {
-    click_action: '/announcements', // 누르면 공지사항 목록 → 읽음 처리(대시보드 시트는 다시 안 뜸)
+    click_action: '/announcements?from=push', // 공지사항 목록 → 읽음 처리(대시보드 시트는 다시 안 뜸)
     type: 'announcement',
     announcementId: announcement.id,
   },
 }
 ```
+
+### 푸시로 들어온 공지사항 화면의 ←
+
+- `?from=push`면 ←가 앱 안 이동 기록과 상관없이 **대시보드로 replace** 한다(`BackButton alwaysFallback`).
+  - 앱이 꺼져 있거나 백그라운드에서 알림을 탭하면 페이지를 새로 불러오므로 원래도 대시보드로 간다.
+  - 앱을 쓰는 중 받은 푸시의 토스트 「보기」는 앱 안 이동(`router.push`)이라, 표시가 없으면 보던 화면으로 돌아간다. 이를 막는다.
+- 한계: Android 시스템 뒤로가기는 WebView 방문 기록을 따르므로 이전 화면으로 갈 수 있다(네이티브 변경이 필요해 v1 제외).
 
 ## API (어드민 전용 — `verifyAdminEmail`)
 
@@ -170,3 +177,4 @@ announcement?: { enabled: boolean }; // 미지정 시 true 취급(기존 사용�
 - 빠른 선택 「짝꿍 없음」은 짝꿍이 없는 사용자만 고른다.
 - 허용 목록에 없는 계정이 API를 부르면 403.
 - 알림 설정에서 「공지 알림」을 끄고 저장하면 `announcement.enabled`가 false로 저장된다.
+- 앱 안에서 다른 화면을 보다가 `/announcements?from=push`로 이동해도 ←는 대시보드로 간다.

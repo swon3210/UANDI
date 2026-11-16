@@ -64,3 +64,9 @@ export async function fetchAnnouncementPushLogs(): Promise<AnnouncementPushLog[]
   if (!res.ok) await readError(res, '보낸 기록을 불러오지 못했어요');
   return ((await res.json()) as { logs: AnnouncementPushLog[] }).logs;
 }
+
+/** 지금이 21시~8시(KST)인지 — 발송 확인 다이얼로그의 야간 경고 */
+export function isNightInKst(now: Date = new Date()): boolean {
+  const hour = (now.getUTCHours() + 9) % 24;
+  return hour >= 21 || hour < 8;
+}

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
 
 let _adminApp: App | undefined;
@@ -30,6 +31,7 @@ function getAdminApp(): App {
 
 export const adminAuth = () => getAuth(getAdminApp());
 export const adminDb = () => getFirestore(getAdminApp());
+export const adminMessaging = () => getMessaging(getAdminApp());
 // 앱 초기화 옵션을 건드리지 않도록 버킷 이름을 직접 넘긴다(의견 보내기 스크린샷 서명 URL).
 export const adminBucket = () =>
   getStorage(getAdminApp()).bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);

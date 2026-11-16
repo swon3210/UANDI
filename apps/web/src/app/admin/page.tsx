@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { LogIn, LogOut, RefreshCw, ShieldOff } from 'lucide-react';
 import { Button, EmptyState, Header, Tabs, TabsContent, TabsList, TabsTrigger } from '@uandi/ui';
 import { MascotLoader } from '@/components/MascotLoader';
+import { AdminAnnouncementPushSection } from '@/components/admin/AdminAnnouncementPushSection';
 import { AdminFeedbackPanel } from '@/components/admin/AdminFeedbackPanel';
 import { AdminSummaryCards } from '@/components/admin/AdminSummaryCards';
 import { AdminUserTable } from '@/components/admin/AdminUserTable';
@@ -39,6 +40,9 @@ export default function AdminUsersPage() {
     status: 'all',
   });
   const feedback = useAdminFeedback(data ? (user?.uid ?? null) : null, feedbackFilter);
+  const [tab, setTab] = useState('users');
+  // 공지 푸시 대상 — 사용자 탭에서 고르고 공지 푸시 탭에서 쓴다(탭을 오가도 유지)
+  const [selectedUids, setSelectedUids] = useState<Set<string>>(() => new Set());
   const newFeedbackCount = feedback.data?.pages[0]?.newCount ?? 0;
 
   const header = (
@@ -126,7 +130,7 @@ export default function AdminUsersPage() {
         {error ? (
           <p className="text-sm text-destructive">{error.message}</p>
         ) : data ? (
-          <Tabs defaultValue="users">
+          <Tabs value={tab} onValueChange={setTab}>
             <TabsList>
               <TabsTrigger value="users" data-testid="admin-tab-users">
                 사용자
@@ -134,10 +138,16 @@ export default function AdminUsersPage() {
               <TabsTrigger value="feedback" data-testid="admin-tab-feedback">
                 피드백{newFeedbackCount > 0 ? ` (신규 ${newFeedbackCount})` : ''}
               </TabsTrigger>
+              <TabsTrigger value="push" data-testid="admin-tab-push">
+                공지 푸시
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="users" className="space-y-4">
               <AdminSummaryCards users={data.users} />
-              <AdminUserTable users={data.users} />
+              <AdminUserTable
+                users={data.users}
+                selection={{ selectedUids, onChange: setSelectedUids }}
+              />
               <p className="text-xs text-muted-foreground">
                 {dayjs(data.generatedAt).format('YYYY.MM.DD HH:mm')} 기준 · 가계부 내용은 표시하지
                 않고 건수만 보여줘요
@@ -148,6 +158,12 @@ export default function AdminUsersPage() {
                 query={feedback}
                 filter={feedbackFilter}
                 onFilterChange={setFeedbackFilter}
+              />
+            </TabsContent>
+            <TabsContent value="push">
+              <AdminAnnouncementPushSection
+                selectedUids={data.users.map((u) => u.uid).filter((uid) => selectedUids.has(uid))}
+                onGoUsers={() => setTab('users')}
               />
             </TabsContent>
           </Tabs>

@@ -65,8 +65,11 @@ async function seedAndOpenAdmin(
   return { uidA: uid, uidB, uidC, uidD };
 }
 
+/** 본인 이메일 칸으로 행을 찾는다(짝꿍 열에도 상대 이메일이 보이므로 hasText 로는 두 행이 잡힌다). */
 function userRow(page: Page, email: string) {
-  return page.getByTestId('admin-user-row').filter({ hasText: email });
+  return page
+    .getByTestId('admin-user-row')
+    .filter({ has: page.getByTestId('admin-user-email').getByText(email, { exact: true }) });
 }
 
 async function selectUsers(page: Page, emails: string[]) {
@@ -219,5 +222,23 @@ test.describe('알림 설정 — 공지 알림', () => {
     await page.getByRole('button', { name: '저장' }).click();
     await expect(page.getByText('알림 설정이 저장되었습니다.')).toBeVisible();
     await expect.poll(() => getAnnouncementNotificationEnabled(uid)).toBe(false);
+  });
+});
+
+test.describe('공지 푸시로 들어온 공지사항', () => {
+  test('앱 안에서 다른 화면을 보다가 푸시로 들어와도 ←는 대시보드로 간다', async ({
+    authedPage,
+  }) => {
+    // 내역 화면을 보던 중(앱 안 이동 기록이 있는 상태)
+    await authedPage.getByTestId('dashboard-history-link').click();
+    await authedPage.waitForURL('**/inner/cashbook/history');
+    // 포그라운드 푸시 토스트의 「보기」와 같은 앱 안 이동
+    // (useFcmForegroundMessages 의 onAction 이 router.push(click_action) 을 부른다)
+    await authedPage.evaluate(() => (window as any).next.router.push('/announcements?from=push'));
+    await authedPage.waitForURL('**/announcements?from=push');
+    await expect(authedPage.getByTestId('announcements-page')).toBeVisible({ timeout: 15000 });
+
+    await authedPage.getByTestId('header-back').click();
+    await authedPage.waitForURL(/\/inner\/cashbook$/);
   });
 });
