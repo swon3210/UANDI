@@ -14,7 +14,7 @@ type OpenAnnouncementSheetOptions = {
   onNavigate: (href: string) => void;
 };
 
-/** 대시보드 공지 시트를 연다(docs/pages/08-announcements.md). */
+/** 대시보드 공지 시트를 연다(docs/pages/09-announcements.md). */
 export function openAnnouncementSheet({ announcements, onNavigate }: OpenAnnouncementSheetOptions) {
   overlay.open(({ isOpen, close, unmount }) => {
     const dismiss = () => {

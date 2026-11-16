@@ -56,7 +56,7 @@ export async function updateUserDocument(uid: string, data: Partial<User>): Prom
   await updateDoc(doc(getDb(), 'users', uid), data);
 }
 
-/** 마지막으로 본 공지 id를 기록한다(docs/pages/08-announcements.md). */
+/** 마지막으로 본 공지 id를 기록한다(docs/pages/09-announcements.md). */
 export async function markAnnouncementSeen(uid: string, announcementId: string): Promise<void> {
   await updateDoc(doc(getDb(), 'users', uid), { lastSeenAnnouncementId: announcementId });
 }

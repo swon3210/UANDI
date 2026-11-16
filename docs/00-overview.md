@@ -71,6 +71,7 @@
 
 ```
 /                            → 랜딩(비로그인) / 대시보드(로그인)
+/get-app                     → 앱 설치 안내 (일반 브라우저는 모두 여기로)
 /onboarding                  → 최초 가입 + 커플 연결
 
 # 우리집 (커플 공동)
@@ -118,7 +119,8 @@
 | `pages/01-onboarding.md`   | `/onboarding`   | 커플 연결                         |
 | `pages/02-dashboard.md`    | `/` (로그인)    | 진입 대시보드 (양쪽 공간 요약)    |
 | `pages/05-ai-features.md`  | (API 공통)      | AI 라우트 공통 규칙               |
-| `pages/08-announcements.md` | `/settings/announcements` | 공지사항 (대시보드 시트 + 목록) |
+| `pages/08-get-app.md`      | `/get-app`      | 앱 설치 안내 + 앱 전용 게이트     |
+| `pages/09-announcements.md` | `/settings/announcements` | 공지사항 (대시보드 시트 + 목록) |
 
 **🏠 우리집 (`pages/inner/*`)**
 

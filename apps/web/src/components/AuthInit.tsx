@@ -25,7 +25,13 @@ export function AuthInit() {
       console.error('[AuthInit] getRedirectResult ERROR:', e);
     });
 
+    // 가장 최근 콜백의 uid. 사용자 문서를 읽는 사이 로그아웃(또는 계정 전환)되면 늦게 끝난 이전
+    // 콜백이 상태를 덮어쓰지 않게 한다. (예: /get-app 의 브라우저 세션 정리가 로드 도중 로그아웃하면
+    // 권한 없는 읽기가 실패해, 이미 로그아웃된 화면에 "계정 정보를 불러오지 못했어요"가 남았다.)
+    let latestUid: string | null = null;
+
     const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+      latestUid = firebaseUser?.uid ?? null;
       if (!firebaseUser) {
         setAuthCookie(null);
         setUser(null);
@@ -52,10 +58,12 @@ export function AuthInit() {
           userDoc = user;
         }
       } catch (e) {
+        if (latestUid !== firebaseUser.uid) return;
         console.error('[AuthInit] 사용자 문서 로드 실패:', e);
         setLoadFailed(true);
         return;
       }
+      if (latestUid !== firebaseUser.uid) return;
 
       setLoadFailed(false);
       setAuthCookie(userDoc.coupleId !== null ? 'with_couple' : 'no_couple');

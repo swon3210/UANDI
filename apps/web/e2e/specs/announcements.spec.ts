@@ -3,7 +3,7 @@ import { test } from '../fixtures/auth.fixture';
 import { getUserLastSeenAnnouncementId, patchUserAnnouncementFields } from '../helpers/emulator';
 import { ANNOUNCEMENTS } from '../../src/content/announcements';
 
-// 공지사항 — docs/pages/08-announcements.md
+// 공지사항 — docs/pages/09-announcements.md
 // 공지 문구는 원본 파일(ANNOUNCEMENTS)에서 가져와 비교한다(문구가 바뀌어도 테스트를 고치지 않도록).
 
 const SHEET = 'announcement-sheet';

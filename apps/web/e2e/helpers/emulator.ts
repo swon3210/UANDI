@@ -1474,7 +1474,7 @@ export async function readFeedbackAsUser(
   return res.status;
 }
 
-// ── 공지사항 — docs/pages/08-announcements.md ─────────────────
+// ── 공지사항 — docs/pages/09-announcements.md ─────────────────
 
 /**
  * users/{uid} 문서의 일부 필드만 owner 권한으로 바꾼다(나머지 필드는 유지).

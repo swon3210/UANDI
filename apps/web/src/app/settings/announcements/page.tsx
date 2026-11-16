@@ -12,7 +12,7 @@ import { useMarkAnnouncementSeen } from '@/hooks/useMarkAnnouncementSeen';
 
 const PARENT = '/settings';
 
-/** 공지사항 — 골라 올린 변경 소식 전체 목록(docs/pages/08-announcements.md). */
+/** 공지사항 — 골라 올린 변경 소식 전체 목록(docs/pages/09-announcements.md). */
 export default function AnnouncementsPage() {
   const router = useRouter();
   const { user } = useAuth();

@@ -7,6 +7,9 @@
     Firebase Console에서 Apple provider 활성화 + Apple Developer의 Service ID/Key 설정이 선행돼야 한다.
 - 이메일/비밀번호 로그인은 MVP에서 제외
 
+- **로그인은 앱(WebView) 안에서만 받는다.** 일반 브라우저 요청은 `middleware.ts`의 앱 전용 게이트가
+  인증 라우팅보다 먼저 `/get-app`(앱 설치 안내)으로 보낸다. 자세한 동작은 `pages/08-get-app.md`.
+
 ---
 
 ## 상태 분류

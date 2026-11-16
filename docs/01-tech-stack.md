@@ -46,6 +46,37 @@
 
 ---
 
+## 보안 헤더
+
+`apps/web/next.config.ts`의 `headers()`가 모든 페이지 응답에 붙인다(`/__/*` Firebase Auth 핸들러 프록시 제외).
+
+| 헤더 | 값 | 목적 |
+| ---- | -- | ---- |
+| `Content-Security-Policy` | 아래 표 | XSS가 나도 외부 스크립트 로드·임의 서버 전송을 막는다 |
+| `X-Frame-Options` | `SAMEORIGIN` | 클릭재킹 방지 (`frame-ancestors 'self'`와 같은 뜻) |
+| `X-Content-Type-Options` | `nosniff` | MIME 스니핑 방지 |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | 외부로 경로·쿼리가 새지 않게 |
+| `Permissions-Policy` | `camera=(self), microphone=(), geolocation=(), payment=()` | 쓰지 않는 기기 권한 차단 |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` | HTTPS 강제 |
+
+### CSP 허용 출처
+
+| 지시어 | 허용 | 쓰는 곳 |
+| ------ | ---- | ------- |
+| `script-src` | `'self' 'unsafe-inline'`, `www.googletagmanager.com`, `apis.google.com`, `www.gstatic.com` | Next 부트스트랩, GA4, Firebase Auth 헬퍼 |
+| `connect-src` | `'self'`, `*.googleapis.com`, `*.cloudfunctions.net`, `*.google-analytics.com`, `*.analytics.google.com`, `www.googletagmanager.com` | Firebase(Auth·Firestore·Storage·FCM), Functions, GA4 |
+| `img-src` | `'self' data: blob: https:` | 프로필 사진, Storage, 링크 썸네일 |
+| `frame-src` | `'self'`, `*.firebaseapp.com` | Firebase Auth 세션 iframe |
+| `object-src` / `base-uri` / `form-action` / `frame-ancestors` | `'none'` / `'self'` / `'self'` / `'self'` | — |
+
+- 로컬 개발·E2E에서는 `'unsafe-eval'`(HMR), `localhost`(에뮬레이터·웹소켓)가 추가된다.
+- `script-src`의 `'unsafe-inline'`은 Next 인라인 스크립트 때문에 남아 있다. 인라인 XSS 자체는 막지 못하고,
+  외부 스크립트 로드와 `connect-src` 밖으로의 전송을 막는 수준이다.
+- **새 외부 서비스(SDK·API·임베드)를 붙이면 CSP에 출처를 추가해야 한다.** 빠뜨리면 브라우저 콘솔에
+  `Content Security Policy` 에러가 뜨고 요청이 막힌다. `e2e/specs/security-headers.spec.ts`가 주요 화면의 위반 0건을 검사한다.
+
+---
+
 ## 모노레포 폴더 구조
 
 ```

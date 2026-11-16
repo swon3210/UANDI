@@ -48,7 +48,7 @@ export function Dashboard() {
     [partnerName, hasEntries]
   );
   useCashbookEntryAutoOpen(coupleId ?? null, tourContext);
-  // 안 읽은 공지 시트 1회(투어를 이미 본 방문에만 — docs/pages/08-announcements.md)
+  // 안 읽은 공지 시트 1회(투어를 이미 본 방문에만 — docs/pages/09-announcements.md)
   useAnnouncementAutoOpen();
 
   if (!coupleId) return null;
