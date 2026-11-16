@@ -65,24 +65,37 @@ async function seedAndOpenAdmin(
   return { uidA: uid, uidB, uidC, uidD };
 }
 
-/** 본인 이메일 칸으로 행을 찾는다(짝꿍 열에도 상대 이메일이 보이므로 hasText 로는 두 행이 잡힌다). */
-function userRow(page: Page, email: string) {
-  return page
-    .getByTestId('admin-user-row')
-    .filter({ has: page.getByTestId('admin-user-email').getByText(email, { exact: true }) });
-}
-
-async function selectUsers(page: Page, emails: string[]) {
-  for (const email of emails) {
-    await userRow(page, email).getByTestId('admin-user-select').click();
-  }
-  await expect(page.getByTestId('admin-selected-count')).toHaveText(`${emails.length}명 선택`);
-}
-
 async function openPushTabAndPick(page: Page) {
   await page.getByTestId('admin-tab-push').click();
   await page.getByTestId('admin-push-announcement').click();
   await page.getByRole('option', { name: new RegExp(announcement.title) }).click();
+}
+
+/** 대상 고르기 다이얼로그를 연다(공지 푸시 탭 안에서). */
+async function openPicker(page: Page) {
+  await page.getByTestId('admin-push-pick-users').click();
+  const picker = page.getByTestId('admin-user-picker');
+  await expect(picker).toBeVisible();
+  return picker;
+}
+
+/** 다이얼로그 안에서 본인 이메일 칸으로 행을 찾는다(짝꿍 이메일과 헷갈리지 않게). */
+function pickerRow(page: Page, email: string) {
+  return page
+    .getByTestId('admin-picker-row')
+    .filter({ has: page.getByTestId('admin-picker-email').getByText(email, { exact: true }) });
+}
+
+/** 다이얼로그를 열어 이메일로 고르고 「n명 선택」으로 반영한다. */
+async function pickUsers(page: Page, emails: string[]) {
+  await openPicker(page);
+  for (const email of emails) {
+    await pickerRow(page, email).getByTestId('admin-picker-check').click();
+  }
+  await expect(page.getByTestId('admin-selected-count')).toHaveText(`${emails.length}명 선택됨`);
+  await page.getByTestId('admin-picker-confirm').click();
+  await expect(page.getByTestId('admin-user-picker')).toBeHidden();
+  await expect(page.getByTestId('admin-push-target-count')).toHaveText(`${emails.length}명`);
 }
 
 async function expectPreview(
@@ -116,8 +129,8 @@ test.describe('어드민 공지 푸시', () => {
     const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
     const { uidA, uidC } = await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
 
-    await selectUsers(page, [EMAIL_A, EMAIL_B, EMAIL_C, EMAIL_D]);
     await openPushTabAndPick(page);
+    await pickUsers(page, [EMAIL_A, EMAIL_B, EMAIL_C, EMAIL_D]);
     // 푸시 문구 미리보기: 제목 = 공지 제목
     await expect(page.getByTestId('admin-push-message')).toContainText(announcement.title);
     await expectPreview(page, { target: 4, optedOut: 1, noToken: 1, alreadySent: 0, eligible: 2 });
@@ -155,39 +168,73 @@ test.describe('어드민 공지 푸시', () => {
     await seedAnnouncementPush(announcement.id, [uid1]);
     await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
 
-    await selectUsers(page, [EMAIL_A]);
     await openPushTabAndPick(page);
+    await pickUsers(page, [EMAIL_A]);
     await expectPreview(page, { target: 1, optedOut: 0, noToken: 0, alreadySent: 1, eligible: 0 });
     await expect(page.getByTestId('admin-push-send')).toBeDisabled();
   });
 
-  test('빠른 선택 「짝꿍 없음」은 짝꿍이 없는 사용자만 고른다', async ({
+  test('다이얼로그 빠른 선택 「짝꿍 없음」은 짝꿍이 없는 사용자만 고르고, 취소하면 반영되지 않는다', async ({
+    twoUserAuthedContext,
+  }) => {
+    const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
+    await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
+    await openPushTabAndPick(page);
+
+    await openPicker(page);
+    await page.getByTestId('admin-quick-select-solo').click();
+    // C·D·운영자(모두 커플 없음)
+    await expect(page.getByTestId('admin-selected-count')).toHaveText('3명 선택됨');
+    await expect(pickerRow(page, EMAIL_C).getByTestId('admin-picker-check')).toBeChecked();
+    await expect(pickerRow(page, EMAIL_D).getByTestId('admin-picker-check')).toBeChecked();
+    await expect(pickerRow(page, EMAIL_A).getByTestId('admin-picker-check')).not.toBeChecked();
+    await expect(pickerRow(page, EMAIL_B).getByTestId('admin-picker-check')).not.toBeChecked();
+
+    // 취소하면 고른 것이 반영되지 않는다
+    await page.getByRole('button', { name: '취소' }).click();
+    await expect(page.getByTestId('admin-user-picker')).toBeHidden();
+    await expect(page.getByText('대상을 골라 주세요')).toBeVisible();
+
+    // 「n명 선택」으로 반영하고, 다시 열면 그 선택이 체크된 채로 시작한다
+    await openPicker(page);
+    await page.getByTestId('admin-quick-select-solo').click();
+    await page.getByTestId('admin-picker-confirm').click();
+    await expect(page.getByTestId('admin-push-target-count')).toHaveText('3명');
+    await openPicker(page);
+    await expect(page.getByTestId('admin-selected-count')).toHaveText('3명 선택됨');
+    await page.getByTestId('admin-quick-select-clear').click();
+    await expect(page.getByTestId('admin-selected-count')).toHaveText('0명 선택됨');
+  });
+
+  test('검색 후 「보이는 n명 모두 선택」은 검색된 사용자만 고른다', async ({
+    twoUserAuthedContext,
+  }) => {
+    const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
+    await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
+    await openPushTabAndPick(page);
+
+    await openPicker(page);
+    await page.getByTestId('admin-picker-search').fill('solo');
+    await expect(page.getByTestId('admin-picker-row')).toHaveCount(2);
+    await page.getByTestId('admin-picker-select-visible').click();
+    await expect(page.getByTestId('admin-selected-count')).toHaveText('2명 선택됨');
+    await page.getByTestId('admin-picker-confirm').click();
+    await expect(page.getByTestId('admin-push-target-count')).toHaveText('2명');
+  });
+
+  test('대상을 고르지 않으면 대상 고르기를 안내하고 보내기는 비활성이다', async ({
     twoUserAuthedContext,
   }) => {
     const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
     await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
 
-    await page.getByTestId('admin-quick-select-solo').click();
-    // C·D·운영자(모두 커플 없음)
-    await expect(page.getByTestId('admin-selected-count')).toHaveText('3명 선택');
-    await expect(userRow(page, EMAIL_C).getByTestId('admin-user-select')).toBeChecked();
-    await expect(userRow(page, EMAIL_D).getByTestId('admin-user-select')).toBeChecked();
-    await expect(userRow(page, EMAIL_A).getByTestId('admin-user-select')).not.toBeChecked();
-    await expect(userRow(page, EMAIL_B).getByTestId('admin-user-select')).not.toBeChecked();
-
-    await page.getByTestId('admin-quick-select-clear').click();
-    await expect(page.getByTestId('admin-selected-count')).toHaveText('0명 선택');
-  });
-
-  test('대상을 고르지 않으면 사용자 탭으로 안내한다', async ({ twoUserAuthedContext }) => {
-    const { page, uid1, uid2, coupleId } = twoUserAuthedContext;
-    await seedAndOpenAdmin(page, { uid: uid1, coupleId }, uid2);
-
     await openPushTabAndPick(page);
-    await expect(page.getByText('사용자 탭에서 대상을 골라 주세요')).toBeVisible();
+    await expect(page.getByText('대상을 골라 주세요')).toBeVisible();
     await expect(page.getByTestId('admin-push-send')).toBeDisabled();
-    await page.getByTestId('admin-push-go-users').click();
-    await expect(page.getByTestId('admin-user-search')).toBeVisible();
+    // 사용자 탭에는 체크박스가 없다
+    await page.getByTestId('admin-tab-users').click();
+    await expect(page.getByTestId('admin-user-row').first()).toBeVisible();
+    await expect(page.getByTestId('admin-user-select')).toHaveCount(0);
   });
 
   test('허용 목록에 없는 계정이 발송 API를 부르면 403', async ({ authedPage }) => {

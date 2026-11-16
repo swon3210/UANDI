@@ -40,9 +40,6 @@ export default function AdminUsersPage() {
     status: 'all',
   });
   const feedback = useAdminFeedback(data ? (user?.uid ?? null) : null, feedbackFilter);
-  const [tab, setTab] = useState('users');
-  // 공지 푸시 대상 — 사용자 탭에서 고르고 공지 푸시 탭에서 쓴다(탭을 오가도 유지)
-  const [selectedUids, setSelectedUids] = useState<Set<string>>(() => new Set());
   const newFeedbackCount = feedback.data?.pages[0]?.newCount ?? 0;
 
   const header = (
@@ -130,7 +127,7 @@ export default function AdminUsersPage() {
         {error ? (
           <p className="text-sm text-destructive">{error.message}</p>
         ) : data ? (
-          <Tabs value={tab} onValueChange={setTab}>
+          <Tabs defaultValue="users">
             <TabsList>
               <TabsTrigger value="users" data-testid="admin-tab-users">
                 사용자
@@ -144,10 +141,7 @@ export default function AdminUsersPage() {
             </TabsList>
             <TabsContent value="users" className="space-y-4">
               <AdminSummaryCards users={data.users} />
-              <AdminUserTable
-                users={data.users}
-                selection={{ selectedUids, onChange: setSelectedUids }}
-              />
+              <AdminUserTable users={data.users} />
               <p className="text-xs text-muted-foreground">
                 {dayjs(data.generatedAt).format('YYYY.MM.DD HH:mm')} 기준 · 가계부 내용은 표시하지
                 않고 건수만 보여줘요
@@ -161,10 +155,7 @@ export default function AdminUsersPage() {
               />
             </TabsContent>
             <TabsContent value="push">
-              <AdminAnnouncementPushSection
-                selectedUids={data.users.map((u) => u.uid).filter((uid) => selectedUids.has(uid))}
-                onGoUsers={() => setTab('users')}
-              />
+              <AdminAnnouncementPushSection users={data.users} />
             </TabsContent>
           </Tabs>
         ) : null}

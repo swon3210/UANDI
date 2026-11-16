@@ -9,27 +9,48 @@ import {
   useAnnouncementPushPreview,
   useSendAnnouncementPush,
 } from '@/hooks/useAdminAnnouncementPush';
+import type { AdminUserRow } from '@/services/admin';
 import { isNightInKst } from '@/services/admin-announcement-push';
 import { AdminAnnouncementPushPanel } from './AdminAnnouncementPushPanel';
 import { AdminPushConfirmDialog } from './AdminPushConfirmDialog';
+import { AdminUserPickerDialog } from './AdminUserPickerDialog';
 
 type AdminAnnouncementPushSectionProps = {
-  /** 사용자 탭에서 고른 대상 */
-  selectedUids: string[];
-  onGoUsers: () => void;
+  /** 어드민 사용자 목록(대상 고르기 다이얼로그에 쓴다) */
+  users: AdminUserRow[];
 };
 
-/** 「공지 푸시」 탭 — 미리보기·발송·기록을 불러와 패널에 넘긴다(docs/pages/10-announcement-push.md). */
-export function AdminAnnouncementPushSection({
-  selectedUids,
-  onGoUsers,
-}: AdminAnnouncementPushSectionProps) {
+/** 「공지 푸시」 탭 — 대상 고르기·미리보기·발송·기록(docs/pages/10-announcement-push.md). */
+export function AdminAnnouncementPushSection({ users }: AdminAnnouncementPushSectionProps) {
   const [announcementId, setAnnouncementId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  // 목록이 새로고침돼 없어진 사용자는 대상에서 뺀다
+  const selectedUids = users.map((u) => u.uid).filter((uid) => selected.has(uid));
+
   const preview = useAnnouncementPushPreview(announcementId, selectedUids);
   const logs = useAnnouncementPushLogs();
   const send = useSendAnnouncementPush();
 
   const announcement = ANNOUNCEMENTS.find((a) => a.id === announcementId) ?? null;
+
+  const handlePickUsers = async () => {
+    const picked = await overlay.openAsync<Set<string> | null>(({ isOpen, close, unmount }) => (
+      <AdminUserPickerDialog
+        isOpen={isOpen}
+        users={users}
+        initialSelectedUids={new Set(selectedUids)}
+        onConfirm={(uids) => {
+          close(uids);
+          setTimeout(unmount, 300);
+        }}
+        onCancel={() => {
+          close(null);
+          setTimeout(unmount, 300);
+        }}
+      />
+    ));
+    if (picked) setSelected(picked);
+  };
 
   const handleSend = async () => {
     const eligible = preview.data?.eligibleCount ?? 0;
@@ -72,7 +93,7 @@ export function AdminAnnouncementPushSection({
       announcementId={announcementId}
       onAnnouncementChange={setAnnouncementId}
       selectedCount={selectedUids.length}
-      onGoUsers={onGoUsers}
+      onPickUsers={() => void handlePickUsers()}
       preview={preview.data ?? null}
       previewLoading={preview.isFetching}
       previewError={preview.error ? preview.error.message : null}
