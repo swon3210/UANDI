@@ -45,3 +45,23 @@ export function nextAdminSort(current: AdminSort, key: AdminSortKey): AdminSort 
   if (current.key === key) return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' };
   return { key, dir: key === 'name' ? 'asc' : 'desc' };
 }
+
+/** 공지 푸시 대상 빠른 선택(docs/pages/10-announcement-push.md). */
+export type AdminQuickSelect = 'all' | 'android' | 'ios' | 'solo';
+
+/** 빠른 선택 조건에 맞는 사용자 uid. 선택을 이 결과로 바꾼다(누적 아님). */
+export function selectAdminUsers(users: AdminUserRow[], preset: AdminQuickSelect): string[] {
+  const match = (u: AdminUserRow) => {
+    switch (preset) {
+      case 'all':
+        return true;
+      case 'android':
+      case 'ios':
+        return u.platforms.some((p) => p.name === preset);
+      case 'solo':
+        // 커플 미연결 또는 상대 대기 중
+        return !u.partnerEmail;
+    }
+  };
+  return users.filter(match).map((u) => u.uid);
+}

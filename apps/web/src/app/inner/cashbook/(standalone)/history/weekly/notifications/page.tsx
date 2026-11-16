@@ -44,6 +44,9 @@ const DEFAULT_VALUES = {
   recordRequest: {
     enabled: true,
   },
+  announcement: {
+    enabled: true,
+  },
 };
 
 export default function NotificationSettingsPage() {
@@ -129,6 +132,10 @@ export default function NotificationSettingsPage() {
           // 기존 사용자 문서에는 recordRequest가 없을 수 있어 기본값 true 보정.
           enabled: settings.recordRequest?.enabled ?? true,
         },
+        announcement: {
+          // 공지 알림은 2026-11 추가 — 없으면 켜짐(docs/pages/10-announcement-push.md).
+          enabled: settings.announcement?.enabled ?? true,
+        },
       }
     : DEFAULT_VALUES;
 
@@ -151,6 +158,7 @@ export default function NotificationSettingsPage() {
                 budgetWarning: data.budgetWarning,
                 recurringTransaction: data.recurringTransaction,
                 recordRequest: data.recordRequest,
+                announcement: data.announcement,
               },
               {
                 onSuccess: async () => {

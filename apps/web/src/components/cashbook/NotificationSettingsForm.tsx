@@ -41,6 +41,9 @@ const notificationSettingsSchema = z.object({
   recordRequest: z.object({
     enabled: z.boolean(),
   }),
+  announcement: z.object({
+    enabled: z.boolean(),
+  }),
 });
 
 type NotificationSettingsFormValues = z.infer<typeof notificationSettingsSchema>;
@@ -243,6 +246,35 @@ export function NotificationSettingsForm({
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     data-testid="record-request-switch"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Separator />
+
+        {/* 공지 알림 — 어드민 공지 푸시(docs/pages/10-announcement-push.md) */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold">공지 알림</h3>
+
+          <FormField
+            control={form.control}
+            name="announcement.enabled"
+            render={({ field }) => (
+              <FormItem className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <FormLabel className="text-sm">알림 받기</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    버그 수정이나 기능 변경처럼 꼭 알아야 할 소식을 알려드려요.
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="announcement-switch"
                   />
                 </FormControl>
               </FormItem>

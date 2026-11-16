@@ -24,6 +24,9 @@ export const Default: Story = {
         enabled: true,
         selfAlertInApp: true,
       },
+      recurringTransaction: { enabled: true },
+      recordRequest: { enabled: true },
+      announcement: { enabled: true },
     },
     onSave: (data) => console.log('save', data),
     isSaving: false,
@@ -42,6 +45,9 @@ export const AllEnabled: Story = {
         enabled: true,
         selfAlertInApp: true,
       },
+      recurringTransaction: { enabled: true },
+      recordRequest: { enabled: true },
+      announcement: { enabled: true },
     },
     onSave: (data) => console.log('save', data),
     isSaving: false,
@@ -61,6 +67,9 @@ export const SelfInAppOff: Story = {
         enabled: true,
         selfAlertInApp: false,
       },
+      recurringTransaction: { enabled: true },
+      recordRequest: { enabled: true },
+      announcement: { enabled: true },
     },
     onSave: (data) => console.log('save', data),
     isSaving: false,
@@ -79,8 +88,26 @@ export const Saving: Story = {
         enabled: true,
         selfAlertInApp: true,
       },
+      recurringTransaction: { enabled: true },
+      recordRequest: { enabled: true },
+      announcement: { enabled: true },
     },
     onSave: (data) => console.log('save', data),
     isSaving: true,
+  },
+};
+
+/** 공지 알림(어드민 공지 푸시)을 끈 상태 */
+export const AnnouncementOff: Story = {
+  args: {
+    defaultValues: {
+      recordReminder: { enabled: false, time: '21:00', days: [1, 2, 3, 4, 5] },
+      budgetWarning: { enabled: true, selfAlertInApp: true },
+      recurringTransaction: { enabled: true },
+      recordRequest: { enabled: true },
+      announcement: { enabled: false },
+    },
+    onSave: (data) => console.log('save', data),
+    isSaving: false,
   },
 };

@@ -60,6 +60,11 @@ API(`GET /api/admin/feedback`, `PATCH /api/admin/feedback/{id}`)·카드 구성�
 - 같은 `verifyAdminEmail` 접근 제어를 쓴다. 클라이언트는 `feedback`을 직접 읽을 수 없다(규칙 차단).
 - 비용: 화면을 열 때 목록 20건 + 신규 `count()` 1회 + 작성자 조회. 「더 보기」마다 20건.
 
+## 공지 푸시 탭
+
+「공지 푸시」 탭에서 공지 하나를 골라, 사용자 탭에서 체크한 사용자에게 푸시를 보낸다. 사용자 표에 체크박스 열과
+빠른 선택(전체/Android/iOS/짝꿍 없음)이 붙는다. 화면·API·데이터·테스트는 `docs/pages/10-announcement-push.md`.
+
 ## 비용
 
 - 사용자 N명 기준: Auth `listUsers` 1회, `users` 문서 일괄 조회 1회, 사용자별 `count()` 1회 + fcmTokens 조회 1회,

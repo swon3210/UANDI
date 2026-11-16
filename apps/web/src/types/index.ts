@@ -182,6 +182,10 @@ export type NotificationSettings = {
   recordRequest?: {
     enabled: boolean;
   };
+  // 어드민 공지 푸시 수신 on/off. 미지정 시 true 취급(docs/pages/10-announcement-push.md).
+  announcement?: {
+    enabled: boolean;
+  };
   updatedAt: Timestamp;
 };
 
