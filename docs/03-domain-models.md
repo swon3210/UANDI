@@ -53,6 +53,8 @@ type User = {
   createdAt: Timestamp;
   // 앱을 연 플랫폼별 마지막 사용 시각. 기기·플랫폼별 하루 1회 본인이 갱신(어드민 사용자 현황용)
   clientPlatforms?: { web?: Timestamp; android?: Timestamp; ios?: Timestamp };
+  // 마지막으로 본 공지 id. 없으면 아직 본 적 없음 (docs/pages/09-announcements.md)
+  lastSeenAnnouncementId?: string;
 };
 ```
 

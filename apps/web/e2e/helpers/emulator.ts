@@ -1473,3 +1473,43 @@ export async function readFeedbackAsUser(
   );
   return res.status;
 }
+
+// ── 공지사항 — docs/pages/09-announcements.md ─────────────────
+
+/**
+ * users/{uid} 문서의 일부 필드만 owner 권한으로 바꾼다(나머지 필드는 유지).
+ * 공지 판정에 쓰는 가입일(createdAt)·마지막으로 본 공지 id를 심을 때 쓴다.
+ */
+export async function patchUserAnnouncementFields(
+  uid: string,
+  fields: { createdAt?: Date; lastSeenAnnouncementId?: string }
+): Promise<void> {
+  const restFields: Record<string, unknown> = {};
+  if (fields.createdAt) restFields.createdAt = { timestampValue: fields.createdAt.toISOString() };
+  if (fields.lastSeenAnnouncementId !== undefined) {
+    restFields.lastSeenAnnouncementId = { stringValue: fields.lastSeenAnnouncementId };
+  }
+  const mask = Object.keys(restFields)
+    .map((k) => `updateMask.fieldPaths=${k}`)
+    .join('&');
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}?${mask}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ fields: restFields }),
+    }
+  );
+}
+
+/** users/{uid}.lastSeenAnnouncementId 를 owner 권한으로 읽는다. 없으면 null. */
+export async function getUserLastSeenAnnouncementId(uid: string): Promise<string | null> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  if (res.status !== 200) return null;
+  const doc = (await res.json()) as RestDoc;
+  const v = restValue(doc.fields?.lastSeenAnnouncementId);
+  return typeof v === 'string' ? v : null;
+}
