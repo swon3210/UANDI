@@ -22,6 +22,7 @@ export async function updateNotificationSettings(
     budgetWarning: NotificationSettings['budgetWarning'];
     recurringTransaction?: NotificationSettings['recurringTransaction'];
     recordRequest?: NotificationSettings['recordRequest'];
+    announcement?: NotificationSettings['announcement'];
   }
 ): Promise<void> {
   await setDoc(

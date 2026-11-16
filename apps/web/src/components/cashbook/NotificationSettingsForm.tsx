@@ -41,7 +41,13 @@ const notificationSettingsSchema = z.object({
   recordRequest: z.object({
     enabled: z.boolean(),
   }),
+  announcement: z.object({
+    enabled: z.boolean(),
+  }),
 });
+
+/** 모든 토글 행을 같은 모양으로: 왼쪽 제목(+설명), 오른쪽 스위치. FormItem 기본값(세로 배치)을 덮어쓴다 */
+const SWITCH_ROW = 'flex flex-row items-center justify-between gap-4 space-y-0';
 
 type NotificationSettingsFormValues = z.infer<typeof notificationSettingsSchema>;
 
@@ -84,7 +90,7 @@ export function NotificationSettingsForm({
             control={form.control}
             name="recordReminder.enabled"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between">
+              <FormItem className={SWITCH_ROW}>
                 <FormLabel className="text-sm">알림 받기</FormLabel>
                 <FormControl>
                   <Switch
@@ -154,7 +160,7 @@ export function NotificationSettingsForm({
             control={form.control}
             name="budgetWarning.enabled"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between">
+              <FormItem className={SWITCH_ROW}>
                 <FormLabel className="text-sm">알림 받기</FormLabel>
                 <FormControl>
                   <Switch
@@ -172,10 +178,10 @@ export function NotificationSettingsForm({
               control={form.control}
               name="budgetWarning.selfAlertInApp"
               render={({ field }) => (
-                <FormItem className="flex items-start justify-between gap-4 pl-1">
+                <FormItem className={SWITCH_ROW}>
                   <div className="space-y-1">
                     <FormLabel className="text-sm">내 지출 알림도 화면에 띄우기</FormLabel>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="break-keep text-xs text-muted-foreground">
                       앱을 켜둔 상태에서 본인 지출로 인한 예산 경고를 토스트로 표시해요.
                     </p>
                   </div>
@@ -202,10 +208,10 @@ export function NotificationSettingsForm({
             control={form.control}
             name="recurringTransaction.enabled"
             render={({ field }) => (
-              <FormItem className="flex items-start justify-between gap-4">
+              <FormItem className={SWITCH_ROW}>
                 <div className="space-y-1">
                   <FormLabel className="text-sm">알림 받기</FormLabel>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-keep text-xs text-muted-foreground">
                     카테고리에 설정한 발생일에 맞춰 월세·구독·정기 급여 기록을 알려드려요.
                   </p>
                 </div>
@@ -231,10 +237,10 @@ export function NotificationSettingsForm({
             control={form.control}
             name="recordRequest.enabled"
             render={({ field }) => (
-              <FormItem className="flex items-start justify-between gap-4">
+              <FormItem className={SWITCH_ROW}>
                 <div className="space-y-1">
                   <FormLabel className="text-sm">알림 받기</FormLabel>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-keep text-xs text-muted-foreground">
                     파트너가 &ldquo;콕 찌르기&rdquo;로 가계부 입력을 요청하면 알려드려요.
                   </p>
                 </div>
@@ -243,6 +249,35 @@ export function NotificationSettingsForm({
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     data-testid="record-request-switch"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Separator />
+
+        {/* 공지 알림 — 어드민 공지 푸시(docs/pages/10-announcement-push.md) */}
+        <div className="space-y-4">
+          <h3 className="text-base font-semibold">공지 알림</h3>
+
+          <FormField
+            control={form.control}
+            name="announcement.enabled"
+            render={({ field }) => (
+              <FormItem className={SWITCH_ROW}>
+                <div className="space-y-1">
+                  <FormLabel className="text-sm">알림 받기</FormLabel>
+                  <p className="break-keep text-xs text-muted-foreground">
+                    버그 수정이나 기능 변경처럼 꼭 알아야 할 소식을 알려드려요.
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="announcement-switch"
                   />
                 </FormControl>
               </FormItem>

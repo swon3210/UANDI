@@ -1162,9 +1162,19 @@ export async function seedNotificationSettings(
     recordReminderTime?: string;
     recordReminderDays?: number[];
     budgetWarningEnabled?: boolean;
+    /** 공지 알림(어드민 공지 푸시) 수신 여부. 지정하지 않으면 필드를 만들지 않는다(기본 켜짐 취급) */
+    announcementEnabled?: boolean;
   }
 ): Promise<void> {
   const days = options.recordReminderDays ?? [1, 2, 3, 4, 5];
+  const announcementField =
+    options.announcementEnabled === undefined
+      ? {}
+      : {
+          announcement: {
+            mapValue: { fields: { enabled: { booleanValue: options.announcementEnabled } } },
+          },
+        };
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${userId}/settings/notifications`,
     {
@@ -1194,6 +1204,7 @@ export async function seedNotificationSettings(
               },
             },
           },
+          ...announcementField,
           updatedAt: { timestampValue: new Date().toISOString() },
         },
       }),
@@ -1512,4 +1523,81 @@ export async function getUserLastSeenAnnouncementId(uid: string): Promise<string
   const doc = (await res.json()) as RestDoc;
   const v = restValue(doc.fields?.lastSeenAnnouncementId);
   return typeof v === 'string' ? v : null;
+}
+
+// ── 공지 푸시 — docs/pages/10-announcement-push.md ─────────────────
+
+export type EmulatorAnnouncementPush = {
+  id: string;
+  announcementId: string;
+  targetUids: string[];
+  sentUids: string[];
+  successCount: number;
+  failureCount: number;
+  sentByEmail: string;
+};
+
+function restStringArray(v: Record<string, unknown> | undefined): string[] {
+  const values = (v as { arrayValue?: { values?: { stringValue?: string }[] } } | undefined)
+    ?.arrayValue?.values;
+  return (values ?? []).map((x) => x.stringValue ?? '');
+}
+
+/** announcementPushes 전체를 owner 권한으로 읽는다(테스트 검증용). */
+export async function listAnnouncementPushes(): Promise<EmulatorAnnouncementPush[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/announcementPushes?pageSize=100`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  const data = (await res.json()) as { documents?: RestDoc[] };
+  return (data.documents ?? []).map((d) => ({
+    id: d.name.split('/').pop()!,
+    announcementId: String(restValue(d.fields?.announcementId)),
+    targetUids: restStringArray(d.fields?.targetUids),
+    sentUids: restStringArray(d.fields?.sentUids),
+    successCount: Number(restValue(d.fields?.successCount) ?? 0),
+    failureCount: Number(restValue(d.fields?.failureCount) ?? 0),
+    sentByEmail: String(restValue(d.fields?.sentByEmail) ?? ''),
+  }));
+}
+
+/** 이미 보낸 공지 푸시 기록을 심는다(중복 발송 방지 검증용). */
+export async function seedAnnouncementPush(announcementId: string, sentUids: string[]) {
+  const arr = { arrayValue: { values: sentUids.map((u) => ({ stringValue: u })) } };
+  await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/announcementPushes`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({
+        fields: {
+          announcementId: { stringValue: announcementId },
+          targetUids: arr,
+          sentUids: arr,
+          optedOutCount: { integerValue: '0' },
+          noTokenCount: { integerValue: '0' },
+          alreadySentCount: { integerValue: '0' },
+          successCount: { integerValue: String(sentUids.length) },
+          failureCount: { integerValue: '0' },
+          sentByEmail: { stringValue: 'admin@test.com' },
+          createdAt: { timestampValue: new Date(Date.now() - 60_000).toISOString() },
+        },
+      }),
+    }
+  );
+}
+
+/** users/{uid}/settings/notifications 의 announcement.enabled 값. 없으면 null. */
+export async function getAnnouncementNotificationEnabled(uid: string): Promise<boolean | null> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}/settings/notifications`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  if (res.status !== 200) return null;
+  const doc = (await res.json()) as RestDoc;
+  const announcement = doc.fields?.announcement as
+    | { mapValue?: { fields?: Record<string, Record<string, unknown>> } }
+    | undefined;
+  const v = restValue(announcement?.mapValue?.fields?.enabled);
+  return typeof v === 'boolean' ? v : null;
 }

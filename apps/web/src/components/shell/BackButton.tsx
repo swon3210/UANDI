@@ -27,6 +27,11 @@ type BackButtonProps = {
    * 생략하면 가계부 대시보드로 보낸다.
    */
   fallbackHref?: string;
+  /**
+   * 앱 내 이동 기록과 상관없이 항상 fallbackHref로 replace 한다.
+   * 푸시처럼 트리 밖에서 들어온 화면에서 ←가 보던 화면이 아니라 부모로 가야 할 때 쓴다.
+   */
+  alwaysFallback?: boolean;
   'data-testid'?: string;
 };
 
@@ -39,11 +44,19 @@ type BackButtonProps = {
  */
 export function BackButton({
   fallbackHref = CASHBOOK_ROOT,
+  alwaysFallback = false,
   'data-testid': testId = 'header-back',
 }: BackButtonProps) {
   const router = useRouter();
 
-  const handleBack = () => goBackOrReplace(router, fallbackHref);
+  const handleBack = () => {
+    if (alwaysFallback) {
+      markNextAsRoot();
+      router.replace(fallbackHref);
+      return;
+    }
+    goBackOrReplace(router, fallbackHref);
+  };
 
   return (
     <Button

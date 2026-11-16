@@ -31,6 +31,7 @@ couples/{coupleId}
       ├── positions/{positionId}          (v1.1)
       └── savings/{accountId}             (v1.1)
 feedback/{feedbackId}                     (운영 — 의견 보내기, 클라이언트는 create만)
+announcementPushes/{pushId}               (운영 — 공지 푸시 발송 기록, Admin SDK만)
 ```
 
 > **v1 시점**: 환테크 화면은 차트·전망 표시만 하므로 실제 재테크 컬렉션은 도입되지 않습니다. `meta/outerSummary`와 `sideHustles/*` 컬렉션은 v1.1에서 본격 사용되며, 보안 규칙만 v1에 선제 적용해 둡니다.
@@ -505,6 +506,29 @@ type Feedback = {
   status: FeedbackStatus; // 생성 시 항상 'new'
   createdAt: Timestamp;
   statusUpdatedAt: Timestamp | null;
+};
+```
+
+---
+
+## 공지 푸시 발송 기록 (운영 데이터)
+
+어드민이 공지사항을 골라 사용자에게 보낸 푸시 기록. 클라이언트 규칙이 없어 기본 거부되고 Admin SDK만 읽고 쓴다.
+같은 공지를 같은 사용자에게 다시 보내지 않는 데 `sentUids`를 쓴다. 상세는 `docs/pages/10-announcement-push.md`.
+
+```ts
+type AnnouncementPush = {
+  id: string;
+  announcementId: string;
+  targetUids: string[];
+  sentUids: string[]; // 토큰 1개 이상 성공한 사용자
+  optedOutCount: number;
+  noTokenCount: number;
+  alreadySentCount: number;
+  successCount: number; // 기기 기준
+  failureCount: number;
+  sentByEmail: string;
+  createdAt: Timestamp;
 };
 ```
 

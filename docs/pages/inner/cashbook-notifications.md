@@ -98,6 +98,7 @@
 - 경로: `/inner/cashbook/history/weekly/notifications`
 - `budgetWarning.enabled = false`이면 토스트와 배너 모두 표시하지 않음
 - 푸시 알림도 발송하지 않음
+- 맨 아래 「공지 알림」(`announcement.enabled`, 기본 켜짐): 끄면 어드민 공지 푸시를 받지 않는다(`docs/pages/10-announcement-push.md`)
 
 ---
 
@@ -171,6 +172,8 @@ type NotificationSettings = {
   userId: string;
   recordReminder: { enabled: boolean; time: string; days: number[] };
   budgetWarning: { enabled: boolean };
+  // 어드민 공지 푸시 수신 여부. 미지정 시 true(docs/pages/10-announcement-push.md)
+  announcement?: { enabled: boolean };
   updatedAt: Timestamp;
 };
 ```
