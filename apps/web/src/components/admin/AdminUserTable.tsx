@@ -3,34 +3,16 @@
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { ArrowDown, ArrowUp, ArrowUpDown, Search, Users } from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Badge,
-  Button,
-  Checkbox,
-  EmptyState,
-  Input,
-} from '@uandi/ui';
+import { Avatar, AvatarFallback, AvatarImage, Badge, Button, EmptyState, Input } from '@uandi/ui';
 import type { AdminUserRow } from '@/services/admin';
 import {
   DEFAULT_ADMIN_SORT,
   filterAdminUsers,
   nextAdminSort,
-  selectAdminUsers,
   sortAdminUsers,
-  type AdminQuickSelect,
   type AdminSort,
   type AdminSortKey,
 } from './admin-user-list';
-
-const QUICK_SELECTS: { preset: AdminQuickSelect; label: string }[] = [
-  { preset: 'all', label: '전체' },
-  { preset: 'android', label: 'Android' },
-  { preset: 'ios', label: 'iOS' },
-  { preset: 'solo', label: '짝꿍 없음' },
-];
 
 /** 사진이 없을 때 보여줄 이니셜(이름 → 이메일 순). */
 function initialOf(u: AdminUserRow): string {
@@ -78,19 +60,12 @@ function SortableHeader({
   );
 }
 
-export type AdminUserSelection = {
-  selectedUids: ReadonlySet<string>;
-  onChange: (next: Set<string>) => void;
-};
-
 export type AdminUserTableProps = {
   users: AdminUserRow[];
-  /** 주면 체크박스 열과 빠른 선택이 붙는다(공지 푸시 대상 고르기 — docs/pages/10-announcement-push.md) */
-  selection?: AdminUserSelection;
 };
 
 /** 사용자별 현황 표. 열 머리글로 정렬하고 이름·이메일로 검색한다. 가계부 내용 없이 건수만 보여준다. */
-export function AdminUserTable({ users, selection }: AdminUserTableProps) {
+export function AdminUserTable({ users }: AdminUserTableProps) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<AdminSort>(DEFAULT_ADMIN_SORT);
 
@@ -106,29 +81,6 @@ export function AdminUserTable({ users, selection }: AdminUserTableProps) {
 
   const visible = sortAdminUsers(filterAdminUsers(users, query), sort);
   const onSort = (key: AdminSortKey) => setSort((current) => nextAdminSort(current, key));
-  const columnCount = selection ? 8 : 7;
-
-  const selected = selection?.selectedUids;
-  const allVisibleSelected =
-    !!selected && visible.length > 0 && visible.every((u) => selected.has(u.uid));
-
-  const toggleOne = (uid: string, checked: boolean) => {
-    if (!selection) return;
-    const next = new Set(selection.selectedUids);
-    if (checked) next.add(uid);
-    else next.delete(uid);
-    selection.onChange(next);
-  };
-  // 머리글 체크박스는 지금 보이는(검색된) 행만 고르거나 푼다
-  const toggleVisible = (checked: boolean) => {
-    if (!selection) return;
-    const next = new Set(selection.selectedUids);
-    for (const u of visible) {
-      if (checked) next.add(u.uid);
-      else next.delete(u.uid);
-    }
-    selection.onChange(next);
-  };
 
   return (
     <div className="space-y-3">
@@ -153,48 +105,10 @@ export function AdminUserTable({ users, selection }: AdminUserTableProps) {
         </p>
       </div>
 
-      {selection ? (
-        <div className="flex flex-wrap items-center gap-2" data-testid="admin-quick-select">
-          <span className="text-xs text-muted-foreground">빠른 선택</span>
-          {QUICK_SELECTS.map(({ preset, label }) => (
-            <Button
-              key={preset}
-              variant="outline"
-              size="sm"
-              data-testid={`admin-quick-select-${preset}`}
-              onClick={() => selection.onChange(new Set(selectAdminUsers(users, preset)))}
-            >
-              {label}
-            </Button>
-          ))}
-          <Button
-            variant="ghost"
-            size="sm"
-            data-testid="admin-quick-select-clear"
-            onClick={() => selection.onChange(new Set())}
-          >
-            선택 해제
-          </Button>
-          <span className="ml-auto text-sm font-medium" data-testid="admin-selected-count">
-            {selection.selectedUids.size}명 선택
-          </span>
-        </div>
-      ) : null}
-
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[880px] text-sm">
           <thead className="bg-muted text-left text-xs text-muted-foreground">
             <tr>
-              {selection ? (
-                <th className="w-10 px-3 py-2">
-                  <Checkbox
-                    aria-label="보이는 사용자 모두 선택"
-                    data-testid="admin-user-select-all"
-                    checked={allVisibleSelected}
-                    onCheckedChange={(checked) => toggleVisible(checked === true)}
-                  />
-                </th>
-              ) : null}
               <SortableHeader label="사용자" sortKey="name" sort={sort} onSort={onSort} />
               <SortableHeader label="가입일" sortKey="createdAt" sort={sort} onSort={onSort} />
               <SortableHeader
@@ -223,26 +137,13 @@ export function AdminUserTable({ users, selection }: AdminUserTableProps) {
           <tbody>
             {visible.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columnCount}
-                  className="px-3 py-8 text-center text-sm text-muted-foreground"
-                >
+                <td colSpan={7} className="px-3 py-8 text-center text-sm text-muted-foreground">
                   「{query.trim()}」와 일치하는 사용자가 없어요
                 </td>
               </tr>
             ) : (
               visible.map((u) => (
                 <tr key={u.uid} data-testid="admin-user-row" className="border-t border-border">
-                  {selection ? (
-                    <td className="px-3 py-2">
-                      <Checkbox
-                        aria-label={`${u.displayName || u.email || u.uid} 선택`}
-                        data-testid="admin-user-select"
-                        checked={selection.selectedUids.has(u.uid)}
-                        onCheckedChange={(checked) => toggleOne(u.uid, checked === true)}
-                      />
-                    </td>
-                  ) : null}
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 shrink-0" data-testid="admin-user-avatar">

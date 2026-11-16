@@ -62,8 +62,7 @@ API(`GET /api/admin/feedback`, `PATCH /api/admin/feedback/{id}`)·카드 구성�
 
 ## 공지 푸시 탭
 
-「공지 푸시」 탭에서 공지 하나를 골라, 사용자 탭에서 체크한 사용자에게 푸시를 보낸다. 사용자 표에 체크박스 열과
-빠른 선택(전체/Android/iOS/짝꿍 없음)이 붙는다. 화면·API·데이터·테스트는 `docs/pages/10-announcement-push.md`.
+「공지 푸시」 탭에서 공지 하나를 골라, 대상 고르기 다이얼로그(검색·빠른 선택·체크박스)에서 고른 사용자에게 푸시를 보낸다. 화면·API·데이터·테스트는 `docs/pages/10-announcement-push.md`.
 
 ## 비용
 

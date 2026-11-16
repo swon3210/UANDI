@@ -21,7 +21,7 @@ const meta: Meta<typeof AdminAnnouncementPushPanel> = {
     announcementId: SAMPLE_PUSH_ANNOUNCEMENTS[0]!.id,
     onAnnouncementChange: () => {},
     selectedCount: 12,
-    onGoUsers: () => alert('사용자 탭으로'),
+    onPickUsers: () => alert('대상 고르기'),
     preview: SAMPLE_PUSH_PREVIEW,
     previewLoading: false,
     previewError: null,
@@ -43,7 +43,7 @@ export const Empty: Story = {
   args: { announcementId: null, selectedCount: 0, preview: null, logs: [] },
 };
 
-/** 공지는 골랐지만 사용자 탭에서 대상을 안 고름 */
+/** 공지는 골랐지만 대상을 안 고름 */
 export const NoTarget: Story = {
   args: { selectedCount: 0, preview: null },
 };

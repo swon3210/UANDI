@@ -28,9 +28,10 @@ export type AdminAnnouncementPushPanelProps = {
   announcements: Announcement[];
   announcementId: string | null;
   onAnnouncementChange: (id: string) => void;
-  /** 사용자 탭에서 고른 인원 */
+  /** 고른 대상 인원 */
   selectedCount: number;
-  onGoUsers: () => void;
+  /** 대상 고르기 다이얼로그 열기 */
+  onPickUsers: () => void;
   /** 서버 미리보기(dryRun). 공지·대상이 없으면 null */
   preview: AnnouncementPushCounts | null;
   previewLoading: boolean;
@@ -47,7 +48,7 @@ export function AdminAnnouncementPushPanel({
   announcementId,
   onAnnouncementChange,
   selectedCount,
-  onGoUsers,
+  onPickUsers,
   preview,
   previewLoading,
   previewError,
@@ -100,28 +101,34 @@ export function AdminAnnouncementPushPanel({
           <h3 className="text-sm font-semibold">대상</h3>
           {selectedCount > 0 ? (
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm">사용자 탭에서 고른 {selectedCount}명</p>
+              <p className="text-sm">
+                <span className="font-semibold tabular-nums" data-testid="admin-push-target-count">
+                  {selectedCount}명
+                </span>
+              </p>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={onGoUsers}
-                data-testid="admin-push-go-users"
+                className="gap-1"
+                onClick={onPickUsers}
+                data-testid="admin-push-pick-users"
               >
+                <Users size={14} aria-hidden />
                 바꾸기
               </Button>
             </div>
           ) : (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-dashed border-border p-3">
-              <p className="text-sm text-muted-foreground">사용자 탭에서 대상을 골라 주세요</p>
+              <p className="text-sm text-muted-foreground">대상을 골라 주세요</p>
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-1"
-                onClick={onGoUsers}
-                data-testid="admin-push-go-users"
+                onClick={onPickUsers}
+                data-testid="admin-push-pick-users"
               >
                 <Users size={14} aria-hidden />
-                사용자 탭으로
+                대상 고르기
               </Button>
             </div>
           )}

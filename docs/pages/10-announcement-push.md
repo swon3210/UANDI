@@ -23,27 +23,38 @@
 
 ## 화면
 
-### 사용자 탭 — 대상 고르기
+### 대상 고르기 다이얼로그 (`AdminUserPickerDialog`)
 
-- `AdminUserTable` 맨 앞에 체크박스 열. 머리글 체크박스는 **지금 보이는(검색된) 행 전체** 선택/해제.
-  - 행 체크박스 `data-testid="admin-user-select"`, 머리글 `admin-user-select-all`.
-- 표 위에 **빠른 선택** 버튼(`variant="outline" size="sm"`). 누르면 선택을 그 조건으로 **바꾼다**(누적 아님).
+공지 푸시 탭 안에서 대상을 고른다(탭을 오가지 않는다). 2026-11: 사용자 탭 체크박스 방식에서 바꿈.
 
-  | 버튼      | 조건                                               | testid                       |
-  | --------- | -------------------------------------------------- | ---------------------------- |
-  | 전체      | 모든 사용자                                        | `admin-quick-select-all`     |
-  | Android   | 플랫폼에 Android가 있는 사용자                     | `admin-quick-select-android` |
-  | iOS       | 플랫폼에 iOS가 있는 사용자                         | `admin-quick-select-ios`     |
-  | 짝꿍 없음 | 커플 미연결 또는 상대 대기 중(`partnerEmail` 없음) | `admin-quick-select-solo`    |
-  | 선택 해제 | 선택 비우기                                        | `admin-quick-select-clear`   |
+- 공지 푸시 탭 「대상」의 「대상 고르기」(`admin-push-pick-users`, 이미 골랐으면 「바꾸기」)로 연다.
+- `Dialog`(overlay-kit), `data-testid="admin-user-picker"`. 넓은 화면 기준 `max-w-2xl`, 목록은 `max-h-[60vh]`에서 스크롤.
+- 구성(위에서 아래로)
+  1. 검색 `Input`(이름·이메일·짝꿍 이메일 부분 일치, 사용자 표와 같은 규칙) — `admin-picker-search`
+  2. **빠른 선택** 버튼(`variant="outline" size="sm"`). 누르면 선택을 그 조건으로 **바꾼다**(누적 아님).
 
-- 선택한 수를 `n명 선택` 으로 보여준다(`admin-selected-count`). 선택은 탭을 오가도 유지된다(페이지 상태).
+     | 버튼      | 조건                                               | testid                       |
+     | --------- | -------------------------------------------------- | ---------------------------- |
+     | 전체      | 모든 사용자                                        | `admin-quick-select-all`     |
+     | Android   | 플랫폼에 Android가 있는 사용자                     | `admin-quick-select-android` |
+     | iOS       | 플랫폼에 iOS가 있는 사용자                         | `admin-quick-select-ios`     |
+     | 짝꿍 없음 | 커플 미연결 또는 상대 대기 중(`partnerEmail` 없음) | `admin-quick-select-solo`    |
+     | 선택 해제 | 선택 비우기                                        | `admin-quick-select-clear`   |
+
+  3. 「보이는 n명 모두 선택」 체크박스(`admin-picker-select-visible`) — 검색된 사용자 전체 선택/해제.
+  4. 사용자 목록 — 행 전체가 체크박스 라벨(`admin-picker-row`, 체크박스 `admin-picker-check`).
+     사진·이름·이메일(`admin-picker-email`)·짝꿍 상태(연결/상대 대기 중/미연결)·플랫폼 배지. 정렬은 이름순.
+  5. 하단: 「n명 선택됨」(`admin-selected-count`) · 「취소」 · 「n명 선택」(`admin-picker-confirm`, 0명이면 「선택 안 함」).
+
+- 다이얼로그 안의 선택은 **임시**다. 「n명 선택」을 눌러야 공지 푸시 탭에 반영되고, 취소·바깥 탭은 버린다.
+- 다시 열면 지금 고른 대상이 체크된 상태로 시작한다.
+- 사용자 탭(`AdminUserTable`)에는 체크박스를 두지 않는다.
 
 ### 공지 푸시 탭 (`data-testid="admin-tab-push"`)
 
 1. **공지** — `Select`로 `ANNOUNCEMENTS` 중 하나(제목 + 날짜). 기본값 없음. `admin-push-announcement`.
    고르면 아래에 푸시 미리보기(제목·본문 첫 줄)를 보여준다.
-2. **대상** — 「사용자 탭에서 고른 n명」. 0명이면 「사용자 탭에서 대상을 골라 주세요」와 「사용자 탭으로」 버튼.
+2. **대상** — 고른 사람이 있으면 「n명」과 「바꾸기」, 없으면 「대상을 골라 주세요」와 「대상 고르기」. 둘 다 대상 고르기 다이얼로그를 연다.
 3. **확인** — 공지와 대상이 있으면 서버에 미리보기(`dryRun`)를 요청해 숫자를 보여준다(`admin-push-preview`,
    숫자는 `admin-push-count-{target|opted-out|no-token|already-sent|eligible}`).
 
@@ -170,11 +181,12 @@ announcement?: { enabled: boolean }; // 미지정 시 true 취급(기존 사용�
 
 ## 테스트 (`e2e/specs/admin-announcement-push.spec.ts`)
 
-- 운영자가 사용자 탭에서 체크박스로 4명을 고르면, 공지 푸시 탭 미리보기에 대상 4 · 공지 알림 끔 1 · 기기 없음 1 · 보낼 수 있음 2가 보인다.
+- 운영자가 공지 푸시 탭의 대상 고르기 다이얼로그에서 4명을 고르면, 공지 푸시 탭 미리보기에 대상 4 · 공지 알림 끔 1 · 기기 없음 1 · 보낼 수 있음 2가 보인다.
 - 보내기 → 확인하면 「2명에게 보냈어요」 toast, `announcementPushes` 기록의 `sentUids`가 그 2명이고, 보낸 기록에 한 줄이 생긴다.
 - 같은 공지를 같은 사람에게 다시 고르면 이미 보냄으로 빠지고, 보낼 사람이 0이면 보내기 버튼이 비활성이다.
 - 무효 토큰(`invalid-…`)은 발송 후 삭제된다.
-- 빠른 선택 「짝꿍 없음」은 짝꿍이 없는 사용자만 고른다.
+- 다이얼로그 빠른 선택 「짝꿍 없음」은 짝꿍이 없는 사용자만 고르고, 취소하면 선택이 반영되지 않는다.
+- 검색 후 「보이는 n명 모두 선택」은 검색된 사용자만 고른다.
 - 허용 목록에 없는 계정이 API를 부르면 403.
 - 알림 설정에서 「공지 알림」을 끄고 저장하면 `announcement.enabled`가 false로 저장된다.
 - 앱 안에서 다른 화면을 보다가 `/announcements?from=push`로 이동해도 ←는 대시보드로 간다.
