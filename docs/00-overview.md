@@ -98,6 +98,7 @@
 # 공통
 /settings                    → 설정 (프로필·가계부 설정·AI 설정)
 /settings/feedback           → 의견 보내기 (피드백·버그 제보)
+/settings/announcements      → 공지사항 (골라 올린 변경 소식)
 /admin                       → 운영자 어드민 (사용자 현황·피드백)
 ```
 
@@ -117,6 +118,7 @@
 | `pages/01-onboarding.md`   | `/onboarding`   | 커플 연결                         |
 | `pages/02-dashboard.md`    | `/` (로그인)    | 진입 대시보드 (양쪽 공간 요약)    |
 | `pages/05-ai-features.md`  | (API 공통)      | AI 라우트 공통 규칙               |
+| `pages/08-announcements.md` | `/settings/announcements` | 공지사항 (대시보드 시트 + 목록) |
 
 **🏠 우리집 (`pages/inner/*`)**
 
