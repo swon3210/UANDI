@@ -81,9 +81,10 @@
 
 ```ts
 {
+  // apps/web/src/lib/announcement-push-message.ts — 서버 발송과 어드민 미리보기가 같이 쓴다
   notification: {
-    title: announcement.title,
-    body: announcement.body.split('\n')[0], // 본문 첫 줄
+    title: '[공지] 버그를 고쳤어요', // 종류(kind)별 고정 문구 — 아래 표
+    body: announcement.title, // 공지 제목(한 문장 요약). 자세한 내용은 눌러서 공지사항에서
   },
   data: {
     click_action: '/announcements?from=push', // 공지사항 목록 → 읽음 처리(대시보드 시트는 다시 안 뜸)
@@ -92,6 +93,17 @@
   },
 }
 ```
+
+| `kind`    | 푸시 제목                 |
+| --------- | ------------------------- |
+| `new`     | [공지] 새 기능이 생겼어요 |
+| `changed` | [공지] 바뀐 점이 있어요   |
+| `fixed`   | [공지] 버그를 고쳤어요    |
+| `ended`   | [공지] 종료 안내          |
+| (없음)    | [공지] 말랑 가계부 소식   |
+
+- 2026-11: 제목에 공지 제목, 본문에 공지 본문 첫 줄을 넣던 방식에서 바꿈. 알림 목록에서 공지임이 한눈에 보이고 본문이 길게 넘치지 않게.
+- 어드민 「공지」 아래 푸시 미리보기도 같은 문구를 보여준다.
 
 ### 푸시로 들어온 공지사항 화면의 ←
 

@@ -2,6 +2,7 @@ import { FieldValue, type DocumentReference } from 'firebase-admin/firestore';
 import type { BatchResponse, MulticastMessage } from 'firebase-admin/messaging';
 import { adminDb, adminMessaging } from '@/lib/ai/firebase-admin';
 import type { Announcement } from '@/content/announcements';
+import { buildAnnouncementPushText } from '@/lib/announcement-push-message';
 import type { AnnouncementPushResult } from '@/services/admin-announcement-push';
 
 // 어드민 공지 푸시 발송 — docs/pages/10-announcement-push.md
@@ -43,10 +44,8 @@ async function sendMulticast(message: MulticastMessage): Promise<BatchResponse> 
 
 function buildMessage(announcement: Announcement): Omit<MulticastMessage, 'tokens'> {
   return {
-    notification: {
-      title: announcement.title,
-      body: announcement.body.split('\n')[0] ?? '',
-    },
+    // 제목은 종류별 고정 문구, 본문은 공지 제목
+    notification: buildAnnouncementPushText(announcement),
     data: {
       click_action: ANNOUNCEMENT_PUSH_CLICK_ACTION,
       type: 'announcement',

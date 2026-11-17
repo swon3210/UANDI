@@ -151,7 +151,7 @@ recordRequest?: {
 
 | 필드 | 값 |
 |------|-----|
-| title | `UANDI 가계부` |
+| title | `말랑 가계부` |
 | body | `○○님이 가계부 입력을 요청했어요 🐹` (message가 있으면 그 문구 사용) |
 | data.click_action | 가계부 입력(빠른 추가) 경로 |
 | data.type | `record-request` |

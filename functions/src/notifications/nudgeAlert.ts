@@ -97,7 +97,7 @@ export const onNudgeCreated = onDocumentCreated(
       // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
       const res = await sendAndPrune(messaging, tokenDocs, {
         notification: {
-          title: 'UANDI 가계부',
+          title: '말랑 가계부',
           body,
         },
         data: {
