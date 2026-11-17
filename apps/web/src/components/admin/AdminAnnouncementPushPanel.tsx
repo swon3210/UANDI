@@ -12,6 +12,7 @@ import {
   Skeleton,
 } from '@uandi/ui';
 import type { Announcement } from '@/content/announcements';
+import { buildAnnouncementPushText } from '@/lib/announcement-push-message';
 import type {
   AnnouncementPushCounts,
   AnnouncementPushLog,
@@ -90,8 +91,12 @@ export function AdminAnnouncementPushPanel({
               data-testid="admin-push-message"
               aria-label="푸시 미리보기"
             >
-              <p className="font-semibold break-keep">{announcement.title}</p>
-              <p className="text-muted-foreground break-keep">{announcement.body.split('\n')[0]}</p>
+              <p className="font-semibold break-keep">
+                {buildAnnouncementPushText(announcement).title}
+              </p>
+              <p className="text-muted-foreground break-keep">
+                {buildAnnouncementPushText(announcement).body}
+              </p>
             </div>
           ) : null}
         </div>

@@ -35,7 +35,7 @@ export const sendTestPush = onCall(
     // 발송 후 무효 토큰은 자동 정리된다(sendAndPrune).
     const result = (await sendAndPrune(admin.messaging(), tokenDocs, {
       notification: {
-        title: 'UANDI 테스트 알림',
+        title: '말랑 가계부 테스트 알림',
         body: '푸시가 정상적으로 도착했어요 🎉',
       },
       data: {

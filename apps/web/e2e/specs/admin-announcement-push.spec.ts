@@ -11,6 +11,7 @@ import {
   seedUserDocument,
 } from '../helpers/emulator';
 import { ANNOUNCEMENTS } from '../../src/content/announcements';
+import { buildAnnouncementPushText } from '../../src/lib/announcement-push-message';
 
 // 어드민 공지 푸시 — docs/pages/10-announcement-push.md
 // 에뮬레이터에는 FCM이 없어 서버가 모의 발송한다(USE_PUSH_MOCK=true, invalid- 토큰은 실패 처리).
@@ -75,7 +76,8 @@ async function openPushTabAndPick(page: Page) {
 async function openPicker(page: Page) {
   await page.getByTestId('admin-push-pick-users').click();
   const picker = page.getByTestId('admin-user-picker');
-  await expect(picker).toBeVisible();
+  // 개발 서버가 다이얼로그를 처음 컴파일할 때 기본 대기(5초)를 넘길 수 있다
+  await expect(picker).toBeVisible({ timeout: 15000 });
   return picker;
 }
 
@@ -109,7 +111,10 @@ async function expectPreview(
   }
 ) {
   const preview = page.getByTestId('admin-push-preview');
-  await expect(preview.getByTestId('admin-push-count-target')).toHaveText(String(counts.target));
+  // 미리보기 API를 개발 서버가 처음 컴파일할 때 기본 대기(5초)를 넘길 수 있다
+  await expect(preview.getByTestId('admin-push-count-target')).toHaveText(String(counts.target), {
+    timeout: 15000,
+  });
   await expect(preview.getByTestId('admin-push-count-opted-out')).toHaveText(
     String(counts.optedOut)
   );
@@ -132,6 +137,10 @@ test.describe('어드민 공지 푸시', () => {
     await openPushTabAndPick(page);
     await pickUsers(page, [EMAIL_A, EMAIL_B, EMAIL_C, EMAIL_D]);
     // 푸시 문구 미리보기: 제목 = 공지 제목
+    // 푸시 미리보기: 제목은 종류별 「[공지] …」 고정 문구, 본문은 공지 제목
+    const pushText = buildAnnouncementPushText(announcement);
+    expect(pushText.title).toMatch(/^\[공지\] /);
+    await expect(page.getByTestId('admin-push-message')).toContainText(pushText.title);
     await expect(page.getByTestId('admin-push-message')).toContainText(announcement.title);
     await expectPreview(page, { target: 4, optedOut: 1, noToken: 1, alreadySent: 0, eligible: 2 });
 
