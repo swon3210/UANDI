@@ -92,3 +92,22 @@ export const Summary: Story = {
     ),
   },
 };
+
+/** 헤더 제목을 누르면 위치 선택 시트가 열린다(부제 옆 ⌄) */
+export const WithStepPicker: Story = {
+  args: {
+    title: '정기결제',
+    subtitle: '지출 · 7 / 20 · 평균',
+    progress: 0.4,
+    onPrev: () => {},
+    onNext: () => {},
+    onExit: () => {},
+    onSkip: () => {},
+    onTitleClick: () => console.log('open step picker'),
+    children: (
+      <div className="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500">
+        본문 영역
+      </div>
+    ),
+  },
+};
