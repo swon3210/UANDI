@@ -105,6 +105,14 @@
 - 2026-11: 제목에 공지 제목, 본문에 공지 본문 첫 줄을 넣던 방식에서 바꿈. 알림 목록에서 공지임이 한눈에 보이고 본문이 길게 넘치지 않게.
 - 어드민 「공지」 아래 푸시 미리보기도 같은 문구를 보여준다.
 
+### 앱에서 푸시를 탭했을 때 (`apps/mobile/hooks/use-fcm-registration.ts`)
+
+- 앱 상태별로 탭 신호가 오는 곳이 달라 세 곳을 모두 듣는다. 같은 탭이 두 번 오면 3초 안의 같은 목적지는 한 번만 처리한다.
+  - expo-notifications가 띄운 알림: `addNotificationResponseReceivedListener`
+  - 앱이 백그라운드에 살아 있을 때 FCM 시스템 알림: `onNotificationOpenedApp`
+  - 앱이 꺼져 있다가 알림으로 열렸을 때: `getInitialNotification`
+- 2026-11: 백그라운드 탭(`onNotificationOpenedApp`)을 듣지 않아 앱만 열리고 이동하지 않던 문제를 고침(앱 1.4.3).
+
 ### 푸시로 들어온 공지사항 화면의 ←
 
 - `?from=push`면 ←가 앱 안 이동 기록과 상관없이 **대시보드로 replace** 한다(`BackButton alwaysFallback`).
