@@ -8,6 +8,7 @@ import { seedDefaultCategories } from '../helpers/emulator';
  * - 평균 0원이면 그리드 생략, "이 항목은 건너뛰기"
  * - 수입 정기 항목 합산 안내
  * - 중간에 나가면 대시보드·경제 목표에 "이어서 하기"
+ * - 헤더의 위치 선택 시트로 원하는 항목·검증·완료로 바로 이동
  *
  * E2E 기본 카테고리(seedDefaultCategories): 정기수입 2 · 비정기 2 · 고정 2 · 변동공통 2 · 변동각자 2
  *  → 빠른 모드 6단계, 전체 모드 14단계
@@ -168,5 +169,90 @@ test.describe('예산 위저드', () => {
 
     await expect(page.getByTestId('annual-plan-header')).toBeVisible();
     await expect(page.getByTestId('annual-plan-home')).toHaveCount(0);
+  });
+  test.describe('위치 선택', () => {
+    async function openPicker(page: Page) {
+      await page.getByTestId('wizard-step-picker').click();
+      const sheet = page.getByTestId('wizard-step-sheet');
+      await expect(sheet).toBeVisible();
+      return sheet;
+    }
+
+    test('인트로에서는 위치 선택 버튼이 없다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await gotoIntro(page);
+      await expect(page.getByTestId('wizard-step-picker')).toHaveCount(0);
+    });
+
+    test('뒤쪽 항목으로 바로 건너뛰고, 앞 항목으로 돌아와도 입력값이 남아 있다', async ({
+      authedContext,
+    }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await gotoIntro(page);
+      await page.getByTestId('wizard-next').click();
+      await expect(page).toHaveURL(/step=income&catIdx=0&phase=avg&mode=quick/);
+      await page.getByTestId('regular-avg-input-field').fill('3000000');
+
+      // 다음을 누르지 않고 바로 시트를 열어도 입력 중인 금액이 보인다
+      let sheet = await openPicker(page);
+      const salaryRow = sheet.getByTestId('wizard-step-row').filter({ hasText: '정기급여' });
+      await expect(salaryRow).toHaveAttribute('aria-current', 'step');
+      await expect(salaryRow).toContainText('월 300만원');
+      await expect(sheet.getByTestId('wizard-step-row').filter({ hasText: '식비' })).toContainText(
+        '—'
+      );
+
+      // 빠른 모드 지출: 월세(0) · 보험(1) · 식비(2) · 여행(3)
+      await sheet.getByTestId('wizard-step-row').filter({ hasText: '식비' }).click();
+      await expect(page).toHaveURL(/step=expense&catIdx=2&phase=avg&mode=quick/);
+      await expect(page.getByTestId('wizard-step-sheet')).toHaveCount(0);
+      await page.getByTestId('regular-avg-input-field').fill('500000');
+
+      sheet = await openPicker(page);
+      await expect(sheet.getByTestId('wizard-step-row').filter({ hasText: '식비' })).toContainText(
+        '월 50만원'
+      );
+      await sheet.getByTestId('wizard-step-row').filter({ hasText: '정기급여' }).click();
+      await expect(page).toHaveURL(/step=income&catIdx=0&phase=avg&mode=quick/);
+      await expect(page.getByTestId('regular-avg-input-field')).toHaveValue('3,000,000');
+
+      // 저장된 값이 새로고침 후에도 남아 있다
+      await page.reload();
+      sheet = await openPicker(page);
+      await expect(sheet.getByTestId('wizard-step-row').filter({ hasText: '식비' })).toContainText(
+        '월 50만원'
+      );
+    });
+
+    test('검증을 통과하지 못했으면 "완료"를 눌러도 검증 단계로 간다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await gotoIntro(page);
+      await page.getByTestId('wizard-next').click();
+
+      let sheet = await openPicker(page);
+      await sheet.getByTestId('wizard-step-row').filter({ hasText: '월세' }).click();
+      await expect(page).toHaveURL(/step=expense&catIdx=0&phase=avg/);
+      await page.getByTestId('regular-avg-input-field').fill('1000000');
+
+      sheet = await openPicker(page);
+      await expect(sheet.getByTestId('wizard-step-summary')).toContainText('검증을 먼저');
+      await sheet.getByTestId('wizard-step-summary').click();
+      await expect(page).toHaveURL(/step=validate&mode=quick/);
+    });
+
+    test('검증을 통과했으면 "완료"로 바로 요약 단계에 간다', async ({ authedContext }) => {
+      const { page, coupleId } = authedContext;
+      await seedDefaultCategories(coupleId);
+      await gotoIntro(page);
+      await page.getByTestId('wizard-next').click();
+      await page.getByTestId('regular-avg-input-field').fill('3000000');
+
+      const sheet = await openPicker(page);
+      await sheet.getByTestId('wizard-step-summary').click();
+      await expect(page).toHaveURL(/step=summary&mode=quick/);
+    });
   });
 });
