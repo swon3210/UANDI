@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
+import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
+import { Sheet } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
 import { MascotLoader } from '@/components/MascotLoader';
 import { useCashbookCategories } from '@/hooks/useCashbookCategories';
@@ -18,7 +20,12 @@ import {
   useValidateAnnualPlan,
   useBulkUpdatePlanItems,
 } from '@/hooks/useAnnualPlan';
-import { usePlanWizard, type UsePlanWizardResult, type WizardStep } from '@/hooks/usePlanWizard';
+import {
+  usePlanWizard,
+  usesAvgPhase,
+  type UsePlanWizardResult,
+  type WizardStep,
+} from '@/hooks/usePlanWizard';
 import {
   totalsFromItems,
   ensurePlanItems,
@@ -41,6 +48,12 @@ import {
 } from '@/components/cashbook/plan-wizard/PlanWizardCategoryStep';
 import { PlanWizardValidate } from '@/components/cashbook/plan-wizard/PlanWizardValidate';
 import { PlanWizardSummary } from '@/components/cashbook/plan-wizard/PlanWizardSummary';
+import {
+  PlanWizardStepSheet,
+  type WizardJumpTarget,
+  type WizardStepSheetCurrent,
+  type WizardStepSheetRow,
+} from '@/components/cashbook/plan-wizard/PlanWizardStepSheet';
 import type { AnnualPlanItem } from '@/types';
 
 type Draft = {
@@ -308,6 +321,62 @@ function WizardPageInner() {
     if (nextStep) navigateTo(nextStep);
   };
 
+  /** 위치 선택 시트에서 고른 곳으로 이동. 입력 중인 값은 이전·다음과 같은 경로로 먼저 저장한다. */
+  const handleJump = async (target: WizardJumpTarget) => {
+    const steps = wizard.steps;
+    let dest: WizardStep | undefined;
+    if (target.kind === 'item') {
+      dest = steps.find((s) => s.kind === 'category' && s.item.id === target.itemId);
+    } else if (target.kind === 'summary' && !validation.ok) {
+      // 검증을 통과하지 못했으면 완료 대신 검증으로
+      dest = steps.find((s) => s.kind === 'validate');
+    } else {
+      dest = steps.find((s) => s.kind === target.kind);
+    }
+    if (!dest) return;
+    const destIdx = steps.indexOf(dest);
+    // 같은 항목(전체 모드의 평균·그리드 중 어디든)이나 같은 단계면 그대로 둔다
+    const cur = wizard.current;
+    const sameItem =
+      target.kind === 'item' && cur.kind === 'category' && cur.item.id === target.itemId;
+    if (sameItem || destIdx === wizard.currentStepIndex) return;
+    await commitCurrentDraftIfDirty();
+    navigateTo(dest);
+  };
+
+  const openStepPicker = () => {
+    const cur = wizard.current;
+    if (cur.kind === 'intro') return;
+    const current: WizardStepSheetCurrent =
+      cur.kind === 'category' ? { kind: 'item', itemId: cur.item.id } : { kind: cur.kind };
+    const rows: WizardStepSheetRow[] = [];
+    const seen = new Set<string>();
+    for (const s of wizard.steps) {
+      if (s.kind !== 'category' || seen.has(s.item.id)) continue;
+      seen.add(s.item.id);
+      rows.push({ item: s.item, category: s.category, usesAvg: usesAvgPhase(s.item, wizard.mode) });
+    }
+    overlay.open(({ isOpen, close, unmount }) => {
+      const closeSheet = () => {
+        close();
+        setTimeout(unmount, 300);
+      };
+      return (
+        <Sheet open={isOpen} onOpenChange={(open) => !open && closeSheet()}>
+          <PlanWizardStepSheet
+            rows={rows}
+            current={current}
+            validationOk={validation.ok}
+            onSelect={(target) => {
+              closeSheet();
+              void handleJump(target);
+            }}
+          />
+        </Sheet>
+      );
+    });
+  };
+
   const handleChangeAvg = (value: number) => {
     if (wizard.current.kind !== 'category') return;
     const item = wizard.current.item;
@@ -381,6 +450,7 @@ function WizardPageInner() {
       onNext={handleNext}
       onExit={handleExit}
       onSkip={wizard.current.kind === 'category' ? handleSkip : undefined}
+      onTitleClick={wizard.current.kind !== 'intro' ? openStepPicker : undefined}
       prevDisabled={!wizard.prev}
       nextDisabled={rendered.nextDisabled}
       nextLabel={rendered.nextLabel}

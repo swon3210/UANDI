@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, X } from 'lucide-react';
 import { Button, cn } from '@uandi/ui';
 
 type PlanWizardShellProps = {
@@ -13,6 +13,8 @@ type PlanWizardShellProps = {
   onExit?: () => void;
   /** 카테고리 단계에서 "이 항목은 건너뛰기"(0원으로 두고 다음 항목). 전달하면 푸터에 텍스트 버튼이 보인다. */
   onSkip?: () => void;
+  /** 전달하면 헤더 제목·부제가 버튼이 되어 위치 선택 시트를 연다(`wizard-step-picker`). */
+  onTitleClick?: () => void;
   prevDisabled?: boolean;
   nextDisabled?: boolean;
   nextLabel?: string;
@@ -30,6 +32,7 @@ export function PlanWizardShell({
   onNext,
   onExit,
   onSkip,
+  onTitleClick,
   prevDisabled,
   nextDisabled,
   nextLabel = '다음',
@@ -56,10 +59,23 @@ export function PlanWizardShell({
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-semibold text-stone-900">{title}</div>
-            {subtitle && <div className="truncate text-[11px] text-stone-500">{subtitle}</div>}
-          </div>
+          {onTitleClick ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onTitleClick}
+              aria-label={`위치 선택 — 지금: ${title}${subtitle ? ` (${subtitle})` : ''}`}
+              aria-haspopup="dialog"
+              data-testid="wizard-step-picker"
+              className="h-auto min-w-0 flex-1 flex-col items-start gap-0 rounded-lg px-2 py-1 text-left font-normal hover:bg-stone-100"
+            >
+              <TitleBlock title={title} subtitle={subtitle} withChevron />
+            </Button>
+          ) : (
+            <div className="min-w-0 flex-1">
+              <TitleBlock title={title} subtitle={subtitle} />
+            </div>
+          )}
           <button
             type="button"
             onClick={onExit}
@@ -135,5 +151,27 @@ export function PlanWizardShell({
         </footer>
       )}
     </div>
+  );
+}
+
+function TitleBlock({
+  title,
+  subtitle,
+  withChevron = false,
+}: {
+  title: string;
+  subtitle?: string;
+  withChevron?: boolean;
+}) {
+  return (
+    <>
+      <div className="w-full truncate text-[15px] font-semibold text-stone-900">{title}</div>
+      {subtitle || withChevron ? (
+        <div className="flex w-full min-w-0 items-center gap-0.5 text-[11px] text-stone-500">
+          {subtitle ? <span className="truncate">{subtitle}</span> : null}
+          {withChevron ? <ChevronDown aria-hidden className="!size-3.5 shrink-0" /> : null}
+        </div>
+      ) : null}
+    </>
   );
 }
