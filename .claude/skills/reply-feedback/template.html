@@ -1,0 +1,57 @@
+<!-- 말랑 문의 답장 템플릿. [[ ]] 자리를 채우고, 필요 없는 블록은 지운다. 이미지는 uandi-web.vercel.app/brand 의 공개 URL만 쓴다. -->
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:15px;line-height:1.75;color:#1c1917;max-width:520px;">
+  <!-- 1. 인사 — 왼쪽 이모티콘(기본 1-03-hello) + 어떤 글에 대한 답인지 -->
+  <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+    <tr>
+      <td style="vertical-align:middle;padding-right:12px;">
+        <img src="https://uandi-web.vercel.app/brand/emoticons/1-03-hello.png" width="88" height="88" alt="안녕!" style="display:block;width:88px;height:88px;">
+      </td>
+      <td style="vertical-align:middle;">
+        <strong style="font-size:17px;">안녕하세요, 말랑 가계부를 만들고 있는 부부입니다.</strong><br>
+        [[며칠 전 "…"라고 남겨 주신 글을 읽고 바로 확인해 봤어요.]]
+      </td>
+    </tr>
+  </table>
+
+  <!-- 2. 본론 — 오른쪽 이모티콘은 상황에 맞게(사과 1-09-sorry, 완료 3-07-ok, 궁금 3-06-curious …). 사과할 일이 없으면 이 표 대신 <p>로 쓴다. -->
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">
+    <tr>
+      <td style="vertical-align:top;">
+        [[먼저 죄송합니다. (상대가 겪었을 일을 구체적으로 한 문장)]]<br><br>
+        [[원인을 쉬운 말로 한두 문장. 고쳤으면 "오늘 고쳐서 올렸습니다", 아직이면 언제 고칠지 사실대로.]]
+      </td>
+      <td style="vertical-align:top;padding-left:12px;">
+        <img src="https://uandi-web.vercel.app/brand/emoticons/1-09-sorry.png" width="88" height="88" alt="미안해" style="display:block;width:88px;height:88px;">
+      </td>
+    </tr>
+  </table>
+
+  <!-- 3. 상대가 할 일 — 경로는 화살표(→)로, 화면 이름은 앱에 보이는 그대로. 할 일이 없으면 블록을 지운다. -->
+  <p style="margin:0 0 8px;">[[이제 앱을 다시 열어 보시면 ….]]</p>
+  <ul style="margin:0 0 16px;padding-left:20px;">
+    <li style="margin-bottom:6px;">[[화면 A가 뜨면: 오른쪽 위 프로필 사진 → <strong>설정</strong> → …]]</li>
+    <li>[[화면 B가 뜨면: …]]</li>
+  </ul>
+
+  <!-- 4. 안심시킬 것 + 다시 연락할 길 -->
+  <p style="margin:0 0 16px;">[[결과가 어떻게 되는지 한 문장.]] 혹시 이번에도 안 되면 이 메일에 답장만 주세요. 저희가 직접 확인하고 처리해 드릴게요.</p>
+
+  <!-- 5. 마무리 — 고마움 한 줄 -->
+  <p style="margin:0 0 20px;">[[글을 남겨 주셔서 고맙습니다. (덕분에 무엇이 좋아졌는지 한 문장)]]</p>
+
+  <!-- 6. 서명 — 고정. 바꾸지 않는다. -->
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;border-top:1px solid #e9e4df;margin-top:4px;">
+    <tr>
+      <td style="vertical-align:middle;padding:16px 14px 0 0;width:76px;">
+        <img src="https://uandi-web.vercel.app/brand/mascot-couple-coral-360.png" width="76" height="90" alt="말랑 마스코트" style="display:block;width:76px;height:90px;">
+      </td>
+      <td style="vertical-align:middle;padding-top:16px;">
+        <img src="https://uandi-web.vercel.app/brand/logo-full-480.png" width="150" height="75" alt="말랑" style="display:block;width:150px;height:75px;margin-left:-10px;">
+        <div style="color:#706c67;font-size:13px;line-height:1.5;margin-top:2px;">
+          함께 모아가는 즐거움, 둘이 함께 쓰는 가계부<br>
+          <strong style="color:#1c1917;">말랑 부부 드림</strong>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
