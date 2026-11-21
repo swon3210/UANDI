@@ -2,14 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
-import { overlay } from 'overlay-kit';
 import { toast } from 'sonner';
 import { AccountInfoCard, Button, Header } from '@uandi/ui';
-import type { User } from '@/types';
 import { BackButton } from '@/components/shell/BackButton';
-import { AccountDeleteConfirmDialog } from '@/components/settings/AccountDeleteConfirmDialog';
+import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { useAuth } from '@/hooks/useAuth';
-import { useDeleteAccount } from '@/hooks/useDeleteAccount';
 import { getSignInProvider, signOut } from '@/lib/firebase/auth';
 
 const PARENT = '/settings';
@@ -56,47 +53,11 @@ export default function AccountPage() {
           로그아웃
         </Button>
 
-        <DeleteAccountSection user={user} />
+        {/* 회원탈퇴 — 페이지 맨 아래, 눈에 띄지 않는 텍스트 버튼. 확인 다이얼로그를 거쳐 서버가 처리한다. */}
+        <div className="mt-auto flex justify-center border-t border-border pt-6">
+          <DeleteAccountButton />
+        </div>
       </main>
-    </div>
-  );
-}
-
-/** 회원탈퇴 — 페이지 맨 아래, 눈에 띄지 않는 텍스트 버튼. 확인 다이얼로그를 거쳐 실행한다. */
-function DeleteAccountSection({ user }: { user: User }) {
-  const deleteAccountMutation = useDeleteAccount();
-
-  const handleDeleteAccount = async () => {
-    const confirmed = await overlay.openAsync<boolean>(({ isOpen, close, unmount }) => (
-      <AccountDeleteConfirmDialog
-        isOpen={isOpen}
-        isPending={deleteAccountMutation.isPending}
-        onConfirm={() => {
-          close(true);
-          setTimeout(unmount, 300);
-        }}
-        onCancel={() => {
-          close(false);
-          setTimeout(unmount, 300);
-        }}
-      />
-    ));
-    if (confirmed) {
-      deleteAccountMutation.mutate({ uid: user.uid, coupleId: user.coupleId });
-    }
-  };
-
-  return (
-    <div className="mt-auto flex justify-center border-t border-border pt-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground hover:text-destructive"
-        onClick={handleDeleteAccount}
-        data-testid="delete-account-button"
-      >
-        회원탈퇴
-      </Button>
     </div>
   );
 }

@@ -10,8 +10,7 @@ export function useDeleteAccount() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: ({ uid, coupleId }: { uid: string; coupleId: string | null }) =>
-      deleteAccount(uid, coupleId),
+    mutationFn: () => deleteAccount(),
     onSuccess: () => {
       setUser(null);
       router.replace('/');

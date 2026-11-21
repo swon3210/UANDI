@@ -180,6 +180,24 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 
 > 이력: 회원탈퇴는 설정 첫 화면 → 프로필 편집 맨 아래(2026-11) → 계정 관리 페이지(2026-11)로 옮겨 왔다.
 
+## 회원탈퇴 처리 (서버, 2026-11 사고 이후)
+
+회원탈퇴는 **서버 API `POST /api/account/delete`** 가 Admin SDK로 처리한다. 클라이언트는 ID 토큰을 Bearer로 보내고,
+성공하면 로컬 세션(`signOut`)과 인증 쿠키만 정리한 뒤 랜딩(`/`)으로 보낸다.
+
+- **왜 서버인가**: 클라이언트 `deleteUser()`는 로그인한 지 오래된 계정에 `auth/requires-recent-login`을 내고,
+  대안인 `reauthenticateWithPopup`은 인앱 WebView(특히 iOS WKWebView)에서 팝업이 열리지 않아 실패한다.
+  게다가 예전 구현은 Firestore(커플 멤버 제거·users 문서 삭제)를 먼저 지운 뒤 Auth 삭제에 실패해,
+  "탈퇴는 안 됐는데 커플 연결만 끊기고 다음 실행 때 온보딩으로 떨어지는" 반쪽 삭제가 생겼다(2026-11-17 iOS 제보).
+  Admin SDK 삭제는 재인증이 필요 없다.
+- **서버 순서(각 단계 멱등)**: ① 커플 멤버 제거 — `users/{uid}.coupleId`와 `couples.memberUids array-contains uid`
+  역조회를 모두 봐서, users 문서가 먼저 지워진 계정도 커플에서 빠지게 한다 → ② `users/{uid}` 하위 컬렉션 포함 삭제
+  (`recursiveDelete`) → ③ 프로필 사진 `users/{uid}/profile/avatar` 삭제(best-effort) → ④ Auth 계정 삭제.
+- **진입점**: 계정 관리 페이지(`/settings/account`) 맨 아래, 그리고 **온보딩 선택 화면 하단**(`onboarding-delete-account`,
+  옆에 로그아웃 `onboarding-sign-out`). 커플 연결 전 사용자(반쪽 삭제된 계정 포함)는 `/settings`에 못 들어가므로
+  온보딩에서 스스로 정리할 수 있어야 한다. 둘 다 `@/components/settings/DeleteAccountButton`을 쓴다.
+- 확인 다이얼로그(`delete-account-dialog`)·탈퇴 후 랜딩 리다이렉트·커플 데이터 보존(짝꿍 쪽 기록 유지) 규칙은 그대로다.
+
 ## 사용자 문서 덮어쓰기 금지 (2026-11 사고)
 
 로그인 시 `getUserDocument`가 오프라인 등으로 실패했는데 이를 "문서 없음"으로 취급해

@@ -4,8 +4,6 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  reauthenticateWithPopup,
-  deleteUser,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
 } from 'firebase/auth';
@@ -92,29 +90,4 @@ export function onAuthStateChanged(callback: (user: FirebaseUser | null) => void
 // 성공 시에는 onAuthStateChanged 가 발화하므로 반환값은 사용하지 않아도 되지만, 에러 표면화를 위해 호출한다.
 export async function getRedirectSignInResult() {
   return getRedirectResult(getAuth());
-}
-
-export async function deleteCurrentUser(): Promise<void> {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) throw new Error('NOT_AUTHENTICATED');
-
-  try {
-    await deleteUser(user);
-  } catch (error: unknown) {
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === 'auth/requires-recent-login'
-    ) {
-      // 로그인에 사용한 provider로 재인증한다 (Apple/Google 혼용 대응).
-      const providerId = user.providerData[0]?.providerId;
-      const reauthProvider =
-        providerId === 'apple.com' ? new OAuthProvider('apple.com') : new GoogleAuthProvider();
-      await reauthenticateWithPopup(user, reauthProvider);
-      await deleteUser(user);
-    } else {
-      throw error;
-    }
-  }
 }

@@ -293,8 +293,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              회원 탈퇴는 앱 내 <strong>설정 &gt; 회원탈퇴</strong> 메뉴에서 직접 진행할 수 있으며,
-              탈퇴 시 본인의 계정 정보는 즉시 삭제됩니다.
+              회원 탈퇴는 앱 내 <strong>설정 &gt; 계정 &gt; 회원탈퇴</strong> 메뉴에서 직접 진행할
+              수 있으며, 탈퇴 시 본인의 계정 정보는 즉시 삭제됩니다.
             </li>
             <li>
               그 외 열람·정정·처리정지 요청은 아래 9조의 이메일을 통해 요청할 수 있으며, 운영자는

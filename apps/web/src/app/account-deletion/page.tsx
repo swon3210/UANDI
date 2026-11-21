@@ -30,8 +30,8 @@ export default function AccountDeletionPage() {
       <main className="max-w-2xl mx-auto w-full px-4 py-6">
         <article className="prose prose-sm max-w-none text-foreground">
           <p className="mt-2">
-            말랑 가계부(이하 &lsquo;서비스&rsquo;) 이용자는 언제든지 본인의 계정과 개인정보 삭제를 요청할 수
-            있습니다. 아래 방법 중 편한 방법을 이용해 주세요.
+            말랑 가계부(이하 &lsquo;서비스&rsquo;) 이용자는 언제든지 본인의 계정과 개인정보 삭제를
+            요청할 수 있습니다. 아래 방법 중 편한 방법을 이용해 주세요.
           </p>
 
           <h2 className="mt-8 text-lg font-semibold">방법 1. 앱에서 직접 삭제 (권장)</h2>
@@ -39,10 +39,14 @@ export default function AccountDeletionPage() {
           <ol className="list-decimal pl-5 space-y-1">
             <li>말랑 가계부 앱 실행 후 로그인</li>
             <li>
-              하단 메뉴 또는 우측 상단에서 <strong>설정</strong> 이동
+              우측 상단 프로필 사진 → <strong>설정</strong> → <strong>계정</strong> 이동
             </li>
             <li>
-              <strong>회원 탈퇴</strong> 선택 후 안내에 따라 진행
+              화면 맨 아래 <strong>회원탈퇴</strong> 선택 후 안내에 따라 진행
+            </li>
+            <li>
+              아직 커플 공간을 만들기 전이라면 첫 화면(시작하기) 아래의 <strong>회원탈퇴</strong>
+              에서 진행
             </li>
           </ol>
 
