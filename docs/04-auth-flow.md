@@ -165,10 +165,20 @@ Next.js App Router의 `middleware.ts`에서 처리합니다.
 - 현재 유효한 코드는 `couples/{coupleId}.inviteCode`에도 기록한다. 대시보드 초대 카드가 코드를 다시 보여줄 때 이 값을 읽고, 만료·소진됐으면 `ensureActiveInviteCode`가 새 코드를 발급한다.
 - 초대 링크는 `/invite/{code}`. 링크로 진입하면 코드를 저장해 두고 로그인 뒤 코드 입력 화면을 자동으로 연다.
 
-## 회원탈퇴 위치
+## 계정 관리 페이지 (`/settings/account`)
 
-- 회원탈퇴 버튼(`delete-account-button`)은 **프로필 편집 페이지(`/settings/profile`) 맨 아래**에 둔다. 설정 첫 화면(`/settings`)에는 두지 않는다(2026-11 걷기: 첫 주 사용자가 설정에 들어가자마자 빨간 "회원탈퇴"를 보는 건 어색하다).
-- 확인 다이얼로그(`delete-account-dialog`)·탈퇴 후 랜딩 리다이렉트·커플 데이터 보존 규칙은 그대로다.
+로그인 수단 확인·로그아웃·회원탈퇴처럼 **"계정" 자체를 다루는 동작**은 프로필 편집과 분리해 계정 관리 페이지 한곳에 모은다.
+
+- 진입: 설정 첫 화면(`/settings`)의 「계정」 행(`settings-account`). 헤더 좌측은 `BackButton`(부모 `/settings`).
+- 구성(위에서 아래로):
+  1. `AccountInfoCard`(`@uandi/ui`) — 로그인 이메일(`account-email`) + 로그인 수단 배지(`account-provider`, Google/Apple).
+     로그인 수단은 Firebase `currentUser.providerData[0].providerId`로 판별하고, Google/Apple이 아니면(에뮬레이터 이메일 로그인 등) 행을 숨긴다.
+  2. 로그아웃(`sign-out-button`, outline) — 헤더 프로필 메뉴의 로그아웃과 같은 `signOut()`을 호출한다.
+  3. 회원탈퇴(`delete-account-button`) — 페이지 맨 아래 회색 텍스트 버튼. 확인 다이얼로그(`delete-account-dialog`)·탈퇴 후 랜딩 리다이렉트·커플 데이터 보존 규칙은 그대로다.
+- 프로필 편집(`/settings/profile`)은 **이름·사진 저장 폼만** 둔다. "완료를 눌러야 저장되는 draft 폼" 안에 되돌릴 수 없는 계정 동작을 섞지 않기 위해서다.
+- 설정 첫 화면에는 회원탈퇴를 두지 않는다(2026-11 걷기: 첫 주 사용자가 설정에 들어가자마자 빨간 "회원탈퇴"를 보는 건 어색하다). 계정 페이지는 두 번 들어가야 보이므로 이 취지를 유지한다.
+
+> 이력: 회원탈퇴는 설정 첫 화면 → 프로필 편집 맨 아래(2026-11) → 계정 관리 페이지(2026-11)로 옮겨 왔다.
 
 ## 사용자 문서 덮어쓰기 금지 (2026-11 사고)
 
