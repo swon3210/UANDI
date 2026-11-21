@@ -398,6 +398,7 @@ AppShell이 현재 공간에 따라 root 요소에 `data-space="inner" | "outer"
 | `AppSidebar`     | `open`, `onOpenChange`, `sections`, `activePath`, `space?`, `LinkComponent?`, `onNavigate?` | 좌측 네비게이션 드로어 (Sheet side=left). 우리집/재테크 두 공간 + 페이지를 한 목록에 통합 |
 | `EmptyState`     | `icon`, `title`, `description`, `action?`      | 빈 상태 화면                      |
 | `FullScreenSpinner` | —                                           | 전체 화면 로딩                    |
+| `AccountInfoCard` | `email`, `provider: 'google' \| 'apple' \| null` | 계정 관리 페이지의 이메일·로그인 수단 카드 |
 
 ---
 

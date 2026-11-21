@@ -100,6 +100,12 @@ export type {
 } from './custom/settings/FeedbackTypeSelector';
 export { ProfileAvatarUploader } from './custom/settings/ProfileAvatarUploader';
 export type { ProfileAvatarUploaderProps } from './custom/settings/ProfileAvatarUploader';
+// 계정 관리 — 이메일·로그인 수단 카드 (docs/04-auth-flow.md 「계정 관리 페이지」)
+export { AccountInfoCard } from './custom/settings/AccountInfoCard';
+export type {
+  AccountInfoCardProps,
+  AccountSignInProvider,
+} from './custom/settings/AccountInfoCard';
 export {
   AI_TONE_OPTIONS,
   AI_FOCUS_OPTIONS,

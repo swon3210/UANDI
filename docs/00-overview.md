@@ -97,7 +97,9 @@
 /community/admin             → 모더레이션 (admin 전용)
 
 # 공통
-/settings                    → 설정 (프로필·가계부 설정·AI 설정)
+/settings                    → 설정 (프로필·가계부 설정·AI 설정·계정)
+/settings/profile            → 프로필 편집 (이름·사진)
+/settings/account            → 계정 관리 (로그인 수단·로그아웃·회원탈퇴)
 /settings/feedback           → 의견 보내기 (피드백·버그 제보)
 /announcements               → 공지사항 (골라 올린 변경 소식, 사이드바 footer에서 진입)
 /admin                       → 운영자 어드민 (사용자 현황·피드백)

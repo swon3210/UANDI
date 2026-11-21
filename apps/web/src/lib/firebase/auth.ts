@@ -75,6 +75,14 @@ export async function signOut(): Promise<void> {
   await firebaseSignOut(getAuth());
 }
 
+/** 현재 로그인에 쓴 소셜 계정 종류. Google/Apple이 아니면(테스트용 이메일 로그인 등) null. */
+export function getSignInProvider(): 'google' | 'apple' | null {
+  const providerId = getAuth().currentUser?.providerData[0]?.providerId;
+  if (providerId === 'google.com') return 'google';
+  if (providerId === 'apple.com') return 'apple';
+  return null;
+}
+
 export function onAuthStateChanged(callback: (user: FirebaseUser | null) => void): Unsubscribe {
   return firebaseOnAuthStateChanged(getAuth(), callback);
 }

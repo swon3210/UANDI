@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronRight, User as UserIcon } from 'lucide-react';
 import { Header, Button, Avatar, AvatarImage, AvatarFallback } from '@uandi/ui';
 import { useAuth } from '@/hooks/useAuth';
 
-/** 설정 첫 화면. 회원탈퇴는 프로필 편집 페이지 맨 아래로 옮겼다(docs/04-auth-flow.md). */
+/** 설정 첫 화면. 로그아웃·회원탈퇴는 계정 관리(/settings/account)에 있다(docs/04-auth-flow.md). */
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -71,6 +71,18 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
           >
             의견 보내기
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </Link>
+        </div>
+
+        {/* 계정 — 로그인 수단·로그아웃·회원탈퇴. 첫 화면엔 진입 행만 둔다. */}
+        <div className="space-y-2">
+          <Link
+            href="/settings/account"
+            data-testid="settings-account"
+            className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm font-medium"
+          >
+            계정
             <ChevronRight size={18} className="text-muted-foreground" />
           </Link>
         </div>

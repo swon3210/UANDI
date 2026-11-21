@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/auth.fixture';
 import { SettingsPage } from '../page-objects/SettingsPage';
+import { AccountPage } from '../page-objects/AccountPage';
 import { seedPhoto } from '../helpers/emulator';
 
 test.describe('회원탈퇴', () => {
@@ -10,7 +11,7 @@ test.describe('회원탈퇴', () => {
     await expect(authedPage).toHaveURL(/\/settings/);
   });
 
-  test('설정 페이지에서 프로필 정보가 표시되고, 회원탈퇴는 프로필 편집에 있다', async ({
+  test('설정 페이지에서 프로필 정보가 표시되고, 회원탈퇴는 계정 페이지에 있다', async ({
     authedPage,
   }) => {
     await authedPage.goto('/settings');
@@ -21,31 +22,29 @@ test.describe('회원탈퇴', () => {
     // 설정 첫 화면에는 회원탈퇴가 없다
     await expect(settings.deleteAccountButton).toHaveCount(0);
 
-    await settings.gotoProfile();
+    await settings.gotoAccount();
     await expect(settings.deleteAccountButton).toBeVisible();
   });
 
-  test('회원탈퇴 확인 다이얼로그에서 취소하면 프로필 편집 페이지에 머문다', async ({
-    authedPage,
-  }) => {
-    const settings = new SettingsPage(authedPage);
-    await settings.gotoProfile();
+  test('회원탈퇴 확인 다이얼로그에서 취소하면 계정 페이지에 머문다', async ({ authedPage }) => {
+    const account = new AccountPage(authedPage);
+    await account.goto();
 
-    await settings.deleteAccountButton.click();
-    await expect(authedPage.getByTestId('delete-account-dialog')).toBeVisible();
+    await account.deleteAccountButton.click();
+    await expect(account.deleteDialog).toBeVisible();
 
-    await authedPage.getByTestId('delete-account-cancel').click();
-    await expect(authedPage).toHaveURL(/\/settings\/profile/);
+    await account.deleteCancel.click();
+    await expect(authedPage).toHaveURL(/\/settings\/account/);
   });
 
   test('회원탈퇴 확인 후 랜딩 페이지로 리다이렉트된다', async ({ authedPage }) => {
-    const settings = new SettingsPage(authedPage);
-    await settings.gotoProfile();
+    const account = new AccountPage(authedPage);
+    await account.goto();
 
-    await settings.deleteAccountButton.click();
-    await expect(authedPage.getByTestId('delete-account-dialog')).toBeVisible();
+    await account.deleteAccountButton.click();
+    await expect(account.deleteDialog).toBeVisible();
 
-    await authedPage.getByTestId('delete-account-confirm').click();
+    await account.deleteConfirm.click();
     await expect(authedPage).toHaveURL('/', { timeout: 10000 });
   });
 
@@ -56,10 +55,10 @@ test.describe('회원탈퇴', () => {
     await seedPhoto(coupleId, uid, { caption: '보존될 사진' });
 
     // 탈퇴 실행
-    const settings = new SettingsPage(page);
-    await settings.gotoProfile();
-    await settings.deleteAccountButton.click();
-    await page.getByTestId('delete-account-confirm').click();
+    const account = new AccountPage(page);
+    await account.goto();
+    await account.deleteAccountButton.click();
+    await account.deleteConfirm.click();
     await expect(page).toHaveURL('/', { timeout: 10000 });
 
     // Firestore에서 사진 데이터가 여전히 존재하는지 확인 (에뮬레이터 REST API)
