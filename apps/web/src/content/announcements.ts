@@ -18,6 +18,11 @@ export type Announcement = {
   body: string;
   /** 선택: "바로 가기" 버튼 */
   link?: { label: string; href: string };
+  /**
+   * 선택: 설명 스크린샷(public/announcements/*.png). 본문 아래, 바로 가기 위에 보인다.
+   * 캡처는 e2e/screenshots/announcement-*.screenshots.spec.ts 로 만든다(에뮬레이터 데모 데이터, 실제 사용자 데이터 아님).
+   */
+  image?: { src: string; alt: string; width: number; height: number };
 };
 
 /** 최신순(배열 앞이 최신) */
@@ -28,6 +33,12 @@ export const ANNOUNCEMENTS: Announcement[] = [
     kind: 'new',
     title: '매달 똑같이 나가는 고정 지출을 자동으로 기록해 드려요',
     body: '월세·보험료·구독처럼 금액이 매달 같은 항목은 이제 직접 적지 않아도 돼요.\n카테고리 설정에서 고정 지출 카테고리를 열고 정기 발생을 켠 뒤 「발생일에 자동으로 기록」을 켜 주세요. 발생일 아침에 내역이 생기고 알림으로 알려 드려요. 누구 지출로 적을지(기록자)도 고를 수 있어요.\n의견 보내기로 요청해 주신 분, 고마워요.',
+    image: {
+      src: '/announcements/recurring-auto-record.png',
+      alt: '카테고리 편집 화면의 정기 발생 설정. 매월 25일 · 예상 금액 800,000원 아래에 「발생일에 자동으로 기록」 스위치와 기록자(나/현우) 선택이 켜져 있다.',
+      width: 776,
+      height: 1252,
+    },
     link: { label: '카테고리 설정 열기', href: '/inner/cashbook/categories' },
   },
   {

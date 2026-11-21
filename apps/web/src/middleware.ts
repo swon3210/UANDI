@@ -29,6 +29,13 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authCookie = request.cookies.get(AUTH_COOKIE)?.value;
 
+  // public/ 정적 파일(확장자 있는 경로)은 인증·커플·앱 게이트 대상이 아니다.
+  // next/image 최적화 서버가 쿠키 없이 원본(/announcements/*.png 등)을 가져오므로,
+  // 여기서 통과시키지 않으면 보호 경로 접두어에 걸려 /로 리다이렉트되어 이미지가 깨진다.
+  if (/\.[a-z0-9]+$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // 어드민 전용 도메인: / 를 어드민 화면으로 보여주고 다른 앱 화면은 열지 않는다.
   // 로그인은 어드민 화면이 직접 받으므로 쿠키 검사를 하지 않는다. 정적 파일·/__/auth 프록시는 통과.
   if (ADMIN_HOST) {

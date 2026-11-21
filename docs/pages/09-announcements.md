@@ -50,6 +50,8 @@ export type Announcement = {
   body: string; // 줄바꿈(\n) 허용. 마크다운 아님
   /** 선택: 시트·목록에 "바로 가기" 버튼 */
   link?: { label: string; href: string };
+  /** 선택: 설명 스크린샷. 본문 아래·바로 가기 위에 전체 폭으로 보인다 */
+  image?: { src: string; alt: string; width: number; height: number };
 };
 
 /** 최신순(배열 앞이 최신). 새 공지는 맨 앞에 추가한다 */
@@ -111,6 +113,9 @@ type User = {
 - 안 읽은 공지를 최신순으로 **최대 3개**. 각 항목:
   - 배지(`kind` 있을 때) + 날짜(`YYYY.MM.DD`, Caption)
   - 제목(Subtitle), 본문(`text-sm`, `whitespace-pre-line`)
+  - `image`가 있으면 본문 아래에 스크린샷(`next/image`, 전체 폭, `rounded-xl border`). 글만으로 위치를 찾기 어려운
+    설정형 기능(토글·메뉴 깊숙한 곳)에 넣는다. 파일은 `apps/web/public/announcements/`에 두고,
+    `e2e/screenshots/announcement-*.screenshots.spec.ts`로 에뮬레이터 데모 데이터에서 캡처한다(실제 사용자 화면 금지).
   - `link`가 있으면 `Button variant="outline" size="sm"` — 누르면 시트를 닫고 `href`로 이동
 - 안 읽은 공지가 3개보다 많으면 아래에 「지난 공지 모두 보기」(`ghost`) → `/announcements`
 - 하단 「확인」(`default`, 전체 폭) → 닫기

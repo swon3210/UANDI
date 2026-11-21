@@ -21,8 +21,13 @@ const meta: Meta<typeof AnnouncementItem> = {
 export default meta;
 type Story = StoryObj<typeof AnnouncementItem>;
 
-/** 새 기능 + 바로 가기 버튼 (실제 첫 공지) */
-export const NewWithLink: Story = {};
+/** 새 기능 + 설명 스크린샷 + 바로 가기 버튼 (실제 첫 공지) */
+export const NewWithImageAndLink: Story = {};
+
+/** 새 기능 + 바로 가기 버튼, 스크린샷 없음 (의견 보내기 공지) */
+export const NewWithLink: Story = {
+  args: { announcement: ANNOUNCEMENTS.find((a) => a.id === '2026-11-feedback')! },
+};
 
 /** 고쳤어요, 바로 가기 없음 (실제 두 번째 공지) */
 export const FixedWithoutLink: Story = {
