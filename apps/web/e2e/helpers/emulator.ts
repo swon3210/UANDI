@@ -1601,3 +1601,43 @@ export async function getAnnouncementNotificationEnabled(uid: string): Promise<b
   const v = restValue(announcement?.mapValue?.fields?.enabled);
   return typeof v === 'boolean' ? v : null;
 }
+
+// ── 회원탈퇴 검증용 조회 ──────────────────────────────────────────────────────
+
+/** Auth 에뮬레이터에서 이메일로 계정을 찾는다. 탈퇴 뒤에는 null 이어야 한다. */
+export async function lookupAuthUserByEmail(email: string): Promise<{ localId: string } | null> {
+  const res = await fetch(
+    `${AUTH_EMULATOR}/identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:lookup`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+      body: JSON.stringify({ email: [email] }),
+    }
+  );
+  const data = (await res.json()) as { users?: { localId: string }[] };
+  return data.users?.[0] ?? null;
+}
+
+/** users/{uid} 문서 존재 여부 */
+export async function userDocumentExists(uid: string): Promise<boolean> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  return res.status === 200;
+}
+
+/** couples/{coupleId}.memberUids */
+export async function getCoupleMemberUids(coupleId: string): Promise<string[]> {
+  const res = await fetch(
+    `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}`,
+    { headers: { Authorization: 'Bearer owner' } }
+  );
+  if (res.status !== 200) return [];
+  const doc = (await res.json()) as {
+    fields?: { memberUids?: { arrayValue?: { values?: { stringValue?: string }[] } } };
+  };
+  return (doc.fields?.memberUids?.arrayValue?.values ?? [])
+    .map((v) => v.stringValue)
+    .filter((v): v is string => typeof v === 'string');
+}

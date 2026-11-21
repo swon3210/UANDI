@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { Loader2, ChevronLeft, Home, Mail } from 'lucide-react';
 import { MascotLoader } from '@/components/MascotLoader';
+import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import {
   Button,
@@ -22,6 +23,7 @@ import coralMascot from '@uandi/ui/assets/mascot-couple-coral.png';
 import sageMascot from '@uandi/ui/assets/mascot-couple-sage.png';
 import { userAtom, authStatusAtom } from '@/stores/auth.store';
 import { setAuthCookie } from '@/lib/auth-cookie';
+import { signOut } from '@/lib/firebase/auth';
 import { trackEvent } from '@/lib/analytics';
 import { consumePendingInviteCode } from '@/lib/invite-code';
 import { shareInviteLink } from '@/lib/share-invite';
@@ -200,6 +202,25 @@ export default function OnboardingPage() {
             공간을 만드는 중…
           </p>
         ) : null}
+        {/* 커플 연결 전에도 계정을 정리할 수 있게 — 다른 계정으로 바꾸거나(로그아웃) 탈퇴한다.
+            탈퇴가 중간에 실패해 users 문서만 지워진 계정은 여기로 오므로 탈퇴 진입이 꼭 필요하다. */}
+        <div className="mt-12 flex items-center gap-1 text-sm text-muted-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            data-testid="onboarding-sign-out"
+            onClick={async () => {
+              await signOut();
+              router.replace('/');
+            }}
+          >
+            로그아웃
+          </Button>
+          <span aria-hidden>·</span>
+          <DeleteAccountButton data-testid="onboarding-delete-account" />
+        </div>
       </main>
     );
   }
