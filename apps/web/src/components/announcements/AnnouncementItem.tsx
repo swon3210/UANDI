@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Badge, Button, type BadgeProps } from '@uandi/ui';
 import type { Announcement, AnnouncementKind } from '@/content/announcements';
 
@@ -21,7 +22,7 @@ type AnnouncementItemProps = {
 
 /** 공지 한 건 — 배지·날짜·제목·본문·바로 가기. 공지 시트와 공지사항 목록이 함께 쓴다. */
 export function AnnouncementItem({ announcement, onLinkClick }: AnnouncementItemProps) {
-  const { kind, date, title, body, link } = announcement;
+  const { kind, date, title, body, link, image } = announcement;
   const badge = kind ? KIND_BADGE[kind] : null;
 
   return (
@@ -43,6 +44,17 @@ export function AnnouncementItem({ announcement, onLinkClick }: AnnouncementItem
         {title}
       </h3>
       <p className="whitespace-pre-line break-keep text-sm text-muted-foreground">{body}</p>
+      {image ? (
+        <Image
+          src={image.src}
+          alt={image.alt}
+          width={image.width}
+          height={image.height}
+          sizes="(max-width: 448px) 100vw, 448px"
+          className="w-full rounded-xl border border-border bg-secondary"
+          data-testid="announcement-image"
+        />
+      ) : null}
       {link ? (
         <Button
           variant="outline"
