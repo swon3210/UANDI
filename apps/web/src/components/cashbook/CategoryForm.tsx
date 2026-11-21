@@ -35,7 +35,7 @@ import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
 import { CategoryIcon } from './CategoryIcon';
 import { ExampleTagInput, ExampleChipList, EXAMPLES_MAX } from './ExampleTagInput';
-import { RecurringScheduleFields } from './RecurringScheduleFields';
+import { RecurringScheduleFields, type PayerOption } from './RecurringScheduleFields';
 
 const recurrenceSchema = z
   .object({
@@ -53,9 +53,28 @@ const recurrenceSchema = z
       .optional(),
     intervalMonths: z.number().optional(),
     anchorMonth: z.string().optional(),
+    // 발생일 자동 기록(docs/pages/inner/cashbook-recurring-auto-record.md)
+    autoRecord: z.boolean().optional(),
+    payerUid: z.string().nullable().optional(),
   })
   .superRefine((val, ctx) => {
     if (!val.enabled) return;
+    if (val.autoRecord) {
+      if (val.expectedAmount == null || val.expectedAmount <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '자동 기록을 켜려면 예상 금액을 입력해주세요',
+          path: ['autoRecord'],
+        });
+      }
+      if (!val.payerUid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: '기록자를 선택해주세요',
+          path: ['payerUid'],
+        });
+      }
+    }
     if (val.kind === 'dayOfMonth') {
       if (val.dayOfMonth == null) {
         ctx.addIssue({
@@ -118,6 +137,10 @@ type CategoryFormProps = {
   /** 시트 제목 override. */
   title?: string;
   isSubmitting?: boolean;
+  /** 자동 기록 기록자 후보(커플 멤버). 정기 발생 섹션에서만 쓰인다. */
+  payerOptions?: PayerOption[];
+  /** 자동 기록을 켤 때 기본 기록자(현재 사용자 uid). */
+  defaultPayerUid?: string;
   onSubmit: (data: FormValues) => Promise<void>;
   onClose: () => void;
 };
@@ -131,6 +154,8 @@ export function CategoryForm({
   takenNames,
   title,
   isSubmitting,
+  payerOptions,
+  defaultPayerUid,
   onSubmit,
   onClose,
 }: CategoryFormProps) {
@@ -179,6 +204,8 @@ export function CategoryForm({
             expectedAmount: editingCategory.recurrence.expectedAmount ?? null,
             intervalMonths: editingCategory.recurrence.intervalMonths,
             anchorMonth: editingCategory.recurrence.anchorMonth,
+            autoRecord: editingCategory.recurrence.autoRecord ?? false,
+            payerUid: editingCategory.recurrence.payerUid ?? null,
           }
         : (prefill?.recurrence ?? { enabled: false, kind: 'dayOfMonth' }),
     },
@@ -385,6 +412,8 @@ export function CategoryForm({
                         value={field.value}
                         onChange={field.onChange}
                         variant={group === 'income' ? 'income' : 'expense'}
+                        payerOptions={payerOptions}
+                        defaultPayerUid={defaultPayerUid}
                       />
                     </FormControl>
                     <FormMessage />

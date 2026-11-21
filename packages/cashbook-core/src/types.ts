@@ -12,6 +12,11 @@ export type CashbookEntry = {
   description: string;
   date: Timestamp;
   createdAt: Timestamp;
+  /**
+   * 정기 발생 자동 기록(cron)으로 생성된 내역이면 존재. 내역 카드에 "자동" 배지.
+   * 문서 id는 `recurrence-{categoryId}-{YYYY-MM}` (docs/pages/inner/cashbook-recurring-auto-record.md).
+   */
+  autoRecord?: { categoryId: string; month: string };
 };
 
 export type CategoryGroup = 'income' | 'expense';
@@ -54,6 +59,14 @@ export type RecurringSchedule = {
    * 미지정 시 절대 월 인덱스 기준 위상 0으로 폴백(결정적).
    */
   anchorMonth?: string;
+  /**
+   * 발생일에 실제 내역을 자동 생성할지(docs/pages/inner/cashbook-recurring-auto-record.md).
+   * enabled && expectedAmount > 0 일 때만 켤 수 있다. 켜지면 리마인더 대신 기록 완료 알림을 받는다.
+   * 미지정 시 false.
+   */
+  autoRecord?: boolean;
+  /** 자동 기록 내역의 작성자(createdBy). 커플 멤버 uid. autoRecord일 때 필수. */
+  payerUid?: string | null;
 };
 
 export type CashbookCategory = {

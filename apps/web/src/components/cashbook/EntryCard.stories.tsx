@@ -102,3 +102,24 @@ export const ShowDateWithAuthor: Story = {
     author: { displayName: '지수', photoURL: null },
   },
 };
+
+/** 정기 발생 자동 기록으로 생긴 내역: 카테고리 옆 "자동" 배지, 메모 없음. */
+export const AutoRecorded: Story = {
+  args: {
+    entry: makeEntry({
+      id: 'recurrence-cat-rent-2026-06',
+      amount: 800000,
+      category: '월세',
+      description: '',
+      autoRecord: { categoryId: 'cat-rent', month: '2026-06' },
+    }),
+    category: {
+      ...foodCategory,
+      id: 'cat-rent',
+      name: '월세',
+      icon: 'house',
+      subGroup: 'fixed_expense',
+    },
+    author: { displayName: '현우', photoURL: null },
+  },
+};

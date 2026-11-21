@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@uandi/ui';
 import type { CashbookEntry, CashbookCategory } from '@/types';
 import { formatAmount } from '@/utils/currency';
 import { formatDay } from '@/utils/date';
@@ -33,7 +34,18 @@ export function EntryCard({ entry, category, onClick, showDate = false, author }
         <CategoryIcon name={icon} size={20} />
       </span>
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium">{entry.category}</span>
+        <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+          {entry.category}
+          {entry.autoRecord && (
+            <Badge
+              variant="secondary"
+              data-testid="entry-auto-record-badge"
+              className="h-5 px-1.5 text-[11px] font-normal text-muted-foreground"
+            >
+              자동
+            </Badge>
+          )}
+        </span>
         {entry.description && (
           <p className="text-xs text-muted-foreground truncate">{entry.description}</p>
         )}

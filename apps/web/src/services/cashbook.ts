@@ -11,6 +11,8 @@ import {
 } from '@uandi/cashbook-core';
 import {
   collection,
+  doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
@@ -64,6 +66,16 @@ export function subscribeToLatestEntry(
       snap.metadata.hasPendingWrites
     );
   });
+}
+
+/**
+ * 내역 1건 조회(없으면 null). 기록 완료 푸시 딥링크(`?entryId=`)처럼 현재 조회 범위 밖의 내역을
+ * 직접 열어야 할 때 쓴다 — docs/pages/inner/cashbook-recurring-auto-record.md 「UI 구성 5」.
+ */
+export async function getEntry(coupleId: string, entryId: string): Promise<CashbookEntry | null> {
+  const snap = await getDoc(doc(getDb(), `couples/${coupleId}/cashbookEntries/${entryId}`));
+  if (!snap.exists()) return null;
+  return { ...(snap.data() as Omit<CashbookEntry, 'id'>), id: snap.id };
 }
 
 export async function addEntry(

@@ -249,6 +249,9 @@ type SeedRecurrence = {
   expectedAmount?: number | null;
   intervalMonths?: number;
   anchorMonth?: string;
+  /** 발생일 자동 기록(docs/pages/inner/cashbook-recurring-auto-record.md) */
+  autoRecord?: boolean;
+  payerUid?: string;
 };
 
 export async function seedCashbookCategory(
@@ -303,6 +306,10 @@ export async function seedCashbookCategory(
     if (r.weekday != null) rf.weekday = { integerValue: String(r.weekday) };
     if (r.leadDays != null) rf.leadDays = { integerValue: String(r.leadDays) };
     if (r.expectedAmount != null) rf.expectedAmount = { integerValue: String(r.expectedAmount) };
+    if (r.intervalMonths != null) rf.intervalMonths = { integerValue: String(r.intervalMonths) };
+    if (r.anchorMonth != null) rf.anchorMonth = { stringValue: r.anchorMonth };
+    if (r.autoRecord != null) rf.autoRecord = { booleanValue: r.autoRecord };
+    if (r.payerUid != null) rf.payerUid = { stringValue: r.payerUid };
     fields.recurrence = { mapValue: { fields: rf } };
   }
 
@@ -499,9 +506,14 @@ export async function seedCashbookEntry(
     category?: string;
     description?: string;
     date?: string;
+    /** 문서 id 지정(자동 기록 내역의 결정적 id 재현 등). 생략 시 랜덤. */
+    id?: string;
+    /** 정기 발생 자동 기록 표식(docs/pages/inner/cashbook-recurring-auto-record.md) */
+    autoRecord?: { categoryId: string; month: string };
   }
 ): Promise<string> {
-  const entryId = `entry-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const entryId =
+    options.id ?? `entry-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const date = options.date ?? new Date().toISOString();
 
   const fields: Record<string, unknown> = {
@@ -515,6 +527,16 @@ export async function seedCashbookEntry(
     date: { timestampValue: date },
     createdAt: { timestampValue: new Date().toISOString() },
   };
+  if (options.autoRecord) {
+    fields.autoRecord = {
+      mapValue: {
+        fields: {
+          categoryId: { stringValue: options.autoRecord.categoryId },
+          month: { stringValue: options.autoRecord.month },
+        },
+      },
+    };
+  }
 
   await fetch(
     `${FIRESTORE_EMULATOR}/v1/projects/${PROJECT_ID}/databases/(default)/documents/couples/${coupleId}/cashbookEntries/${entryId}`,

@@ -6,6 +6,7 @@ import { useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { overlay } from 'overlay-kit';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { BookOpen, CalendarRange } from 'lucide-react';
 import { Button, Sheet, EmptyState, Skeleton } from '@uandi/ui';
 import { userAtom } from '@/stores/auth.store';
@@ -34,6 +35,7 @@ import {
 } from '@/hooks/usePredictions';
 import { useRecurrencePrompts } from '@/hooks/useRecurrencePrompts';
 import { resolvePeriod, formatDay } from '@/utils/date';
+import { getEntry } from '@/services/cashbook';
 import { CashbookFilterBar } from '@/components/cashbook/CashbookFilterBar';
 import { CashbookFilterSheet } from '@/components/cashbook/CashbookFilterSheet';
 import { MonthlySummary } from '@/components/cashbook/MonthlySummary';
@@ -353,6 +355,28 @@ export default function CashbookPage() {
       </Sheet>
     ));
   };
+
+  // 기록 완료 푸시 딥링크(entryId)로 진입하면 해당 내역의 편집 시트를 1회 연다.
+  // 현재 조회 범위 밖(지난달 catch-up)일 수 있어 문서를 직접 읽는다 — quickAdd와 같은 일회성 URL 트리거 패턴.
+  // docs/pages/inner/cashbook-recurring-auto-record.md 「UI 구성 5」
+  const entryLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (entryLinkHandledRef.current) return;
+    const entryId = searchParams.get('entryId');
+    if (!entryId || !coupleId || !categories) return;
+    entryLinkHandledRef.current = true;
+
+    // 새로고침/뒤로가기 시 시트가 다시 열리지 않도록 쿼리 제거
+    window.history.replaceState(null, '', '/inner/cashbook/history');
+    getEntry(coupleId, entryId)
+      .then((entry) => {
+        if (entry) handleEntryClick(entry);
+        else toast.error('내역을 찾을 수 없어요');
+      })
+      .catch(() => toast.error('내역을 불러오지 못했어요'));
+    // handleEntryClick은 매 렌더 새로 생성되어 deps에서 제외(일회성 가드로 충분)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, coupleId, categories]);
 
   // 정기 발생 파생(kind === 'recurrence') 프롬프트는 표시만 하고 액션 버튼이 없으므로
   // 아래 핸들러들은 doc 기반 예측에서만 호출된다.

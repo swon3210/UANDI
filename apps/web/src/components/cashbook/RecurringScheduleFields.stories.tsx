@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import {
   RecurringScheduleFields,
+  type PayerOption,
   type RecurringScheduleValue,
 } from './RecurringScheduleFields';
 
@@ -23,12 +24,24 @@ type Story = StoryObj<typeof RecurringScheduleFields>;
 function Interactive({
   initial,
   variant,
+  payerOptions,
+  defaultPayerUid,
 }: {
   initial: RecurringScheduleValue;
   variant?: 'income' | 'expense';
+  payerOptions?: PayerOption[];
+  defaultPayerUid?: string;
 }) {
   const [value, setValue] = useState<RecurringScheduleValue>(initial);
-  return <RecurringScheduleFields value={value} onChange={setValue} variant={variant} />;
+  return (
+    <RecurringScheduleFields
+      value={value}
+      onChange={setValue}
+      variant={variant}
+      payerOptions={payerOptions}
+      defaultPayerUid={defaultPayerUid}
+    />
+  );
 }
 
 export const Disabled: Story = {
@@ -59,10 +72,7 @@ export const LastWeek: Story = {
 
 export const IncomeVariant: Story = {
   render: () => (
-    <Interactive
-      variant="income"
-      initial={{ enabled: true, kind: 'dayOfMonth', dayOfMonth: 10 }}
-    />
+    <Interactive variant="income" initial={{ enabled: true, kind: 'dayOfMonth', dayOfMonth: 10 }} />
   ),
 };
 
@@ -95,6 +105,61 @@ export const Quarterly: Story = {
         intervalMonths: 3,
         anchorMonth: '2026-07',
       }}
+    />
+  ),
+};
+
+// ── 발생일 자동 기록 (docs/pages/inner/cashbook-recurring-auto-record.md) ──
+
+const PAYERS = [
+  { uid: 'me', label: '나' },
+  { uid: 'partner', label: '지수' },
+];
+
+// 예상 금액이 없어 자동 기록 토글이 비활성 + 안내 문구.
+export const AutoRecordDisabledNoAmount: Story = {
+  render: () => (
+    <Interactive
+      initial={{ enabled: true, kind: 'dayOfMonth', dayOfMonth: 25 }}
+      payerOptions={PAYERS}
+      defaultPayerUid="me"
+    />
+  ),
+};
+
+// 자동 기록 on: 기록자 칩 2개(짝꿍 선택), 미리 알림 입력은 숨김.
+export const AutoRecordOn: Story = {
+  render: () => (
+    <Interactive
+      initial={{
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: 25,
+        expectedAmount: 800000,
+        autoRecord: true,
+        payerUid: 'partner',
+      }}
+      payerOptions={PAYERS}
+      defaultPayerUid="me"
+    />
+  ),
+};
+
+// 짝꿍 미연결(멤버 1명): 기록자 칩 없이 안내 문구만.
+export const AutoRecordSingleMember: Story = {
+  render: () => (
+    <Interactive
+      variant="income"
+      initial={{
+        enabled: true,
+        kind: 'dayOfMonth',
+        dayOfMonth: 10,
+        expectedAmount: 3500000,
+        autoRecord: true,
+        payerUid: 'me',
+      }}
+      payerOptions={[{ uid: 'me', label: '나' }]}
+      defaultPayerUid="me"
     />
   ),
 };
