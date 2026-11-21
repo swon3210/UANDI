@@ -39,3 +39,17 @@ export const DisabledRendersNothing: Story = {
     schedule: { enabled: false, kind: 'dayOfMonth', dayOfMonth: 25 },
   },
 };
+
+// 발생일 자동 기록이 켜진 카테고리: 주기 뒤에 "· 자동 기록" 표식.
+export const WithAutoRecord: Story = {
+  args: {
+    schedule: {
+      enabled: true,
+      kind: 'dayOfMonth',
+      dayOfMonth: 25,
+      expectedAmount: 800000,
+      autoRecord: true,
+      payerUid: 'me',
+    },
+  },
+};

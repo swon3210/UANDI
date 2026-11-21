@@ -19,6 +19,11 @@ export function RecurringBadge({ schedule }: RecurringBadgeProps) {
     >
       <CalendarClock size={12} />
       {formatRecurrence(schedule)}
+      {schedule.autoRecord && (
+        <span data-testid="category-auto-record-mark" className="text-primary">
+          · 자동 기록
+        </span>
+      )}
     </Badge>
   );
 }

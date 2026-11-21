@@ -26,7 +26,14 @@ export type RecurringScheduleValue = {
   intervalMonths?: number;
   /** 주기 위상 기준 달("YYYY-MM"). interval>1일 때만 의미. */
   anchorMonth?: string;
+  /** 발생일에 실제 내역을 자동 기록(docs/pages/inner/cashbook-recurring-auto-record.md). */
+  autoRecord?: boolean;
+  /** 자동 기록 내역의 작성자 uid. */
+  payerUid?: string | null;
 };
+
+/** 자동 기록 기록자 후보(커플 멤버). label은 "나" / 짝꿍 이름. */
+export type PayerOption = { uid: string; label: string };
 
 const FREQUENCY_OPTIONS: { value: number; label: string }[] = [
   { value: 1, label: '매월' },
@@ -57,7 +64,16 @@ type RecurringScheduleFieldsProps = {
   onChange: (next: RecurringScheduleValue) => void;
   /** 수입이면 '들어오는 날', 지출이면 '나가는 날' 등 안내 문구 차이 */
   variant?: 'income' | 'expense';
+  /** 자동 기록 기록자 후보. 비어 있거나 1명이면 칩을 숨기고 defaultPayerUid(또는 유일한 멤버)를 쓴다. */
+  payerOptions?: PayerOption[];
+  /** 자동 기록을 켤 때 기본 기록자(보통 현재 사용자). */
+  defaultPayerUid?: string;
 };
+
+/** 자동 기록을 켤 수 있는 조건(명세 D2): 예상 금액이 양수 */
+export function canAutoRecord(value: Pick<RecurringScheduleValue, 'expectedAmount'>): boolean {
+  return value.expectedAmount != null && value.expectedAmount > 0;
+}
 
 const WEEK_OPTIONS: { value: number; label: string }[] = [
   { value: 1, label: '첫째' },
@@ -96,12 +112,34 @@ export function RecurringScheduleFields({
   value,
   onChange,
   variant = 'expense',
+  payerOptions = [],
+  defaultPayerUid,
 }: RecurringScheduleFieldsProps) {
   const patch = (partial: Partial<RecurringScheduleValue>) => onChange({ ...value, ...partial });
 
   const occurrenceHint = variant === 'income' ? '들어오는 날' : '나가는 날';
   const intervalMonths = value.intervalMonths ?? 1;
   const monthOptions = buildMonthOptions(value.anchorMonth);
+  const autoRecordAllowed = canAutoRecord(value);
+  const autoRecordOn = value.autoRecord === true;
+
+  /** 예상 금액 변경: 양수가 아니게 되면 자동 기록도 함께 끈다(D2 — 이벤트 핸들러에서 처리). */
+  const handleAmountChange = (raw: string) => {
+    const expectedAmount = parseIntOrUndefined(raw) ?? null;
+    const stillAllowed = expectedAmount != null && expectedAmount > 0;
+    patch({ expectedAmount, ...(stillAllowed ? {} : { autoRecord: false }) });
+  };
+
+  /** 자동 기록 토글: 켤 때 기록자가 비어 있으면 기본 기록자(현재 사용자 → 유일한 멤버)로 채운다. */
+  const handleAutoRecordChange = (checked: boolean) => {
+    if (!checked) {
+      patch({ autoRecord: false });
+      return;
+    }
+    const fallbackPayer =
+      value.payerUid ?? defaultPayerUid ?? (payerOptions.length === 1 ? payerOptions[0].uid : null);
+    patch({ autoRecord: true, payerUid: fallbackPayer });
+  };
 
   /** 빈도 변경: 격월 이상이면 기준 월(anchorMonth)을 이번 달로 자동 지정(비어 있을 때만). */
   const handleIntervalChange = (next: number) => {
@@ -202,7 +240,11 @@ export function RecurringScheduleFields({
                 ] as const
               ).map((opt) => (
                 <div key={opt.value} className="flex items-center">
-                  <RadioGroupItem value={opt.value} id={`recurrence-kind-${opt.value}`} className="sr-only" />
+                  <RadioGroupItem
+                    value={opt.value}
+                    id={`recurrence-kind-${opt.value}`}
+                    className="sr-only"
+                  />
                   <Label
                     htmlFor={`recurrence-kind-${opt.value}`}
                     data-testid={`recurrence-kind-${opt.value}`}
@@ -288,25 +330,27 @@ export function RecurringScheduleFields({
             </div>
           )}
 
-          {/* 며칠 전 알림 */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="recurrence-lead-input" className="text-sm">
-              미리 알림
-            </Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="recurrence-lead-input"
-                data-testid="recurrence-lead-input"
-                type="number"
-                min={0}
-                max={7}
-                className="w-20"
-                value={value.leadDays ?? 0}
-                onChange={(e) => patch({ leadDays: parseIntOrUndefined(e.target.value) ?? 0 })}
-              />
-              <span className="text-sm text-muted-foreground">일 전 (0 = 당일)</span>
+          {/* 며칠 전 알림 — 자동 기록이 켜지면 기록 완료 알림으로 대체되므로 숨긴다(D8, 값은 보존) */}
+          {!autoRecordOn && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="recurrence-lead-input" className="text-sm">
+                미리 알림
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="recurrence-lead-input"
+                  data-testid="recurrence-lead-input"
+                  type="number"
+                  min={0}
+                  max={7}
+                  className="w-20"
+                  value={value.leadDays ?? 0}
+                  onChange={(e) => patch({ leadDays: parseIntOrUndefined(e.target.value) ?? 0 })}
+                />
+                <span className="text-sm text-muted-foreground">일 전 (0 = 당일)</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 예상 금액 */}
           <div className="flex flex-col gap-1.5">
@@ -322,12 +366,67 @@ export function RecurringScheduleFields({
                 inputMode="numeric"
                 placeholder="예: 800000"
                 value={value.expectedAmount ?? ''}
-                onChange={(e) =>
-                  patch({ expectedAmount: parseIntOrUndefined(e.target.value) ?? null })
-                }
+                onChange={(e) => handleAmountChange(e.target.value)}
               />
               <span className="text-sm text-muted-foreground">원</span>
             </div>
+          </div>
+
+          {/* 발생일 자동 기록 (docs/pages/inner/cashbook-recurring-auto-record.md) */}
+          <div
+            data-testid="recurrence-auto-record-section"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-secondary/40 p-3"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="recurrence-auto-record-switch" className="text-sm font-semibold">
+                  발생일에 자동으로 기록
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {autoRecordAllowed
+                    ? '매달 금액이 같은 항목에만 켜 주세요. 발생일 아침에 내역이 생기고 알림으로 알려드려요.'
+                    : '예상 금액을 입력하면 켤 수 있어요.'}
+                </p>
+              </div>
+              <Switch
+                id="recurrence-auto-record-switch"
+                data-testid="recurrence-auto-record-switch"
+                checked={autoRecordOn}
+                disabled={!autoRecordAllowed}
+                onCheckedChange={handleAutoRecordChange}
+              />
+            </div>
+
+            {autoRecordOn && (
+              <div className="flex flex-col gap-2">
+                {payerOptions.length > 1 && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-sm">기록자</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {payerOptions.map((opt) => {
+                        const selected = value.payerUid === opt.uid;
+                        return (
+                          <button
+                            key={opt.uid}
+                            type="button"
+                            data-testid={`recurrence-payer-${opt.uid}`}
+                            data-selected={selected}
+                            className={chipClassName(selected)}
+                            onClick={() => patch({ payerUid: opt.uid })}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  발생일이 이미 지났으면 다음 발생일부터 기록돼요. 미리 알림 대신 기록 완료 알림을
+                  받아요.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

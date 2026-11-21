@@ -11,6 +11,8 @@ export type RecurrenceFormValue = {
   expectedAmount?: number | null;
   intervalMonths?: number;
   anchorMonth?: string;
+  autoRecord?: boolean;
+  payerUid?: string | null;
 };
 
 /**
@@ -39,6 +41,13 @@ export function buildRecurrencePayload(value: RecurrenceFormValue): RecurringSch
   if (interval > 1) {
     payload.intervalMonths = interval;
     if (value.anchorMonth) payload.anchorMonth = value.anchorMonth;
+  }
+  // 자동 기록(docs/pages/inner/cashbook-recurring-auto-record.md): 켜진 경우에만 저장(하위호환).
+  // 예상 금액이 양수가 아니면 켜져 있어도 저장하지 않는다(D2 — cron도 같은 조건으로 거른다).
+  const amount = payload.expectedAmount;
+  if (value.autoRecord && amount != null && amount > 0 && value.payerUid) {
+    payload.autoRecord = true;
+    payload.payerUid = value.payerUid;
   }
   return payload;
 }

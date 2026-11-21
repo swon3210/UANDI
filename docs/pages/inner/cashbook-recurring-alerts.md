@@ -317,7 +317,7 @@ export { recurringTransactionReminder } from './notifications/recurringReminder'
 ## 후속 사이클 (이번 작업 제외)
 
 - **현금흐름 캘린더 통합**: `recurrence`를 현금흐름 잔액 예측의 단일 선언 출처로 사용 → [`cashflow-recurrence-integration.md`](./cashflow-recurrence-integration.md)
-- **알림에서 퀵 입력**: 알림 클릭/액션으로 `expectedAmount` 기반 거래 자동 생성
+- ~~**알림에서 퀵 입력**: 알림 클릭/액션으로 `expectedAmount` 기반 거래 자동 생성~~ → 퀵 입력 대신 **발생일 자동 기록**으로 구현: [`cashbook-recurring-auto-record.md`](./cashbook-recurring-auto-record.md)
 - **소유자 한정 발송 옵션**: 개인 고정 지출은 본인에게만
 - **다회 발생**: 주 2회·격주 등 월 1회 외 주기
 - **연체 감지**: 발생일 +N일까지 해당 카테고리 거래가 없으면 "아직 기록 안 됐어요" 재알림

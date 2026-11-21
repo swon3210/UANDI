@@ -126,6 +126,20 @@ export class CashbookCategoriesPage {
     return this.page.getByTestId('recurrence-amount-input');
   }
 
+  // 발생일 자동 기록 (docs/pages/inner/cashbook-recurring-auto-record.md)
+  get autoRecordSwitch() {
+    return this.page.getByTestId('recurrence-auto-record-switch');
+  }
+
+  payerChip(uid: string) {
+    return this.page.getByTestId(`recurrence-payer-${uid}`);
+  }
+
+  // 카테고리 카드 정기 배지 안의 "자동 기록" 표식
+  autoRecordMark(name: string) {
+    return this.categoryItem(name).getByTestId('category-auto-record-mark');
+  }
+
   // 카테고리 카드에 노출되는 정기 발생 배지
   recurrenceBadge(name: string) {
     return this.categoryItem(name).getByTestId('category-recurrence-badge');

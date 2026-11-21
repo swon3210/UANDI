@@ -29,6 +29,7 @@ import {
   useDeleteCategory,
 } from '@/hooks/useCashbookCategories';
 import { countEntriesByCategory } from '@/services/cashbook';
+import { useCoupleMembers } from '@/hooks/useCoupleMembers';
 import { GROUP_LABELS, RECURRENCE_SUBGROUPS } from '@/constants/default-categories';
 import { CategoryList } from '@/components/cashbook/CategoryList';
 import { CategoryForm } from '@/components/cashbook/CategoryForm';
@@ -44,6 +45,12 @@ export default function CashbookCategoriesPage() {
   const coupleId = user?.coupleId ?? null;
 
   const { data: categories, isLoading } = useCashbookCategories(coupleId);
+  // 자동 기록 기록자 후보: 본인은 "나", 짝꿍은 이름(없으면 "짝꿍"). 명세 「UI 구성 6」.
+  const { data: members } = useCoupleMembers(coupleId);
+  const payerOptions = (members ?? []).map((m) => ({
+    uid: m.uid,
+    label: m.uid === user?.uid ? '나' : m.displayName || '짝꿍',
+  }));
   const addMutation = useAddCategory(coupleId);
   const updateMutation = useUpdateCategory(coupleId);
   const deleteMutation = useDeleteCategory(coupleId);
@@ -62,6 +69,8 @@ export default function CashbookCategoriesPage() {
           group={props.group}
           parentCategory={props.parentCategory}
           editingCategory={props.editingCategory}
+          payerOptions={payerOptions}
+          defaultPayerUid={user?.uid}
           onSubmit={async (data) => {
             if (props.editingCategory) {
               const editSubGroup = data.subGroup as CashbookCategory['subGroup'];

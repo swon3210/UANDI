@@ -169,6 +169,9 @@ type CashbookEntry = {
   description: string; // 메모 (빈 문자열 허용)
   date: Timestamp; // 거래 발생일 (사용자가 지정)
   createdAt: Timestamp; // 서버 생성 시각
+  // 정기 발생 자동 기록(cron)으로 생성된 내역이면 존재. 문서 id는 `recurrence-{categoryId}-{YYYY-MM}`.
+  // 내역 카드에 "자동" 배지 (pages/inner/cashbook-recurring-auto-record.md)
+  autoRecord?: { categoryId: string; month: string };
 };
 ```
 
