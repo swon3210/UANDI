@@ -37,9 +37,16 @@
 - 폼 아래 안내(작은 글씨): 「앱 버전, 기기 정보, 직전에 보던 화면이 함께 전송돼요. 가계부 내용은 보내지 않아요.」
 - 「보내기」 버튼(`Button`, 전체 폭): 제출 중에는 비활성 + 「보내는 중…」.
 
+### 답장 시점 안내 (`FeedbackResponseNotice`)
+
+- 폼(보내기 버튼) **아래**, 페이지 맨 끝에 카드 하나: 이모티콘(`/brand/emoticons/1-12-thinking.png`, 64px) + 제목 「답장은 주말에 드려요」 +
+  본문 「말랑 부부는 평일엔 각자 회사에 다니는 맞벌이예요. 문의 답변과 건의·버그 처리는 대체로 주말에 하고 있어요. 조금 늦더라도 하나하나 읽고 답장할게요.」
+- 운영자가 맞벌이라 평일 응답이 어렵다는 사실을 **보내기 전에** 알려 "보냈는데 답이 없다"는 두 번째 문의를 줄인다.
+  `aside`(aria-label 「답장 시점 안내」), `data-testid="feedback-response-notice"`.
+
 ### 제출 결과
 
-- 성공: toast 「보내 주셔서 고마워요」 → `BackButton`과 같은 규칙으로 이전 화면(없으면 `/settings`)으로 돌아간다.
+- 성공: toast 「보내 주셔서 고마워요」 + 설명 「주말에 확인하고 답장할게요」 → `BackButton`과 같은 규칙으로 이전 화면(없으면 `/settings`)으로 돌아간다.
   GA 이벤트 `feedback_submit` 전송.
 - 실패: toast 「보내지 못했어요. 잠시 후 다시 시도해 주세요」. 입력값은 그대로 둔다.
 - 스크린샷 업로드는 성공했는데 문서 저장이 실패하면, 올린 파일은 남겨 둔다(규칙상 클라이언트 삭제 불가 — 아래 참고). 재시도하면 같은 `feedbackId`로 다시 저장한다.
@@ -154,6 +161,7 @@ type Feedback = {
 
 1. 사이드바 footer 「의견 보내기」 → `/settings/feedback` 진입, 설정 화면 행으로도 진입.
 2. 유형 미선택·내용 10자 미만이면 각 오류 메시지가 보이고 제출되지 않는다.
+   하단에 답장 시점 안내(「주말」)가 보내기 버튼 아래에 보이고 이모티콘이 로드된다.
 3. 연락 이메일 기본값이 로그인 이메일이다. 잘못된 형식이면 오류.
 4. 버그 + 내용 + 스크린샷 1장으로 제출 → toast, 이전 화면 복귀, 에뮬레이터 `feedback` 문서에
    `type/content/uid/status='new'/screenshotPath/context.platform`이 저장된다.
@@ -166,4 +174,5 @@ type Feedback = {
 
 - `FeedbackForm` (packages/ui `custom/settings/`) — 기본 / 버그 선택 / 오류 표시 / 스크린샷 첨부 / 제출 중
 - `FeedbackTypeSelector` — 미선택 / 선택
+- `FeedbackResponseNotice` — 기본 / 320px 좁은 폭 / 이미지 깨짐
 - `AdminFeedbackCard` (apps/web `components/admin/` — 기존 어드민 컴포넌트 위치) — 버그+스크린샷 / 의견(스크린샷 없음) / 긴 내용 / 연락 이메일 다름
