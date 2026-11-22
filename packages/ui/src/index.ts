@@ -94,6 +94,11 @@ export {
   FeedbackTypeSelector,
   FEEDBACK_TYPE_OPTIONS,
 } from './custom/settings/FeedbackTypeSelector';
+export {
+  FeedbackResponseNotice,
+  FEEDBACK_RESPONSE_NOTICE_IMAGE,
+} from './custom/settings/FeedbackResponseNotice';
+export type { FeedbackResponseNoticeProps } from './custom/settings/FeedbackResponseNotice';
 export type {
   FeedbackType,
   FeedbackTypeSelectorProps,

@@ -48,6 +48,23 @@ test.describe('의견 보내기 (/settings/feedback)', () => {
     await expect(authedPage.getByTestId('feedback-page')).toBeVisible();
   });
 
+  test('하단에 답장은 주말에 처리된다는 안내가 보인다', async ({ authedPage }) => {
+    await openFeedbackFromSettings(authedPage);
+    const notice = authedPage.getByTestId('feedback-response-notice');
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText('주말');
+    // 폼(보내기 버튼) 아래에 놓인다
+    const submitBox = await authedPage.getByTestId('feedback-submit').boundingBox();
+    const noticeBox = await notice.boundingBox();
+    expect(noticeBox!.y).toBeGreaterThan(submitBox!.y);
+    // 이모티콘 이미지가 실제로 로드된다
+    const img = notice.getByRole('img');
+    await expect(img).toBeVisible();
+    await expect
+      .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+  });
+
   test('유형을 고르지 않거나 내용이 10자 미만이면 오류를 보여주고 보내지 않는다', async ({
     authedPage,
   }) => {
@@ -94,6 +111,7 @@ test.describe('의견 보내기 (/settings/feedback)', () => {
     await page.getByTestId('feedback-submit').click();
 
     await expect(page.getByText('보내 주셔서 고마워요')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('주말에 확인하고 답장할게요')).toBeVisible();
     await page.waitForURL(/\/settings$/);
 
     const saved = await listFeedback();

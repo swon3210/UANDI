@@ -9,6 +9,18 @@
         "cd /Users/jinsong/Documents/Github/UANDI/apps/web && set -a && . ./.env.test && set +a && rm -rf .next && /opt/homebrew/bin/pnpm exec next dev --port 3100"
       ],
       "port": 3100
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "/opt/homebrew/bin/pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@uandi/ui",
+        "sb",
+        "--",
+        "--no-open"
+      ],
+      "port": 6006
     }
   ]
 }

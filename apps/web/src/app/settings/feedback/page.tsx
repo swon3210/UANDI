@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FeedbackForm, Header, type FeedbackFormSubmit } from '@uandi/ui';
+import { FeedbackForm, FeedbackResponseNotice, Header, type FeedbackFormSubmit } from '@uandi/ui';
 import { BackButton, goBackOrReplace } from '@/components/shell/BackButton';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubmitFeedback } from '@/hooks/useSubmitFeedback';
@@ -25,7 +25,7 @@ export default function FeedbackPage() {
       toast.error('보내지 못했어요. 잠시 후 다시 시도해 주세요');
       return;
     }
-    toast.success('보내 주셔서 고마워요');
+    toast.success('보내 주셔서 고마워요', { description: '주말에 확인하고 답장할게요' });
     goBackOrReplace(router, PARENT);
   };
 
@@ -41,6 +41,7 @@ export default function FeedbackPage() {
           onSubmit={handleSubmit}
           isPending={submit.isPending}
         />
+        <FeedbackResponseNotice className="mt-8" />
       </main>
     </div>
   );
