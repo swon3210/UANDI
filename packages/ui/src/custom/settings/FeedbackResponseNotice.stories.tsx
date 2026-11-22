@@ -10,7 +10,7 @@ const meta: Meta<typeof FeedbackResponseNotice> = {
     docs: {
       description: {
         component:
-          '의견 보내기 폼 아래 안내. 말랑 부부가 맞벌이라 답장·처리는 대체로 주말에 한다는 것을 보내기 전에 알린다. 이모티콘은 apps/web/public/brand/emoticons 의 "생각중".',
+          '의견 보내기 폼 아래 안내. 답장·처리는 대체로 주말에 한다는 것을 보내기 전에 알린다. 이모티콘은 apps/web/public/brand/emoticons 의 "생각중".',
       },
     },
   },
