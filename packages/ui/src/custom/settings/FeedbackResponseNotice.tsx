@@ -1,9 +1,9 @@
 import { cn } from '@uandi/ui/lib/utils';
 
-export const FEEDBACK_RESPONSE_NOTICE_IMAGE = '/brand/emoticons/3-01-thanks.png';
+export const FEEDBACK_RESPONSE_NOTICE_IMAGE = '/brand/emoticons/1-12-thinking.png';
 
 export type FeedbackResponseNoticeProps = {
-  /** 이모티콘 이미지 경로. 기본은 고마워하는 말랑 */
+  /** 이모티콘 이미지 경로. 기본은 생각하는 말랑 */
   imageSrc?: string;
   className?: string;
 };
@@ -27,7 +27,7 @@ export function FeedbackResponseNotice({
     >
       <img
         src={imageSrc}
-        alt="고마워하는 말랑"
+        alt="생각하는 말랑"
         width={64}
         height={64}
         draggable={false}
