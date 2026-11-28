@@ -19,6 +19,8 @@ export {
   getLatestEntryDate,
   addEntry,
   addEntries,
+  addEntriesReturningIds,
+  getEntry,
   updateEntry,
   deleteEntry,
   countEntriesByCategory,

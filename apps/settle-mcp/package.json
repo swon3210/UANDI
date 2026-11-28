@@ -1,0 +1,36 @@
+{
+  "name": "@uandi/settle-mcp",
+  "version": "0.0.1",
+  "description": "말랑 가계부 데스크탑 결산 MCP 서버 — 은행·카드 내역서를 호스트 LLM이 읽고, 중복 판정·규칙 적용·쓰기는 로컬에서 결정적으로 처리한다",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "uandi-settle-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@napi-rs/keyring": "^2.1.1",
+    "@uandi/cashbook-core": "workspace:*",
+    "dayjs": "^1.11.13",
+    "firebase": "^11.3.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@uandi/tsconfig": "workspace:*",
+    "tsup": "^9.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
+  }
+}
