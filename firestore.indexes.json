@@ -50,6 +50,14 @@
       ]
     },
     {
+      "collectionGroup": "cashbookEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "folders",
       "queryScope": "COLLECTION",
       "fields": [
